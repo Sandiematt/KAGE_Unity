@@ -16,7 +16,6 @@ namespace Kage
     {
         public static KageGame I;
         public const int LayerFighter = PhysicsLayers.Fighter, LayerRagdoll = PhysicsLayers.Ragdoll, LayerGround = PhysicsLayers.Ground, LayerProp = PhysicsLayers.Prop;
-        public static PhysicsMaterial2D NoFriction;
 
         public enum Mode { Duel, Training }
         public Mode startMode = Mode.Duel;

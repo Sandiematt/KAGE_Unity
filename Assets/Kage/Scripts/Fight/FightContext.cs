@@ -20,7 +20,8 @@ namespace Kage
         public readonly List<HitSweep> Sweeps = new();
         /// <summary>
         /// The legacy switch (combat.json), read once when the fight is built: hits resolve inside the
-        /// attacker's tick with the old distance checks, and no sweeps are recorded.
+        /// attacker's tick with the old distance checks, and no sweeps are recorded; fighters are kept
+        /// apart by the old manual push, and knockback ignores mass.
         /// </summary>
         public readonly bool LegacyHits;
 

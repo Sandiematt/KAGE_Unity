@@ -18,10 +18,10 @@ TagManager:
   - Ground
   - Prop
   - Hurtbox
-  - 
-  - 
-  - 
-  - 
+  - Push
+  - PushPassThrough
+  - Projectile
+  - Hazard
   - 
   - 
   - 
