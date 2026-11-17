@@ -7,18 +7,12 @@ namespace Kage
     public partial class Fighter
     {
         // ---- locomotion tuning (m, m/s, m/s²; gravity values are Rigidbody2D gravity scales) ----
-        // Kage's horizontal speeds; every character moves at these × its speed multiplier (character data, SAN-66)
-        const float KageWalkFwd = 1.65f, KageWalkBack = 1.3f, KageRunSpeed = 4.6f;
-        const float KageJumpX = 2.6f, KageAirMaxX = 2.8f;
-        const float KageDashSpeed = 9.5f, KageBackDashSpeed = 7.5f, KageAirDashSpeed = 8.2f;
-        float WalkFwd => KageWalkFwd * SpeedMul;
-        float WalkBack => KageWalkBack * SpeedMul;
-        float RunSpeed => KageRunSpeed * SpeedMul;
-        float JumpX => KageJumpX * SpeedMul;
-        float AirMaxX => KageAirMaxX * SpeedMul;
-        float DashSpeed => KageDashSpeed * SpeedMul;
-        float BackDashSpeed => KageBackDashSpeed * SpeedMul;
-        float AirDashSpeed => KageAirDashSpeed * SpeedMul;
+        // Kage's horizontal speeds. Every character moves at these × its speed multiplier (character data, SAN-66).
+        // SpeedMul is applied last in each expression, so the constant part still folds at compile time and
+        // a speed multiplier of 1 gives exactly Kage's old numbers.
+        const float WalkFwd = 1.65f, WalkBack = 1.3f, RunSpeed = 4.6f;
+        const float JumpX = 2.6f, AirMaxX = 2.8f;
+        const float DashSpeed = 9.5f, BackDashSpeed = 7.5f, AirDashSpeed = 8.2f;
         const float GroundAccel = 16f, GroundDecel = 22f, RunAccel = 11f, SkidDecel = 15f;
         const float RunAfter = 0.42f;                    // seconds of forward walking before breaking into a run
         const float JumpV = 8.4f, AirJumpV = 7.2f, JumpCut = 0.55f;
@@ -53,7 +47,7 @@ namespace Kage
         {
             float dt = Time.fixedDeltaTime;
             float vl = rb.linearVelocity.x * facing;
-            float runT = state == FState.Run ? KMath.Smooth01(Mathf.InverseLerp(WalkFwd, RunSpeed * 0.9f, vl)) : 0f;
+            float runT = state == FState.Run ? KMath.Smooth01(Mathf.InverseLerp(WalkFwd * SpeedMul, RunSpeed * 0.9f * SpeedMul, vl)) : 0f;
             _runBlend = Mathf.MoveTowards(_runBlend, runT, 5f * dt);
             if (Mathf.Abs(vl) > 0.05f) _gaitDir = Mathf.Sign(vl);
             _gaitRate = PoseLib.GaitRate(Mathf.Abs(vl), _runBlend);
@@ -113,23 +107,25 @@ namespace Kage
                 if (run)
                 {
                     if (state != FState.Run) SetState(FState.Run);
-                    vl = Mathf.MoveTowards(vl, RunSpeed, (vl > RunSpeed ? GroundDecel : RunAccel) * dt);
+                    float runV = RunSpeed * SpeedMul;
+                    vl = Mathf.MoveTowards(vl, runV, (vl > runV ? GroundDecel : RunAccel) * dt);
                 }
                 else
                 {
                     if (state != FState.Walk) SetState(FState.Walk);
-                    vl = Mathf.MoveTowards(vl, WalkFwd, (vl > WalkFwd ? GroundDecel : GroundAccel) * dt);
+                    float walkV = WalkFwd * SpeedMul;
+                    vl = Mathf.MoveTowards(vl, walkV, (vl > walkV ? GroundDecel : GroundAccel) * dt);
                 }
             }
             else
             {
                 _walkHeld = 0f;
                 // letting go of (or reversing out of) a full run plants the feet in a skid
-                if (state == FState.Run && vl > RunSpeed * 0.55f) { StartSkid(); return; }
+                if (state == FState.Run && vl > RunSpeed * 0.55f * SpeedMul) { StartSkid(); return; }
                 if (fwd < 0)
                 {
                     if (state != FState.Walk) SetState(FState.Walk);
-                    vl = Mathf.MoveTowards(vl, -WalkBack, (vl > 0f ? GroundDecel * 1.3f : GroundAccel) * dt);
+                    vl = Mathf.MoveTowards(vl, -WalkBack * SpeedMul, (vl > 0f ? GroundDecel * 1.3f : GroundAccel) * dt);
                 }
                 else
                 {
@@ -163,7 +159,7 @@ namespace Kage
             SetState(FState.Dash);
             rig.SnapFacing();
             rig.Squash(-0.08f);
-            float sp = air ? AirDashSpeed : (dir > 0 ? DashSpeed : BackDashSpeed);
+            float sp = (air ? AirDashSpeed : (dir > 0 ? DashSpeed : BackDashSpeed)) * SpeedMul;
             rb.linearVelocity = new Vector2(dir * sp * facing, air ? 0f : Mathf.Min(0f, rb.linearVelocity.y));
             Vfx.I?.Dust(Pos + (air ? Vector2.up * 0.6f : Vector2.zero), air ? 0.5f : 0.9f, -dir * facing);
             Vfx.I?.Ghost(rig, fxMain, 0.3f);
@@ -175,8 +171,8 @@ namespace Kage
             _dashFrame++;
             int f = _dashFrame;
             float u = f / (float)_dashTotal;
-            float sp0 = _dashAir ? AirDashSpeed : (_dashDir > 0 ? DashSpeed : BackDashSpeed);
-            float spEnd = _dashAir ? 2.6f : (_dashDir > 0 ? (fwd > 0 ? RunSpeed : 1.2f) : 0.5f);
+            float sp0 = (_dashAir ? AirDashSpeed : (_dashDir > 0 ? DashSpeed : BackDashSpeed)) * SpeedMul;
+            float spEnd = _dashAir ? 2.6f : (_dashDir > 0 ? (fwd > 0 ? RunSpeed * SpeedMul : 1.2f) : 0.5f);
             // burst, hold, then bleed off (InQuad keeps the speed up early)
             float sp = Mathf.Lerp(sp0, spEnd, KMath.Apply(Ease.InQuad, u));
             Vector2 v = rb.linearVelocity;
@@ -234,7 +230,7 @@ namespace Kage
             _jumpBuf = 99;
             // a running (or dashing) take-off keeps its momentum for a long jump
             float carry = rb.linearVelocity.x * facing;
-            float vx = carry > WalkFwd + 0.3f && fwd >= 0 ? Mathf.Clamp(carry, JumpX, RunSpeed * 0.85f) : fwd * JumpX;
+            float vx = carry > (WalkFwd + 0.3f) * SpeedMul && fwd >= 0 ? Mathf.Clamp(carry, JumpX * SpeedMul, RunSpeed * 0.85f * SpeedMul) : fwd * JumpX * SpeedMul;
             rb.linearVelocity = new Vector2(vx * facing, JumpV);
             _airFrame = 0;
             _airJumpFrame = 99;
@@ -254,7 +250,7 @@ namespace Kage
             _airJumpFrame = 0;
             if (dirIn != 0) _jumpDir = dirIn;
             float vxl = rb.linearVelocity.x * facing;
-            if (dirIn != 0) vxl = dirIn * Mathf.Max(JumpX * 0.9f, dirIn * vxl);   // redirect, never slower than a jump
+            if (dirIn != 0) vxl = dirIn * Mathf.Max(JumpX * 0.9f * SpeedMul, dirIn * vxl);   // redirect, never slower than a jump
             else vxl *= 0.6f;
             rb.linearVelocity = new Vector2(vxl * facing, AirJumpV);
             rig.Squash(-0.09f);
@@ -292,7 +288,7 @@ namespace Kage
             float vxl = v.x * facing;
             if (dirIn != 0)
             {
-                float cap = Mathf.Max(AirMaxX, dirIn * vxl > 0f ? Mathf.Abs(vxl) : 0f);
+                float cap = Mathf.Max(AirMaxX * SpeedMul, dirIn * vxl > 0f ? Mathf.Abs(vxl) : 0f);
                 vxl = Mathf.MoveTowards(vxl, dirIn * cap, AirAccel * dt);
             }
             else vxl = Mathf.MoveTowards(vxl, 0f, AirDrag * dt);
@@ -308,7 +304,7 @@ namespace Kage
             _landHard = Mathf.InverseLerp(5f, 13f, impact);
             _landFrames = Mathf.RoundToInt(Mathf.Lerp(4f, 9f, _landHard));
             float vl = rb.linearVelocity.x * facing;
-            _landRun = vl > WalkFwd + 0.4f;
+            _landRun = vl > (WalkFwd + 0.4f) * SpeedMul;
             SetState(FState.Land);
             // keep some momentum: a running landing rolls on, a standing one sticks
             rb.linearVelocity = new Vector2(rb.linearVelocity.x * (_landRun ? 0.75f : 0.4f), 0f);
