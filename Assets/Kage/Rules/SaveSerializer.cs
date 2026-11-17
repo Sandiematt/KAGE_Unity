@@ -46,6 +46,7 @@ namespace Kage.Rules
                 error = "save text is not an object";
                 return false;
             }
+            GameRules.NormalizeSave(save);
             return true;
         }
     }
