@@ -104,3 +104,12 @@ public delegate void CuePlayer(Vector2 pos, in CueArgs args);
 - Projectiles and hazards are deterministic in the harness because they run on the fight loop.
 - The layer matrix becomes project settings that the owner can see. SAN-65 (Hurtbox), SAN-68 (Push layers and the whole matrix) and SAN-75 (Projectile, Hazard) edit `TagManager.asset` and `Physics2DSettings.asset`, each in a different wave. Until SAN-68 lands, SAN-65 keeps setting its layer's collisions in code, as `KageGame` does today.
 - Garan's Storm Fist and Shiden's Vanguard Break use hazards, so those sub-bosses depend on SAN-75.
+
+## As built (SAN-75)
+
+- `ProjectileDef` also has `samples` (hit-circle centres relative to the projectile, x ahead, each cast like a melee sample point; the Crescent uses three at 0.3 m ahead and 0.32 m apart, as its old leading-arc test did) and `endCue` (played where the projectile ends: the Crescent's fade ring). `ProjectileDef.hit.radius` is not used, `ProjectileDef.radius` is.
+- `Projectile` has a kinematic body and a trigger on layer 15, moved by `FightLoop` (phase 6, in play and on a manual clock alike). It is spent by its last hit, a parried (`Countered`) hit, its life, the arena edge (|x| > 9.5) or, with gravity, the ground. A perfect-dodged hit (pre-hit check) does not spend it. No crit roll, as before.
+- `Hazard` has a trigger box on layer 16 and `Phase` (Telegraph, Strike, Done). Knockback x points away from the box centre. Default cues are `VFX_Kage_HazardTelegraph` (a pulsing floor strip) and `VFX_Kage_HazardStrike` (shockwave and dust).
+- `CueArgs` also has `follow` (a persistent cue rides this transform), `seconds` and `size`. `EffectCues.Played` is an event raised on every `Play`, with or without a `Vfx`, for tests. `Unregister` and `IsRegistered` exist for tests.
+- The Crescent's look is `CrescentCues.cs` (`VFX_Kage_Crescent`, `VFX_Kage_CrescentHit`, `VFX_Kage_CrescentFade`); its data is `Fighter.CrescentProjectile`. `ctx.Crescents` is gone: `ctx.Projectiles` and `ctx.Hazards`.
+- Not built yet: the world time scale (SAN-92) is not applied to projectiles and hazards; the one place is the `dt` line in `Projectile.Tick` and `Hazard.Tick`. A Mirror Guard counter on a projectile still teleports the defender behind the projectile's owner and staggers him, as before (SAN-91's parry replaces it).

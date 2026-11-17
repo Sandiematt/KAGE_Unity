@@ -25,7 +25,7 @@ namespace Kage
     {
         /// <summary>False when this window can't touch it now (invulnerable, thrown, KO, ...): the contact doesn't count.</summary>
         bool HittableBy(HitWindow w);
-        /// <summary>The legacy point test (legacy switch, and the Crescent until SAN-75).</summary>
+        /// <summary>The legacy point test (the legacy switch only).</summary>
         bool Overlap(Vector2 p, float r, HitWindow w, out HitZone zone, out Vector2 contact);
         HitResult ReceiveHit(HitInfo info);
     }

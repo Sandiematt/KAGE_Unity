@@ -17,7 +17,8 @@ namespace Kage
     /// <item>Hits: every sweep, in fighter order, is cast against the Hurtbox layer (SAN-65). A sweep
     /// whose owner was interrupted earlier in this phase is dropped, so the first fighter to hit wins a trade.
     /// With the legacy switch on, hits resolve inside the attacker's tick instead, as before SAN-65.</item>
-    /// <item>Projectiles: on a manual clock, live Crescents move here (in play they still move in Update; SAN-75).</item>
+    /// <item>Projectiles and hazards: each live <see cref="Projectile"/> moves and casts, each <see cref="Hazard"/>
+    /// counts its telegraph or strikes (SAN-75). Both run in play and on a manual clock alike.</item>
     /// <item>Push: each fighter puts its push collider on the Push or PushPassThrough layer for this frame
     /// (SAN-68); the physics step that follows keeps fighters apart. Off under the legacy switch.</item>
     /// <item>End the frame: <c>Clock.Frame++</c>.</item>
@@ -31,7 +32,8 @@ namespace Kage
     {
         public FightContext Context { get; private set; }
         internal SimulationMode2D? restoreSimulationMode;
-        readonly List<Crescent> _crescentTmp = new();
+        readonly List<Projectile> _projectileTmp = new();
+        readonly List<Hazard> _hazardTmp = new();
 
         public void Bind(FightContext ctx)
         {
@@ -69,11 +71,17 @@ namespace Kage
                     ResolveClashes(ctx.Sweeps);
                     ResolveHits(ctx.Sweeps);
                 }
-                if (ctx.Clock.Manual && ctx.Crescents.Count > 0)
+                if (ctx.Projectiles.Count > 0)
                 {
-                    _crescentTmp.Clear();
-                    _crescentTmp.AddRange(ctx.Crescents);
-                    foreach (var c in _crescentTmp) if (c != null) c.Advance(Time.fixedDeltaTime);
+                    _projectileTmp.Clear();
+                    _projectileTmp.AddRange(ctx.Projectiles);
+                    foreach (var p in _projectileTmp) if (p != null) p.Tick();
+                }
+                if (ctx.Hazards.Count > 0)
+                {
+                    _hazardTmp.Clear();
+                    _hazardTmp.AddRange(ctx.Hazards);
+                    foreach (var h in _hazardTmp) if (h != null) h.Tick();
                 }
                 foreach (var f in fs) if (Live(f)) f.SyncPush();
             }
