@@ -7,7 +7,7 @@ namespace Kage
     public partial class Fighter
     {
         // ---- IHittable ----
-        bool HittableBy(HitWindow w)
+        public bool HittableBy(HitWindow w)
         {
             if (_hidden) return false;
             switch (state)
@@ -19,6 +19,19 @@ namespace Kage
             }
             return true;
         }
+
+        /// <summary>
+        /// Defence step 2 (ADR-0004): runs <see cref="PreHitCheck"/> on a contact, before the hittable
+        /// check. True when a check took the hit; <paramref name="c"/> then holds the result.
+        /// </summary>
+        public bool PreHit(ref DefenceCheck c)
+        {
+            PreHitCheck(ref c);
+            return c.resolved;
+        }
+
+        /// <summary>Declared by SAN-65; implemented by SAN-92 (Fighter.PerfectDodge.cs).</summary>
+        partial void PreHitCheck(ref DefenceCheck c);
 
         public bool Overlap(Vector2 p, float r, HitWindow w, out HitZone zone, out Vector2 contact)
         {
@@ -150,6 +163,7 @@ namespace Kage
             Vector2 impulse = new Vector2(info.kb.x * 1.2f + Mathf.Sign(info.kb.x) * 1.8f, Mathf.Clamp(info.kb.y, 3.0f, 6f));
             rb.linearVelocity = Vector2.zero;
             rb.simulated = false;
+            SetHurtboxesActive(false);      // the ragdoll bodies take the bones; the hurt circles stay out of them
             _ragdoll = Ragdoll2D.Activate(rig, impulse, info.contact);
             Vfx.I?.KoBurst(info.contact, fxMain, info.attacker != null ? info.attacker.fxMain : fxMain);
             GameFeel.SlowMo(0.25f, 0.9f);

@@ -5,15 +5,15 @@
 1 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 10 MoveStarted kage>- airSlash#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 18 Hit kage>ronin airSlash#0 dmg=5 pos=0 crit=0 lvl=Overhead zone=Head i=0 n=-
-39 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-45 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Head i=0 n=-
-52 MoveStarted ronin>- kick1#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-61 Hit ronin>kage kick1#0 dmg=6 pos=0 crit=0 lvl=High zone=Body i=0 n=-
-71 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-79 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-89 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-94 Hit ronin>kage risingMoon#0 dmg=12 pos=0 crit=1 lvl=Mid zone=Legs i=0 n=-
-111 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+40 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+46 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Head i=0 n=-
+53 MoveStarted ronin>- kick1#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+62 Hit ronin>kage kick1#0 dmg=6 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+72 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+80 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+90 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+95 Hit ronin>kage risingMoon#0 dmg=12 pos=0 crit=1 lvl=Mid zone=Legs i=0 n=-
+112 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]
 0 kage -0.32667 0.15210 Air - hp=100 ronin 0.37000 0.02000 Idle - hp=100
 1 kage -0.29222 0.27629 Air - hp=100 ronin 0.38167 0.02000 Attack sweep:0 hp=100
@@ -33,105 +33,105 @@
 15 kage 0.10472 1.18771 Attack airSlash:5 hp=100 ronin 0.63806 0.02000 Attack sweep:14 hp=100
 16 kage 0.15139 1.19827 Attack airSlash:6 hp=100 ronin 0.63806 0.02000 Attack sweep:15 hp=100
 17 kage 0.19806 1.20339 Attack airSlash:7 hp=100 ronin 0.63806 0.02000 Attack sweep:16 hp=100
-18 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65500 0.02000 Hitstun - hp=95
-19 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65500 0.02000 Hitstun - hp=95
-20 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65500 0.02000 Hitstun - hp=95
-21 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65500 0.02000 Hitstun - hp=95
-22 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65500 0.02000 Hitstun - hp=95
-23 kage 0.29139 1.19726 Attack airSlash:9 hp=100 ronin 0.66889 0.02000 Hitstun - hp=95
-24 kage 0.33806 1.18602 Attack airSlash:10 hp=100 ronin 0.67972 0.02000 Hitstun - hp=95
-25 kage 0.38472 1.16934 Attack airSlash:11 hp=100 ronin 0.68750 0.02000 Hitstun - hp=95
-26 kage 0.43139 1.14720 Attack airSlash:12 hp=100 ronin 0.69222 0.02000 Hitstun - hp=95
-27 kage 0.47806 1.11389 Attack airSlash:13 hp=100 ronin 0.69389 0.02000 Hitstun - hp=95
-28 kage 0.27264 1.06941 Attack airSlash:14 hp=100 ronin 0.94597 0.02000 Hitstun - hp=95
-29 kage 0.29597 1.01375 Attack airSlash:15 hp=100 ronin 0.96931 0.02000 Hitstun - hp=95
-30 kage 0.31931 0.94692 Attack airSlash:16 hp=100 ronin 0.99264 0.02000 Hitstun - hp=95
-31 kage 0.34264 0.86892 Attack airSlash:17 hp=100 ronin 1.01597 0.02000 Hitstun - hp=95
-32 kage 0.36597 0.77975 Attack airSlash:18 hp=100 ronin 1.03931 0.02000 Hitstun - hp=95
-33 kage 0.38931 0.67941 Attack airSlash:19 hp=100 ronin 1.06264 0.02000 Hitstun - hp=95
-34 kage 0.41264 0.56789 Attack airSlash:20 hp=100 ronin 1.08597 0.02000 Hitstun - hp=95
-35 kage 0.43597 0.44520 Attack airSlash:21 hp=100 ronin 1.10931 0.02000 Hitstun - hp=95
-36 kage 0.45931 0.31134 Attack airSlash:22 hp=100 ronin 1.13264 0.02000 Hitstun - hp=95
-37 kage 0.48264 0.16630 Attack airSlash:23 hp=100 ronin 1.15597 0.02000 Idle - hp=95
-38 kage 0.50597 0.01009 Attack airSlash:24 hp=100 ronin 1.17931 0.02000 Idle - hp=95
-39 kage 0.51764 0.01186 Land - hp=100 ronin 1.20264 0.02000 Attack jab:0 hp=95
-40 kage 0.52903 0.01299 Land - hp=100 ronin 1.22014 0.02000 Attack jab:1 hp=95
-41 kage 0.53736 0.01371 Land - hp=100 ronin 1.23458 0.02000 Attack jab:2 hp=95
-42 kage 0.54264 0.01418 Land - hp=100 ronin 1.24597 0.02000 Attack jab:3 hp=95
-43 kage 0.54486 0.01447 Land - hp=100 ronin 1.25431 0.02000 Attack jab:4 hp=95
-44 kage 0.54403 0.01466 Land - hp=100 ronin 1.25958 0.02000 Attack jab:5 hp=95
-45 kage 0.52514 0.01478 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:6 hp=95
-46 kage 0.52514 0.01478 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:6 hp=95
-47 kage 0.52514 0.01478 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:6 hp=95
-48 kage 0.52514 0.01478 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:6 hp=95
-49 kage 0.52514 0.01478 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:6 hp=95
-50 kage 0.51153 0.01486 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:7 hp=95
-51 kage 0.50097 0.01491 Hitstun - hp=96 ronin 1.26181 0.02000 Attack jab:8 hp=95
-52 kage 0.49347 0.01494 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:0 hp=95
-53 kage 0.48903 0.01496 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:1 hp=95
-54 kage 0.48764 0.01498 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:2 hp=95
-55 kage 0.48764 0.01499 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:3 hp=95
-56 kage 0.48764 0.01499 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:4 hp=95
-57 kage 0.48764 0.01499 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:5 hp=95
-58 kage 0.48764 0.01500 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:6 hp=95
-59 kage 0.48764 0.01500 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:7 hp=95
-60 kage 0.48764 0.01500 Hitstun - hp=96 ronin 1.26181 0.02000 Attack kick1:8 hp=95
-61 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-62 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-63 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-64 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-65 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-66 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-67 kage 0.46097 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:9 hp=95
-68 kage 0.43736 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:10 hp=95
-69 kage 0.41681 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:11 hp=95
-70 kage 0.39931 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack kick1:12 hp=95
-71 kage 0.38486 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:0 hp=95
-72 kage 0.37347 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:1 hp=95
-73 kage 0.36514 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:2 hp=95
-74 kage 0.35986 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:3 hp=95
-75 kage 0.35764 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:4 hp=95
-76 kage 0.35764 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:5 hp=95
-77 kage 0.35764 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:6 hp=95
-78 kage 0.35764 0.01500 Hitstun - hp=90 ronin 1.26181 0.02000 Attack iai:7 hp=95
-79 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-80 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-81 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-82 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-83 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-84 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-85 kage 0.32764 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:8 hp=95
-86 kage 0.30069 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:9 hp=95
-87 kage 0.27681 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:10 hp=95
-88 kage 0.25597 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack iai:11 hp=95
-89 kage 0.23819 0.01500 Hitstun - hp=81 ronin 1.26181 0.02000 Attack risingMoon:0 hp=95
-90 kage 0.22347 0.01500 Hitstun - hp=81 ronin 1.22181 0.02000 Attack risingMoon:1 hp=95
-91 kage 0.21181 0.01500 Hitstun - hp=81 ronin 1.18181 0.02000 Attack risingMoon:2 hp=95
-92 kage 0.20319 0.01500 Hitstun - hp=81 ronin 1.14181 0.02000 Attack risingMoon:3 hp=95
-93 kage 0.19764 0.01500 Hitstun - hp=81 ronin 1.10181 0.02000 Attack risingMoon:4 hp=95
-94 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-95 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-96 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-97 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-98 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-99 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-100 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-101 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-102 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-103 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-104 kage 0.19097 0.12628 Launched - hp=69 ronin 1.06181 0.02000 Attack risingMoon:5 hp=95
-105 kage 0.18431 0.22884 Launched - hp=69 ronin 1.02181 0.02000 Attack risingMoon:6 hp=95
-106 kage 0.17764 0.32268 Launched - hp=69 ronin 0.98181 0.02000 Attack risingMoon:7 hp=95
-107 kage 0.17097 0.40780 Launched - hp=69 ronin 0.94625 0.02000 Attack risingMoon:8 hp=95
-108 kage 0.16431 0.48420 Launched - hp=69 ronin 0.91514 0.02000 Attack risingMoon:9 hp=95
-109 kage 0.15764 0.55188 Launched - hp=69 ronin 0.88847 0.02000 Attack risingMoon:10 hp=95
-110 kage 0.15097 0.61084 Launched - hp=69 ronin 0.86625 0.02000 Attack risingMoon:11 hp=95
-111 kage 0.14194 0.66108 Launched - hp=69 ronin 0.86194 0.02000 Attack cleave:0 hp=95
-112 kage 0.13528 0.70260 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:1 hp=95
-113 kage 0.12861 0.73540 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:2 hp=95
-114 kage 0.12194 0.75948 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:3 hp=95
-115 kage 0.11528 0.77484 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:4 hp=95
-116 kage 0.10861 0.78148 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:5 hp=95
-117 kage 0.10194 0.77940 Launched - hp=69 ronin 0.85972 0.02000 Attack cleave:6 hp=95
-118 kage 0.09528 0.76860 Launched - hp=69 ronin 0.81639 0.09461 Attack cleave:7 hp=95
-119 kage 0.08861 0.74908 Launched - hp=69 ronin 0.77306 0.16051 Attack cleave:8 hp=95
+18 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65806 0.02000 Hitstun - hp=95
+19 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65806 0.02000 Hitstun - hp=95
+20 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65806 0.02000 Hitstun - hp=95
+21 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65806 0.02000 Hitstun - hp=95
+22 kage 0.24472 1.20305 Attack airSlash:8 hp=100 ronin 0.65806 0.02000 Hitstun - hp=95
+23 kage 0.29139 1.19726 Attack airSlash:9 hp=100 ronin 0.67500 0.02000 Hitstun - hp=95
+24 kage 0.33806 1.18602 Attack airSlash:10 hp=100 ronin 0.68889 0.02000 Hitstun - hp=95
+25 kage 0.38472 1.16934 Attack airSlash:11 hp=100 ronin 0.69972 0.02000 Hitstun - hp=95
+26 kage 0.43139 1.14720 Attack airSlash:12 hp=100 ronin 0.70750 0.02000 Hitstun - hp=95
+27 kage 0.47806 1.11389 Attack airSlash:13 hp=100 ronin 0.71222 0.02000 Hitstun - hp=95
+28 kage 0.28181 1.06941 Attack airSlash:14 hp=100 ronin 0.95681 0.02000 Hitstun - hp=95
+29 kage 0.30597 1.01375 Attack airSlash:15 hp=100 ronin 0.97931 0.02000 Hitstun - hp=95
+30 kage 0.32931 0.94692 Attack airSlash:16 hp=100 ronin 1.00264 0.02000 Hitstun - hp=95
+31 kage 0.35264 0.86892 Attack airSlash:17 hp=100 ronin 1.02597 0.02000 Hitstun - hp=95
+32 kage 0.37597 0.77975 Attack airSlash:18 hp=100 ronin 1.04931 0.02000 Hitstun - hp=95
+33 kage 0.39931 0.67941 Attack airSlash:19 hp=100 ronin 1.07264 0.02000 Hitstun - hp=95
+34 kage 0.42264 0.56789 Attack airSlash:20 hp=100 ronin 1.09597 0.02000 Hitstun - hp=95
+35 kage 0.44597 0.44520 Attack airSlash:21 hp=100 ronin 1.11931 0.02000 Hitstun - hp=95
+36 kage 0.46931 0.31134 Attack airSlash:22 hp=100 ronin 1.14264 0.02000 Hitstun - hp=95
+37 kage 0.49264 0.16630 Attack airSlash:23 hp=100 ronin 1.16597 0.02000 Hitstun - hp=95
+38 kage 0.51597 0.01009 Attack airSlash:24 hp=100 ronin 1.18931 0.02000 Idle - hp=95
+39 kage 0.52764 0.01186 Land - hp=100 ronin 1.21264 0.02000 Idle - hp=95
+40 kage 0.53903 0.01299 Land - hp=100 ronin 1.23014 0.02000 Attack jab:0 hp=95
+41 kage 0.54736 0.01371 Land - hp=100 ronin 1.24458 0.02000 Attack jab:1 hp=95
+42 kage 0.55264 0.01418 Land - hp=100 ronin 1.25597 0.02000 Attack jab:2 hp=95
+43 kage 0.55486 0.01447 Land - hp=100 ronin 1.26431 0.02000 Attack jab:3 hp=95
+44 kage 0.55403 0.01466 Land - hp=100 ronin 1.26958 0.02000 Attack jab:4 hp=95
+45 kage 0.55181 0.01478 Idle - hp=100 ronin 1.27181 0.02000 Attack jab:5 hp=95
+46 kage 0.53514 0.01486 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:6 hp=95
+47 kage 0.53514 0.01486 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:6 hp=95
+48 kage 0.53514 0.01486 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:6 hp=95
+49 kage 0.53514 0.01486 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:6 hp=95
+50 kage 0.53514 0.01486 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:6 hp=95
+51 kage 0.52153 0.01491 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:7 hp=95
+52 kage 0.51097 0.01494 Hitstun - hp=96 ronin 1.27181 0.02000 Attack jab:8 hp=95
+53 kage 0.50347 0.01496 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:0 hp=95
+54 kage 0.49903 0.01498 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:1 hp=95
+55 kage 0.49764 0.01499 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:2 hp=95
+56 kage 0.49764 0.01499 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:3 hp=95
+57 kage 0.49764 0.01499 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:4 hp=95
+58 kage 0.49764 0.01500 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:5 hp=95
+59 kage 0.49764 0.01500 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:6 hp=95
+60 kage 0.49764 0.01500 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:7 hp=95
+61 kage 0.49764 0.01500 Hitstun - hp=96 ronin 1.27181 0.02000 Attack kick1:8 hp=95
+62 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+63 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+64 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+65 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+66 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+67 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+68 kage 0.47097 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:9 hp=95
+69 kage 0.44736 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:10 hp=95
+70 kage 0.42681 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:11 hp=95
+71 kage 0.40931 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack kick1:12 hp=95
+72 kage 0.39486 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:0 hp=95
+73 kage 0.38347 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:1 hp=95
+74 kage 0.37514 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:2 hp=95
+75 kage 0.36986 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:3 hp=95
+76 kage 0.36764 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:4 hp=95
+77 kage 0.36764 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:5 hp=95
+78 kage 0.36764 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:6 hp=95
+79 kage 0.36764 0.01500 Hitstun - hp=90 ronin 1.27181 0.02000 Attack iai:7 hp=95
+80 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+81 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+82 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+83 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+84 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+85 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+86 kage 0.33764 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:8 hp=95
+87 kage 0.31069 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:9 hp=95
+88 kage 0.28681 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:10 hp=95
+89 kage 0.26597 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack iai:11 hp=95
+90 kage 0.24819 0.01500 Hitstun - hp=81 ronin 1.27181 0.02000 Attack risingMoon:0 hp=95
+91 kage 0.23347 0.01500 Hitstun - hp=81 ronin 1.23181 0.02000 Attack risingMoon:1 hp=95
+92 kage 0.22181 0.01500 Hitstun - hp=81 ronin 1.19181 0.02000 Attack risingMoon:2 hp=95
+93 kage 0.21319 0.01500 Hitstun - hp=81 ronin 1.15181 0.02000 Attack risingMoon:3 hp=95
+94 kage 0.20764 0.01500 Hitstun - hp=81 ronin 1.11181 0.02000 Attack risingMoon:4 hp=95
+95 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+96 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+97 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+98 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+99 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+100 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+101 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+102 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+103 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+104 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+105 kage 0.20097 0.12628 Launched - hp=69 ronin 1.07181 0.02000 Attack risingMoon:5 hp=95
+106 kage 0.19431 0.22884 Launched - hp=69 ronin 1.03181 0.02000 Attack risingMoon:6 hp=95
+107 kage 0.18764 0.32268 Launched - hp=69 ronin 0.99181 0.02000 Attack risingMoon:7 hp=95
+108 kage 0.18097 0.40780 Launched - hp=69 ronin 0.95625 0.02000 Attack risingMoon:8 hp=95
+109 kage 0.17431 0.48420 Launched - hp=69 ronin 0.92514 0.02000 Attack risingMoon:9 hp=95
+110 kage 0.16764 0.55188 Launched - hp=69 ronin 0.89847 0.02000 Attack risingMoon:10 hp=95
+111 kage 0.16097 0.61084 Launched - hp=69 ronin 0.87625 0.02000 Attack risingMoon:11 hp=95
+112 kage 0.15194 0.66108 Launched - hp=69 ronin 0.87194 0.02000 Attack cleave:0 hp=95
+113 kage 0.14528 0.70260 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:1 hp=95
+114 kage 0.13861 0.73540 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:2 hp=95
+115 kage 0.13194 0.75948 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:3 hp=95
+116 kage 0.12528 0.77484 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:4 hp=95
+117 kage 0.11861 0.78148 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:5 hp=95
+118 kage 0.11194 0.77940 Launched - hp=69 ronin 0.86972 0.02000 Attack cleave:6 hp=95
+119 kage 0.10528 0.76860 Launched - hp=69 ronin 0.82639 0.09461 Attack cleave:7 hp=95

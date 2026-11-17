@@ -76,6 +76,8 @@ namespace Kage
             Physics2D.IgnoreLayerCollision(KageGame.LayerProp, KageGame.LayerProp, true);
             Physics2D.IgnoreLayerCollision(0, KageGame.LayerRagdoll, true);
             Physics2D.IgnoreLayerCollision(0, KageGame.LayerFighter, true);
+            // hurtboxes touch nothing: only hit casts query them (ADR-0007)
+            for (int layer = 0; layer < 32; layer++) Physics2D.IgnoreLayerCollision(PhysicsLayers.Hurtbox, layer, true);
         }
 
         /// <summary>Ground and walls only, for a fight with no arena visuals.</summary>

@@ -10,8 +10,12 @@ namespace Kage
     /// <item>If the clock freezes this frame (hitstop, slow motion), only end the frame.</item>
     /// <item>Push: keep fighters apart (moved from KageGame; SAN-68 replaces it with push colliders).</item>
     /// <item>Input: poll every fighter's input source, in fighter order.</item>
-    /// <item>Fighter tick: state machine, root motion, move playback. Hits still resolve inside the
-    /// attacker's tick, as before; SAN-65 moves them to their own phase after all ticks.</item>
+    /// <item>Fighter tick: state machine, root motion, move playback; each active hit point records a
+    /// <see cref="HitSweep"/> in <c>ctx.Sweeps</c>.</item>
+    /// <item>Clashes: <see cref="ResolveClashes"/> (SAN-93, FightLoop.Clash.cs).</item>
+    /// <item>Hits: every sweep, in fighter order, is cast against the Hurtbox layer (SAN-65). A sweep
+    /// whose owner was interrupted earlier in this phase is dropped, so the first fighter to hit wins a trade.
+    /// With the legacy switch on, hits resolve inside the attacker's tick instead, as before SAN-65.</item>
     /// <item>Projectiles: on a manual clock, live Crescents move here (in play they still move in Update; SAN-75).</item>
     /// <item>End the frame: <c>Clock.Frame++</c>.</item>
     /// </list>
@@ -20,7 +24,7 @@ namespace Kage
     /// poses the rigs, so a fight is exactly repeatable.
     /// </summary>
     [DefaultExecutionOrder(-40)]
-    public class FightLoop : MonoBehaviour
+    public partial class FightLoop : MonoBehaviour
     {
         public FightContext Context { get; private set; }
         internal SimulationMode2D? restoreSimulationMode;
@@ -51,7 +55,13 @@ namespace Kage
                     for (int j = i + 1; j < fs.Count; j++)
                         if (Live(fs[i]) && Live(fs[j])) Pushbox(fs[i], fs[j]);
                 foreach (var f in fs) if (Live(f)) f.PollInput();
+                ctx.Sweeps.Clear();
                 foreach (var f in fs) if (Live(f)) f.Tick();
+                if (!ctx.LegacyHits && ctx.Sweeps.Count > 0)
+                {
+                    ResolveClashes(ctx.Sweeps);
+                    ResolveHits(ctx.Sweeps);
+                }
                 if (ctx.Clock.Manual && ctx.Crescents.Count > 0)
                 {
                     _crescentTmp.Clear();
@@ -76,6 +86,24 @@ namespace Kage
             float t = Context.Clock.Frame * dt;
             foreach (var f in Context.Fighters) if (Live(f)) f.PoseOutput(0f, dt, t);
             return true;
+        }
+
+        /// <summary>Phase 4 (ADR-0004 step 1). Declared here, implemented by SAN-93 in FightLoop.Clash.cs.</summary>
+        partial void ResolveClashes(List<HitSweep> sweeps);
+
+        /// <summary>Phase 5: each owner's sweeps, in fighter order (they are recorded in tick order).</summary>
+        static void ResolveHits(List<HitSweep> sweeps)
+        {
+            int i = 0;
+            while (i < sweeps.Count)
+            {
+                var owner = sweeps[i].owner;
+                int j = i + 1;
+                while (j < sweeps.Count && sweeps[j].owner == owner) j++;
+                Hurtbox.SyncAll();      // again per owner: an earlier hit may have moved someone (Mirror Guard)
+                if (owner != null) owner.ResolveSweeps(sweeps, i, j);
+                i = j;
+            }
         }
 
         static bool Live(Fighter f) => f != null && f.isActiveAndEnabled && f.def != null && f.rb != null;

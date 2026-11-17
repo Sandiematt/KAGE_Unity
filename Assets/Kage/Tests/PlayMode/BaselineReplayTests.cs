@@ -39,6 +39,29 @@ namespace Kage.Tests
             }
         }
 
+        [Test, TestCaseSource(nameof(Scenarios))]
+        public void TheLegacySwitchReplaysTheOldBaseline(MoveScenario scenario)
+        {
+            string actual;
+            Tuning.Override(new CombatTuning { legacyHitResolution = true });
+            try
+            {
+                using var f = scenario.Play(KageMoveScenarios.Seed);
+                actual = BaselineReplay.Format(scenario.name, KageMoveScenarios.Seed, f.Log.Lines(), f.Frames);
+            }
+            finally { Tuning.ClearOverrides(); }
+
+            string path = BaselineReplay.LegacyPathOf(scenario.name);
+            Assert.IsTrue(File.Exists(path), $"No legacy baseline for {scenario.name}.");
+            string diff = BaselineReplay.Compare(File.ReadAllText(path), actual);
+            if (diff != null)
+            {
+                string dump = Path.Combine(Application.temporaryCachePath, scenario.name + ".legacy.actual.txt");
+                File.WriteAllText(dump, actual);
+                Assert.Fail($"{scenario.name} with the legacy switch differs from the old baseline at {diff}\n(full run written to {dump})");
+            }
+        }
+
         [Test]
         public void TheReplayStartsEveryKageMove()
         {
@@ -58,20 +81,23 @@ namespace Kage.Tests
         [Test]
         public void TheReplayLandsHitsOnTheBagAndTheAi()
         {
-            int bagHits = 0, aiHits = 0;
+            int bagHits = 0, aiHits = 0, aiConnects = 0;
             foreach (var s in KageMoveScenarios.All())
             {
                 using var f = s.Play(KageMoveScenarios.Seed);
-                foreach (var e in f.Events(CombatEventType.Hit))
+                foreach (var e in f.Log.All)
                 {
                     if (e.SourceId != "kage") continue;
-                    if (e.TargetId == "bag") bagHits++;
-                    if (e.TargetId == "ronin") aiHits++;
+                    if (e.Type == CombatEventType.Hit && e.TargetId == "bag") bagHits++;
+                    if (e.Type == CombatEventType.Hit && e.TargetId == "ronin") aiHits++;
+                    if (e.Type is CombatEventType.Hit or CombatEventType.Blocked && e.TargetId == "ronin") aiConnects++;
                 }
             }
-            // a sanity floor: the scripts are placed to connect, not to whiff
+            // a sanity floor: the scripts are placed to connect, not to whiff (a guarded hit connects too:
+            // since SAN-65 the AI's guard is judged on the frame it is hit, so it blocks one more of them)
             Assert.GreaterOrEqual(bagHits, 15);
-            Assert.GreaterOrEqual(aiHits, 15);
+            Assert.GreaterOrEqual(aiHits, 14);
+            Assert.GreaterOrEqual(aiConnects, 30);
         }
 
         [Test]
