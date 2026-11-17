@@ -129,7 +129,48 @@ namespace Kage.Tests
             yield return Shot("controls_guide");
         }
 
+        /// <summary>SAN-73: the results screen, a win with gear and a loss, to Screenshots/review/SAN-73/unity.</summary>
+        [UnityTest]
+        public IEnumerator Capture_results_screens()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            shotDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-73", "unity"));
+            Directory.CreateDirectory(shotDir);
+
+            // a win on the first sub-boss: S rating, flawless, a trophy
+            Start(false, s => { GameRules.MarkStageCleared(s, "prologue.1"); GameRules.MarkStageCleared(s, "act1.stretch1"); GameRules.MarkStageCleared(s, "act1.stretch2"); s.xp = 150; });
+            yield return Settle();
+            yield return ToResults("act1.sub1", win: true);
+            yield return new WaitForSecondsRealtime(2.4f);
+            yield return Shot("results_win");
+
+            // a loss on Raikon's stage
+            Start(true);
+            yield return Settle();
+            yield return ToResults("act1.boss", win: false);
+            yield return new WaitForSecondsRealtime(2.4f);
+            yield return Shot("results_loss");
+            shotDir = null;
+        }
+
+        IEnumerator ToResults(string stage, bool win)
+        {
+            flow.Controller.OpenCampaign();
+            flow.Controller.SelectStage(stage);
+            flow.Controller.BeginLoadout();
+            yield return Settle(10);
+            flow.Controller.StartStage();
+            float end = Time.realtimeSinceStartup + 8f;
+            while (flow.World.phase != StageWorld.Phase.Fight && Time.realtimeSinceStartup < end) yield return null;
+            if (win) flow.World.ForceKnockOut(true); else flow.World.ForceKnockOut(false);
+            end = Time.realtimeSinceStartup + 10f;
+            while (flow.Controller.Screen != FlowScreen.Results && Time.realtimeSinceStartup < end) yield return null;
+            Assert.AreEqual(FlowScreen.Results, flow.Controller.Screen);
+        }
+
         // ---------------- capture ----------------
+
+        string shotDir;
 
         IEnumerator Shot(string name)
         {
@@ -182,7 +223,7 @@ namespace Kage.Tests
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
             tex.SetPixels32(outPx);
             tex.Apply();
-            File.WriteAllBytes(Path.Combine(outDir, name + ".png"), tex.EncodeToPNG());
+            File.WriteAllBytes(Path.Combine(shotDir ?? outDir, name + ".png"), tex.EncodeToPNG());
 
             foreach (var e in canvases) { e.c.renderMode = e.mode; e.c.worldCamera = e.cam; }
             foreach (var l in layers) if (l.t != null) l.t.gameObject.layer = l.layer;
