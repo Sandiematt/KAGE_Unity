@@ -50,6 +50,21 @@ namespace Kage
             KageGame.I?.Audio?.Play(SfxKind.Crescent, 0.9f);
         }
 
+        /// <summary>
+        /// Special + Down (ADR-0004): the rage art when Rage is full, else a kunai if any are left, else nothing.
+        /// Returns true when the press was used up (including the "nothing" case); false when it is not for this
+        /// method (in the air), so the caller falls through to the move table.
+        /// </summary>
+        bool TrySpecialDown()
+        {
+            if (!Grounded) return false;
+            ConsumeBuffer();
+            if (canUltimate && meter >= 100f) { StartUltimate(); return true; }
+            if (StartKunaiThrow()) return true;
+            if (canThrowKunai) KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO KUNAI", new Color(0.7f, 0.7f, 0.7f), 0.7f);
+            return true;
+        }
+
         public const string ThousandShadows = "thousandShadows";
         static readonly HitWindow UltCut = new() { dmg = 4, level = HitLevel.Unblockable, sword = true };
         int _ultFrame;

@@ -21,12 +21,7 @@ namespace Kage
             if (_bufferAge > 8 || _buffer == Btn.None) return false;
             int dy = inp.dy != 0 ? inp.dy : _bufferDy;
             int f = fwd != 0 ? fwd : _bufferFwd;
-            if (_buffer == Btn.X && dy < 0 && canUltimate && meter >= 100f && Grounded)
-            {
-                ConsumeBuffer();
-                StartUltimate();
-                return true;
-            }
+            if (_buffer == Btn.X && dy < 0 && TrySpecialDown()) return true;
             var m = moves.Select(_buffer, f, dy, !Grounded, this);
             if (m == null) return false;
             if (m.meterCost > 0 && meter < m.meterCost) { ConsumeBuffer(); KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO SHADOW", new Color(0.7f, 0.7f, 0.7f), 0.7f); return false; }
@@ -118,7 +113,7 @@ namespace Kage
                     if (f >= w.from && f <= w.to) WindowActive(w);
             }
 
-            if (f == m.projectileFrame) SpawnCrescent();
+            if (f == m.projectileFrame) { if (IsKunaiThrow(m)) ThrowKunai(); else SpawnCrescent(); }
             if (m.isThrow) ThrowUpdate(f);
 
             if (m.airborne && m.endsOnLanding && f > 4 && Grounded) { Landed(); return; }
