@@ -24,7 +24,7 @@ namespace Kage.Tests
             Tuning.ClearOverrides();
         }
 
-        /// <summary>Kage against a Ronin who stands still (scripted with no input) for the whole test.</summary>
+        /// <summary>Kage against a still Ronin. Only one fight is live at a time in these tests.</summary>
         HeadlessFight StillRonin(float kageX, float roninX, bool legacy = false)
         {
             Tuning.Override(new CombatTuning { legacyHitResolution = legacy });
@@ -53,14 +53,23 @@ namespace Kage.Tests
         [Test]
         public void PushingMovesBothFightersLikeTheOldPush()
         {
-            var phys = StillRonin(-0.4f, 0.6f);
-            var old = StillRonin(-0.4f, 0.6f, legacy: true);
-            foreach (var f in new[] { phys, old }) f.KageInput.Add(120, fwd: 1);
+            // one fight at a time: a live fight's push colliders would touch the next one's fighters
+            List<(float kage, float ronin)> Path(bool legacy)
+            {
+                var f = StillRonin(-0.4f, 0.6f, legacy);
+                f.KageInput.Add(120, fwd: 1);
+                var path = new List<(float, float)>();
+                for (int i = 0; i < 120; i++) { f.Run(1); path.Add((f.Kage.Pos.x, f.Ronin.Pos.x)); }
+                f.Dispose();
+                _fights.Remove(f);
+                return path;
+            }
+            var phys = Path(false);
+            var old = Path(true);
             for (int i = 0; i < 120; i++)
             {
-                phys.Run(1); old.Run(1);
-                Assert.AreEqual(old.Kage.Pos.x, phys.Kage.Pos.x, 0.06f, $"Kage x on frame {i}");
-                Assert.AreEqual(old.Ronin.Pos.x, phys.Ronin.Pos.x, 0.06f, $"Ronin x on frame {i}");
+                Assert.AreEqual(old[i].kage, phys[i].kage, 0.03f, $"Kage x on frame {i}");
+                Assert.AreEqual(old[i].ronin, phys[i].ronin, 0.03f, $"Ronin x on frame {i}");
             }
         }
 
