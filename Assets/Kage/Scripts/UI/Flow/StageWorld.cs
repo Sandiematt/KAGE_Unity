@@ -40,9 +40,7 @@ namespace Kage
         Vignette _vig;
         Transform _shadowP, _shadowE;
         bool _paused, _koHandled, _controlWas;
-        int _fightStartFrame;
-        int _maxCombo;
-        float _minHealthFrac = 1f;
+        FightStatsRecorder _stats;
         Fighter _winner;
 
         /// <summary>Builds the world of a stage, in the tableau phase: both fighters stand and wait.</summary>
@@ -100,6 +98,7 @@ namespace Kage
             _shadowE = MakeShadow(false);
 
             Fight = fight.Build();
+            _stats = new FightStatsRecorder(Fight.Events, Player);
             Fight.Begin();
             Player.ResetForRound(-1.25f, 1f);
             Foe.ResetForRound(1.25f, -1f);
@@ -133,7 +132,7 @@ namespace Kage
         {
             Player.BeginFight();
             Foe.BeginFight();
-            _fightStartFrame = Fight.Clock.Frame;
+            _stats.MarkFightStart(Fight.Clock.Frame);
             Hud.Announce("FIGHT!", Palette.TrimBright, 0.9f);
             SetPhase(Phase.Fight);
         }
@@ -183,8 +182,6 @@ namespace Kage
         // the combo counter ends when the victim has recovered (as in the dev arena)
         void TrackCombo()
         {
-            if (Player.comboCount > _maxCombo) _maxCombo = Player.comboCount;
-            _minHealthFrac = Mathf.Min(_minHealthFrac, Player.health / Mathf.Max(1f, Player.maxHealth));
             ResetComboIfRecovered(Player, Foe);
             ResetComboIfRecovered(Foe, Player);
         }
@@ -209,16 +206,8 @@ namespace Kage
             var handler = Finished;
             Finished = null;
             if (handler == null) return;
-            double frac = Mathf.Clamp01(Player.health / Mathf.Max(1f, Player.maxHealth));
-            var r = new FightResult
-            {
-                win = _winner == Player,
-                hpLeft = frac,
-                time = (Fight.Clock.Frame - _fightStartFrame) / 60.0,
-                maxCombo = _maxCombo,
-                parries = 0,
-                flawless = _winner == Player && _minHealthFrac >= 0.999f,
-            };
+            var r = _stats.Result();
+            r.enemyDamage = Mathf.Clamp01(1f - Foe.health / Mathf.Max(1f, Foe.maxHealth));
             handler(r);
         }
 
@@ -228,7 +217,18 @@ namespace Kage
             if (phase != Phase.Fight) return;
             var loser = foeLoses ? Foe : Player;
             loser.health = 0f;
+            Fight.Events.Publish(CombatEvent.KnockedOut(Fight.Clock.Frame, foeLoses ? Player : Foe, loser, "force", Vector2.zero, Vector2.zero));
             OnKO(loser);
+        }
+
+        /// <summary>The results screen's framing: the fighters stand in the left half, the results column has the right (JS tableau).</summary>
+        public void FrameResults()
+        {
+            if (Cam == null || Player == null || Foe == null) return;
+            float mid = (Player.rig.Bone(B.Hips).position.x + Foe.rig.Bone(B.Hips).position.x) * 0.5f;
+            Cam.useOverride = true;
+            Cam.overrideSize = 2.2f;
+            Cam.overrideCenter = new Vector2(mid + 2.1f, 1.45f);
         }
 
         // ---------------- camera, post, shadows (the dev arena's, without KageGame) ----------------
@@ -338,6 +338,7 @@ namespace Kage
 
         void OnDestroy()
         {
+            if (_stats != null) _stats.Dispose();
             GameFeel.paused = false;
             Time.timeScale = 1f;
             if (Cam != null) { Cam.targets.Clear(); Cam.useOverride = false; }
