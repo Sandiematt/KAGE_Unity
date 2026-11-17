@@ -80,10 +80,12 @@ does the pushing. The box is sized in world metres whatever the fighter's scale.
 
 ## Mass and knockback
 
-`Fighter.Mass` comes from `FighterSpec.mass` (Kage and the Ronin: 1). Authored knockback
+`Fighter.Mass` comes from the character data's `mass` (`CharacterDef`, ADR-0005; Kage and the Ronin: 1,
+`test_heavy`: 3). Authored knockback
 (`HitWindow.kb`) is the velocity a hit gives a fighter of `Fighter.ReferenceMass` (1, Kage), so its
 impulse is kb × 1. Hitstun knockback, launches, ground hits, blockstun pushback and the attacker's
-recoil off a cornered guard are applied as that impulse on a stopped body: velocity = kb / mass. Kage's
+recoil off a cornered guard are applied as that impulse on a stopped body: velocity = kb / mass ×
+the character's `knockbackTaken` (1 for everyone so far). Kage's
 numbers are unchanged. Launches keep their minimum pop (2.8 m/s off the ground), so every launch still
 leaves the ground.
 
