@@ -6,7 +6,7 @@ using UnityEngine.Rendering.Universal;
 namespace Kage
 {
     /// <summary>
-    /// Entry point. Builds everything at runtime from code — camera, post-processing, stage,
+    /// Dev arena entry point (ADR-0001). Builds everything at runtime from code — camera, post-processing, stage,
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
     /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · R restart · P pause.
@@ -34,7 +34,9 @@ namespace Kage
         ChromaticAberration _ca;
         Vignette _vig;
         AIInputSource _ai;
-        MoveSet _moves;
+        [Tooltip("Fight seed. 0 = a new seed every run (the seed is published in FightStarted).")]
+        public int fixedSeed;
+        public FightContext Fight { get; private set; }
 
         enum Phase { Intro, Fight, RoundOver, MatchOver }
         Phase _phase;
@@ -49,18 +51,10 @@ namespace Kage
         {
             I = this;
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = 1f / 60f;
             Application.targetFrameRate = 120;
             transform.position = Vector3.zero;
-            NoFriction = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
-            Physics2D.IgnoreLayerCollision(LayerFighter, LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(LayerRagdoll, LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(LayerRagdoll, LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(LayerProp, LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(LayerProp, LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(LayerProp, LayerProp, true);
-            Physics2D.IgnoreLayerCollision(0, LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(0, LayerFighter, true);
+            // the fight: context, loop (60 Hz step), physics rules; fighters are added below
+            var fight = new FightBuilder(transform, fixedSeed != 0 ? fixedSeed : System.Environment.TickCount, manualClock: false);
 
             BuildCamera();
             BuildVolume();
@@ -81,17 +75,9 @@ namespace Kage
             Hud = hudGo.AddComponent<Hud>();
             Hud.Build(_camera);
 
-            _moves = MoveSet.Build();
-            player = SpawnFighter("KAGE", KageModel.Look.Kage, 1500, Palette.Trim, Color.white, Palette.TrimDeep);
-            player.isPlayer = true;
-            player.canUltimate = true;
-            player.input = new PlayerInputSource();
-            enemy = SpawnFighter("RONIN", KageModel.Look.Ronin, 1000, Palette.Amber, KMath.Hex("#FFF2D6"), Palette.AmberDeep);
-            enemy.transform.localScale = new Vector3(1.04f, 1.04f, 1f);
+            player = fight.AddFighter(FighterSpec.Kage, 0, new PlayerInputSource());
             _ai = new AIInputSource();
-            enemy.input = _ai;
-            player.opponent = enemy;
-            enemy.opponent = player;
+            enemy = fight.AddFighter(FighterSpec.Ronin, 1, _ai);
             player.onHit += OnFighterHit;
             enemy.onHit += OnFighterHit;
             player.onKO += OnKO;
@@ -102,20 +88,14 @@ namespace Kage
             _shadowP = MakeShadow(true);
             _shadowE = MakeShadow(false);
 
-            bag = PunchingBag.Build(stage.transform, new Vector2(1.6f, 2.65f));
+            bag = fight.AddBag(stage.transform, new Vector2(1.6f, 2.65f));
+            Fight = fight.Build();
+            Fight.Events.Published += OnCombatEvent;
+            Fight.Begin();
             Cam.targets.Add(player.rig.Bone(B.Hips));
             Cam.targets.Add(enemy.rig.Bone(B.Hips));
 
             SetMode(startMode);
-        }
-
-        Fighter SpawnFighter(string name, KageModel.Look look, int order, Color main, Color core, Color dark)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(transform, false);
-            var f = go.AddComponent<Fighter>();
-            f.Setup(name, KageModel.Build(look), _moves, order, main, core, dark);
-            return f;
         }
 
         Transform MakeShadow(bool kage)
@@ -420,10 +400,18 @@ namespace Kage
             else if (res == HitResult.Blocked) Hud.Float(info.contact + Vector2.up * 0.3f, "GUARD", new Color(0.75f, 0.85f, 1f), 0.7f);
         }
 
-        public void OnPropHit(Fighter att, HitInfo info, HitResult res)
+        void OnCombatEvent(CombatEvent e)
+        {
+            // prop hits: the event names the prop, and there is no target fighter
+            if (e.Target == null && e.TargetId != null && e.Type is CombatEventType.Hit or CombatEventType.Blocked or CombatEventType.Countered)
+                OnPropHit(e);
+        }
+
+        void OnPropHit(CombatEvent e)
         {
             _lastBagHit = Time.time;
-            Hud.Float(info.contact + Vector2.up * 0.4f, info.crit ? "CRITICAL! " + info.dmg : info.dmg.ToString(), info.crit ? KMath.Hex("#FF4B4B") : Color.white, info.crit ? 1f : 0.7f);
+            int dmg = Mathf.RoundToInt(e.Damage);
+            Hud.Float(e.Contact + Vector2.up * 0.4f, e.Crit ? "CRITICAL! " + dmg : dmg.ToString(), e.Crit ? KMath.Hex("#FF4B4B") : Color.white, e.Crit ? 1f : 0.7f);
         }
 
         void OnKO(Fighter loser)
@@ -449,33 +437,6 @@ namespace Kage
             _roundWinner = player.health > enemy.health ? player : enemy;
             _roundWinner.roundsWon++;
             Hud.Announce("TIME", Color.white, 1.8f);
-        }
-
-        // =========================================================================================
-        void FixedUpdate()
-        {
-            if (player == null || player.def == null) return;
-            if (mode != Mode.Duel || player == null || enemy == null) return;
-            Pushbox(player, enemy);
-        }
-
-        static void Pushbox(Fighter a, Fighter b)
-        {
-            if (a.state is FState.KO or FState.Thrown or FState.Ultimate || b.state is FState.KO or FState.Thrown or FState.Ultimate) return;
-            if (a.IsDown || b.IsDown) return;
-            if ((a.IsAttacking && a.move.PassThrough(a.moveFrame)) || (b.IsAttacking && b.move.PassThrough(b.moveFrame))) return;
-            Vector2 pa = a.rb.position, pb = b.rb.position;
-            if (Mathf.Abs(pa.y - pb.y) > 1.1f) return;
-            float dx = pb.x - pa.x;
-            const float min = 0.72f;
-            if (Mathf.Abs(dx) >= min) return;
-            float dir = Mathf.Abs(dx) < 0.001f ? a.facing : Mathf.Sign(dx);
-            float overlap = min - Mathf.Abs(dx);
-            float sa = 0.5f, sb = 0.5f;
-            if (a.AtWall && Mathf.Sign(pa.x) == -dir) { sa = 0f; sb = 1f; }
-            if (b.AtWall && Mathf.Sign(pb.x) == dir) { sa = 1f; sb = 0f; }
-            a.rb.position = pa - new Vector2(dir * overlap * sa, 0f);
-            b.rb.position = pb + new Vector2(dir * overlap * sb, 0f);
         }
 
         void OnDestroy()

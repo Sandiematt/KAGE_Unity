@@ -15,6 +15,9 @@ namespace Kage
         public HitZone zone;
         public Vector2 contact;
         public bool crit;
+        /// <summary>Move, projectile or rage-art id for the event stream; window = index in the move's hits, -1 when not a window.</summary>
+        public string moveId;
+        public int window;
     }
 
     public interface IHittable
@@ -43,6 +46,15 @@ namespace Kage
         public bool isPlayer, canUltimate;
         public Color fxMain = Palette.Trim, fxCore = Color.white, fxDark = Palette.TrimDeep;
         public bool controlEnabled;
+
+        // ---- fight (ADR-0002) ----
+        [System.NonSerialized] public FightContext ctx;
+        /// <summary>0 = Kage's side, 1 = foes. Hits never land on a fighter of the same team.</summary>
+        public int team;
+        /// <summary>Character id, plus "#n" for the n-th copy ("kage", "ronin", "order_footman#2").</summary>
+        [System.NonSerialized] public string FighterId, CharacterId;
+        /// <summary>Health the last ReceiveHit removed (after crit and guard), for the event stream.</summary>
+        public float LastDamageTaken { get; private set; }
 
         // ---- stats ----
         public float maxHealth = 100f, health = 100f, meter;
@@ -204,16 +216,31 @@ namespace Kage
         }
 
         // =====================================================================================
+        bool Headless => ctx != null && ctx.Clock.Manual;
+        bool Ready => def != null && moves != null && rig != null && rig.def != null;   // false mid hot-reload: KageGame rebuilds the scene
+        FrameInput _inp;
+
         void Update()
         {
+            if (Headless) return;
             if (controlEnabled && input != null) input.Sample();
         }
 
-        void FixedUpdate()
+        /// <summary>Fight loop phase 2: reads this frame's input. Every fighter polls before any fighter ticks.</summary>
+        public void PollInput()
         {
-            if (def == null || moves == null || rig == null || rig.def == null) return;   // mid hot-reload: KageGame rebuilds the scene
+            _inp = default;
+            if (!Ready || state == FState.KO) return;
+            if (controlEnabled && input != null) _inp = input.Poll(this);
+        }
+
+        /// <summary>Fight loop phase 3: one frame of the state machine, root motion and move playback.</summary>
+        public void Tick()
+        {
+            if (!Ready) return;
             if (state == FState.KO) return;
-            var inp = (controlEnabled && input != null) ? input.Poll(this) : default;
+            var inp = _inp;
+            _inp = default;
             stateFrame++;
             _bufferAge++;
             if (inp.p) Buffer(Btn.P, inp);
@@ -629,6 +656,7 @@ namespace Kage
             moveFrame = 0;
             moveHit = false;
             _hitLog.Clear();
+            ctx?.Events.Publish(CombatEvent.MoveStarted(ctx.Clock.Frame, this, m.id));
             rig.SetSwordFront(m.swordFront);
             rig.SnapFacing();
             if (Grounded && !m.airborne) rb.linearVelocity = new Vector2(rb.linearVelocity.x * 0.3f, rb.linearVelocity.y);
@@ -742,17 +770,19 @@ namespace Kage
         void TryTarget(IHittable t, HitWindow w)
         {
             if (t == null || ReferenceEquals(t, this)) return;
+            if (t is Fighter tf && tf.team == team) return;
             foreach (var (hw, ht) in _hitLog) if (hw == w && ReferenceEquals(ht, t)) return;
             foreach (var p in _pts)
             {
                 if (!t.Overlap(p, w.radius, w, out var zone, out var contact)) continue;
                 _hitLog.Add((w, t));
                 int dmg = w.dmg;
-                bool crit = Random.value < 0.1f;
+                bool crit = RollCrit();
                 if (crit) dmg = Mathf.RoundToInt(dmg * 1.5f);
                 var info = new HitInfo
                 {
-                    attacker = this, w = w, dmg = dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact, crit = crit
+                    attacker = this, w = w, dmg = dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact, crit = crit,
+                    moveId = move != null ? move.id : null, window = move != null ? move.hits.IndexOf(w) : -1,
                 };
                 var res = t.ReceiveHit(info);
                 OnHitResolved(t, info, res);
@@ -760,7 +790,22 @@ namespace Kage
             }
         }
 
+        /// <summary>Crits come from the fight's "crit" stream (ADR-0002).</summary>
+        bool RollCrit() => ctx != null ? ctx.Random.Stream("crit").Chance(0.1f) : Random.value < 0.1f;
+
         public void ResolveExternal(IHittable t, HitInfo info, HitResult res) => OnHitResolved(t, info, res);
+
+        /// <summary>Publishes the one event every hit result gets (ADR-0003). A whiff publishes nothing.</summary>
+        void PublishHit(IHittable t, HitInfo info, HitResult res)
+        {
+            if (ctx == null || res == HitResult.Whiff) return;
+            var type = res switch { HitResult.Blocked => CombatEventType.Blocked, HitResult.Countered => CombatEventType.Countered, _ => CombatEventType.Hit };
+            var target = t as Fighter;
+            float dmg = target != null ? target.LastDamageTaken : (res == HitResult.Hit ? info.dmg : 0f);
+            var w = info.w;
+            ctx.Events.Publish(CombatEvent.HitResolved(ctx.Clock.Frame, type, this, target, FightContext.IdOf(t), info.moveId, info.window,
+                dmg, info.crit, w != null ? w.level : HitLevel.Mid, info.zone, info.contact, info.kb));
+        }
 
         void OnHitResolved(IHittable t, HitInfo info, HitResult res)
         {
@@ -786,8 +831,8 @@ namespace Kage
                 if (opponent != null && opponent.AtWall)
                     rb.linearVelocity = new Vector2(-facing * 1.6f, rb.linearVelocity.y);
             }
+            PublishHit(t, info, res);
             if (t is Fighter f) onHit?.Invoke(this, f, info, res);
-            else KageGame.I?.OnPropHit(this, info, res);
         }
 
         // ---- IHittable ----
@@ -824,6 +869,14 @@ namespace Kage
         }
 
         public HitResult ReceiveHit(HitInfo info)
+        {
+            float before = health;
+            var res = ReceiveHitCore(info);
+            LastDamageTaken = before - health;
+            return res;
+        }
+
+        HitResult ReceiveHitCore(HitInfo info)
         {
             var w = info.w;
             // Mirror Guard: parry and teleport-slash behind the attacker
@@ -945,6 +998,7 @@ namespace Kage
             GameFeel.Shake(0.5f);
             GameFeel.Punch(0.25f);
             KageGame.I?.Audio?.Play(SfxKind.KO, 1f);
+            ctx?.Events.Publish(CombatEvent.KnockedOut(ctx.Clock.Frame, info.attacker, this, info.moveId, info.contact, impulse));
             onKO?.Invoke(this);
         }
 
@@ -997,9 +1051,12 @@ namespace Kage
                 kb = new Vector2(-facing * 2.4f, -3f),
                 zone = HitZone.Body,
                 contact = v.Pos + Vector2.up * 0.4f,
+                moveId = move != null ? move.id : "throw", window = -1,
             };
             v.state = FState.Idle;
+            float before = v.health;
             v.health = Mathf.Max(0f, v.health - info.dmg);
+            v.LastDamageTaken = before - v.health;
             v.rig.Flash(Color.white, 0.9f);
             if (v.health <= 0f) v.KnockOut(info);
             else { v.Launch(info); v._tumbleVel = Mathf.Abs(v._tumbleVel) * 0.5f; }
@@ -1009,6 +1066,7 @@ namespace Kage
             GameFeel.Shake(0.35f);
             Vfx.I?.HitBurst(info.contact, Vector2.down, 1.3f, false, fxMain, fxCore, fxDark);
             KageGame.I?.Audio?.Play(SfxKind.HitHeavy, 1f);
+            PublishHit(v, info, HitResult.Hit);
             onHit?.Invoke(this, v, info, HitResult.Hit);
         }
 
@@ -1064,6 +1122,8 @@ namespace Kage
             KageGame.I?.Audio?.Play(SfxKind.Crescent, 0.9f);
         }
 
+        public const string ThousandShadows = "thousandShadows";
+        static readonly HitWindow UltCut = new() { dmg = 4, level = HitLevel.Unblockable, sword = true };
         int _ultFrame;
         Vector2 _ultAnchor;
         static readonly float[] UltSides = { 1f, -1f, 1f, -1f, 1f };
@@ -1077,6 +1137,7 @@ namespace Kage
             rb.linearVelocity = Vector2.zero;
             GameFeel.SlowMo(0.5f, 0.35f);
             GameFeel.Punch(0.18f);
+            ctx?.Events.Publish(CombatEvent.RageArt(ctx.Clock.Frame, this, ThousandShadows));
             KageGame.I?.Hud?.Banner("THOUSAND SHADOWS", fxMain, 1.4f);
             KageGame.I?.Audio?.Play(SfxKind.Ultimate, 1f);
         }
@@ -1109,7 +1170,15 @@ namespace Kage
                 Vector2 q = _ultAnchor + new Vector2(-side * 0.95f, 1.6f - UltHeights[slash]);
                 Vfx.I?.SlashLine(p + Vector2.up * 0.6f, q - Vector2.up * 0.3f, fxMain, fxCore);
                 Vfx.I?.HitBurst(opponent.Pos + Vector2.up * 1.0f, (q - p).normalized, 1.0f, true, fxMain, fxCore, fxDark);
+                float before = opponent.health;
                 opponent.health = Mathf.Max(1f, opponent.health - 4f);
+                opponent.LastDamageTaken = before - opponent.health;
+                // a cut publishes a Hit like any window; the onHit callback never saw cuts, so it still doesn't
+                PublishHit(opponent, new HitInfo
+                {
+                    attacker = this, w = UltCut, dmg = 4, zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
+                    moveId = ThousandShadows, window = -1,
+                }, HitResult.Hit);
                 opponent.rig.Flash(Color.white, 0.9f);
                 opponent.Stagger(60);
                 GameFeel.Shake(0.18f);
@@ -1140,6 +1209,7 @@ namespace Kage
                     attacker = this,
                     w = new HitWindow { dmg = 14, level = HitLevel.Unblockable, knockdown = true, heavy = true, hitstop = 14, shake = 0.6f, sword = true, stun = 30 },
                     dmg = 14, kb = new Vector2(-facing * 2.0f, 6f), zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
+                    moveId = ThousandShadows, window = -1,
                 };
                 opponent.state = FState.Idle;
                 var res = opponent.ReceiveHit(info);
@@ -1154,9 +1224,19 @@ namespace Kage
         // =====================================================================================
         void LateUpdate()
         {
+            if (Headless) return;    // the fight loop poses headless fighters at each exact frame
+            PoseOutput(Mathf.Clamp01((Time.time - Time.fixedTime) / Time.fixedDeltaTime), Time.deltaTime, Time.time);
+        }
+
+        /// <summary>
+        /// Poses the rig: <paramref name="alpha"/> is how far the rendered frame is past the last logic
+        /// frame, <paramref name="dt"/> the time since the last pose and <paramref name="time"/> the clock
+        /// for idle breathing and air flail. Play passes rendered time; the headless loop passes 0, 1/60 and frame time.
+        /// </summary>
+        public void PoseOutput(float alpha, float dt, float time)
+        {
             if (rig == null || def == null || rig.def == null || _stance == null) return;
-            if (state == FState.KO) { rig.Secondary(Time.deltaTime, Vector2.zero); return; }
-            float alpha = Mathf.Clamp01((Time.time - Time.fixedTime) / Time.fixedDeltaTime);
+            if (state == FState.KO) { rig.Secondary(dt, Vector2.zero); return; }
             float sf = stateFrame + alpha;
             switch (state)
             {
@@ -1165,7 +1245,7 @@ namespace Kage
                     break;
                 case FState.Idle:
                     _target.CopyFrom(_stance);
-                    float br = Mathf.Sin(Time.time * 2.4f + (isPlayer ? 0f : 1.3f));
+                    float br = Mathf.Sin(time * 2.4f + (isPlayer ? 0f : 1.3f));
                     _target.hip.y += br * 0.007f;
                     _target.a[(int)B.Chest] += br * 1.2f;
                     _target.a[(int)B.Head] -= br * 0.8f;
@@ -1191,7 +1271,7 @@ namespace Kage
                     if (_stun > 6) BlendTo(_hurt ?? _hurtBody, sf, 3f);
                     else { Pose.Blend(def, _hurt ?? _hurtBody, _stance, 1f - _stun / 6f, _display); }
                     break;
-                case FState.Air: AirPose(sf); break;
+                case FState.Air: AirPose(sf, time); break;
                 case FState.Launched:
                 {
                     _target.CopyFrom(_tumble);
@@ -1221,8 +1301,8 @@ namespace Kage
                     break;
             }
             rig.Apply(_display);
-            rig.Secondary(Time.deltaTime, rb.linearVelocity);
-            UpdateTrails();
+            rig.Secondary(dt, rb.linearVelocity);
+            if (!Headless) UpdateTrails();
         }
 
         void BlendTo(Pose target, float sf, float frames)
@@ -1249,11 +1329,10 @@ namespace Kage
         /// lift as the fall builds → a long-fall reach → feet reaching for the floor just before touchdown.
         /// The body leans into its horizontal travel and a second jump kicks in a quick tuck.
         /// </summary>
-        void AirPose(float sf)
+        void AirPose(float sf, float t)
         {
             Vector2 vel = rb.linearVelocity;
             float vy = vel.y, vxl = vel.x * facing;
-            float t = Time.time;
 
             float kApex = KMath.Smooth01(Mathf.InverseLerp(6f, 0.6f, vy));
             Pose.Blend(def, _rise, _apex, kApex, _airA);

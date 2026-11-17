@@ -19,14 +19,17 @@ namespace Kage
         Step _cur;
         int _curLeft, _think, _guardFrames;
         bool _guardLow;
-        System.Random _rng = new(1234);
+        FightRandom _rng;
 
-        float R() => (float)_rng.NextDouble();
+        /// <summary>Every AI choice rolls on the fight's "ai/&lt;FighterId&gt;" stream (ADR-0002).</summary>
+        float R() => _rng.Value();
+        int N(int maxExclusive) => _rng.Range(0, maxExclusive);
 
         public void Sample() { }
 
         public FrameInput Poll(Fighter self)
         {
+            _rng ??= self.ctx != null ? self.ctx.Random.Stream("ai/" + self.FighterId) : new FightRandom(1234);
             var opp = self.opponent;
             var o = new FrameInput();
             if (opp == null) return o;
@@ -70,7 +73,7 @@ namespace Kage
                 {
                     o.dy = 1;
                     o.dx = (int)face;
-                    Enqueue(6 + _rng.Next(4), 1, 0, Btn.None);
+                    Enqueue(6 + N(4), 1, 0, Btn.None);
                     Enqueue(1, 0, 0, R() < 0.5f ? Btn.K : Btn.S);
                     return o;
                 }
@@ -80,7 +83,7 @@ namespace Kage
             if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && R() < Mathf.Lerp(0.25f, 0.85f, level))
             {
                 var keys = new List<Btn>(self.move.chain.Keys);
-                Btn b = keys[_rng.Next(keys.Count)];
+                Btn b = keys[N(keys.Count)];
                 Press(ref o, b);
                 return o;
             }
@@ -88,7 +91,7 @@ namespace Kage
             if (_curLeft <= 0)
             {
                 if (_plan.Count > 0) { _cur = _plan.Dequeue(); _curLeft = _cur.frames; }
-                else if (--_think <= 0 && !self.Busy) { Decide(self, opp, dist); _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level)) + _rng.Next(6); }
+                else if (--_think <= 0 && !self.Busy) { Decide(self, opp, dist); _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level)) + N(6); }
             }
             if (_curLeft > 0)
             {
@@ -132,13 +135,13 @@ namespace Kage
             if (oppDown)
             {
                 if (dist < 1.0f && r < 0.5f) { Enqueue(2, 0, -1, Btn.P); return; }
-                Enqueue(18 + _rng.Next(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
+                Enqueue(18 + N(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
                 return;
             }
             if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f) { Enqueue(2, 0, 0, Btn.X); return; }
             if (dist > 2.2f)
             {
-                if (r < 0.62f) Enqueue(14 + _rng.Next(16), 1, 0, Btn.None);
+                if (r < 0.62f) Enqueue(14 + N(16), 1, 0, Btn.None);
                 else if (r < 0.75f) { Enqueue(1, 1, 1, Btn.None); Enqueue(14, 1, 0, Btn.None); Enqueue(2, 0, 0, Btn.K); }
                 else if (r < 0.85f) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: 1);
                 else Enqueue(18, 0, 0, Btn.None);
@@ -146,7 +149,7 @@ namespace Kage
             }
             if (dist > 1.25f)
             {
-                if (r < 0.35f) Enqueue(10 + _rng.Next(10), 1, 0, Btn.None);
+                if (r < 0.35f) Enqueue(10 + N(10), 1, 0, Btn.None);
                 else if (r < 0.5f) Enqueue(2, 1, 0, Btn.S);                       // shadow step
                 else if (r < 0.62f) { Enqueue(1, 1, 1, Btn.None); Enqueue(12, 1, 0, Btn.None); Enqueue(2, 0, 0, Btn.K); }
                 else if (r < 0.72f) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: 1);
