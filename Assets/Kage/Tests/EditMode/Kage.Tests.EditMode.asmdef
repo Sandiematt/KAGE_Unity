@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Kage.Rules"
+        "Kage.Rules",
+        "Kage.Runtime"
     ],
     "includePlatforms": [
         "Editor"
