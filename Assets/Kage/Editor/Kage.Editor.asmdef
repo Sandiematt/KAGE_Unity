@@ -3,6 +3,7 @@
     "rootNamespace": "KageEditor",
     "references": [
         "Kage.Runtime",
+        "Kage.Rules",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [

@@ -3,6 +3,7 @@
     "rootNamespace": "Kage.Tests",
     "references": [
         "Kage.Runtime",
+        "Kage.Rules",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
