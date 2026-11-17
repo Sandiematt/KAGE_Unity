@@ -225,6 +225,7 @@ namespace Kage
         public void FrameResults()
         {
             if (Cam == null || Player == null || Foe == null) return;
+            if (Hud != null) Hud.gameObject.SetActive(false);
             float mid = (Player.rig.Bone(B.Hips).position.x + Foe.rig.Bone(B.Hips).position.x) * 0.5f;
             Cam.useOverride = true;
             Cam.overrideSize = 2.2f;

@@ -45,8 +45,8 @@ namespace Kage
             var accent = v.Win ? Hex("#f3d48f") : Hex("#e8443a");
 
             // a dark wash on the right so the column reads over the world
-            Ui.Grad(Root, 760, 0, 840, 900, Ui.A(Color.black, 0f), Ui.A(Color.black, 0.72f), true);
-            Ui.Grad(Root, 0, 0, 1600, 900, Ui.A(Color.black, 0.18f), Ui.A(Color.black, 0.18f));
+            for (int i = 0; i < 24; i++) Ui.Box(Root, 760 + i * 14, 0, 14, 900, Ui.A(Color.black, 0.7f * (i + 1) / 24f), "Wash");
+            Ui.Box(Root, 1096, 0, 504, 900, Ui.A(Color.black, 0.7f), "Wash");
 
             float y = ColY;
             Ui.Label(Root, v.Eyebrow.ToUpperInvariant(), UiFont.Cond, 13, Ui.Muted, ColX, y, ColW, 18, TextAnchor.MiddleLeft, 3.1f);
@@ -112,8 +112,8 @@ namespace Kage
                 Ui.Box(Root, ColX, y, ColW, 1, Ui.Hair);
                 y += 1 + 24;
                 Ui.Diamond(Root, ColX + 9, y + 12, 8, Ui.Gold, Ui.Gold, 0);
-                Ui.Label(Root, v.Tip, UiFont.Body, 17, Ui.Bone, ColX + 28, y, ColW - 28, 52, TextAnchor.UpperLeft, 0.7f, true, 1.2f);
-                y += 52 + 28;
+                Ui.Label(Root, v.Tip, UiFont.Body, 15, Ui.Bone, ColX + 28, y, ColW - 28, 84, TextAnchor.UpperLeft, 0f, true, 1.15f);
+                y += 84 + 20;
             }
 
             // experience
