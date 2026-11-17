@@ -123,7 +123,8 @@ namespace Kage
             body = gameObject.AddComponent<BoxCollider2D>();
             body.size = new Vector2(0.36f, 1.5f);
             body.offset = new Vector2(0f, 0.75f);
-            body.sharedMaterial = KageGame.NoFriction;
+            body.sharedMaterial = PhysicsMaterials.NoFriction;
+            BuildPushCollider();
 
             var vis = new GameObject("Visual");
             vis.transform.SetParent(transform, false);
@@ -179,6 +180,10 @@ namespace Kage
         }
 
         public Vector2 Pos => rb != null ? rb.position : (Vector2)transform.position;
+        /// <summary>The physics mass (Kage = 1). Knockback impulses are divided by it, so heavy fighters move less.</summary>
+        public float Mass { get => rb.mass; set => rb.mass = value; }
+        /// <summary>The legacy switch (combat.json): the old manual push and knockback that ignores mass.</summary>
+        bool LegacyPhysics => ctx != null && ctx.LegacyHits;
         public bool CanBeThrown => Grounded && (state == FState.Idle || state == FState.Walk || state == FState.Run || state == FState.Skid || state == FState.Crouch || state == FState.Blockstun || (state == FState.Attack && move != null && !move.isThrow && !move.Invulnerable(moveFrame)));
         public bool IsAttacking => state == FState.Attack && move != null;
         public bool Busy => state is FState.Attack or FState.Hitstun or FState.Blockstun or FState.Launched or FState.Down or FState.Thrown or FState.KO or FState.Ultimate;

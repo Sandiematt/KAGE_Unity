@@ -15,8 +15,8 @@
 4 kage -0.38000 0.02000 Attack throw:0 hp=100 ronin 0.38000 0.02000 Idle - hp=100
 5 kage -0.38000 0.02000 Attack throw:1 hp=100 ronin 0.38000 0.15210 Air - hp=100
 6 kage -0.38000 0.02000 Attack throw:2 hp=100 ronin 0.38000 0.27629 Air - hp=100
-7 kage -0.38000 0.02000 Attack throw:3 hp=100 ronin 0.38000 0.39258 Air - hp=100
-8 kage -0.38000 0.02000 Attack throw:4 hp=100 ronin 0.38000 0.50097 Air - hp=100
+7 kage -0.38000 0.02000 Attack throw:3 hp=100 ronin 0.38000 0.39259 Air - hp=100
+8 kage -0.38000 0.02000 Attack throw:4 hp=100 ronin 0.38000 0.50098 Air - hp=100
 9 kage -0.38000 0.02000 Attack throw:5 hp=100 ronin 0.38000 0.60146 Air - hp=100
 10 kage -0.38000 0.02000 Attack throwWhiff:6 hp=100 ronin 0.38000 0.69405 Air - hp=100
 11 kage -0.38000 0.02000 Attack throwWhiff:7 hp=100 ronin 0.38000 0.77873 Air - hp=100

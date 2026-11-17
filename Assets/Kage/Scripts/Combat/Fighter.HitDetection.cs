@@ -269,7 +269,7 @@ namespace Kage
                 Vfx.I?.BlockBurst(info.contact, -dir);
                 KageGame.I?.Audio?.Play(SfxKind.Block, 0.7f);
                 if (opponent != null && opponent.AtWall)
-                    rb.linearVelocity = new Vector2(-facing * 1.6f, rb.linearVelocity.y);
+                    Knock(new Vector2(KnockVelocity(new Vector2(-facing * 1.6f, 0f)).x, rb.linearVelocity.y));     // recoil off a cornered guard
             }
             PublishHit(t, info, res);
             if (t is Fighter f) onHit?.Invoke(this, f, info, res);

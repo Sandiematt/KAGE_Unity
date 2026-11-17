@@ -25,6 +25,8 @@ Layer names go into `ProjectSettings/TagManager.asset`, and the collision matrix
 | 15 | `Projectile` | projectile bodies | Ground | SAN-75 |
 | 16 | `Hazard` | hazard areas | nothing (queried by overlap only) | SAN-75 |
 
+Amended by SAN-68: Push collides with Push only, not Ground, and PushPassThrough with nothing (the 0.72 m push box would stop a fighter inside the stage edge). SAN-68 also names layers 15 and 16 and sets their matrix rows. The as-built matrix is in `docs/physics.md`.
+
 - Every hit test (melee sweeps, projectiles, hazards) casts against `Hurtbox` only, skips the owner, and skips the owner's team (ADR-0002).
 - A `Hurtbox` component on each hurt-circle collider carries its owner (`IHittable`) and its `HitZone`. Fighters and the training bag use the same component (SAN-65).
 - The ragdoll is unchanged.

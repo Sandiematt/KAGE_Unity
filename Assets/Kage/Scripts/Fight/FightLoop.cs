@@ -8,7 +8,8 @@ namespace Kage
     /// <see cref="Step"/> is one frame, and it runs every fighter in <c>ctx.Fighters</c> order:
     /// <list type="number">
     /// <item>If the clock freezes this frame (hitstop, slow motion), only end the frame.</item>
-    /// <item>Push: keep fighters apart (moved from KageGame; SAN-68 replaces it with push colliders).</item>
+    /// <item>Push settle: a fighter the last physics step pushed gets its own horizontal speed back
+    /// (SAN-68, Fighter.SettlePush). Under the legacy switch the old manual push runs here instead.</item>
     /// <item>Input: poll every fighter's input source, in fighter order.</item>
     /// <item>Fighter tick: state machine, root motion, move playback; each active hit point records a
     /// <see cref="HitSweep"/> in <c>ctx.Sweeps</c>.</item>
@@ -17,6 +18,8 @@ namespace Kage
     /// whose owner was interrupted earlier in this phase is dropped, so the first fighter to hit wins a trade.
     /// With the legacy switch on, hits resolve inside the attacker's tick instead, as before SAN-65.</item>
     /// <item>Projectiles: on a manual clock, live Crescents move here (in play they still move in Update; SAN-75).</item>
+    /// <item>Push: each fighter puts its push collider on the Push or PushPassThrough layer for this frame
+    /// (SAN-68); the physics step that follows keeps fighters apart. Off under the legacy switch.</item>
     /// <item>End the frame: <c>Clock.Frame++</c>.</item>
     /// </list>
     /// In play, FixedUpdate calls Step and Unity simulates physics after it. On a manual clock nothing
@@ -51,9 +54,13 @@ namespace Kage
             if (run)
             {
                 var fs = ctx.Fighters;
-                for (int i = 0; i < fs.Count; i++)
-                    for (int j = i + 1; j < fs.Count; j++)
-                        if (Live(fs[i]) && Live(fs[j])) Pushbox(fs[i], fs[j]);
+                if (ctx.LegacyHits)
+                {
+                    for (int i = 0; i < fs.Count; i++)
+                        for (int j = i + 1; j < fs.Count; j++)
+                            if (Live(fs[i]) && Live(fs[j])) Pushbox(fs[i], fs[j]);
+                }
+                else foreach (var f in fs) if (Live(f)) f.SettlePush();
                 foreach (var f in fs) if (Live(f)) f.PollInput();
                 ctx.Sweeps.Clear();
                 foreach (var f in fs) if (Live(f)) f.Tick();
@@ -68,6 +75,7 @@ namespace Kage
                     _crescentTmp.AddRange(ctx.Crescents);
                     foreach (var c in _crescentTmp) if (c != null) c.Advance(Time.fixedDeltaTime);
                 }
+                foreach (var f in fs) if (Live(f)) f.SyncPush();
             }
             ctx.Clock.EndFrame();
             return run;
@@ -108,6 +116,7 @@ namespace Kage
 
         static bool Live(Fighter f) => f != null && f.isActiveAndEnabled && f.def != null && f.rb != null;
 
+        /// <summary>The legacy push: moves overlapping fighters apart by position, half each (all of it for the one not cornered).</summary>
         static void Pushbox(Fighter a, Fighter b)
         {
             if (a.state is FState.KO or FState.Thrown or FState.Ultimate || b.state is FState.KO or FState.Thrown or FState.Ultimate) return;

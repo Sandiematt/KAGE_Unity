@@ -52,6 +52,27 @@ namespace Kage
             return false;
         }
 
+        // ---- knockback (SAN-68) ----
+        /// <summary>
+        /// Authored knockback (<see cref="HitWindow"/>.kb, <see cref="HitInfo"/>.kb) is the velocity a hit
+        /// gives a fighter of this mass (Kage's): the hit's impulse is kb x ReferenceMass.
+        /// </summary>
+        public const float ReferenceMass = 1f;
+
+        /// <summary>The velocity a knockback gives this fighter: its impulse over this fighter's mass. The legacy switch ignores mass.</summary>
+        Vector2 KnockVelocity(Vector2 kb) => LegacyPhysics ? kb : kb * (ReferenceMass / rb.mass);
+
+        /// <summary>
+        /// Gives the body velocity <paramref name="v"/> through a physics impulse. The hit replaces the
+        /// current motion, as before: the body is stopped first. Under the legacy switch the velocity is set.
+        /// </summary>
+        void Knock(Vector2 v)
+        {
+            if (LegacyPhysics || rb.bodyType != RigidbodyType2D.Dynamic) { rb.linearVelocity = v; return; }
+            rb.linearVelocity = Vector2.zero;
+            rb.AddForce(v * rb.mass, ForceMode2D.Impulse);
+        }
+
         public HitResult ReceiveHit(HitInfo info)
         {
             float before = health;
@@ -78,7 +99,7 @@ namespace Kage
                 _otgHits++;
                 health = Mathf.Max(0f, health - info.dmg);
                 rig.Flash(Color.white, 0.8f, 14f);
-                rb.linearVelocity = new Vector2(info.kb.x * 0.25f, 0f);
+                Knock(KnockVelocity(new Vector2(info.kb.x * 0.25f, 0f)));
                 if (health <= 0f) KnockOut(info);
                 return HitResult.Hit;
             }
@@ -97,7 +118,7 @@ namespace Kage
                 rig.Squash(w.heavy ? 0.09f : 0.05f);
                 _stun = w.stun;
                 _hurt = w.level == HitLevel.Low || info.zone == HitZone.Legs ? _hurtLow : info.zone == HitZone.Head ? _hurtHigh : _hurtBody;
-                rb.linearVelocity = new Vector2(info.kb.x, Mathf.Max(0f, info.kb.y * 0.3f));
+                Knock(KnockVelocity(new Vector2(info.kb.x, Mathf.Max(0f, info.kb.y * 0.3f))));
             }
             return HitResult.Hit;
         }
@@ -106,13 +127,14 @@ namespace Kage
         {
             _juggle++;
             float jm = Mathf.Pow(0.8f, _juggle - 1);
-            Vector2 v = info.kb;
+            // the launch impulse over this fighter's mass; the minimum pops below keep every launch off the ground
+            Vector2 v = KnockVelocity(info.kb);
             if (v.y > 0f) v.y *= jm;
             if (Grounded && v.y < 2.5f) v.y = info.w.knockdown && info.kb.y < 0 ? 2.2f : 2.8f;
             if (!Grounded && v.y < 1.5f && info.kb.y >= 0f) v.y = Mathf.Max(v.y, 1.5f * jm);
             SetState(FState.Launched);
             _bounces = info.kb.y < 0f ? -1 : 0;     // spiked: guaranteed ground bounce
-            rb.linearVelocity = v;
+            Knock(v);
             _lastVy = v.y;
             // tumble: knocked backwards -> rotate onto the back, knocked forwards -> onto the front
             bool backwards = v.x * facing <= 0f;
