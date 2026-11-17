@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KageArena.unity
     guid: 3ac3e6bf2f505874299bcc4f8ad13b8c
+  - enabled: 1
+    path: Assets/Scenes/KageCampaign.unity
+    guid: e36b23700e65f424da4ca1c25a9a82eb
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
