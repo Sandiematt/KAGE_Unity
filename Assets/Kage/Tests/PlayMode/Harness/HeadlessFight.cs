@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Kage.Tests
 {
     /// <summary>What Kage fights in a harness run.</summary>
-    public enum Foe { Bag, Ai, Scripted }
+    public enum Foe { Bag, Ai, Scripted, None }
 
     /// <summary>
     /// The fight harness: builds a fight from code with no game bootstrap, on a manual clock, with Kage
@@ -26,7 +26,7 @@ namespace Kage.Tests
         public readonly CombatEventLog Log;
         public readonly Fighter Kage;
         public readonly Fighter Ronin;          // null against the bag
-        public readonly PunchingBag Bag;        // null against the Ronin
+        public readonly PunchingBag Bag;        // null against the Ronin and with no foe
         public readonly ScriptedInput KageInput;
         public readonly ScriptedInput RoninInput;   // set for Foe.Scripted (falls back to the AI when its script ends)
         public readonly AIInputSource Ai;
@@ -43,7 +43,7 @@ namespace Kage.Tests
             {
                 Bag = b.AddBag(Root.transform, BagAnchor);
             }
-            else
+            else if (foe != Foe.None)
             {
                 Ai = new AIInputSource();
                 IInputSource input = Ai;

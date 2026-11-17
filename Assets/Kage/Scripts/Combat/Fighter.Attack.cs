@@ -47,6 +47,7 @@ namespace Kage
             moveFrame = 0;
             moveHit = false;
             _hitLog.Clear();
+            _sweepPrev.Clear();
             ctx?.Events.Publish(CombatEvent.MoveStarted(ctx.Clock.Frame, this, m.id));
             rig.SetSwordFront(m.swordFront);
             rig.SnapFacing();
@@ -114,7 +115,7 @@ namespace Kage
                 m.Evaluate(def, f, _start, _display);
                 rig.Apply(_display);
                 foreach (var w in m.hits)
-                    if (f >= w.from && f <= w.to) CheckHits(w);
+                    if (f >= w.from && f <= w.to) WindowActive(w);
             }
 
             if (f == m.projectileFrame) SpawnCrescent();

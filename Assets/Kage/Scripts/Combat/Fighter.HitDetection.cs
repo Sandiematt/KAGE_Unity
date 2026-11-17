@@ -28,6 +28,177 @@ namespace Kage
             }
         }
 
+        // =====================================================================================
+        //  SWEPT HITS (SAN-65): sweeps recorded in the tick, cast against hurtboxes in the hit phase
+        // =====================================================================================
+        sealed class SweepPrev { public int frame; public readonly List<Vector2> pts = new(); }
+        readonly Dictionary<HitWindow, SweepPrev> _sweepPrev = new();
+        readonly List<HitPoint> _ptKinds = new();
+        static readonly List<Hurtbox> BoxTmp = new();
+        static readonly List<HurtboxHit> SweepTmp = new();
+        readonly List<(IHittable t, int order)> _targets = new();
+
+        /// <summary>An active window on this frame (the rig is posed at this exact frame).</summary>
+        void WindowActive(HitWindow w)
+        {
+            if (ctx == null || ctx.LegacyHits) CheckHits(w);
+            else RecordSweeps(w);
+        }
+
+        /// <summary>Records one sweep per sample point: from last frame's position (if the window was active then) to this frame's.</summary>
+        void RecordSweeps(HitWindow w)
+        {
+            _pts.Clear();
+            _ptKinds.Clear();
+            foreach (var hp in w.points)
+            {
+                HitPoints(hp, _pts);
+                while (_ptKinds.Count < _pts.Count) _ptKinds.Add(hp);
+            }
+            if (!_sweepPrev.TryGetValue(w, out var prev)) _sweepPrev[w] = prev = new SweepPrev { frame = int.MinValue };
+            bool continues = prev.frame == moveFrame - 1 && prev.pts.Count == _pts.Count;
+            for (int k = 0; k < _pts.Count; k++)
+                ctx.Sweeps.Add(new HitSweep
+                {
+                    owner = this, move = move, window = w, point = _ptKinds[k], sample = k,
+                    from = continues ? prev.pts[k] : _pts[k], to = _pts[k], radius = w.radius,
+                });
+            prev.frame = moveFrame;
+            prev.pts.Clear();
+            prev.pts.AddRange(_pts);
+        }
+
+        /// <summary>
+        /// Fight loop hit phase: resolves this fighter's sweeps <c>[start, end)</c> of this frame, window by
+        /// window. A window whose move was interrupted earlier in this phase (this fighter was hit first) is dropped.
+        /// </summary>
+        public void ResolveSweeps(List<HitSweep> sweeps, int start, int end)
+        {
+            int i = start;
+            while (i < end)
+            {
+                var w = sweeps[i].window;
+                var m = sweeps[i].move;
+                int j = i + 1;
+                while (j < end && sweeps[j].window == w && sweeps[j].move == m) j++;
+                if (state == FState.Attack && move == m) ResolveWindow(sweeps, i, j);
+                i = j;
+            }
+        }
+
+        void ResolveWindow(List<HitSweep> sweeps, int i, int j)
+        {
+            var w = sweeps[i].window;
+            // every owner any sample touches, in a fixed order: fighters in tick order, then props
+            _targets.Clear();
+            for (int k = i; k < j; k++)
+            {
+                var s = sweeps[k];
+                Hurtbox.Overlap(s.to, s.radius, BoxTmp);
+                foreach (var b in BoxTmp) AddTarget(b.Owner);
+                Hurtbox.Sweep(s.from, s.to, s.radius, SweepTmp);
+                foreach (var h in SweepTmp) AddTarget(h.box.Owner);
+            }
+            _targets.Sort((a, b) => a.order.CompareTo(b.order));
+            foreach (var (t, _) in _targets)
+            {
+                if (t == null || ReferenceEquals(t, this)) continue;
+                if (t is Fighter tf && tf.team == team) continue;
+                if (Logged(w, t)) continue;
+                if (!FindContact(t, sweeps, i, j, out var zone, out var contact)) continue;
+                ResolveContact(t, w, zone, contact);
+                if (state != FState.Attack || move != sweeps[i].move) return;   // countered: the window is over
+            }
+        }
+
+        void AddTarget(IHittable t)
+        {
+            if (t == null) return;
+            foreach (var (x, _) in _targets) if (ReferenceEquals(x, t)) return;
+            int fi = t is Fighter f ? ctx.Fighters.IndexOf(f) : -1;
+            int pi = fi < 0 ? ctx.Props.IndexOf(t) : -1;
+            int order = fi >= 0 ? fi : pi >= 0 ? 10000 + pi : 20000 + _targets.Count;
+            _targets.Add((t, order));
+        }
+
+        bool Logged(HitWindow w, IHittable t)
+        {
+            foreach (var (hw, ht) in _hitLog) if (hw == w && ReferenceEquals(ht, t)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Where the window touches <paramref name="t"/>. The first sample (in hit-point order) that rests in
+        /// one of its circles this frame wins, with the lowest-index circle's zone, exactly as the point
+        /// tests did; otherwise the earliest touch along any sample's path since last frame.
+        /// </summary>
+        bool FindContact(IHittable t, List<HitSweep> sweeps, int i, int j, out HitZone zone, out Vector2 contact)
+        {
+            zone = HitZone.Body;
+            contact = default;
+            for (int k = i; k < j; k++)
+            {
+                var s = sweeps[k];
+                Hurtbox.Overlap(s.to, s.radius, BoxTmp);
+                Hurtbox best = null;
+                foreach (var b in BoxTmp) if (ReferenceEquals(b.Owner, t) && (best == null || b.Index < best.Index)) best = b;
+                if (best == null) continue;
+                zone = best.Zone;
+                contact = Vector2.Lerp(s.to, best.Centre, s.radius / (s.radius + best.Radius));
+                return true;
+            }
+            float bestFrac = float.MaxValue;
+            int bestIndex = int.MaxValue;
+            for (int k = i; k < j; k++)
+            {
+                var s = sweeps[k];
+                Hurtbox.Sweep(s.from, s.to, s.radius, SweepTmp);
+                foreach (var h in SweepTmp)
+                {
+                    if (!ReferenceEquals(h.box.Owner, t)) continue;
+                    if (h.fraction > bestFrac || (h.fraction == bestFrac && h.box.Index >= bestIndex)) continue;
+                    bestFrac = h.fraction;
+                    bestIndex = h.box.Index;
+                    zone = h.box.Zone;
+                    contact = h.point;
+                }
+            }
+            return bestFrac != float.MaxValue;
+        }
+
+        /// <summary>
+        /// A contact goes through the defence order (ADR-0004): the pre-hit checks (perfect dodge), then
+        /// whether the target can be hit now, then the target's own checks in ReceiveHit.
+        /// </summary>
+        void ResolveContact(IHittable t, HitWindow w, HitZone zone, Vector2 contact)
+        {
+            var info = new HitInfo
+            {
+                attacker = this, w = w, dmg = w.dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact,
+                moveId = move != null ? move.id : null, window = move != null ? move.hits.IndexOf(w) : -1,
+            };
+            if (t is Fighter tf)
+            {
+                var c = new DefenceCheck { info = info };
+                if (tf.PreHit(ref c))
+                {
+                    _hitLog.Add((w, t));
+                    OnHitResolved(t, c.info, c.result);
+                    return;
+                }
+            }
+            if (!t.HittableBy(w)) return;
+            _hitLog.Add((w, t));
+            if (RollCrit())
+            {
+                info.crit = true;
+                info.dmg = Mathf.RoundToInt(info.dmg * 1.5f);
+            }
+            var res = t.ReceiveHit(info);
+            OnHitResolved(t, info, res);
+        }
+
+        // ---- legacy resolution (legacy switch): point tests inside the attacker's tick ----
         void CheckHits(HitWindow w)
         {
             _pts.Clear();

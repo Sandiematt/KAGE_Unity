@@ -15,7 +15,7 @@ namespace Kage
     public class KageGame : MonoBehaviour
     {
         public static KageGame I;
-        public const int LayerFighter = 8, LayerRagdoll = 9, LayerGround = 10, LayerProp = 11;
+        public const int LayerFighter = PhysicsLayers.Fighter, LayerRagdoll = PhysicsLayers.Ragdoll, LayerGround = PhysicsLayers.Ground, LayerProp = PhysicsLayers.Prop;
         public static PhysicsMaterial2D NoFriction;
 
         public enum Mode { Duel, Training }

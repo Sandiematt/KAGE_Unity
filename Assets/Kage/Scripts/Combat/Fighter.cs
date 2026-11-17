@@ -20,8 +20,12 @@ namespace Kage
         public int window;
     }
 
+    /// <summary>Something hits can land on: a fighter or a prop. Its hurt circles are <see cref="Hurtbox"/>es.</summary>
     public interface IHittable
     {
+        /// <summary>False when this window can't touch it now (invulnerable, thrown, KO, ...): the contact doesn't count.</summary>
+        bool HittableBy(HitWindow w);
+        /// <summary>The legacy point test (legacy switch, and the Crescent until SAN-75).</summary>
         bool Overlap(Vector2 p, float r, HitWindow w, out HitZone zone, out Vector2 contact);
         HitResult ReceiveHit(HitInfo info);
     }
@@ -125,6 +129,7 @@ namespace Kage
             vis.transform.SetParent(transform, false);
             rig = vis.AddComponent<FighterRig>();
             rig.Build(d, sortBase);
+            BuildHurtboxes();
 
             _trailBlade = new MotionTrail("TrailBlade", transform.parent, 0.12f, main, core, sortBase + 900, true);
             _trailFist = new MotionTrail("TrailFist", transform.parent, 0.09f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
@@ -139,6 +144,7 @@ namespace Kage
         public void ResetForRound(float x, float face)
         {
             if (_ragdoll != null) { _ragdoll.Restore(); _ragdoll = null; }
+            SetHurtboxesActive(true);
             if (_thrower != null || _victim != null) { _thrower = null; _victim = null; }
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.simulated = true;
