@@ -94,10 +94,10 @@ namespace Kage.Tests
                 }
             }
             // a sanity floor: the scripts are placed to connect, not to whiff (a guarded hit connects too:
-            // since SAN-65 the AI's guard is judged on the frame it is hit, so it blocks a few more of them)
+            // since SAN-65 the AI's guard is judged on the frame it is hit, so it blocks one more of them)
             Assert.GreaterOrEqual(bagHits, 15);
-            Assert.GreaterOrEqual(aiHits, 12);
-            Assert.GreaterOrEqual(aiConnects, 20);
+            Assert.GreaterOrEqual(aiHits, 14);
+            Assert.GreaterOrEqual(aiConnects, 30);
         }
 
         [Test]
