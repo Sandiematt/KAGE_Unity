@@ -11,7 +11,8 @@ namespace Kage.Tests
     /// Renders Kage and the Ronin from a headless fight (idle, walking, mid-attack) to
     /// Screenshots/review/SAN-66/&lt;label&gt;, label from KAGE_SHOT_LABEL (default "after"). When a "before" set
     /// exists, every "after" image must match it pixel for pixel: building fighters from character data
-    /// must not change how they look (SAN-66). Needs a GPU: it skips itself under -nographics. Run:
+    /// must not change how they look (SAN-66). The very first run after a fresh Library import can differ by a
+    /// pixel (kage_walk), so render the before set in a warm session. Needs a GPU: it skips itself under -nographics. Run:
     /// <c>Unity.exe -batchmode -projectPath ... -runTests -testPlatform PlayMode -testFilter CharacterScreenshots</c> (no -nographics).
     /// </summary>
     [Category("Screenshots")]
@@ -45,6 +46,15 @@ namespace Kage.Tests
             Capture(shots, outDir, "kage_kick", 9, s => s.Add(1, buttons: "K"), Foe.None, 0f);
             Capture(shots, outDir, "kage_iai", 14, s => s.Add(1, buttons: "S"), Foe.None, 0f);
             Capture(shots, outDir, "kage_vs_ronin", 40, s => s.Add(40), Foe.Scripted, -0.9f);
+            if (Label != "before")
+            {
+                // not compared: a second fighter from another data entry (a recoloured Kage), new in SAN-66
+                var variant = CharacterCatalog.Get(KageCharacter.Id);
+                variant.id = "test_variant";
+                variant.aiProfile = "regular";
+                variant.colors = new FighterColors(new Color(0.25f, 0.8f, 1f), Color.white, new Color(0.08f, 0.3f, 0.55f));
+                Capture(new List<string>(), outDir, "data_variant_vs_kage", 40, s => s.Add(40), Foe.Scripted, -0.9f, variant);
+            }
 
             string before = Path.Combine(Root, "before");
             if (Label == "before" || !Directory.Exists(before)) return;
@@ -59,9 +69,9 @@ namespace Kage.Tests
             CollectionAssert.IsEmpty(differ, "images that changed since the before set");
         }
 
-        static void Capture(List<string> shots, string dir, string name, int frames, System.Action<ScriptedInput> kage, Foe foe, float kageX)
+        static void Capture(List<string> shots, string dir, string name, int frames, System.Action<ScriptedInput> kage, Foe foe, float kageX, CharacterDef foeDef = null)
         {
-            using (var f = new HeadlessFight(KageMoveScenarios.Seed, foe, kageX, 0.9f))
+            using (var f = new HeadlessFight(KageMoveScenarios.Seed, foe, kageX, 0.9f, foeDef: foeDef))
             {
                 kage(f.KageInput);
                 f.RoninInput?.Add(600);
