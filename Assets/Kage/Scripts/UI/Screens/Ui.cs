@@ -490,8 +490,24 @@ namespace Kage
             vh.Clear();
             Vector2 c = rectTransform.rect.center;
             float outer = side * 0.7071f, inner = Mathf.Max(0f, (side - 2f * border) * 0.7071f);
-            Quad(vh, c, outer, edge * color);
-            if (inner > 0f && fill.a > 0f) Quad(vh, c, inner, fill * color);
+            // the border is a ring between the two diamonds (so a clear fill leaves a hollow outline), the fill sits inside it
+            if (border > 0f && edge.a > 0f)
+            {
+                int b = vh.currentVertCount;
+                Color e = edge * color;
+                Vector2[] o = { new Vector2(0, outer), new Vector2(outer, 0), new Vector2(0, -outer), new Vector2(-outer, 0) };
+                Vector2[] n = { new Vector2(0, inner), new Vector2(inner, 0), new Vector2(0, -inner), new Vector2(-inner, 0) };
+                for (int i = 0; i < 4; i++) vh.AddVert(c + o[i], e, Vector2.zero);
+                for (int i = 0; i < 4; i++) vh.AddVert(c + n[i], e, Vector2.zero);
+                for (int i = 0; i < 4; i++)
+                {
+                    int j = (i + 1) % 4;
+                    vh.AddTriangle(b + i, b + j, b + 4 + j);
+                    vh.AddTriangle(b + i, b + 4 + j, b + 4 + i);
+                }
+            }
+            float fillR = border > 0f ? inner : outer;
+            if (fillR > 0f && fill.a > 0f) Quad(vh, c, fillR, fill * color);
         }
 
         static void Quad(VertexHelper vh, Vector2 c, float r, Color col)

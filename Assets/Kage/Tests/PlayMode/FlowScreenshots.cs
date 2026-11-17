@@ -133,8 +133,8 @@ namespace Kage.Tests
 
         IEnumerator Shot(string name)
         {
-            yield return new WaitForEndOfFrame();
-            var rt = new RenderTexture(1600, 900, 24, RenderTextureFormat.ARGB32);
+            Debug.Log("[shots] " + name);
+            const int W = 1600, H = 900;
             var main = Camera.main;
             var canvases = new List<(Canvas c, RenderMode mode, Camera cam)>();
             var layers = new List<(Transform t, int layer)>();
@@ -143,9 +143,7 @@ namespace Kage.Tests
             cam.orthographic = true;
             cam.orthographicSize = 4.5f;
             cam.cullingMask = 1 << 5;
-            cam.clearFlags = main != null ? CameraClearFlags.Depth : CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.04f, 0.02f, 0.02f);
-            cam.targetTexture = rt;
+            cam.clearFlags = CameraClearFlags.SolidColor;
             cam.depth = 100;
             var data = cam.GetUniversalAdditionalCameraData();
             if (data != null) { data.renderPostProcessing = false; data.antialiasing = AntialiasingMode.None; }
@@ -161,28 +159,54 @@ namespace Kage.Tests
             }
             Canvas.ForceUpdateCanvases();
             yield return null;
-            if (main != null)
-            {
-                main.targetTexture = rt;
-                main.Render();
-                main.targetTexture = null;
-            }
-            cam.Render();
 
-            var prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            var tex = new Texture2D(1600, 900, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, 1600, 900), 0, 0);
+            // the world (with its post-processing), then the UI twice, on black and on white: the difference gives the UI's alpha
+            Color[] world = null;
+            if (main != null) world = Render(main, W, H);
+            cam.backgroundColor = Color.black;
+            var onBlack = Render(cam, W, H);
+            cam.backgroundColor = Color.white;
+            var onWhite = Render(cam, W, H);
+
+            var bg = new Color(0.04f, 0.02f, 0.02f);
+            var outPx = new Color32[W * H];
+            for (int i = 0; i < outPx.Length; i++)
+            {
+                Color f = onBlack[i], w = onWhite[i];
+                float a = 1f - ((w.r - f.r) + (w.g - f.g) + (w.b - f.b)) / 3f;
+                a = Mathf.Clamp01(a);
+                Color under = world != null ? world[i] : bg;
+                Color o = new Color(f.r + (1f - a) * under.r, f.g + (1f - a) * under.g, f.b + (1f - a) * under.b, 1f);
+                outPx[i] = o;
+            }
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            tex.SetPixels32(outPx);
             tex.Apply();
-            RenderTexture.active = prev;
             File.WriteAllBytes(Path.Combine(outDir, name + ".png"), tex.EncodeToPNG());
 
             foreach (var e in canvases) { e.c.renderMode = e.mode; e.c.worldCamera = e.cam; }
             foreach (var l in layers) if (l.t != null) l.t.gameObject.layer = l.layer;
             Object.DestroyImmediate(camGo);
+            Object.Destroy(tex);
+        }
+
+        static Color[] Render(Camera cam, int w, int h)
+        {
+            var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+            var prevTarget = cam.targetTexture;
+            cam.targetTexture = rt;
+            cam.Render();
+            cam.targetTexture = prevTarget;
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            RenderTexture.active = prev;
+            var px = tex.GetPixels();
+            Object.Destroy(tex);
             rt.Release();
             Object.Destroy(rt);
-            Object.Destroy(tex);
+            return px;
         }
     }
 }

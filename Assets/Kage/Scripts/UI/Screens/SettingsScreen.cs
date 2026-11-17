@@ -39,7 +39,7 @@ namespace Kage
             // the panel
             float px = 40, py = 112, pw = 940;
             float y = py + 30;
-            float ph = 568f;
+            float ph = 582f;
             Ui.Box(Root, px, py, pw, ph, Ui.PanelA(0.88f), "PanelBg");
             var frame = Ui.Node(Root, "PanelFrame", px, py, pw, ph);
             Ui.Frame(frame, 0, 0, pw, ph, 1.5f, Ui.GoldDim);
@@ -82,7 +82,7 @@ namespace Kage
 
         void Row(float px, ref float y, float pw, string label, string hint, string key, string[] options, int active, System.Action<int> onPick, bool first, bool last = false)
         {
-            float h = string.IsNullOrEmpty(hint) ? 78f : 90f;
+            float h = string.IsNullOrEmpty(hint) ? 78f : hint.Length > 70 ? 104f : 90f;
             float top = y + (first ? 20 : 18);
             var t = Ui.Label(Root, label, UiFont.Title, 19, Ui.Bone, px + 40, top, 420, 26, TextAnchor.MiddleLeft);
             if (!string.IsNullOrEmpty(hint)) Ui.Label(Root, hint, UiFont.Body, 14, Ui.Muted, px + 40, top + 28, 420, 44, TextAnchor.UpperLeft, 0, true, 1.3f);

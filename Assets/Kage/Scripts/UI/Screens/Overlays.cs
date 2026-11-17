@@ -38,7 +38,7 @@ namespace Kage
             var s = C.Save;
             var stage = GameRules.Stage(C.StageId);
             string name = stage == null ? "" : (stage.Kind == "boss" || stage.Kind == "subboss") && !string.IsNullOrEmpty(stage.Foe) ? stage.Foe : stage.Name;
-            const float x = 460, y = 60, w = 680, h = 724;
+            const float x = 460, y = 60, w = 680, h = 696;
             var card = OverlayKit.Card(Root, x, y, w, h);
             Ui.Label(card, "PAUSED · NORMAL", UiFont.Cond, 15, Ui.Gold, 48, 34, 560, 22, TextAnchor.MiddleLeft, 3.9f);
             Ui.Label(card, name.ToUpperInvariant(), UiFont.TitleHeavy, 44, Ui.Bone, 48, 62, 600, 60, TextAnchor.MiddleLeft, 1f);

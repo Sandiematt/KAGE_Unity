@@ -39,7 +39,7 @@ namespace Kage
             bool stretch = stage.Kind == "stretch";
 
             // atmosphere over the live tableau
-            Ui.Grad(Root, 0, 0, 1600, 320, Ui.A(Ui.Sky3, 0.75f), Ui.A(Ui.Sky3, 0f));
+            Ui.Grad(Root, 0, 0, 1600, 340, Ui.A(Ui.Sky3, 0.88f), Ui.A(Ui.Sky3, 0f));
             Ui.Glow(Root, 1300, 500, 420, Ui.A(Ui.Acc, 0.22f), 1.2f);
             Ui.Grad(Root, 799, 120, 1.5f, 640, Color.clear, Color.clear, false, Ui.A(Ui.Bone, 0.35f));
             // the versus mark
@@ -76,12 +76,14 @@ namespace Kage
             int lit = Mathf.Clamp(dl, 1, 3);
             string[] labels = { "Calm", "Tense", "Fierce", "Brutal", "Mythic" };
             string kind = stretch ? "Stretch" : stage.Kind == "boss" ? "Boss" : "Sub-boss";
-            UiParts.Pips(Root, 1536 - 3 * 22 - 2 * 5 - 14 - EyebrowWidth(ch.Name + " · " + kind + " · " + labels[dl]), 120, lit);
-            Ui.Label(Root, (ch.Name + " · " + kind + " · " + labels[dl]).ToUpperInvariant(), UiFont.Title, 15, Ui.Hot, 956, 108, 580, 24, TextAnchor.MiddleRight, 3.6f);
+            string eyeText = (ch.Name + " · " + kind + " · " + labels[dl]).ToUpperInvariant();
+            var eye = Ui.Label(Root, eyeText, UiFont.Title, 15, Ui.Hot, 956, 108, 580, 24, TextAnchor.MiddleRight, 3.6f);
+            Soften(eye);
+            UiParts.Pips(Root, 1536 - UiParts.Width(eye, 3.6f) - 14 - 76, 118, lit);
             string title = stretch ? stage.Name : (stage.Foe ?? (foe != null ? foe.Name : stage.Name));
             string sub = stretch ? ch.Place : (stage.FoeTitle ?? (foe != null ? foe.Title : ""));
-            Ui.Label(Root, title, UiFont.Mincho, 50, Ui.Bone, 856, 136, 680, 66, TextAnchor.MiddleRight);
-            Ui.Label(Root, sub, UiFont.Title, 16, Ui.Muted, 956, 206, 580, 24, TextAnchor.MiddleRight, 1.28f);
+            Soften(Ui.Label(Root, title, UiFont.Mincho, 50, Ui.Bone, 856, 136, 680, 66, TextAnchor.MiddleRight));
+            Soften(Ui.Label(Root, sub, UiFont.Title, 16, Ui.Bone, 956, 206, 580, 24, TextAnchor.MiddleRight, 1.28f));
             // chips, right aligned
             var reward = GameRules.StageRewardPreview(save, stage.Id);
             string kindChip = stretch ? (stage.Stretch.Encounters.Length + " encounter" + (stage.Stretch.Encounters.Length == 1 ? "" : "s")) : kind;
@@ -95,10 +97,15 @@ namespace Kage
             Dock(save, stage);
         }
 
-        static float EyebrowWidth(string s)
+        // the foe's words sit over the bright live scene: a soft shadow keeps them readable
+        static void Soften(Text t)
         {
-            // tracked uppercase Cinzel 15: close enough to place the pips before the line
-            return s.Length * (9.4f + 3.6f);
+            var sh = t.gameObject.AddComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.8f);
+            sh.effectDistance = new Vector2(0f, -2.5f);
+            var sh2 = t.gameObject.AddComponent<Shadow>();
+            sh2.effectColor = new Color(0f, 0f, 0f, 0.45f);
+            sh2.effectDistance = new Vector2(2f, 2f);
         }
 
         float Cell(float x, float y, string k, string v)
@@ -126,6 +133,9 @@ namespace Kage
             var owned = new List<JsWeapon>();
             foreach (var w in JsTables.Weapons)
                 if (!w.Enemy && save.owned.weapons.ContainsKey(w.Id)) owned.Add(w);
+            // the starter weapon leads, as it does on the JS screen
+            int starter = owned.FindIndex(w => w.Id == "kagetsu");
+            if (starter > 0) { var k = owned[starter]; owned.RemoveAt(starter); owned.Insert(0, k); }
 
             var head = Ui.Label(Root, "CHOOSE WEAPON", UiFont.Title, 13, Ui.Muted, 56, 788, 300, 18, TextAnchor.MiddleLeft, 4.42f);
             float hw = UiParts.Width(head, 4.42f);

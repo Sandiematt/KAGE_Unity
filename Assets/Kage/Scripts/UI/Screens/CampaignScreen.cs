@@ -224,7 +224,11 @@ namespace Kage
             Color nameC = st.Selected || st.IsNext ? Ui.Gold : locked ? Ui.Muted : Ui.Bone;
             int nameSize = st.Kind == "boss" ? 16 : st.IsNext ? 15 : 14;
             var nm = Ui.Label(rt, st.Label, UiFont.Title, nameSize, nameC, 5, box + 6, 130, 36, TextAnchor.UpperCenter, 0, true, 0.9f);
-            float nh = nm.preferredHeight;
+            nm.horizontalOverflow = HorizontalWrapMode.Overflow;
+            float oneLine = nm.preferredWidth;
+            nm.horizontalOverflow = HorizontalWrapMode.Wrap;
+            int lines = Mathf.Clamp(Mathf.CeilToInt(oneLine / 116f), 1, 3);
+            float nh = lines * nameSize * 1.21f;
             if (!string.IsNullOrEmpty(st.TypeLine))
                 Ui.Label(rt, st.TypeLine.ToUpperInvariant(), UiFont.Cond, 12, st.Kind == "boss" ? Ui.Hot : Ui.Muted, -10, box + 6 + nh + 4, 160, 16, TextAnchor.UpperCenter, 2.88f);
 
@@ -269,15 +273,15 @@ namespace Kage
             float rx = 412;
             if (card.Gems > 0)
             {
-                var g = Ui.Label(rt, "+" + card.Gems, UiFont.Title, 18, Ui.Gold, 0, cy, 60, 28, TextAnchor.MiddleRight);
-                g.rectTransform.anchoredPosition = new Vector2(rx - 60, -cy);
-                Ui.Diamond(rt, rx - 60 - UiParts.Width(g) - 14, cy + 14, 11, Ui.Ruby, Ui.Ruby, 0);
-                rx = rx - 60 - UiParts.Width(g) - 40;
+                var g = Ui.Label(rt, "+" + card.Gems, UiFont.Title, 18, Ui.Gold, rx - 80, cy, 80, 28, TextAnchor.MiddleRight);
+                float gw = UiParts.Width(g);
+                Ui.Diamond(rt, rx - gw - 13, cy + 14, 11, Ui.Ruby, Ui.Ruby, 0);
+                rx = rx - gw - 13 - 22;
             }
-            var coins = Ui.Label(rt, "+" + card.Coins, UiFont.Title, 18, Ui.Gold, 0, cy, 100, 28, TextAnchor.MiddleRight);
-            coins.rectTransform.anchoredPosition = new Vector2(rx - 100, -cy);
-            Ui.Disc(rt, rx - 100 + 100 - UiParts.Width(coins) - 16, cy + 14, 9, Ui.Gold);
-            Ui.Disc(rt, rx - 100 + 100 - UiParts.Width(coins) - 16, cy + 14, 5, Ui.Mix(Ui.Gold, Ui.Panel, 0.45f));
+            var coins = Ui.Label(rt, "+" + card.Coins, UiFont.Title, 18, Ui.Gold, rx - 100, cy, 100, 28, TextAnchor.MiddleRight);
+            float cw = UiParts.Width(coins);
+            Ui.Disc(rt, rx - cw - 15, cy + 14, 9, Ui.Gold);
+            Ui.Disc(rt, rx - cw - 15, cy + 14, 5, Ui.Mix(Ui.Gold, Ui.Panel, 0.45f));
             cy += 28 + 4;
             if (card.Cleared)
             {
