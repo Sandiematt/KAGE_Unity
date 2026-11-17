@@ -123,7 +123,7 @@ namespace Kage
             body = gameObject.AddComponent<BoxCollider2D>();
             body.size = new Vector2(0.36f, 1.5f);
             body.offset = new Vector2(0f, 0.75f);
-            body.sharedMaterial = KageGame.NoFriction;
+            body.sharedMaterial = PhysicsMaterials.NoFriction;
 
             var vis = new GameObject("Visual");
             vis.transform.SetParent(transform, false);

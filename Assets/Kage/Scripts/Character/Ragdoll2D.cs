@@ -78,7 +78,7 @@ namespace Kage
                 t.gameObject.layer = KageGame.LayerRagdoll;
             }
 
-            var mat = new PhysicsMaterial2D("Ragdoll") { friction = 0.7f, bounciness = 0.12f };
+            var mat = PhysicsMaterials.Ragdoll;
             foreach (var b in Bodies)
             {
                 var t = rig.Bone(b);

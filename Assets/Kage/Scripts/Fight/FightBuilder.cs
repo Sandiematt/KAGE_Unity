@@ -63,21 +63,13 @@ namespace Kage
             Moves = MoveSet.Build();
         }
 
-        /// <summary>The 60 Hz step, the frictionless fighter material and the layer collision rules.</summary>
+        /// <summary>
+        /// The 60 Hz step. The layer collision matrix and the physics materials are project settings and
+        /// assets (ProjectSettings/Physics2DSettings.asset, Resources/Physics; docs/physics.md), not code.
+        /// </summary>
         public static void ConfigurePhysics()
         {
             Time.fixedDeltaTime = 1f / 60f;
-            if (KageGame.NoFriction == null) KageGame.NoFriction = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
-            Physics2D.IgnoreLayerCollision(KageGame.LayerFighter, KageGame.LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(KageGame.LayerRagdoll, KageGame.LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(KageGame.LayerRagdoll, KageGame.LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(KageGame.LayerProp, KageGame.LayerFighter, true);
-            Physics2D.IgnoreLayerCollision(KageGame.LayerProp, KageGame.LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(KageGame.LayerProp, KageGame.LayerProp, true);
-            Physics2D.IgnoreLayerCollision(0, KageGame.LayerRagdoll, true);
-            Physics2D.IgnoreLayerCollision(0, KageGame.LayerFighter, true);
-            // hurtboxes touch nothing: only hit casts query them (ADR-0007)
-            for (int layer = 0; layer < 32; layer++) Physics2D.IgnoreLayerCollision(PhysicsLayers.Hurtbox, layer, true);
         }
 
         /// <summary>Ground and walls only, for a fight with no arena visuals.</summary>
