@@ -135,6 +135,9 @@ namespace Kage
                 case FlowScreen.Stage:
                     EnsureStageWorld();
                     break;
+                case FlowScreen.Results:
+                    if (World != null) World.FrameResults();
+                    break;
             }
 
             foreach (var kv in panels) if (kv.Key != scr && kv.Value.Visible) kv.Value.Hide();
@@ -220,6 +223,7 @@ namespace Kage
             foreach (var cmd in commands) Send(cmd);
             Pointer();
             stageHud.Tick();
+            if (Controller.Screen == FlowScreen.Results) panels[FlowScreen.Results].Tick();
         }
 
         void Pointer()
