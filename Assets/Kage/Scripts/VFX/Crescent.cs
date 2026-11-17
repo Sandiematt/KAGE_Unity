@@ -21,12 +21,17 @@ namespace Kage
         public static Crescent Spawn(Fighter owner, Vector2 pos, float dir)
         {
             var go = new GameObject("Crescent");
-            go.transform.SetParent(KageGame.I != null ? KageGame.I.transform : null, false);
+            go.transform.SetParent(owner.transform.parent, false);    // the fight root (KageGame in the dev arena)
             go.transform.position = pos;
             var c = go.AddComponent<Crescent>();
             c.Init(owner, dir);
+            owner.ctx?.Crescents.Add(c);
             return c;
         }
+
+        bool Headless => _owner != null && _owner.ctx != null && _owner.ctx.Clock.Manual;
+
+        void OnDestroy() => _owner?.ctx?.Crescents.Remove(this);
 
         void Init(Fighter owner, float dir)
         {
@@ -36,11 +41,11 @@ namespace Kage
             _rim = new Mesh(); _body = new Mesh(); _core = new Mesh();
             int o = Vfx.Order + 30;
             _rRim = MeshKit.MakeRenderer("Rim", transform, _rim, MeshKit.Alpha, o);
-            _rBody = MeshKit.MakeRenderer("Body", transform, _body, Vfx.I.AddHDR(2.4f), o + 1);
-            _rCore = MeshKit.MakeRenderer("Core", transform, _core, Vfx.I.AddHDR(3.4f), o + 2);
+            _rBody = MeshKit.MakeRenderer("Body", transform, _body, Vfx.I != null ? Vfx.I.AddHDR(2.4f) : MeshKit.Additive, o + 1);
+            _rCore = MeshKit.MakeRenderer("Core", transform, _core, Vfx.I != null ? Vfx.I.AddHDR(3.4f) : MeshKit.Additive, o + 2);
             _w = new HitWindow { dmg = 10, level = HitLevel.Mid, kb = new Vector2(2.6f, 1.2f), stun = 22, hitstop = 7, shake = 0.22f, heavy = true, radius = 0.32f, sword = true };
             Build(0f);
-            Vfx.I.Star(transform.position, 0.6f, owner.fxCore, owner.fxMain);
+            Vfx.I?.Star(transform.position, 0.6f, owner.fxCore, owner.fxMain);
         }
 
         void Build(float u)
@@ -85,8 +90,14 @@ namespace Kage
 
         void Update()
         {
+            if (Headless) return;    // the fight loop moves it at each frame
+            Advance(Time.deltaTime);
+        }
+
+        /// <summary>Moves the crescent by <paramref name="dt"/> seconds and tests its leading arc for a hit.</summary>
+        public void Advance(float dt)
+        {
             if (_done) return;
-            float dt = Time.deltaTime;
             if (dt <= 0f) return;
             _t += dt;
             float u = _t / Life;
@@ -97,10 +108,10 @@ namespace Kage
             if (_echoT > 0.035f)
             {
                 _echoT = 0f;
-                Vfx.I.Echo(this, _rBody, 0.18f);
+                Vfx.I?.Echo(this, _rBody, 0.18f);
             }
             Vector2 p = transform.position;
-            Vfx.I.Embers(p + new Vector2(-_dir * 0.2f, Random.Range(-0.45f, 0.45f)), new Vector2(-_dir * Random.Range(0.5f, 2f), Random.Range(-0.4f, 0.8f)), _owner.fxMain, Random.Range(0.03f, 0.06f), Random.Range(0.25f, 0.45f));
+            Vfx.I?.Embers(p + new Vector2(-_dir * 0.2f, Random.Range(-0.45f, 0.45f)), new Vector2(-_dir * Random.Range(0.5f, 2f), Random.Range(-0.4f, 0.8f)), _owner.fxMain, Random.Range(0.03f, 0.06f), Random.Range(0.25f, 0.45f));
 
             // hit test: the crescent's leading arc
             Vector2 hp = p + new Vector2(_dir * 0.3f, 0f);
@@ -112,14 +123,19 @@ namespace Kage
         bool TryHit(IHittable t, Vector2 hp)
         {
             if (t == null) return false;
+            if (t is Fighter f && f.team == _owner.team) return false;
             for (int i = -1; i <= 1; i++)
             {
                 Vector2 q = hp + new Vector2(0f, i * 0.32f);
                 if (!t.Overlap(q, _w.radius, _w, out var zone, out var contact)) continue;
-                var info = new HitInfo { attacker = _owner, w = _w, dmg = _w.dmg, kb = new Vector2(_w.kb.x * _dir, _w.kb.y), zone = zone, contact = contact };
+                var info = new HitInfo
+                {
+                    attacker = _owner, w = _w, dmg = _w.dmg, kb = new Vector2(_w.kb.x * _dir, _w.kb.y), zone = zone, contact = contact,
+                    moveId = "crescent", window = -1,
+                };
                 var res = t.ReceiveHit(info);
                 _owner.ResolveExternal(t, info, res);
-                Vfx.I.InkBurst(contact, _owner.fxDark, 0.8f);
+                Vfx.I?.InkBurst(contact, _owner.fxDark, 0.8f);
                 Fade();
                 return true;
             }
@@ -129,7 +145,7 @@ namespace Kage
         void Fade()
         {
             _done = true;
-            Vfx.I.Ring(transform.position, 0.2f, 0.9f, 0.08f, _owner.fxMain, 0.25f, false);
+            Vfx.I?.Ring(transform.position, 0.2f, 0.9f, 0.08f, _owner.fxMain, 0.25f, false);
             Destroy(gameObject);
         }
     }

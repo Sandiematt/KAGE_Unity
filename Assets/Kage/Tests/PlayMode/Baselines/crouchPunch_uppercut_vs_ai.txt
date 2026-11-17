@@ -1,0 +1,137 @@
+# KAGE baseline replay: crouchPunch_uppercut_vs_ai
+# seed 61. Frame lines: frame, then per fighter: id x y state move:moveFrame hp; then the bag: x y rotation.
+[events]
+0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
+0 MoveStarted kage>- crouchPunch#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+6 Blocked kage>ronin crouchPunch#0 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+12 MoveStarted kage>- uppercut#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+20 Blocked kage>ronin uppercut#0 dmg=0 pos=0 crit=0 lvl=Mid zone=Head i=0 n=-
+45 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+51 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+58 MoveStarted ronin>- kick1#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+67 Hit ronin>kage kick1#0 dmg=6 pos=0 crit=0 lvl=High zone=Head i=0 n=-
+77 MoveStarted ronin>- kick2#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+86 Hit ronin>kage kick2#0 dmg=9 pos=0 crit=1 lvl=Mid zone=Body i=0 n=-
+99 MoveStarted ronin>- axe#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+114 Hit ronin>kage axe#0 dmg=10 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+[frames]
+0 kage -0.37000 0.02000 Attack crouchPunch:0 hp=100 ronin 0.37000 0.02000 Idle - hp=100
+1 kage -0.37000 0.02000 Attack crouchPunch:1 hp=100 ronin 0.37444 0.02000 Walk - hp=100
+2 kage -0.37000 0.02000 Attack crouchPunch:2 hp=100 ronin 0.38333 0.02000 Walk - hp=100
+3 kage -0.37000 0.02000 Attack crouchPunch:3 hp=100 ronin 0.39667 0.02000 Walk - hp=100
+4 kage -0.37000 0.02000 Attack crouchPunch:4 hp=100 ronin 0.41444 0.02000 Walk - hp=100
+5 kage -0.37000 0.02000 Attack crouchPunch:5 hp=100 ronin 0.43611 0.02000 Walk - hp=100
+6 kage -0.37000 0.02000 Attack crouchPunch:6 hp=100 ronin 0.45428 0.02000 Blockstun - hp=100
+7 kage -0.37000 0.02000 Attack crouchPunch:6 hp=100 ronin 0.45428 0.02000 Blockstun - hp=100
+8 kage -0.37000 0.02000 Attack crouchPunch:6 hp=100 ronin 0.45428 0.02000 Blockstun - hp=100
+9 kage -0.37000 0.02000 Attack crouchPunch:6 hp=100 ronin 0.45428 0.02000 Blockstun - hp=100
+10 kage -0.37000 0.02000 Attack crouchPunch:7 hp=100 ronin 0.46994 0.02000 Blockstun - hp=100
+11 kage -0.37000 0.02000 Attack crouchPunch:8 hp=100 ronin 0.48311 0.02000 Blockstun - hp=100
+12 kage -0.37000 0.02000 Attack uppercut:0 hp=100 ronin 0.49378 0.02000 Blockstun - hp=100
+13 kage -0.37000 0.02000 Attack uppercut:1 hp=100 ronin 0.50194 0.02000 Blockstun - hp=100
+14 kage -0.34000 0.02000 Attack uppercut:2 hp=100 ronin 0.50761 0.02000 Blockstun - hp=100
+15 kage -0.31000 0.02000 Attack uppercut:3 hp=100 ronin 0.51078 0.02000 Blockstun - hp=100
+16 kage -0.28000 0.02000 Attack uppercut:4 hp=100 ronin 0.51144 0.02000 Idle - hp=100
+17 kage -0.25000 0.02000 Attack uppercut:5 hp=100 ronin 0.51656 0.02000 Walk - hp=100
+18 kage -0.22000 0.02000 Attack uppercut:6 hp=100 ronin 0.52611 0.02000 Walk - hp=100
+19 kage -0.19000 0.02000 Attack uppercut:7 hp=100 ronin 0.54011 0.02000 Walk - hp=100
+20 kage -0.16000 0.02000 Attack uppercut:8 hp=100 ronin 0.55553 0.02000 Blockstun - hp=100
+21 kage -0.16000 0.02000 Attack uppercut:8 hp=100 ronin 0.55553 0.02000 Blockstun - hp=100
+22 kage -0.16000 0.02000 Attack uppercut:8 hp=100 ronin 0.55553 0.02000 Blockstun - hp=100
+23 kage -0.16000 0.02000 Attack uppercut:8 hp=100 ronin 0.55553 0.02000 Blockstun - hp=100
+24 kage -0.13224 0.02000 Attack uppercut:9 hp=100 ronin 0.57068 0.02000 Blockstun - hp=100
+25 kage -0.11522 0.02000 Attack uppercut:10 hp=100 ronin 0.58964 0.02000 Blockstun - hp=100
+26 kage -0.10168 0.02000 Attack uppercut:11 hp=100 ronin 0.60513 0.02000 Blockstun - hp=100
+27 kage -0.09161 0.02000 Attack uppercut:12 hp=100 ronin 0.61714 0.02000 Blockstun - hp=100
+28 kage -0.08501 0.02000 Attack uppercut:13 hp=100 ronin 0.62568 0.02000 Blockstun - hp=100
+29 kage -0.08189 0.02000 Attack uppercut:14 hp=100 ronin 0.63075 0.02000 Blockstun - hp=100
+30 kage -0.08224 0.02000 Attack uppercut:15 hp=100 ronin 0.63443 0.02000 Blockstun - hp=100
+31 kage -0.08390 0.02000 Attack uppercut:16 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+32 kage -0.08390 0.02000 Attack uppercut:17 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+33 kage -0.08390 0.02000 Attack uppercut:18 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+34 kage -0.08390 0.02000 Attack uppercut:19 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+35 kage -0.08390 0.02000 Attack uppercut:20 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+36 kage -0.08390 0.02000 Attack uppercut:21 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+37 kage -0.08390 0.02000 Attack uppercut:22 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+38 kage -0.08390 0.02000 Attack uppercut:23 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+39 kage -0.08390 0.02000 Attack uppercut:24 hp=100 ronin 0.63610 0.02000 Blockstun - hp=100
+40 kage -0.08390 0.02000 Attack uppercut:25 hp=100 ronin 0.63610 0.02000 Idle - hp=100
+41 kage -0.08390 0.02000 Attack uppercut:26 hp=100 ronin 0.63610 0.02000 Idle - hp=100
+42 kage -0.08390 0.02000 Attack uppercut:27 hp=100 ronin 0.63610 0.02000 Idle - hp=100
+43 kage -0.08390 0.02000 Attack uppercut:28 hp=100 ronin 0.63610 0.02000 Idle - hp=100
+44 kage -0.08390 0.02000 Attack uppercut:29 hp=100 ronin 0.63610 0.02000 Idle - hp=100
+45 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:0 hp=100
+46 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:1 hp=100
+47 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:2 hp=100
+48 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:3 hp=100
+49 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:4 hp=100
+50 kage -0.08390 0.02000 Idle - hp=100 ronin 0.63610 0.02000 Attack jab:5 hp=100
+51 kage -0.10057 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:6 hp=100
+52 kage -0.10057 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:6 hp=100
+53 kage -0.10057 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:6 hp=100
+54 kage -0.10057 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:6 hp=100
+55 kage -0.10057 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:6 hp=100
+56 kage -0.11418 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:7 hp=100
+57 kage -0.12474 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack jab:8 hp=100
+58 kage -0.13224 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:0 hp=100
+59 kage -0.13668 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:1 hp=100
+60 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:2 hp=100
+61 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:3 hp=100
+62 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:4 hp=100
+63 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:5 hp=100
+64 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:6 hp=100
+65 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:7 hp=100
+66 kage -0.13807 0.02000 Hitstun - hp=96 ronin 0.63610 0.02000 Attack kick1:8 hp=100
+67 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+68 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+69 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+70 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+71 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+72 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+73 kage -0.16474 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:9 hp=100
+74 kage -0.18835 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:10 hp=100
+75 kage -0.20890 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:11 hp=100
+76 kage -0.22640 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick1:12 hp=100
+77 kage -0.24085 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:0 hp=100
+78 kage -0.25224 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:1 hp=100
+79 kage -0.26057 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:2 hp=100
+80 kage -0.26585 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:3 hp=100
+81 kage -0.26807 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:4 hp=100
+82 kage -0.26807 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:5 hp=100
+83 kage -0.26807 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:6 hp=100
+84 kage -0.26807 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:7 hp=100
+85 kage -0.26807 0.02000 Hitstun - hp=90 ronin 0.63610 0.02000 Attack kick2:8 hp=100
+86 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+87 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+88 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+89 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+90 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+91 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+92 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+93 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+94 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+95 kage -0.30474 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:9 hp=100
+96 kage -0.33835 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:10 hp=100
+97 kage -0.36890 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:11 hp=100
+98 kage -0.39640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack kick2:12 hp=100
+99 kage -0.42085 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:0 hp=100
+100 kage -0.44224 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:1 hp=100
+101 kage -0.46057 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:2 hp=100
+102 kage -0.47585 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:3 hp=100
+103 kage -0.48807 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:4 hp=100
+104 kage -0.49724 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:5 hp=100
+105 kage -0.50335 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:6 hp=100
+106 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:7 hp=100
+107 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:8 hp=100
+108 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:9 hp=100
+109 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:10 hp=100
+110 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:11 hp=100
+111 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:12 hp=100
+112 kage -0.50640 0.02000 Hitstun - hp=81 ronin 0.63610 0.02000 Attack axe:13 hp=100
+113 kage -0.50640 0.02000 Idle - hp=81 ronin 0.63610 0.02000 Attack axe:14 hp=100
+114 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100
+115 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100
+116 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100
+117 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100
+118 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100
+119 kage -0.52307 0.04795 Launched - hp=71 ronin 0.63610 0.02000 Attack axe:15 hp=100

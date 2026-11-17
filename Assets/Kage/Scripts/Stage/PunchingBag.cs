@@ -17,6 +17,11 @@ namespace Kage
         float _flash;
         MaterialPropertyBlock _mpb;
         public float totalDamage;
+        /// <summary>Prop id in the event stream (ADR-0002).</summary>
+        public string PropId = "bag";
+        /// <summary>The bag body's position (its top, where the rope ties on) and rotation in degrees.</summary>
+        public Vector2 BagPosition => _bag.position;
+        public float BagRotation => _bag.rotation;
         const float BagLen = 1.15f;
 
         public static PunchingBag Build(Transform parent, Vector2 anchor)

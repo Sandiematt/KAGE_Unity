@@ -19,15 +19,33 @@ namespace Kage
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
+            ManualClock = null;
             _hitstopUntil = _slowUntil = 0f; _slowScale = 1f; trauma = punch = flashAmount = aberration = 0f; paused = false; debugTimeScale = 1f;
         }
 
-        public static void Hitstop(int frames) => _hitstopUntil = Mathf.Max(_hitstopUntil, Time.unscaledTime + frames / 60f);
+        /// <summary>
+        /// The clock of the running headless fight (FightClock.Manual), set by its FightLoop. While set,
+        /// hitstop and slow motion are counted in that clock's frames instead of wall-clock time and
+        /// Time.timeScale (ADR-0002). Null in play, where everything works as before.
+        /// </summary>
+        public static FightClock ManualClock;
+
+        public static void Hitstop(int frames)
+        {
+            if (ManualClock != null) { ManualClock.Hitstop(frames); return; }
+            _hitstopUntil = Mathf.Max(_hitstopUntil, Time.unscaledTime + frames / 60f);
+        }
+
         public static void Shake(float t) => trauma = Mathf.Min(1f, trauma + t);
         public static void Punch(float p) { punch = Mathf.Max(punch, p); aberration = Mathf.Max(aberration, p * 4f); }
-        public static void SlowMo(float scale, float duration) { _slowScale = scale; _slowUntil = Time.unscaledTime + duration; }
+
+        public static void SlowMo(float scale, float duration)
+        {
+            if (ManualClock != null) { ManualClock.SlowMo(scale, Mathf.RoundToInt(duration * 60f)); return; }
+            _slowScale = scale; _slowUntil = Time.unscaledTime + duration;
+        }
         public static void Flash(Color c, float duration) { flashColor = c; flashAmount = c.a; flashDecay = c.a / Mathf.Max(0.02f, duration); }
-        public static bool InHitstop => Time.unscaledTime < _hitstopUntil;
+        public static bool InHitstop => ManualClock != null ? ManualClock.InHitstop : Time.unscaledTime < _hitstopUntil;
 
         public static void Tick()
         {

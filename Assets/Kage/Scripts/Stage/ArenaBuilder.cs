@@ -25,11 +25,9 @@ namespace Kage
             return t;
         }
 
-        public static void Build(Transform root, CameraRig camRig)
+        /// <summary>The arena's physics only: the ground and two walls on the Ground layer (also used by headless fights).</summary>
+        public static void BuildPhysics(Transform root)
         {
-            _root = root;
-
-            // ---------- physics ----------
             var ground = new GameObject("Ground");
             ground.transform.SetParent(root, false);
             ground.layer = KageGame.LayerGround;
@@ -45,6 +43,12 @@ namespace Kage
                 wb.size = new Vector2(2f, 30f);
                 wb.offset = new Vector2(sx * 8.9f, 12f);
             }
+        }
+
+        public static void Build(Transform root, CameraRig camRig)
+        {
+            _root = root;
+            BuildPhysics(root);
 
             // ---------- sky (follows the camera) ----------
             var sky = Group("Sky");
