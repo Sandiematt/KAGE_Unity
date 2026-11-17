@@ -14,8 +14,9 @@ namespace Kage
         public readonly CombatEvents Events = new();
         public readonly List<Fighter> Fighters = new();     // spawn order = tick order
         public readonly List<IHittable> Props = new();      // training bag, later breakables
-        /// <summary>Live Crimson Crescents. On a manual clock the loop moves them; SAN-75 replaces this with projectiles.</summary>
-        public readonly List<Crescent> Crescents = new();
+        /// <summary>Live projectiles (Crescent, kunai...) and hazards: the fight loop ticks them (ADR-0002, step 6).</summary>
+        public readonly List<Projectile> Projectiles = new();
+        public readonly List<Hazard> Hazards = new();
         /// <summary>This frame's hit sweeps: recorded by the fighter tick, read by the clash and hit phases (ADR-0002).</summary>
         public readonly List<HitSweep> Sweeps = new();
         /// <summary>
