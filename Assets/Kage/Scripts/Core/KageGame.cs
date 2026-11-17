@@ -171,7 +171,7 @@ namespace Kage
             bag.gameObject.SetActive(training);
             player.opponent = training ? null : enemy;
             player.extraTarget = training ? bag : null;
-            player.roundsWon = enemy.roundsWon = 0;
+            player.roundsWon = enemy.roundsWon = 0; player.ResetKunai(); enemy.ResetKunai();
             _round = 1;
             Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train");
             _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };

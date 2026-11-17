@@ -27,13 +27,42 @@ namespace Kage
             KageGame.I?.Audio?.Play(SfxKind.Counter, 1f);
         }
 
+        /// <summary>The Crimson Crescent as data for the generic projectile (SAN-75): the numbers it always had.</summary>
+        public static readonly ProjectileDef CrescentProjectile = new()
+        {
+            id = "crescent",
+            hit = new HitWindow { dmg = 10, level = HitLevel.Mid, kb = new Vector2(2.6f, 1.2f), stun = 22, hitstop = 7, shake = 0.22f, heavy = true, radius = 0.32f, sword = true },
+            speed = 8.2f,
+            radius = 0.32f,
+            lifeFrames = 69,                 // 1.15 s
+            maxHits = 1,
+            samples = new[] { new Vector2(0.3f, -0.32f), new Vector2(0.3f, 0f), new Vector2(0.3f, 0.32f) },    // its leading arc
+            flightCue = CrescentCues.Flight, hitCue = CrescentCues.Hit, endCue = CrescentCues.Fade,
+        };
+
         void SpawnCrescent()
         {
+            if (ctx == null) return;
             Vector2 p = rig.World(B.Sword, def.bladeTipLocal * 0.55f);
             p.y = Mathf.Max(p.y, 1.0f);
-            Crescent.Spawn(this, new Vector2(p.x, 1.05f), facing);
+            Projectile.Spawn(ctx, this, CrescentProjectile, new Vector2(p.x, 1.05f), facing);
             GameFeel.Shake(0.1f);
             KageGame.I?.Audio?.Play(SfxKind.Crescent, 0.9f);
+        }
+
+        /// <summary>
+        /// Special + Down (ADR-0004): the rage art when Rage is full, else a kunai if any are left, else nothing.
+        /// Returns true when the press was used up (including the "nothing" case); false when it is not for this
+        /// method (in the air), so the caller falls through to the move table.
+        /// </summary>
+        bool TrySpecialDown()
+        {
+            if (!Grounded) return false;
+            ConsumeBuffer();
+            if (Has(CharacterFlags.CanRageArt) && meter >= 100f) { StartUltimate(); return true; }
+            if (StartKunaiThrow()) return true;
+            if (Has(CharacterFlags.CanThrowKunai)) KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO KUNAI", new Color(0.7f, 0.7f, 0.7f), 0.7f);
+            return true;
         }
 
         public const string ThousandShadows = "thousandShadows";

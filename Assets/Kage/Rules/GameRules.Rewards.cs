@@ -25,6 +25,8 @@ namespace Kage.Rules
         public int maxCombo;
         public int parries;
         public bool flawless;
+        /// <summary>Fraction of the foe's health taken (0 to 1); only the results screen's loss recap reads it.</summary>
+        public double enemyDamage;
     }
 
     /// <summary>The reward tier of a stage: stretches pay like regular fights; sub-bosses and Raikon pay more.</summary>

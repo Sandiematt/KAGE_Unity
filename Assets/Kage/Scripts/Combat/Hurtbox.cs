@@ -97,6 +97,16 @@ namespace Kage
                 if (c.TryGetComponent<Hurtbox>(out var h)) into.Add(h);
         }
 
+        /// <summary>Every hurtbox an axis-aligned box centred at <paramref name="centre"/> touches (hazards, SAN-75).</summary>
+        public static void OverlapBox(Vector2 centre, Vector2 size, List<Hurtbox> into)
+        {
+            into.Clear();
+            ColTmp.Clear();
+            Physics2D.OverlapBox(centre, size, 0f, Filter, ColTmp);
+            foreach (var c in ColTmp)
+                if (c.TryGetComponent<Hurtbox>(out var h)) into.Add(h);
+        }
+
         /// <summary>
         /// Every hurtbox a circle moving from <paramref name="from"/> to <paramref name="to"/> touches on
         /// the way, with the fraction of the path where it first touches. A zero-length sweep finds nothing.

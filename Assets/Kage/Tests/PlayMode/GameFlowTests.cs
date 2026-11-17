@@ -159,6 +159,53 @@ namespace Kage.Tests
             Assert.IsFalse(GameRules.IsStageComplete(flow.Controller.Save, "prologue.1"));
         }
 
+        [UnityTest]
+        public IEnumerator The_results_screen_shows_what_the_rules_paid_and_replay_starts_the_stage_again()
+        {
+            StartFlow(devMode: false);
+            yield return null;
+            yield return IntoAFight();
+            flow.World.ForceKnockOut(foeLoses: true);
+            yield return Until(() => flow.Controller.Screen == FlowScreen.Results, 8f, "the results");
+            var screen = (ResultsScreen)flow.Panel(FlowScreen.Results);
+            var o = flow.Controller.LastOutcome;
+            Assert.IsTrue(screen.Visible);
+            Assert.AreEqual("Victory", screen.View.Title);
+            Assert.AreEqual(o.Rating.ToString(), screen.View.Rating);
+            Assert.AreEqual(o.Coins, screen.View.Coins);
+            Assert.AreEqual(o.Xp, screen.View.XpGain);
+            Assert.AreEqual("continue", Focus);
+
+            flow.Send(MenuCommand.Right);
+            Assert.AreEqual("retry", Focus);
+            var before = flow.World;
+            flow.Send(MenuCommand.Submit);          // Replay
+            Assert.AreEqual(FlowScreen.Stage, flow.Controller.Screen);
+            Assert.AreNotSame(before, flow.World);
+        }
+
+        [UnityTest]
+        public IEnumerator A_lost_fight_shows_the_defeat_state_with_no_gems_and_a_way_back_to_the_map()
+        {
+            StartFlow(devMode: false);
+            yield return null;
+            int gems = flow.Controller.Save.gems;
+            yield return IntoAFight();
+            flow.World.ForceKnockOut(foeLoses: false);
+            yield return Until(() => flow.Controller.Screen == FlowScreen.Results, 8f, "the results");
+            var v = ((ResultsScreen)flow.Panel(FlowScreen.Results)).View;
+            Assert.AreEqual("Defeated", v.Title);
+            Assert.IsFalse(v.ShowRewards);
+            Assert.AreEqual(gems, flow.Controller.Save.gems);
+            Assert.AreEqual("retry", Focus);
+
+            flow.Send(MenuCommand.Right);
+            Assert.AreEqual("continue", Focus);
+            flow.Send(MenuCommand.Submit);          // Map
+            Assert.AreEqual(FlowScreen.Campaign, flow.Controller.Screen);
+            Assert.IsFalse(GameRules.IsStageComplete(flow.Controller.Save, "prologue.1"));
+        }
+
         // ---- pause ----
 
         IEnumerator IntoAFight()
