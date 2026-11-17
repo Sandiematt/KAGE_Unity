@@ -136,7 +136,34 @@ namespace Kage.Rules
                 if (ci >= 0 && ci + 1 < chapters.Length && IsChapterComplete(save, st.Chapter))
                     clear.Unlocks.Add(new StageUnlock { Kind = "chapter", Id = chapters[ci + 1].Id });
             }
+            clear.Gear.AddRange(GrantStageReward(save, st));
+            clear.Unlocks.AddRange(clear.Gear);
             return clear;
+        }
+
+        /// <summary>
+        /// Gear a stage gives when it is cleared. Each item is granted exactly once, at level 1, while the player
+        /// does not own it; an item flagged NgOnly only drops in New Game+ (save.ng > 0). JS grantStageReward.
+        /// </summary>
+        public static List<StageUnlock> GrantStageReward(SaveData save, JsStage stage)
+        {
+            var got = new List<StageUnlock>();
+            if (stage == null || stage.Reward == null) return got;
+            Grant(save, GearKind.Weapons, stage.Reward.Weapons, got);
+            Grant(save, GearKind.Helmets, stage.Reward.Helmets, got);
+            Grant(save, GearKind.Armors, stage.Reward.Armors, got);
+            return got;
+        }
+
+        static void Grant(SaveData save, GearKind kind, string[] ids, List<StageUnlock> got)
+        {
+            foreach (var id in ids)
+            {
+                var it = Item(kind, id);
+                if (it == null || Owns(save, kind, id) || (it.NgOnly && save.ng <= 0)) continue;
+                OwnedOf(save, kind)[id] = 1;
+                got.Add(new StageUnlock { Kind = KindName(kind), Id = id });
+            }
         }
     }
 }
