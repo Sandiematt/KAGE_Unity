@@ -13,6 +13,8 @@ namespace Kage
         public int sortOrder;
         public Color main, core, dark;
         public float scale = 1f;
+        /// <summary>Physics mass; knockback impulses are divided by it (Kage and the Ronin: 1).</summary>
+        public float mass = 1f;
         public bool isPlayer, canUltimate;
 
         public static FighterSpec Kage => new()
@@ -83,6 +85,7 @@ namespace Kage
             var f = go.AddComponent<Fighter>();
             f.Setup(spec.displayName, KageModel.Build(spec.look), Moves, spec.sortOrder, spec.main, spec.core, spec.dark);
             if (spec.scale != 1f) go.transform.localScale = new Vector3(spec.scale, spec.scale, 1f);
+            f.Mass = spec.mass;
             f.isPlayer = spec.isPlayer;
             f.canUltimate = spec.canUltimate;
             f.input = input;

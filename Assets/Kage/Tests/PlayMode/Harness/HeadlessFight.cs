@@ -32,7 +32,8 @@ namespace Kage.Tests
         public readonly AIInputSource Ai;
         readonly List<string> _frames = new();
 
-        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f)
+        /// <param name="foeSpec">Who the foe is (default the Ronin), for example a heavier test dummy.</param>
+        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, FighterSpec foeSpec = null)
         {
             Root = new GameObject("HeadlessFight");
             var b = new FightBuilder(Root.transform, seed, manualClock: true);
@@ -48,7 +49,7 @@ namespace Kage.Tests
                 Ai = new AIInputSource();
                 IInputSource input = Ai;
                 if (foe == Foe.Scripted) { RoninInput = new ScriptedInput { fallback = Ai }; input = RoninInput; }
-                Ronin = b.AddFighter(FighterSpec.Ronin, 1, input);
+                Ronin = b.AddFighter(foeSpec ?? FighterSpec.Ronin, 1, input);
             }
             Ctx = b.Build();
             Loop = b.Loop;
