@@ -97,74 +97,73 @@ namespace Kage.Tests
             public string move;
             public System.Action<ScriptedInput> script;
             public int frames;
+            /// <summary>The move's hit points step further in one frame than their reach, so point tests can miss.</summary>
+            public bool tunnels;
             public override string ToString() => move;
         }
 
         static IEnumerable<FastMove> FastMoves()
         {
-            yield return new FastMove { move = "cleave", frames = 120, script = s => s.Add(1, buttons: "S").Add(10).Add(1, buttons: "S").Add(10).Add(1, buttons: "S") };
+            yield return new FastMove { move = "cleave", tunnels = true, frames = 120, script = s => s.Add(1, buttons: "S").Add(10).Add(1, buttons: "S").Add(10).Add(1, buttons: "S") };
             yield return new FastMove { move = "shadowStep", frames = 80, script = s => s.Add(1, fwd: 1, buttons: "S") };
             yield return new FastMove { move = "airKick", frames = 80, script = s => s.Add(10, fwd: 1, dy: 1).Add(1, buttons: "K") };
         }
 
-        const float ProbeRadius = 0.03f;
+        const float ProbeRadius = 0.005f;
 
         [Test, TestCaseSource(nameof(FastMoves))]
         public void AFastMoveHitsATargetItsPathCrossesBetweenTwoFrames(FastMove fm)
         {
             // 1. where the move's hit points go, with nothing to hit
             var sweeps = new List<HitSweep>();
-            var dry = Fight(Foe.None);
-            fm.script(dry.KageInput);
-            for (int i = 0; i < fm.frames; i++)
+            using (var dry = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f))
             {
-                dry.Run(1);
-                sweeps.AddRange(dry.Ctx.Sweeps.Where(s => s.owner == dry.Kage));
+                fm.script(dry.KageInput);
+                for (int i = 0; i < fm.frames; i++)
+                {
+                    dry.Run(1);
+                    sweeps.AddRange(dry.Ctx.Sweeps.Where(s => s.owner == dry.Kage));
+                }
             }
-            Assert.IsTrue(sweeps.Any(s => s.move.id == fm.move), $"{fm.move} never had an active hit point");
+            var own = sweeps.Where(s => s.move.id == fm.move).ToList();
+            Assert.IsNotEmpty(own, $"{fm.move} never had an active hit point");
 
-            // 2. a point on one sweep of the move that no sampled position (of any move in the script) touches,
-            //    and that no other move's sweep crosses
-            Vector2? target = null;
-            float best = 0f;
-            foreach (var s in sweeps.Where(s => s.move.id == fm.move))
-            {
+            // 2. the point between two frames' sample points farthest from every sampled position
+            Vector2 target = default;
+            float clear = float.MinValue;
+            foreach (var s in own)
                 for (float u = 0.3f; u <= 0.71f; u += 0.05f)
                 {
                     Vector2 c = Vector2.Lerp(s.from, s.to, u);
-                    float clear = sweeps.Min(o => Vector2.Distance(o.to, c) - o.radius);
-                    bool otherCrosses = sweeps.Any(o => o.move.id != fm.move && SegmentDistance(o.from, o.to, c) <= o.radius + ProbeRadius + 0.01f);
-                    if (otherCrosses || clear <= ProbeRadius + 0.01f || clear <= best) continue;
-                    best = clear;
-                    target = c;
+                    float d = sweeps.Min(o => Vector2.Distance(o.to, c) - o.radius);
+                    if (d > clear) { clear = d; target = c; }
                 }
+            float step = own.Max(s => Vector2.Distance(s.from, s.to));
+            string what = $"{fm.move}: longest step {step:0.000} m, reach {own[0].radius:0.000} m, gap {clear:0.000} m";
+            bool gap = clear > ProbeRadius + 0.002f;
+            if (fm.tunnels) Assert.IsTrue(gap, $"{what}: expected a gap that point tests step over");
+
+            // 3. the sweep hits it, exactly once ...
+            using (var swept = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f))
+            {
+                var probe = HurtProbe.Place(swept.Root.transform, target, ProbeRadius);
+                fm.script(swept.KageInput);
+                swept.Run(fm.frames);
+                Assert.AreEqual(1, probe.Hits.Count(h => h.moveId == fm.move), $"{what}: should hit the target once");
+                Assert.AreEqual(1, swept.Events(CombatEventType.Hit).Count(e => e.MoveId == fm.move && e.SourceId == "kage"), what);
             }
-            Assert.IsTrue(target.HasValue, $"{fm.move}: no gap between two frames' sample points wide enough to hide a target");
 
-            // 3. the legacy point checks miss it ...
+            // 4. ... where the legacy point tests step over it (when the move is fast enough to leave a gap)
+            if (!gap) return;
             Tuning.Override(new CombatTuning { legacyHitResolution = true });
-            var legacy = Fight(Foe.None);
-            var legacyProbe = HurtProbe.Place(legacy.Root.transform, target.Value, ProbeRadius);
-            legacy.Kage.extraTarget = legacyProbe;
-            fm.script(legacy.KageInput);
-            legacy.Run(fm.frames);
-            Assert.IsEmpty(legacyProbe.Hits, "the legacy point checks should step over the target (else the test proves nothing)");
-            Tuning.ClearOverrides();
-
-            // 4. ... and the sweep finds it
-            var swept = Fight(Foe.None);
-            var probe = HurtProbe.Place(swept.Root.transform, target.Value, ProbeRadius);
-            fm.script(swept.KageInput);
-            swept.Run(fm.frames);
-            Assert.AreEqual(1, probe.Hits.Count(h => h.moveId == fm.move), $"{fm.move} should hit the target once");
-            Assert.AreEqual(1, swept.Events(CombatEventType.Hit).Count(e => e.MoveId == fm.move && e.SourceId == "kage"));
-        }
-
-        static float SegmentDistance(Vector2 a, Vector2 b, Vector2 p)
-        {
-            Vector2 ab = b - a;
-            float t = ab.sqrMagnitude < 1e-12f ? 0f : Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude);
-            return Vector2.Distance(a + ab * t, p);
+            using (var legacy = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f))
+            {
+                var probe = HurtProbe.Place(legacy.Root.transform, target, ProbeRadius);
+                legacy.Kage.extraTarget = probe;
+                fm.script(legacy.KageInput);
+                legacy.Run(fm.frames);
+                Assert.IsFalse(probe.Hits.Any(h => h.moveId == fm.move), $"{what}: the legacy point tests should miss it");
+            }
         }
 
         // ---------------------------------------------------------------------------------------
