@@ -59,9 +59,9 @@ namespace Kage
         {
             if (!Grounded) return false;
             ConsumeBuffer();
-            if (canUltimate && meter >= 100f) { StartUltimate(); return true; }
+            if (Has(CharacterFlags.CanRageArt) && meter >= 100f) { StartUltimate(); return true; }
             if (StartKunaiThrow()) return true;
-            if (canThrowKunai) KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO KUNAI", new Color(0.7f, 0.7f, 0.7f), 0.7f);
+            if (Has(CharacterFlags.CanThrowKunai)) KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO KUNAI", new Color(0.7f, 0.7f, 0.7f), 0.7f);
             return true;
         }
 

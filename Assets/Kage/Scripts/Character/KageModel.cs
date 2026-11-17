@@ -160,6 +160,26 @@ namespace Kage
             return d;
         }
 
+        /// <summary>
+        /// Recolours a built rig: every part, painted polygon, rim and scarf colour equal to <paramref name="from"/>
+        /// becomes <paramref name="to"/> (a part set's trim in the character's colours). Nothing changes when they're equal.
+        /// </summary>
+        public static void Recolour(RigDef d, Color from, Color to)
+        {
+            if (from == to) return;
+            Color Swap(Color c) => c == from ? new Color(to.r, to.g, to.b, c.a) : c;
+            foreach (var p in d.parts)
+            {
+                p.color = Swap(p.color);
+                if (p.rimColor.HasValue) p.rimColor = Swap(p.rimColor.Value);
+                if (p.polys == null) continue;
+                for (int i = 0; i < p.polys.Count; i++) p.polys[i] = (p.polys[i].pts, Swap(p.polys[i].col));
+            }
+            d.rimColor = Swap(d.rimColor);
+            d.scarfColor = Swap(d.scarfColor);
+            d.scarfBack = Swap(d.scarfBack);
+        }
+
         // ---------------------------------------------------------------------------------------
         static Vector2[] FromSvg(float[] xy)
         {

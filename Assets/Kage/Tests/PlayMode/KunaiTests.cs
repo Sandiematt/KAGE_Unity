@@ -169,7 +169,7 @@ namespace Kage.Tests
         public void AFighterWhoCannotThrowKunaiDoesNothing()
         {
             var f = Duel();
-            f.Kage.canThrowKunai = false;
+            f.Kage.Flags &= ~CharacterFlags.CanThrowKunai;
             SpecialDown(f);
             f.Run(40);
             Assert.AreEqual(0, f.Ctx.Projectiles.Count);

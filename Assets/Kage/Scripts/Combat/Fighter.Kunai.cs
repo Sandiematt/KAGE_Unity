@@ -13,8 +13,6 @@ namespace Kage
     {
         /// <summary>Kunai a fighter starts a fight with (the JS player's 5). Character data and gear perks set it.</summary>
         public int kunaiStart = 5;
-        /// <summary>False for characters that never throw (a character flag, glossary "CanThrowKunai").</summary>
-        public bool canThrowKunai = true;
 
         int _kunaiLeft = -1;        // -1: not thrown any yet this fight, so the full starting count
 
@@ -67,7 +65,7 @@ namespace Kage
         /// <summary>Starts a throw if there is one to throw. Spends the kunai when the throw starts, as the JS game does.</summary>
         bool StartKunaiThrow()
         {
-            if (!canThrowKunai || KunaiCount <= 0) return false;
+            if (!Has(CharacterFlags.CanThrowKunai) || KunaiCount <= 0) return false;
             _kunaiLeft = KunaiCount - 1;
             StartMove(KunaiThrow);
             return true;

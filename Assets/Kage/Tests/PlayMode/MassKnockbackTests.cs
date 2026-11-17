@@ -16,21 +16,14 @@ namespace Kage.Tests
         [TearDown]
         public void TearDown() => Tuning.ClearOverrides();
 
-        /// <summary>A test dummy: the Ronin's rig and moves with three times Kage's mass.</summary>
-        static FighterSpec Heavy()
-        {
-            var s = FighterSpec.Ronin;
-            s.id = "test_heavy";
-            s.displayName = "HEAVY";
-            s.mass = 3f;
-            return s;
-        }
+        /// <summary>The test dummy: the Ronin's rig and moves with three times Kage's mass (catalog entry test_heavy).</summary>
+        static CharacterDef Heavy() => CharacterCatalog.Get(TestHeavy.Id);
 
         /// <summary>Kage against a foe who stands still; <paramref name="kage"/> scripts Kage. Dispose it.</summary>
-        static HeadlessFight Fight(System.Action<ScriptedInput> kage, FighterSpec foe = null, bool legacy = false, float kageX = -0.37f, float foeX = 0.37f)
+        static HeadlessFight Fight(System.Action<ScriptedInput> kage, CharacterDef foe = null, bool legacy = false, float kageX = -0.37f, float foeX = 0.37f)
         {
             Tuning.Override(new CombatTuning { legacyHitResolution = legacy });
-            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, kageX, foeX, foeSpec: foe);
+            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, kageX, foeX, foeDef: foe);
             Tuning.ClearOverrides();
             f.RoninInput.Add(600);
             kage(f.KageInput);
@@ -63,7 +56,7 @@ namespace Kage.Tests
         [Test]
         public void AHeavyDummyIsKnockedBackLessThanKageWeightByTheSameHit()
         {
-            float Travel(FighterSpec foe)
+            float Travel(CharacterDef foe)
             {
                 using var f = Fight(PushKick, foe);
                 f.RunUntil(() => f.Events(CombatEventType.Hit).Any(), 60);
@@ -81,7 +74,7 @@ namespace Kage.Tests
         [Test]
         public void AHeavyDummyIsLaunchedLowerThanKageWeightByTheSameHit()
         {
-            float Peak(FighterSpec foe)
+            float Peak(CharacterDef foe)
             {
                 using var f = Fight(CrouchPunchUppercut, foe);
                 float peak = 0f;
@@ -121,7 +114,7 @@ namespace Kage.Tests
         [Test]
         public void TheLegacySwitchIgnoresMass()
         {
-            float Travel(FighterSpec foe)
+            float Travel(CharacterDef foe)
             {
                 using var f = Fight(PushKick, foe, legacy: true);
                 f.RunUntil(() => f.Events(CombatEventType.Hit).Any(), 60);
@@ -144,7 +137,7 @@ namespace Kage.Tests
             public RigidbodyType2D bodyAfterRelease;
         }
 
-        static ThrowRun RunThrow(FighterSpec foe, bool legacy = false)
+        static ThrowRun RunThrow(CharacterDef foe, bool legacy = false)
         {
             using var f = Fight(Throw, foe, legacy, -0.38f, 0.38f);
             var r = new ThrowRun();

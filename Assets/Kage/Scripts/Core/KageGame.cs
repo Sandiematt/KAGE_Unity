@@ -74,9 +74,9 @@ namespace Kage
             Hud = hudGo.AddComponent<Hud>();
             Hud.Build(_camera);
 
-            player = fight.AddFighter(FighterSpec.Kage, 0, new PlayerInputSource());
+            player = fight.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new PlayerInputSource());
             _ai = new AIInputSource();
-            enemy = fight.AddFighter(FighterSpec.Ronin, 1, _ai);
+            enemy = fight.Spawn(CharacterCatalog.Get(Ronin.Id), 1, _ai);
             player.onHit += OnFighterHit;
             enemy.onHit += OnFighterHit;
             player.onKO += OnKO;

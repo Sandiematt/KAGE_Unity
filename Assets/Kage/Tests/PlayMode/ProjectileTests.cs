@@ -121,9 +121,9 @@ namespace Kage.Tests
             _roots.Add(root);
             var b = new FightBuilder(root.transform, KageMoveScenarios.Seed, manualClock: true);
             b.AddGround();
-            var kage = b.AddFighter(FighterSpec.Kage, 0, new ScriptedInput());
-            var friend = b.AddFighter(FighterSpec.Ronin, 0, new ScriptedInput());
-            var foe = b.AddFighter(FighterSpec.Ronin, 1, new ScriptedInput());
+            var kage = b.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new ScriptedInput());
+            var friend = b.Spawn(CharacterCatalog.Get(Ronin.Id), 0, new ScriptedInput());
+            var foe = b.Spawn(CharacterCatalog.Get(Ronin.Id), 1, new ScriptedInput());
             var ctx = b.Build();
             using var log = new CombatEventLog(ctx.Events);
             ctx.Begin();
