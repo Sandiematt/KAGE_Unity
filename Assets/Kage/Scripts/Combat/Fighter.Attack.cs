@@ -21,7 +21,7 @@ namespace Kage
             if (_bufferAge > 8 || _buffer == Btn.None) return false;
             int dy = inp.dy != 0 ? inp.dy : _bufferDy;
             int f = fwd != 0 ? fwd : _bufferFwd;
-            if (_buffer == Btn.X && dy < 0 && canUltimate && meter >= 100f && Grounded)
+            if (_buffer == Btn.X && dy < 0 && Has(CharacterFlags.CanRageArt) && meter >= 100f && Grounded)
             {
                 ConsumeBuffer();
                 StartUltimate();

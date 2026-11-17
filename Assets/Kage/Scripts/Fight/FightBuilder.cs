@@ -3,47 +3,22 @@ using UnityEngine;
 namespace Kage
 {
     /// <summary>
-    /// Who a fighter is. A stop-gap until character data lands (CharacterDef, SAN-66): today's two
-    /// looks, with the ids the event stream uses.
-    /// </summary>
-    public sealed class FighterSpec
-    {
-        public string id, displayName;
-        public KageModel.Look look;
-        public int sortOrder;
-        public Color main, core, dark;
-        public float scale = 1f;
-        /// <summary>Physics mass; knockback impulses are divided by it (Kage and the Ronin: 1).</summary>
-        public float mass = 1f;
-        public bool isPlayer, canUltimate;
-
-        public static FighterSpec Kage => new()
-        {
-            id = "kage", displayName = "KAGE", look = KageModel.Look.Kage, sortOrder = 1500,
-            main = Palette.Trim, core = Color.white, dark = Palette.TrimDeep, isPlayer = true, canUltimate = true,
-        };
-
-        public static FighterSpec Ronin => new()
-        {
-            id = "ronin", displayName = "RONIN", look = KageModel.Look.Ronin, sortOrder = 1000,
-            main = Palette.Amber, core = KMath.Hex("#FFF2D6"), dark = Palette.AmberDeep, scale = 1.04f,
-        };
-    }
-
-    /// <summary>
     /// Builds a fight from code, with no game bootstrap (ADR-0002): creates the fight context and its
-    /// fight loop, spawns fighters into it and wires their input sources and opponents. The dev arena
-    /// (KageGame) and the headless harness both use it.
+    /// fight loop, spawns fighters into it from character data (ADR-0005) and wires their input sources
+    /// and opponents. The dev arena (KageGame), the campaign stage and the headless harness all use it.
     /// <code>
     /// var b = new FightBuilder(root, seed: 61, manualClock: true);
     /// b.AddGround();
-    /// var kage = b.AddFighter(FighterSpec.Kage, team: 0, input);
+    /// var kage = b.Spawn(CharacterCatalog.Get("kage"), team: 0, input);
     /// var bag = b.AddBag(root, new Vector2(1.6f, 2.65f));
     /// var ctx = b.Build();       // attach listeners, then ctx.Begin()
     /// </code>
     /// </summary>
     public sealed class FightBuilder
     {
+        /// <summary>Draw order of the player's side and of the foes (the player is drawn in front).</summary>
+        public const int PlayerSortOrder = 1500, FoeSortOrder = 1000;
+
         readonly Transform _root;
 
         public FightContext Context { get; }
@@ -77,28 +52,46 @@ namespace Kage
         /// <summary>Ground and walls only, for a fight with no arena visuals.</summary>
         public void AddGround() => ArenaBuilder.BuildPhysics(_root);
 
-        /// <summary>Spawns a fighter under the root, in tick order. Ids get "#n" from the second copy on.</summary>
-        public Fighter AddFighter(FighterSpec spec, int team, IInputSource input)
+        /// <summary>
+        /// Spawns a fighter from character data under the root, in tick order: its part set draws it, and
+        /// its mass, body scale, health (JS health × healthMul × the health scale), multipliers and flags are
+        /// set. Ids get "#n" from the second copy on. Place it with <see cref="Fighter.ResetForRound"/>
+        /// (or use the overload that does).
+        /// </summary>
+        public Fighter Spawn(CharacterDef def, int team, IInputSource input)
         {
-            var go = new GameObject(spec.displayName);
+            var partSet = CharacterCatalog.PartSet(def.partSet);
+            if (partSet == null) throw new System.ArgumentException($"character {def.id}: no part set '{def.partSet}'");
+            var rigDef = partSet.Build(def);
+            if (def.hurt != null) { rigDef.hurt.Clear(); rigDef.hurt.AddRange(def.hurt); }
+
+            var go = new GameObject(def.displayName);
             go.transform.SetParent(_root, false);
             var f = go.AddComponent<Fighter>();
-            f.Setup(spec.displayName, KageModel.Build(spec.look), Moves, spec.sortOrder, spec.main, spec.core, spec.dark);
-            if (spec.scale != 1f) go.transform.localScale = new Vector3(spec.scale, spec.scale, 1f);
-            f.Mass = spec.mass;
-            f.isPlayer = spec.isPlayer;
-            f.canUltimate = spec.canUltimate;
+            f.Setup(def, rigDef, MovesFor(def), team == 0 ? PlayerSortOrder : FoeSortOrder);
+            if (def.bodyScale != 1f) go.transform.localScale = new Vector3(def.bodyScale, def.bodyScale, 1f);
             f.input = input;
             f.team = team;
             int copies = 0;
-            foreach (var o in Context.Fighters) if (o.CharacterId == spec.id) copies++;
-            f.CharacterId = spec.id;
-            f.FighterId = copies == 0 ? spec.id : spec.id + "#" + (copies + 1);
+            foreach (var o in Context.Fighters) if (o.CharacterId == def.id) copies++;
+            f.CharacterId = def.id;
+            f.FighterId = copies == 0 ? def.id : def.id + "#" + (copies + 1);
             f.ctx = Context;
             Context.Fighters.Add(f);
             if (Context.Clock.Manual) Headless(go);
             return f;
         }
+
+        /// <summary>Spawns a fighter from character data and places it at <paramref name="x"/>, facing <paramref name="facing"/>.</summary>
+        public Fighter Spawn(CharacterDef def, int team, float x, float facing, IInputSource input)
+        {
+            var f = Spawn(def, team, input);
+            f.ResetForRound(x, facing);
+            return f;
+        }
+
+        /// <summary>The move set of the character's weapon family. Every character uses Kage's katana set until the families land (ADR-0006, SAN-70).</summary>
+        MoveSet MovesFor(CharacterDef def) => Moves;
 
         /// <summary>The training bag, registered as a prop.</summary>
         public PunchingBag AddBag(Transform parent, Vector2 anchor)

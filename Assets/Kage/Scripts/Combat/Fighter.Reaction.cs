@@ -59,8 +59,11 @@ namespace Kage
         /// </summary>
         public const float ReferenceMass = 1f;
 
-        /// <summary>The velocity a knockback gives this fighter: its impulse over this fighter's mass. The legacy switch ignores mass.</summary>
-        Vector2 KnockVelocity(Vector2 kb) => LegacyPhysics ? kb : kb * (ReferenceMass / rb.mass);
+        /// <summary>
+        /// The velocity a knockback gives this fighter: its impulse over this fighter's mass, times the character's
+        /// knockback taken. The legacy switch ignores both.
+        /// </summary>
+        Vector2 KnockVelocity(Vector2 kb) => LegacyPhysics ? kb : kb * (ReferenceMass / rb.mass * KnockbackTaken);
 
         /// <summary>
         /// Gives the body velocity <paramref name="v"/> through a physics impulse. The hit replaces the

@@ -89,8 +89,8 @@ namespace Kage
             }
             Hud.gameObject.SetActive(false);
 
-            Player = fight.AddFighter(FighterSpec.Kage, 0, new PlayerInputSource());
-            Foe = fight.AddFighter(FighterSpec.Ronin, 1, new AIInputSource { level = LevelFor(stage) });
+            Player = fight.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new PlayerInputSource());
+            Foe = fight.Spawn(CharacterCatalog.Get(Ronin.Id), 1, new AIInputSource { level = LevelFor(stage) });
             Player.onKO += OnKO;
             Foe.onKO += OnKO;
             Hud.Bind(Player);

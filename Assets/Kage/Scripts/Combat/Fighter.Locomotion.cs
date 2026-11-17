@@ -7,13 +7,23 @@ namespace Kage
     public partial class Fighter
     {
         // ---- locomotion tuning (m, m/s, m/s²; gravity values are Rigidbody2D gravity scales) ----
-        const float WalkFwd = 1.65f, WalkBack = 1.3f, RunSpeed = 4.6f;
+        // Kage's horizontal speeds; every character moves at these × its speed multiplier (character data, SAN-66)
+        const float KageWalkFwd = 1.65f, KageWalkBack = 1.3f, KageRunSpeed = 4.6f;
+        const float KageJumpX = 2.6f, KageAirMaxX = 2.8f;
+        const float KageDashSpeed = 9.5f, KageBackDashSpeed = 7.5f, KageAirDashSpeed = 8.2f;
+        float WalkFwd => KageWalkFwd * SpeedMul;
+        float WalkBack => KageWalkBack * SpeedMul;
+        float RunSpeed => KageRunSpeed * SpeedMul;
+        float JumpX => KageJumpX * SpeedMul;
+        float AirMaxX => KageAirMaxX * SpeedMul;
+        float DashSpeed => KageDashSpeed * SpeedMul;
+        float BackDashSpeed => KageBackDashSpeed * SpeedMul;
+        float AirDashSpeed => KageAirDashSpeed * SpeedMul;
         const float GroundAccel = 16f, GroundDecel = 22f, RunAccel = 11f, SkidDecel = 15f;
         const float RunAfter = 0.42f;                    // seconds of forward walking before breaking into a run
-        const float JumpV = 8.4f, JumpX = 2.6f, AirJumpV = 7.2f, JumpCut = 0.55f;
+        const float JumpV = 8.4f, AirJumpV = 7.2f, JumpCut = 0.55f;
         const float Gravity = 3.2f, RiseGravity = 2.9f, ApexGravity = 2.0f, FallGravity = 4.1f, MaxFall = 14f;
-        const float AirAccel = 10f, AirMaxX = 2.8f, AirDrag = 1.2f;
-        const float DashSpeed = 9.5f, BackDashSpeed = 7.5f, AirDashSpeed = 8.2f;
+        const float AirAccel = 10f, AirDrag = 1.2f;
         const int DashFrames = 13, BackDashFrames = 15, AirDashFrames = 14, DashCooldown = 16, BackDashInvuln = 6;
         const float StageHalf = 7.6f;
 
