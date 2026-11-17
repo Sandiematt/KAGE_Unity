@@ -50,7 +50,9 @@ namespace Kage
             _rig = rig;
             var d = rig.def;
             _container = new GameObject(rig.def.name + "_Ragdoll");
-            _container.transform.SetParent(KageGame.I != null ? KageGame.I.transform : null, false);
+            // under the fight root (KageGame in the dev arena), so a headless fight cleans it up with the rest
+            var fighter = rig.transform.parent;
+            _container.transform.SetParent(fighter != null ? fighter.parent : null, false);
 
             // capture world poses first (mirrored rigs need an explicit 2D decomposition)
             var world = new Dictionary<B, (Vector3 pos, float ang, float sx)>();
