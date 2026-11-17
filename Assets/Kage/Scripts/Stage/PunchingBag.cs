@@ -87,6 +87,12 @@ namespace Kage
             var col = bag.AddComponent<CapsuleCollider2D>();
             col.size = new Vector2(0.44f, BagLen);
             col.offset = new Vector2(0f, -BagLen * 0.5f);
+            // hurt circles: four along the bag, top = head, bottom = legs (the same Hurtbox path as fighters)
+            var hurt = new GameObject("Hurtboxes");
+            hurt.transform.SetParent(bag.transform, false);
+            Hurtbox.AddCarrier(hurt);
+            for (int i = 0; i < HurtCount; i++) Hurtbox.Add(hurt.transform, HurtLocal(i), HurtRadius, HurtZone(i), i, this);
+
             var hj = bag.AddComponent<HingeJoint2D>();
             hj.connectedBody = prev;
             hj.autoConfigureConnectedAnchor = false;
@@ -154,18 +160,25 @@ namespace Kage
             _bag.angularVelocity = 0f;
         }
 
+        const int HurtCount = 4;
+        const float HurtRadius = 0.22f;
+        static Vector2 HurtLocal(int i) => new(0f, -0.14f - i * 0.29f);
+        static HitZone HurtZone(int i) => i == 0 ? HitZone.Head : (i == HurtCount - 1 ? HitZone.Legs : HitZone.Body);
+
+        public bool HittableBy(HitWindow w) => true;
+
         public bool Overlap(Vector2 p, float r, HitWindow w, out HitZone zone, out Vector2 contact)
         {
             zone = HitZone.Body;
             contact = p;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < HurtCount; i++)
             {
-                Vector2 c = _bag.transform.TransformPoint(new Vector3(0f, -0.14f - i * 0.29f, 0f));
-                float rr = r + 0.22f;
+                Vector2 c = _bag.transform.TransformPoint(HurtLocal(i));
+                float rr = r + HurtRadius;
                 if ((c - p).sqrMagnitude <= rr * rr)
                 {
                     contact = Vector2.Lerp(p, c, r / rr);
-                    zone = i == 0 ? HitZone.Head : (i == 3 ? HitZone.Legs : HitZone.Body);
+                    zone = HurtZone(i);
                     return true;
                 }
             }

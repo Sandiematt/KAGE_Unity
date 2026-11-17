@@ -16,10 +16,18 @@ namespace Kage
         public readonly List<IHittable> Props = new();      // training bag, later breakables
         /// <summary>Live Crimson Crescents. On a manual clock the loop moves them; SAN-75 replaces this with projectiles.</summary>
         public readonly List<Crescent> Crescents = new();
+        /// <summary>This frame's hit sweeps: recorded by the fighter tick, read by the clash and hit phases (ADR-0002).</summary>
+        public readonly List<HitSweep> Sweeps = new();
+        /// <summary>
+        /// The legacy switch (combat.json), read once when the fight is built: hits resolve inside the
+        /// attacker's tick with the old distance checks, and no sweeps are recorded.
+        /// </summary>
+        public readonly bool LegacyHits;
 
         public FightContext(int seed, bool manualClock)
         {
             Seed = seed;
+            LegacyHits = Tuning.Get<CombatTuning>().legacyHitResolution;
             Random = new FightRandom(seed);
             Clock = new FightClock(manualClock);
         }

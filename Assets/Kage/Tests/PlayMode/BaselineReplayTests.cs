@@ -39,6 +39,29 @@ namespace Kage.Tests
             }
         }
 
+        [Test, TestCaseSource(nameof(Scenarios))]
+        public void TheLegacySwitchReplaysTheOldBaseline(MoveScenario scenario)
+        {
+            string actual;
+            Tuning.Override(new CombatTuning { legacyHitResolution = true });
+            try
+            {
+                using var f = scenario.Play(KageMoveScenarios.Seed);
+                actual = BaselineReplay.Format(scenario.name, KageMoveScenarios.Seed, f.Log.Lines(), f.Frames);
+            }
+            finally { Tuning.ClearOverrides(); }
+
+            string path = BaselineReplay.LegacyPathOf(scenario.name);
+            Assert.IsTrue(File.Exists(path), $"No legacy baseline for {scenario.name}.");
+            string diff = BaselineReplay.Compare(File.ReadAllText(path), actual);
+            if (diff != null)
+            {
+                string dump = Path.Combine(Application.temporaryCachePath, scenario.name + ".legacy.actual.txt");
+                File.WriteAllText(dump, actual);
+                Assert.Fail($"{scenario.name} with the legacy switch differs from the old baseline at {diff}\n(full run written to {dump})");
+            }
+        }
+
         [Test]
         public void TheReplayStartsEveryKageMove()
         {

@@ -1,0 +1,135 @@
+# KAGE baseline replay: cross_kick2_vs_ai
+# seed 61. Frame lines: frame, then per fighter: id x y state move:moveFrame hp; then the bag: x y rotation.
+[events]
+0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
+0 MoveStarted kage>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+6 Blocked kage>ronin jab#0 dmg=0 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+12 MoveStarted kage>- cross#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+23 MoveStarted kage>- kick2#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+42 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+50 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+60 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+66 Hit ronin>kage risingMoon#0 dmg=8 pos=0 crit=0 lvl=Mid zone=Head i=0 n=-
+79 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+99 Hit ronin>kage cleave#0 dmg=12 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+[frames]
+0 kage -0.37000 0.02000 Attack jab:0 hp=100 ronin 0.37000 0.02000 Idle - hp=100
+1 kage -0.37000 0.02000 Attack jab:1 hp=100 ronin 0.37444 0.02000 Walk - hp=100
+2 kage -0.37000 0.02000 Attack jab:2 hp=100 ronin 0.38333 0.02000 Walk - hp=100
+3 kage -0.37000 0.02000 Attack jab:3 hp=100 ronin 0.39667 0.02000 Walk - hp=100
+4 kage -0.37000 0.02000 Attack jab:4 hp=100 ronin 0.41444 0.02000 Walk - hp=100
+5 kage -0.37000 0.02000 Attack jab:5 hp=100 ronin 0.43611 0.02000 Walk - hp=100
+6 kage -0.37000 0.02000 Attack jab:6 hp=100 ronin 0.45611 0.02000 Blockstun - hp=100
+7 kage -0.37000 0.02000 Attack jab:6 hp=100 ronin 0.45611 0.02000 Blockstun - hp=100
+8 kage -0.37000 0.02000 Attack jab:6 hp=100 ronin 0.45611 0.02000 Blockstun - hp=100
+9 kage -0.37000 0.02000 Attack jab:6 hp=100 ronin 0.45611 0.02000 Blockstun - hp=100
+10 kage -0.37000 0.02000 Attack jab:7 hp=100 ronin 0.47361 0.02000 Blockstun - hp=100
+11 kage -0.37000 0.02000 Attack jab:8 hp=100 ronin 0.48861 0.02000 Blockstun - hp=100
+12 kage -0.37000 0.02000 Attack cross:0 hp=100 ronin 0.50111 0.02000 Blockstun - hp=100
+13 kage -0.37000 0.02000 Attack cross:1 hp=100 ronin 0.51111 0.02000 Blockstun - hp=100
+14 kage -0.37000 0.02000 Attack cross:2 hp=100 ronin 0.51861 0.02000 Blockstun - hp=100
+15 kage -0.37000 0.02000 Attack cross:3 hp=100 ronin 0.52361 0.02000 Blockstun - hp=100
+16 kage -0.37000 0.02000 Attack cross:4 hp=100 ronin 0.52611 0.02000 Idle - hp=100
+17 kage -0.37000 0.02000 Attack cross:5 hp=100 ronin 0.53306 0.02000 Walk - hp=100
+18 kage -0.37000 0.02000 Attack cross:6 hp=100 ronin 0.54444 0.02000 Walk - hp=100
+19 kage -0.37000 0.02000 Attack cross:7 hp=100 ronin 0.56028 0.02000 Walk - hp=100
+20 kage -0.37000 0.02000 Attack cross:8 hp=100 ronin 0.57000 0.02000 Walk - hp=100
+21 kage -0.37000 0.02000 Attack cross:9 hp=100 ronin 0.58417 0.02000 Walk - hp=100
+22 kage -0.37000 0.02000 Attack cross:10 hp=100 ronin 0.60278 0.02000 Walk - hp=100
+23 kage -0.37000 0.02000 Attack kick2:0 hp=100 ronin 0.62444 0.02000 Walk - hp=100
+24 kage -0.37000 0.02000 Attack kick2:1 hp=100 ronin 0.64611 0.02000 Walk - hp=100
+25 kage -0.37000 0.02000 Attack kick2:2 hp=100 ronin 0.66778 0.02000 Walk - hp=100
+26 kage -0.37000 0.02000 Attack kick2:3 hp=100 ronin 0.68944 0.02000 Walk - hp=100
+27 kage -0.37000 0.02000 Attack kick2:4 hp=100 ronin 0.71111 0.02000 Walk - hp=100
+28 kage -0.37000 0.02000 Attack kick2:5 hp=100 ronin 0.73278 0.02000 Walk - hp=100
+29 kage -0.37000 0.02000 Attack kick2:6 hp=100 ronin 0.75444 0.02000 Walk - hp=100
+30 kage -0.37000 0.02000 Attack kick2:7 hp=100 ronin 0.77611 0.02000 Walk - hp=100
+31 kage -0.37000 0.02000 Attack kick2:8 hp=100 ronin 0.79167 0.02000 Walk - hp=100
+32 kage -0.37000 0.02000 Attack kick2:9 hp=100 ronin 0.80111 0.02000 Walk - hp=100
+33 kage -0.37000 0.02000 Attack kick2:10 hp=100 ronin 0.80444 0.02000 Walk - hp=100
+34 kage -0.37000 0.02000 Attack kick2:11 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+35 kage -0.37000 0.02000 Attack kick2:12 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+36 kage -0.37000 0.02000 Attack kick2:13 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+37 kage -0.37000 0.02000 Attack kick2:14 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+38 kage -0.37000 0.02000 Attack kick2:15 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+39 kage -0.37000 0.02000 Attack kick2:16 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+40 kage -0.37000 0.02000 Attack kick2:17 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+41 kage -0.37000 0.02000 Attack kick2:18 hp=100 ronin 0.80444 0.02000 Idle - hp=100
+42 kage -0.37000 0.02000 Attack kick2:19 hp=100 ronin 0.80444 0.02000 Attack iai:0 hp=100
+43 kage -0.37000 0.02000 Attack kick2:20 hp=100 ronin 0.80444 0.02000 Attack iai:1 hp=100
+44 kage -0.37000 0.02000 Attack kick2:21 hp=100 ronin 0.80444 0.02000 Attack iai:2 hp=100
+45 kage -0.37000 0.02000 Attack kick2:22 hp=100 ronin 0.80444 0.02000 Attack iai:3 hp=100
+46 kage -0.37000 0.02000 Attack kick2:23 hp=100 ronin 0.80444 0.02000 Attack iai:4 hp=100
+47 kage -0.37000 0.02000 Attack kick2:24 hp=100 ronin 0.80444 0.02000 Attack iai:5 hp=100
+48 kage -0.37000 0.02000 Attack kick2:25 hp=100 ronin 0.80444 0.02000 Attack iai:6 hp=100
+49 kage -0.37000 0.02000 Idle - hp=100 ronin 0.80444 0.02000 Attack iai:7 hp=100
+50 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+51 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+52 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+53 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+54 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+55 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+56 kage -0.40000 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:8 hp=100
+57 kage -0.42694 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:9 hp=100
+58 kage -0.45083 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:10 hp=100
+59 kage -0.47167 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack iai:11 hp=100
+60 kage -0.48944 0.02000 Hitstun - hp=91 ronin 0.80444 0.02000 Attack risingMoon:0 hp=100
+61 kage -0.50417 0.02000 Hitstun - hp=91 ronin 0.76444 0.02000 Attack risingMoon:1 hp=100
+62 kage -0.51583 0.02000 Hitstun - hp=91 ronin 0.72444 0.02000 Attack risingMoon:2 hp=100
+63 kage -0.52444 0.02000 Hitstun - hp=91 ronin 0.68444 0.02000 Attack risingMoon:3 hp=100
+64 kage -0.53000 0.02000 Hitstun - hp=91 ronin 0.64444 0.02000 Attack risingMoon:4 hp=100
+65 kage -0.53250 0.02000 Hitstun - hp=91 ronin 0.60444 0.02000 Attack risingMoon:5 hp=100
+66 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+67 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+68 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+69 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+70 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+71 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+72 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+73 kage -0.53917 0.13128 Launched - hp=83 ronin 0.56444 0.02000 Attack risingMoon:6 hp=100
+74 kage -0.54583 0.23384 Launched - hp=83 ronin 0.52444 0.02000 Attack risingMoon:7 hp=100
+75 kage -0.55250 0.32768 Launched - hp=83 ronin 0.48889 0.02000 Attack risingMoon:8 hp=100
+76 kage -0.55917 0.41280 Launched - hp=83 ronin 0.45778 0.02000 Attack risingMoon:9 hp=100
+77 kage -0.56583 0.48920 Launched - hp=83 ronin 0.43111 0.02000 Attack risingMoon:10 hp=100
+78 kage -0.57250 0.55688 Launched - hp=83 ronin 0.40889 0.02000 Attack risingMoon:11 hp=100
+79 kage -0.57917 0.61584 Launched - hp=83 ronin 0.40222 0.02000 Attack cleave:0 hp=100
+80 kage -0.58583 0.66608 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:1 hp=100
+81 kage -0.59250 0.70760 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:2 hp=100
+82 kage -0.59917 0.74040 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:3 hp=100
+83 kage -0.60583 0.76448 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:4 hp=100
+84 kage -0.61250 0.77984 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:5 hp=100
+85 kage -0.61917 0.78648 Launched - hp=83 ronin 0.40000 0.02000 Attack cleave:6 hp=100
+86 kage -0.62583 0.78440 Launched - hp=83 ronin 0.35667 0.09461 Attack cleave:7 hp=100
+87 kage -0.63250 0.77360 Launched - hp=83 ronin 0.31333 0.16051 Attack cleave:8 hp=100
+88 kage -0.63917 0.75408 Launched - hp=83 ronin 0.27000 0.21768 Attack cleave:9 hp=100
+89 kage -0.64583 0.72584 Launched - hp=83 ronin 0.22667 0.26613 Attack cleave:10 hp=100
+90 kage -0.65250 0.68888 Launched - hp=83 ronin 0.18333 0.30587 Attack cleave:11 hp=100
+91 kage -0.65917 0.64320 Launched - hp=83 ronin 0.14000 0.33688 Attack cleave:12 hp=100
+92 kage -0.66583 0.58880 Launched - hp=83 ronin 0.09667 0.35917 Attack cleave:13 hp=100
+93 kage -0.67250 0.52568 Launched - hp=83 ronin 0.05333 0.37275 Attack cleave:14 hp=100
+94 kage -0.67917 0.45384 Launched - hp=83 ronin 0.01000 0.37760 Attack cleave:15 hp=100
+95 kage -0.70125 0.37328 Launched - hp=83 ronin -0.01792 0.37373 Attack cleave:16 hp=100
+96 kage -0.72625 0.28400 Launched - hp=83 ronin -0.04292 0.36115 Attack cleave:17 hp=100
+97 kage -0.75125 0.18600 Launched - hp=83 ronin -0.06792 0.33984 Attack cleave:18 hp=100
+98 kage -0.77625 0.07928 Launched - hp=83 ronin -0.09292 0.30981 Attack cleave:19 hp=100
+99 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+100 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+101 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+102 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+103 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+104 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+105 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+106 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+107 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+108 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+109 kage -0.81792 0.02056 Launched - hp=71 ronin -0.11792 0.27107 Attack cleave:20 hp=100
+110 kage -0.85125 0.01496 Launched - hp=71 ronin -0.15125 0.22360 Attack cleave:21 hp=100
+111 kage -0.88458 0.01498 Launched - hp=71 ronin -0.18458 0.16741 Attack cleave:22 hp=100
+112 kage -0.91792 0.01498 Launched - hp=71 ronin -0.21792 0.10251 Attack cleave:23 hp=100
+113 kage -0.93958 0.04293 Launched - hp=71 ronin -0.25125 0.02888 Attack cleave:24 hp=100
+114 kage -0.96708 0.06216 Launched - hp=71 ronin -0.27431 0.01496 Attack cleave:25 hp=100
+115 kage -0.99236 0.07266 Launched - hp=71 ronin -0.29514 0.01498 Attack cleave:26 hp=100
+116 kage -1.01542 0.07445 Launched - hp=71 ronin -0.31375 0.01498 Attack cleave:27 hp=100
+117 kage -1.03625 0.06752 Launched - hp=71 ronin -0.33014 0.01499 Attack cleave:28 hp=100
+118 kage -1.05486 0.05186 Launched - hp=71 ronin -0.34431 0.01499 Attack cleave:29 hp=100
+119 kage -1.07125 0.02749 Launched - hp=71 ronin -0.35625 0.01500 Attack cleave:30 hp=100
