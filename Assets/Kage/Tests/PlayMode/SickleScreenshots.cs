@@ -40,7 +40,7 @@ namespace Kage.Tests
                     ("crouch", () => Stance(s => s.Add(40, dy: -1), 40, "yamigama")),
                     ("katana_idle_for_scale", () => Stance(s => s.Add(40), 40, "kagetsu")),
                     ("chain_hook_idle", () => Stance(s => s.Add(40), 40, "chain_hook")),
-                    ("guard_back", () => Stance(s => s.Add(20, fwd: -1), 20, "yamigama")),
+                    ("guard_back", () => Stance(s => s.Add(20, buttons: "G"), 20, "yamigama")),     // the Guard stance (SAN-86)
                 },
                 new (string, Func<Color32[]>)[]
                 {

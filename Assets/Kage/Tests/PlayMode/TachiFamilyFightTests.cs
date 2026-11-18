@@ -301,7 +301,7 @@ namespace Kage.Tests
         public void A_low_guard_with_the_tachi_keeps_the_point_off_the_floor()
         {
             var f = Alone();
-            f.KageInput.Add(40, dy: -1, fwd: -1);
+            f.KageInput.Add(40, dy: -1, buttons: "G");     // Guard with Down: the low guard
             f.Run(40);
             Assert.Greater(f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y, -0.04f);
         }
