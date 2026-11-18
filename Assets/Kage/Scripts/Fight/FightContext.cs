@@ -19,6 +19,8 @@ namespace Kage
         public readonly List<Hazard> Hazards = new();
         /// <summary>This frame's hit sweeps: recorded by the fighter tick, read by the clash and hit phases (ADR-0002).</summary>
         public readonly List<HitSweep> Sweeps = new();
+        /// <summary>Each weapon family's move set, built on first use and shared by its fighters (ADR-0006).</summary>
+        public readonly MoveSets MoveSets = new();
         /// <summary>
         /// The legacy switch (combat.json), read once when the fight is built: hits resolve inside the
         /// attacker's tick with the old distance checks, and no sweeps are recorded; fighters are kept

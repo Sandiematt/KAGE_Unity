@@ -44,7 +44,7 @@ namespace Kage
             switch (state)
             {
                 case FState.Attack:
-                    move?.Evaluate(def, moveFrame + alpha, _start, _display);
+                    move?.Evaluate(def, _moveTime + alpha * PlaybackRate, _start, _display);
                     break;
                 case FState.Idle:
                     _target.CopyFrom(Unarmed(_stance));
@@ -103,7 +103,7 @@ namespace Kage
                     else _display.CopyFrom(_ref);
                     break;
             }
-            if (SwordBroken) _display.grip = false;     // no handle to hold
+            if (!GripHeld) _display.grip = false;     // no handle to hold, or the family holds it one-handed
             rig.Apply(_display);
             rig.Secondary(dt, rb.linearVelocity);
             if (!Headless) UpdateTrails();

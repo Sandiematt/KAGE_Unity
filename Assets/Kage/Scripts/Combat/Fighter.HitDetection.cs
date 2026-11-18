@@ -24,7 +24,7 @@ namespace Kage
                 case HitPoint.ShinF: into.Add(rig.World(B.LegFL, new Vector2(0f, -0.1f))); break;
                 case HitPoint.KneeN: into.Add(rig.World(B.LegNL, Vector2.zero)); break;
                 case HitPoint.Blade:
-                    for (int i = 1; i <= 5; i++) into.Add(rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, def.bladeTipLocal, i / 5f)));
+                    for (int i = 1; i <= 5; i++) into.Add(rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, BladeTipLocal, i / 5f)));
                     break;
             }
         }
@@ -57,14 +57,14 @@ namespace Kage
                 while (_ptKinds.Count < _pts.Count) _ptKinds.Add(hp);
             }
             if (!_sweepPrev.TryGetValue(w, out var prev)) _sweepPrev[w] = prev = new SweepPrev { frame = int.MinValue };
-            bool continues = prev.frame == moveFrame - 1 && prev.pts.Count == _pts.Count;
+            bool continues = prev.frame == _moveTicks - 1 && prev.pts.Count == _pts.Count;
             for (int k = 0; k < _pts.Count; k++)
                 ctx.Sweeps.Add(new HitSweep
                 {
                     owner = this, move = move, window = w, point = _ptKinds[k], sample = k,
                     from = continues ? prev.pts[k] : _pts[k], to = _pts[k], radius = w.radius,
                 });
-            prev.frame = moveFrame;
+            prev.frame = _moveTicks;
             prev.pts.Clear();
             prev.pts.AddRange(_pts);
         }
@@ -175,8 +175,8 @@ namespace Kage
         {
             var info = new HitInfo
             {
-                attacker = this, w = w, dmg = w.dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact,
-                moveId = move != null ? move.id : null, window = move != null ? move.hits.IndexOf(w) : -1,
+                attacker = this, w = w, dmg = DamageCalc.For(this, t, w.dmg, false, true), kb = new Vector2(w.kb.x * facing, w.kb.y),
+                zone = zone, contact = contact, moveId = move != null ? move.id : null, window = move != null ? move.hits.IndexOf(w) : -1,
             };
             if (t is Fighter tf)
             {
@@ -193,7 +193,7 @@ namespace Kage
             if (RollCrit())
             {
                 info.crit = true;
-                info.dmg = Mathf.RoundToInt(info.dmg * 1.5f);
+                info.dmg = DamageCalc.For(this, t, w.dmg, true, true);
             }
             var res = t.ReceiveHit(info);
             OnHitResolved(t, info, res);
@@ -217,9 +217,8 @@ namespace Kage
             {
                 if (!t.Overlap(p, w.radius, w, out var zone, out var contact)) continue;
                 _hitLog.Add((w, t));
-                int dmg = w.dmg;
                 bool crit = RollCrit();
-                if (crit) dmg = Mathf.RoundToInt(dmg * 1.5f);
+                int dmg = DamageCalc.For(this, t, w.dmg, crit, true);
                 var info = new HitInfo
                 {
                     attacker = this, w = w, dmg = dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact, crit = crit,

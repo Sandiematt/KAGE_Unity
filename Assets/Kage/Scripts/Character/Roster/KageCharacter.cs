@@ -17,6 +17,8 @@ namespace Kage
         {
             save ??= GameRules.DefaultSave(false);
             var stats = GameRules.PlayerCombatStats(save);
+            string weapon = save.equipped?.weapon ?? "kagetsu";
+            int weaponLevel = save.owned != null && save.owned.weapons.TryGetValue(weapon, out var lv) && lv > 0 ? lv : 1;
             return new CharacterDef
             {
                 id = Id,
@@ -28,7 +30,9 @@ namespace Kage
                 helmet = save.equipped?.helmet,
                 armor = save.equipped?.armor,
                 colors = new FighterColors(Palette.Trim, Color.white, Palette.TrimDeep),
-                family = "katana",
+                family = WeaponFamilies.FamilyIdOf(weapon) ?? WeaponFamilies.Katana,
+                weaponId = weapon,
+                weaponLevel = weaponLevel,
                 aiProfile = null,
                 flags = CharacterFlags.CanRageArt | CharacterFlags.CanThrowKunai,
             };

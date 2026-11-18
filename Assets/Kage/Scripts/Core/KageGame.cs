@@ -9,7 +9,7 @@ namespace Kage
     /// Dev arena entry point (ADR-0001). Builds everything at runtime from code — camera, post-processing, stage,
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
-    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F7 break/restore sword · R restart · P pause.
+    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class KageGame : MonoBehaviour
@@ -355,6 +355,12 @@ namespace Kage
                 if (player.SwordBroken) player.RestoreSword(); else player.BreakSword();
                 Hud?.Banner(player.SwordBroken ? "SWORD BROKEN (F7)" : "SWORD RESTORED (F7)", Color.white, 1.2f);
             }
+            if (kb.f8Key.wasPressedThisFrame)       // dev: next weapon (Shift: next weapon level) for the player (SAN-70)
+            {
+                if (kb.shiftKey.isPressed) CycleWeaponLevel(); else CycleWeapon();
+                var w = Rules.JsTables.Weapon(player.WeaponId);
+                Hud?.Banner($"{(w != null ? w.Name : player.WeaponId)}  LV {player.WeaponLevel}  ·  {player.Family.id} (F8)", Color.white, 1.2f);
+            }
             if (kb.f9Key.wasPressedThisFrame) ToggleGallery();
             if (Gallery != null && Gallery.page >= 0)
             {
@@ -366,6 +372,21 @@ namespace Kage
                 if (mode == Mode.Training) { bag.ResetBag(); player.ResetForRound(-0.4f, 1f); player.BeginFight(); }
                 else { player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; enemy.meter = 0f; player.ResetForFight(); enemy.ResetForFight(); _round = 1; StartRound(); }
             }
+        }
+
+        /// <summary>Dev (F8): equips the player's next weapon of a registered family, at level 1.</summary>
+        public void CycleWeapon()
+        {
+            var list = WeaponFamilies.PlayableWeapons();
+            int i = System.Array.IndexOf(list, player.WeaponId);
+            player.EquipWeapon(list[(i + 1) % list.Length], 1);
+        }
+
+        /// <summary>Dev (Shift+F8): raises the player's weapon level, back to 1 after its maximum.</summary>
+        public void CycleWeaponLevel()
+        {
+            int max = Rules.GameRules.MaxLevel(Rules.GearKind.Weapons, player.WeaponId);
+            player.EquipWeapon(player.WeaponId, player.WeaponLevel >= max ? 1 : player.WeaponLevel + 1);
         }
 
         public PoseGallery Gallery { get; private set; }
