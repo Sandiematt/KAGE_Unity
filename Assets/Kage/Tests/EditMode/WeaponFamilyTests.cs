@@ -49,6 +49,31 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void Twin_blades_are_registered_with_Tsubame_as_reference_a_dual_grip_and_short_blades()
+        {
+            var twin = WeaponFamilies.Get("twin");
+            Assert.AreEqual("tsubame", twin.referenceWeapon);
+            Assert.AreEqual(GripPose.Dual, twin.grip);
+            Assert.Greater(twin.bladeLength, 0f);
+            Assert.Less(twin.bladeLength, WeaponFamilies.Get("katana").bladeLength);
+            Assert.AreEqual(Fighter.ThousandShadows, twin.rageArt);
+            Assert.IsNotNull(twin.visual);
+        }
+
+        [Test]
+        public void Tsubame_at_level_1_is_x1_and_level_8_gains_the_JS_amounts()
+        {
+            AssertCombat("tsubame", 1, 1, 1, 1);
+            AssertCombat("tsubame", 8, 1.56, 1.175, 1.105);
+        }
+
+        [Test]
+        public void Foe_twin_weapons_are_measured_against_Tsubame()
+        {
+            AssertCombat("shadow_daggers", 1, 1, 1, 1);   // the same JS stats as Tsubame
+        }
+
+        [Test]
         public void The_spear_family_is_registered_with_Mizuchi_a_polearm_grip_and_the_longest_blade()
         {
             var spear = WeaponFamilies.Get("spear");
@@ -93,13 +118,13 @@ namespace Kage.Tests
         [Test]
         public void A_family_that_is_not_built_yet_is_not_registered()
         {
-            Assert.IsNull(WeaponFamilies.Get("twin"));
+            Assert.IsNull(WeaponFamilies.Get("chain"));
         }
 
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "kagetsu", "onikiri", "mizuchi", "iwakudaki", "shizuka", "shinsen", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "iwakudaki", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----

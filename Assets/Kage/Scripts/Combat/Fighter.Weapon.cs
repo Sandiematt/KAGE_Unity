@@ -28,8 +28,19 @@ namespace Kage
         /// <summary>The stance's two-handed grip is held: a whole blade held with both hands (katana, heavy tachi, polearm).</summary>
         bool GripHeld => !BareHanded && (Family == null || Family.grip is GripPose.TwoHand or GripPose.HeavyTwoHand or GripPose.Polearm);
 
+        /// <summary>The family holds a second blade in the near hand (twin blades) and has a blade to hold.</summary>
+        public bool Dual => !BareHanded && Family != null && Family.grip == GripPose.Dual;
+
+        /// <summary>Where the near hand sits from the far hand when a held-grip pose is split for dual wield (root space, facing right).</summary>
+        static readonly Vector2 DualHandOffset = new(0.14f, 0.16f);
+
         Vector2 _bladeTip, _bladeBase;
         bool _bladeSet;
+
+        /// <summary>HandN-local start of the second (near hand) blade: just past the fist.</summary>
+        public Vector2 NearBladeBaseLocal => def.fistLocal + Vector2.right * 0.05f;
+        /// <summary>HandN-local tip of the second blade: the same length as the first. The near hand's own axis is the blade's.</summary>
+        public Vector2 NearBladeTipLocal => NearBladeBaseLocal + Vector2.right * BladeReach;
 
         /// <summary>Sword-bone local tip of the Blade hit points: the family's blade length × the weapon's reach.</summary>
         public Vector2 BladeTipLocal => _bladeSet ? _bladeTip : def.bladeTipLocal;
@@ -98,7 +109,16 @@ namespace Kage
         /// </summary>
         void ApplyGrip(Pose p)
         {
-            if (!GripHeld) { p.grip = false; return; }
+            if (!GripHeld)
+            {
+                // no handle to hold, or a family that holds its weapon(s) one-handed; a dual wielder's hands split and
+                // each holds a blade (the near blade is posed with the pose)
+                bool dual = Dual;
+                if (dual) p.SplitHands(DualHandOffset);
+                p.grip = false;
+                p.dual = dual;
+                return;
+            }
             bool polearm = Family != null && Family.grip == GripPose.Polearm;
             bool heavy = Family != null && Family.grip == GripPose.HeavyTwoHand;
             float spacing = polearm ? Pose.PolearmSpacing : heavy ? Pose.HeavySpacing : Pose.GripSpacing;

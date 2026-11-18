@@ -280,7 +280,8 @@ namespace Kage.Tests
             int cycled = 0;
             while (game.player.WeaponId != "fists" && cycled++ < 20) game.CycleWeapon();
             Assert.AreEqual("fists", game.player.WeaponId, "the cycle wraps to bare hands");
-            Assert.AreEqual(WeaponFamilies.PlayableWeapons().Length - 2, cycled, "after kagetsu and the second weapon, through the rest of the list");
+            var list = WeaponFamilies.PlayableWeapons();
+            Assert.AreEqual(list.Length - System.Array.IndexOf(list, "onikiri"), cycled, "from the second weapon on through the rest of the list");
             Assert.AreEqual("fists", game.player.Family.id);
         }
     }

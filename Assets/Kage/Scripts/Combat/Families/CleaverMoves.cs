@@ -127,17 +127,17 @@ namespace Kage
                 .Hit(12, 17, FootTip, 7, HitLevel.Mid, new Vector2(4.2f, 0.6f), stun: 22, hitstop: 7, shake: 0.16f, radius: 0.11f)
                 .Fx(11, 17, FxKind.TrailFootN);
 
-            m.lowKick = new MoveDef("cleaver.lowKick", "Low Kick", 34)
-                .Key(8, P().Hip(0.0f, -0.32f, 4f).Chest(-14f).Head(10f).LegN(80f, -100f, 10f).FootF(-0.26f, 0.15f, -25f).HandF(0.14f, 0.86f).Blade(70f).HandN(0.22f, 1.0f, 10f))
-                .Key(11, P().Hip(0.06f, -0.3f, 8f).Chest(-8f).Head(8f).LegN(92f, -4f, 20f).FootF(-0.26f, 0.15f, -25f).HandF(0.12f, 0.88f).Blade(72f).HandN(0.2f, 1.02f, 10f), Ease.OutExpo)
-                .Key(16, P().Hip(0.06f, -0.3f, 8f).Chest(-8f).Head(8f).LegN(90f, -6f, 20f).FootF(-0.26f, 0.15f, -25f).HandF(0.12f, 0.88f).Blade(72f).HandN(0.2f, 1.02f, 10f))
-                .Key(34, Crouch(), Ease.InOutQuad)
-                .Hit(10, 15, FootN, 7, HitLevel.Low, new Vector2(1.0f, 0f), stun: 16, hitstop: 5, shake: 0.08f, radius: 0.1f)
-                .Fx(9, 15, FxKind.TrailFootN).Cancel(15);
+            m.lowKick = new MoveDef("cleaver.lowKick", "Low Kick", 36)
+                .Key(10, P().Hip(0.0f, -0.32f, 4f).Chest(-14f).Head(10f).LegN(80f, -100f, 10f).FootF(-0.26f, 0.15f, -25f).HandF(0.14f, 0.86f).Blade(70f).HandN(0.22f, 1.0f, 10f))
+                .Key(13, P().Hip(0.06f, -0.3f, 8f).Chest(-8f).Head(8f).LegN(92f, -4f, 20f).FootF(-0.26f, 0.15f, -25f).HandF(0.12f, 0.88f).Blade(72f).HandN(0.2f, 1.02f, 10f), Ease.OutExpo)
+                .Key(18, P().Hip(0.06f, -0.3f, 8f).Chest(-8f).Head(8f).LegN(90f, -6f, 20f).FootF(-0.26f, 0.15f, -25f).HandF(0.12f, 0.88f).Blade(72f).HandN(0.2f, 1.02f, 10f))
+                .Key(36, Crouch(), Ease.InOutQuad)
+                .Hit(12, 17, FootN, 7, HitLevel.Low, new Vector2(1.0f, 0f), stun: 16, hitstop: 5, shake: 0.08f, radius: 0.1f)
+                .Fx(11, 17, FxKind.TrailFootN).Cancel(17);
 
             // Pommel Smash: the handle's butt driven up under the chin: a launcher
             m.pommel = new MoveDef("cleaver.pommel", "Pommel Smash", 40)
-                .Key(10, Hold(P().Hip(0f, -0.2f, 0f).Chest(-14f).Head(10f).Feet(0.28f, -0.26f), 0.0f, 0.8f, -176f), Ease.OutQuad)
+                .Key(10, Hold(P().Hip(0f, -0.2f, 0f).Chest(-14f).Head(10f).Feet(0.28f, -0.26f), 0.0f, 0.8f, 184f), Ease.OutQuad)
                 .Key(16, Hold(P().Hip(0.1f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.34f, 0.13f).FootF(-0.16f, 0.15f, -20f), 0.5f, 1.5f, 176f), Ease.OutExpo)
                 .Key(24, Hold(P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f), 0.46f, 1.56f, 176f))
                 .Key(40, Stance(), Ease.InOutQuad)
