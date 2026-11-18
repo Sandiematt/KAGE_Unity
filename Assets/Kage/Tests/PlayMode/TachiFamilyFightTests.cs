@@ -306,6 +306,28 @@ namespace Kage.Tests
             Assert.Greater(f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y, -0.04f);
         }
 
+        // ---- Raikon (SAN-71) wields the family and keeps his painted tachi ----
+
+        [Test]
+        public void Raikon_fights_with_the_tachi_family_and_keeps_his_own_painted_tachi()
+        {
+            var def = CharacterCatalog.Get("raikon");
+            Assert.AreEqual("tachi", def.family);
+            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -0.37f, 0.37f, 0f, foeDef: def);
+            _fights.Add(f);
+            f.RoninInput.Add(600);
+            f.Run(3);
+            var r = f.Ronin;
+            Assert.AreEqual("raikon_tachi", r.WeaponId);
+            Assert.AreEqual("tachi", r.Family.id, "no 'no registered family' fallback to the katana");
+            Assert.IsInstanceOf<TachiMoves>(r.moves);
+            Assert.AreEqual(0, r.rig.FamilyPartCount, "his painted Tachi_Hilt / Tachi_Blade stay; the family adds no blade of its own");
+            Assert.IsTrue(r.rig.HasOwnPart("Tachi_Blade"));
+            Assert.IsFalse(r.rig.BaseSwordHidden);
+            Assert.AreEqual(TachiMoves.BladeLength * r.Weapon.reach, r.BladeReach, 1e-3f, "the family's blade length drives his Blade hit points");
+            Debug.Log($"Raikon: hit line {r.BladeReach:0.00} m, painted blade {(r.def.bladeTipLocal - r.def.bladeBaseLocal).magnitude:0.00} m, body scale {r.Character.bodyScale:0.00}");
+        }
+
         // ---- slow and heavy ----
 
         [Test]

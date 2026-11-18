@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
@@ -101,6 +102,14 @@ namespace Kage.Tests
                 },
             };
 
+            rows = rows.Append(new (string, Func<Color32[]>)[]
+            {
+                ("raikon_idle_with_tachi_set", () => RaikonMove(null, 40)),
+                ("raikon_cut1_f13", () => RaikonMove(s => s.cut1, 13)),
+                ("raikon_overhead_f20", () => RaikonMove(s => s.overhead, 20)),
+                ("raikon_thrust_f17", () => RaikonMove(s => s.thrust, 17)),
+            }).ToArray();
+
             var sheet = new Texture2D(W * Cols, H * rows.Length, TextureFormat.RGBA32, false);
             for (int r = 0; r < rows.Length; r++)
                 for (int c = 0; c < rows[r].Length; c++)
@@ -113,6 +122,25 @@ namespace Kage.Tests
             sheet.Apply();
             File.WriteAllBytes(Path.Combine(Root, "san81_sheet.png"), sheet.EncodeToPNG());
             UnityEngine.Object.DestroyImmediate(sheet);
+        }
+
+        /// <summary>Raikon (a Ronin slot, facing left) in his idle or in a tachi move; the image is mirrored back so he faces right like the others.</summary>
+        static Color32[] RaikonMove(Pick pick, int frame)
+        {
+            using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -3.5f, 0.6f, 0f, foeDef: CharacterCatalog.Get("raikon"));
+            f.RoninInput.Add(600);
+            f.Run(2);
+            var r = f.Ronin;
+            if (pick == null) f.Run(frame);
+            else
+            {
+                var m = pick((TachiMoves)r.moves);
+                r.StartMove(m);
+                f.RunUntil(() => r.state == FState.Attack && r.move == m && r.moveFrame >= frame, 80);
+            }
+            var px = Render(new Vector2(r.Pos.x - 0.35f, Mathf.Max(1.25f, r.rig.Bone(B.Hips).position.y + 0.4f)), Half);
+            for (int y = 0; y < H; y++) System.Array.Reverse(px, y * W, W);
+            return px;
         }
 
         static Color32[] KatanaIai(int frame)

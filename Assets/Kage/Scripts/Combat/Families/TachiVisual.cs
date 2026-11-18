@@ -6,7 +6,8 @@ namespace Kage
     /// <summary>
     /// Draws the heavy tachi on the Sword bone in place of the part set's katana (SAN-81): a long wrapped hilt with a
     /// round guard and a red cord, and a broad odachi blade with a slight curve and a glowing red groove down it
-    /// (Raikō no Tachi: "the red groove drinks lightning"). Raikon's own copy (<c>raikon_tachi</c>) burns brighter.
+    /// (Raikō no Tachi: "the red groove drinks lightning"). A rig that paints its own tachi (Raikon's part set) keeps it:
+    /// nothing is added. Another rig carrying <c>raikon_tachi</c> gets the same blade with a brighter groove.
     /// Axis frame: x along the hilt from the lead hand; the blade runs from the guard (0.08, 0) along the same line
     /// the hit points follow (the katana's blade direction, <see cref="Fighter.BladeTipLocal"/>) and ends at the family's blade length.
     /// </summary>
@@ -39,6 +40,8 @@ namespace Kage
         public void Attach(FighterRig rig, string weaponId)
         {
             rig.ClearFamilyParts();                  // idempotent: never add the parts twice
+            // a character whose part set already paints its own tachi (Raikon, SAN-71) keeps it: draw nothing
+            if (rig.HasOwnPart("Tachi_Blade")) { rig.SetSwordAlwaysFront(false); return; }
             rig.SetBaseSwordHidden(true);
             rig.SetSwordAlwaysFront(true);
             var look = LookOf(weaponId);
