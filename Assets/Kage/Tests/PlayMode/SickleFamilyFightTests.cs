@@ -11,7 +11,7 @@ namespace Kage.Tests
     /// buttons, a chain lash that reaches mid range, a pull that drags the foe in through the physics knockback, a chain
     /// that is drawn and whose length follows the move, every move landing, and weapon levels scaling it like any weapon.
     /// </summary>
-    public class ChainFamilyFightTests
+    public class SickleFamilyFightTests
     {
         readonly List<HeadlessFight> _fights = new();
 
@@ -539,7 +539,7 @@ namespace Kage.Tests
     }
 
     /// <summary>The player's buttons are family-agnostic: J / L and the pad's X, A, Y reach the chain set through Select.</summary>
-    public class ChainInputTests : InputTestFixture
+    public class SickleInputTests : InputTestFixture
     {
         [Test]
         public void Chain_buttons_work_from_the_keyboard_and_the_gamepad_input_source()

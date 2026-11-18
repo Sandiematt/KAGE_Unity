@@ -12,10 +12,10 @@ namespace Kage.Tests
     /// The SAN-87 review sheet: Kage with Yamigama (the chain sickle) in the stances and at the strike frame of every move,
     /// the chain extended mid-lash, and the pull dragging a Ronin in, frame by frame. Writes
     /// Screenshots/review/SAN-87/chain_sheet.png, chain_lash.png, chain_pull.png and every tile to .../chain_tiles/.
-    /// Needs a GPU: skips itself under -nographics (<c>-testFilter ChainScreenshots</c>, no -nographics).
+    /// Needs a GPU: skips itself under -nographics (<c>-testFilter SickleScreenshots</c>, no -nographics).
     /// </summary>
     [Category("Screenshots")]
-    public class ChainScreenshots
+    public class SickleScreenshots
     {
         const int T = 360;
         const int Cols = 6;
