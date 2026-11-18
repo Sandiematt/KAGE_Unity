@@ -5,6 +5,7 @@
     "drainPerFrame": 0.2,
     "drainWhileGuarding": false,
     "breakFrames": 45,
+    "breakPushKept": 0.2,
     "postureAfterBreak": 0.4,
     "chipFactor": 0.15,
     "blockstunFactor": 0.6,

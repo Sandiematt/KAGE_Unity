@@ -19,6 +19,8 @@ namespace Kage
         public bool drainWhileGuarding;
         /// <summary>Frames a guard-broken fighter is helpless. The next hit in them is a guaranteed critical.</summary>
         public int breakFrames = 45;
+        /// <summary>Share of the guarded hit's push-back a guard-broken fighter keeps: it staggers in place, open to the next hit.</summary>
+        public float breakPushKept = 0.2f;
         /// <summary>Posture left after a break, as a share of the maximum (JS: the guard refills to 60 of 100).</summary>
         public float postureAfterBreak = 0.4f;
         /// <summary>Health a guarded blade hit still takes: damage × this, rounded up. Fists and feet do no chip damage.</summary>

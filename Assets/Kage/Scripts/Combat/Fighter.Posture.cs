@@ -80,6 +80,8 @@ namespace Kage
             _hurt = _guardBrokenPose;
             _stun = t.breakFrames;
             _guardBreakLeft = t.breakFrames;
+            // staggered in place, open to the attacker: most of the block's push-back is cancelled
+            if (rb.bodyType == RigidbodyType2D.Dynamic) rb.linearVelocity = new Vector2(rb.linearVelocity.x * t.breakPushKept, rb.linearVelocity.y);
             rig.Squash(0.08f);
             rig.Flash(new Color(1f, 0.35f, 0.3f), 0.8f, 10f);
             Vfx.I?.Shockwave(source.contact, 0.6f, new Color(1f, 0.85f, 0.6f));

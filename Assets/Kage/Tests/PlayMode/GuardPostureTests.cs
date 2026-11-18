@@ -357,10 +357,7 @@ namespace Kage.Tests
             Assert.AreEqual(1f, b.Posture, "the bar that filled");
 
             var crit = f.Events(CombatEventType.Hit).FirstOrDefault(e => e.TargetId == "kage");
-            Assert.AreEqual(CombatEventType.Hit, crit.Type, string.Join("
-", f.Log.Lines()) + "
-" + string.Join("
-", f.Frames.Take(40)));
+            Assert.AreEqual(CombatEventType.Hit, crit.Type, string.Join(" || ", f.Log.Lines()) + " ## " + string.Join(" || ", f.Frames.Take(40)));
             Assert.AreEqual("cross", crit.MoveId);
             Assert.IsTrue(crit.Crit, "a guaranteed critical");
             var cross = f.Ronin.moves.All.First(m => m.id == "cross").hits[crit.Window];
