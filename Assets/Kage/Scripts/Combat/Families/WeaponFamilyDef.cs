@@ -45,6 +45,12 @@ namespace Kage
         /// <summary>Draws the weapon; null draws nothing.</summary>
         public IWeaponVisual visual;
 
+        /// <summary>
+        /// A blade long enough to dig into the floor in the low poses (the tachi's): the grip keeps its point above the
+        /// floor, as for a polearm (<see cref="Fighter"/> ApplyGrip). The spear does it through its grip.
+        /// </summary>
+        public bool keepPointOffFloor;
+
         public bool HasBlade => bladeLength > 0f;
     }
 }

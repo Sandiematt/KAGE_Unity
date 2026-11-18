@@ -386,6 +386,14 @@ namespace Kage
         }
 
         public int FamilyPartCount => _familyParts.Count;
+
+        /// <summary>True when the character's own part set draws a part with this name (not one a weapon family added).</summary>
+        public bool HasOwnPart(string partName)
+        {
+            foreach (var p in _parts)
+                if (!p.family && p.def.name == partName) return true;
+            return false;
+        }
         public bool BaseSwordHidden => _baseSwordHidden;
 
         /// <summary>
