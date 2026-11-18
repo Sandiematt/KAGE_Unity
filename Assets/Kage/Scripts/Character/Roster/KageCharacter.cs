@@ -26,6 +26,7 @@ namespace Kage
                 defense = (float)stats.Defense,
                 partSet = "kage",
                 helmet = save.equipped?.helmet,
+                armor = save.equipped?.armor,
                 colors = new FighterColors(Palette.Trim, Color.white, Palette.TrimDeep),
                 family = "katana",
                 aiProfile = null,
