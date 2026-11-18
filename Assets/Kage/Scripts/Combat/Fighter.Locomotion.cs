@@ -153,7 +153,7 @@ namespace Kage
             _dashAir = air;
             _dashFrame = 0;
             _dashTotal = air ? AirDashFrames : (dir > 0 ? DashFrames : BackDashFrames);
-            _dashCool = DashCooldown + _dashTotal;
+            _dashCool = DashCooldownFrames(DashCooldown + _dashTotal);
             if (air) _airDashUsed = true;
             _walkHeld = 0f;
             SetState(FState.Dash);

@@ -27,6 +27,8 @@ namespace Kage
         public CameraRig Cam { get; private set; }
         public string StageId { get; private set; }
         public string FoeName { get; private set; }
+        /// <summary>What Kage was built from (<see cref="KageCharacter.LoadoutKey"/>); a screen builds a new world when the save's loadout no longer matches.</summary>
+        public string LoadoutKey { get; private set; }
 
         /// <summary>Time since the current phase began, in unscaled seconds (the title card reads it).</summary>
         public float PhaseTime { get; private set; }
@@ -43,19 +45,20 @@ namespace Kage
         FightStatsRecorder _stats;
         Fighter _winner;
 
-        /// <summary>Builds the world of a stage, in the tableau phase: both fighters stand and wait.</summary>
-        public static StageWorld Create(Transform parent, string stageId)
+        /// <summary>Builds the world of a stage, in the tableau phase: both fighters stand and wait. Kage is built from <paramref name="save"/>'s loadout (null = a fresh save).</summary>
+        public static StageWorld Create(Transform parent, string stageId, SaveData save = null)
         {
             var go = new GameObject("StageWorld");
             go.transform.SetParent(parent, false);
             var w = go.AddComponent<StageWorld>();
-            w.Build(stageId);
+            w.Build(stageId, save);
             return w;
         }
 
-        void Build(string stageId)
+        void Build(string stageId, SaveData save)
         {
             StageId = stageId;
+            LoadoutKey = KageCharacter.LoadoutKey(save);
             var stage = GameRules.Stage(stageId);
             var foe = stage != null ? JsTables.Enemy(stage.Enemy) : null;
             FoeName = stage != null && stage.Kind != "stretch" && !string.IsNullOrEmpty(stage.Foe) ? stage.Foe : foe != null ? foe.Name : "RONIN";
@@ -87,7 +90,7 @@ namespace Kage
             }
             Hud.gameObject.SetActive(false);
 
-            Player = fight.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new PlayerInputSource());
+            Player = fight.Spawn(KageCharacter.Def(save), 0, new PlayerInputSource());     // the save's equipped weapon, helmet and armour (SAN-84)
             Foe = fight.Spawn(CharacterCatalog.Get(Ronin.Id), 1, new AIInputSource { level = LevelFor(stage) });
             Player.onKO += OnKO;
             Foe.onKO += OnKO;

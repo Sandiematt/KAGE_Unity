@@ -165,7 +165,7 @@ namespace Kage
             var info = new HitInfo
             {
                 // a blade projectile (the Crescent) carries the weapon's damage; a kunai doesn't
-                attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, w.sword), kb = new Vector2(w.kb.x * Dir, w.kb.y), zone = zone, contact = contact,
+                attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, w.sword, Owner != null ? Owner.ProjectileDamageMul(Def) : 1f), kb = new Vector2(w.kb.x * Dir, w.kb.y), zone = zone, contact = contact,
                 moveId = Def.id, window = -1,
             };
             var outcome = ExternalHit.Deliver(Owner, t, info, out var result);
