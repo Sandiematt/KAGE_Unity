@@ -11,18 +11,37 @@ namespace Kage
         /// <summary>The reference pose itself: Kage standing, katana low, exactly as drawn.</summary>
         public static Pose Ref() => new Pose();
 
-        /// <summary>Fighting stance: wide base, fist guard high, katana low and forward (as in the art).</summary>
+        // Two-handed stances (SAN-113, docs/reference/two_handed_sword_stances.png). Only the arms and the
+        // blade are new: hips, chest, head and feet stay as they were, so the hurt circles don't move.
+
+        /// <summary>Chūdan-no-kamae: both hands on the grip at the waist, the blade forward and up at the opponent.</summary>
         public static Pose Stance() => new Pose().Hip(0f, -0.08f, -4f).Chest(-8f).Head(5f)
-            .Feet(0.24f, -0.26f).HandN(0.2f, 1.12f, 10f).HandF(0.24f, 0.88f).Blade(-32f);
+            .Feet(0.24f, -0.26f).HandF(ChudanX, ChudanY, 0f).Blade(ChudanBlade).Grip();
 
+        public const float ChudanX = 0.27f, ChudanY = 0.97f, ChudanBlade = 34f;
+
+        /// <summary>Gedan-no-kamae: crouched, both hands low, the point lowered towards the opponent's knees.</summary>
         public static Pose Crouch() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-20f).Head(14f)
-            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandN(0.2f, 0.9f, 10f).HandF(0.24f, 0.68f).Blade(-20f);
+            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandF(0.27f, 0.74f).Blade(-18f).Grip();
 
+        /// <summary>High guard: both hands raised in front of the chest, the blade held straight up across the line of attack.</summary>
         public static Pose Block() => new Pose().Hip(-0.03f, -0.1f, -2f).Chest(-2f).Head(-6f)
-            .Feet(0.2f, -0.28f).HandN(0.16f, 1.36f, 75f).HandF(0.2f, 1.06f).Blade(78f);
+            .Feet(0.2f, -0.28f).HandF(0.24f, 1.2f, 0f).Blade(84f).Grip();
 
+        /// <summary>Low guard (Gedan): crouched, both hands low in front, the blade lowered straight across the legs.</summary>
         public static Pose CrouchBlock() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-16f).Head(8f)
-            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandN(0.14f, 1.04f, 75f).HandF(0.2f, 0.82f).Blade(70f);
+            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandF(0.26f, 0.84f).Blade(-62f).Grip();
+
+        // ---------------------------------------------------------------- reference stances (start / finish of swings)
+        /// <summary>Jōdan-no-kamae: hands above the forehead, the blade raised up and back. Overhead cuts start here.</summary>
+        public static Pose Jodan(Pose p) => p.HandF(0.06f, 1.62f, 0f).Blade(118f).Grip();
+        /// <summary>Waki-gamae: hands at the rear hip, the blade low and pointing back. Sweeps and draws start here.</summary>
+        public static Pose Waki(Pose p) => p.HandF(0.02f, 0.86f, 0f).Blade(-160f).Grip();
+        /// <summary>Kasumi-no-kamae: hands by the head, the blade level and pointing forward. Thrusts start here.</summary>
+        public static Pose Kasumi(Pose p) => p.HandF(0.12f, 1.5f, 0f).Blade(4f).Grip();
+
+        /// <summary>The unarmed guard (sword broken): both fists up.</summary>
+        public static Pose FistGuard(Pose p) => p.HandN(0.26f, 1.3f, 10f).HandF(0.16f, 1.18f, 10f);
 
         public static Pose JumpRise() => new Pose().Hip(0f, 0f, 0f).Chest(-4f).Head(4f)
             .FootN(0.18f, 0.36f, -20f).FootF(-0.14f, 0.3f, -30f).HandN(0.18f, 1.18f).HandF(0.08f, 0.94f).Blade(-140f);
@@ -141,7 +160,7 @@ namespace Kage
             float s = Mathf.Sin(w), bob = Mathf.Cos(w * 2f);
             into.Hip(0.01f * dir, -0.09f + bob * 0.012f, -4f - 2f * dir).Chest(-9f - 2f * dir + s * 1.2f).Head(5f - s * 0.8f)
                 .FootN(nx, ny, na).FootF(fx, fy, fa)
-                .HandN(0.2f + s * 0.02f, 1.12f - bob * 0.01f, 10f).HandF(0.24f - s * 0.015f, 0.88f).Blade(-32f + s * 4f);
+                .HandF(ChudanX - s * 0.015f, ChudanY - bob * 0.008f).Blade(ChudanBlade + s * 3f).Grip();
             into.MarkDirty();
             return into;
         }

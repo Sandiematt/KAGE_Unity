@@ -4,8 +4,12 @@ using UnityEngine;
 namespace Kage
 {
     /// <summary>
-    /// K.O. ragdoll: the posed skeleton is flattened into Rigidbody2D bodies joined by limited
-    /// HingeJoint2Ds and thrown with the finishing blow's impulse. Restore() puts the rig back.
+    /// Ragdoll: the posed skeleton is flattened into Rigidbody2D bodies joined by limited HingeJoint2Ds.
+    /// K.O. (<see cref="Activate"/>) throws it free with the finishing blow's impulse. A physical fall
+    /// (<see cref="ActivateFall"/>, SAN-113) is the same bodies <see cref="Tethered"/> to the fighter's
+    /// gameplay body: each frame <see cref="Drive"/> pulls the whole ragdoll towards where the hips should be
+    /// and turns the torso towards the gameplay tumble, while the limbs, the impact and the settling are
+    /// physics. <see cref="Capture"/> reads the fallen body back as a pose; Restore() puts the rig back.
     /// </summary>
     public class Ragdoll2D : MonoBehaviour
     {
@@ -38,18 +42,164 @@ namespace Kage
         FighterRig _rig;
         public readonly Dictionary<B, Rigidbody2D> bodies = new();
 
+        /// <summary>True during a physical fall: the ragdoll follows the gameplay body (no randomness, no interpolation).</summary>
+        public bool Tethered { get; private set; }
+
+        /// <summary>K.O.: the free ragdoll, thrown by the finishing blow.</summary>
         public static Ragdoll2D Activate(FighterRig rig, Vector2 impulse, Vector2 contact)
         {
             var rd = rig.gameObject.AddComponent<Ragdoll2D>();
-            rd.Go(rig, impulse, contact);
+            rd.Build(rig, false);
+            rd.Throw(impulse, contact);
             return rd;
         }
 
-        void Go(FighterRig rig, Vector2 impulse, Vector2 contact)
+        /// <summary>
+        /// A physical fall: every body starts with the hit's velocity <paramref name="velocity"/> plus a spin of
+        /// <paramref name="spinDeg"/> degrees a second about the hips (world, counter-clockwise), under <paramref name="gravityScale"/>.
+        /// </summary>
+        public static Ragdoll2D ActivateFall(FighterRig rig, Vector2 velocity, float spinDeg, float gravityScale)
         {
+            var rd = rig.gameObject.AddComponent<Ragdoll2D>();
+            rd.Build(rig, true);
+            foreach (var kv in rd.bodies) kv.Value.gravityScale = gravityScale;
+            rd.AddMotion(velocity, spinDeg);
+            return rd;
+        }
+
+        /// <summary>Adds a velocity and a spin about the hips to every body (a fresh hit on a falling body).</summary>
+        public void AddMotion(Vector2 velocity, float spinDeg)
+        {
+            Vector2 c = bodies[B.Hips].position;
+            float w = spinDeg * Mathf.Deg2Rad;
+            foreach (var b in Bodies)
+            {
+                var rb = bodies[b];
+                Vector2 r = rb.position - c;
+                rb.linearVelocity += velocity + new Vector2(-r.y, r.x) * w;
+                rb.angularVelocity += spinDeg;
+            }
+        }
+
+        /// <summary>A push at a point (a ground hit on the lying body).</summary>
+        public void Kick(Vector2 impulse, Vector2 at)
+        {
+            Rigidbody2D nearest = null;
+            float best = float.MaxValue;
+            foreach (var b in Bodies)
+            {
+                float dd = (bodies[b].position - at).sqrMagnitude;
+                if (dd < best) { best = dd; nearest = bodies[b]; }
+            }
+            if (nearest != null) nearest.AddForceAtPosition(impulse, at, ForceMode2D.Impulse);
+        }
+
+        /// <summary>Tether gains: position (1/s², 1/s) and torso turn (1/s², 1/s), and the tether's acceleration cap (m/s²).</summary>
+        public const float PosK = 160f, PosD = 18f, TurnK = 90f, TurnD = 11f, MaxAccel = 120f;
+
+        /// <summary>
+        /// One fall frame, before the physics step: one acceleration on every body takes the hips towards
+        /// <paramref name="hipsTarget"/> (moving at <paramref name="targetVel"/>), so the tether never bends the body,
+        /// and a torque turns the hips and chest towards <paramref name="angleTarget"/> (world degrees), scaled by
+        /// <paramref name="turnWeight"/>. Ground contacts, joint limits and the limbs' own momentum do the rest.
+        /// </summary>
+        public void Drive(Vector2 hipsTarget, Vector2 targetVel, float angleTarget, float turnWeight, float posGain = 1f)
+        {
+            var hips = bodies[B.Hips];
+            Vector2 acc = PosK * posGain * (hipsTarget - hips.position) + PosD * Mathf.Sqrt(posGain) * (targetVel - hips.linearVelocity);
+            acc = Vector2.ClampMagnitude(acc, MaxAccel);
+            foreach (var b in Bodies) bodies[b].AddForce(acc * bodies[b].mass);
+            if (turnWeight <= 0f) return;
+            foreach (var b in TurnBodies)
+            {
+                var rb = bodies[b];
+                float err = Mathf.DeltaAngle(rb.rotation, angleTarget) * Mathf.Deg2Rad;
+                float alpha = (TurnK * err - TurnD * rb.angularVelocity * Mathf.Deg2Rad) * turnWeight;
+                rb.AddTorque(alpha * rb.inertia);
+            }
+        }
+
+        static readonly B[] TurnBodies = { B.Hips, B.Chest };
+
+        /// <summary>
+        /// Joint muscles: a torque pair on every joint turns the child towards its angle in <paramref name="pose"/>
+        /// (plain bone angles, root space facing right; <paramref name="facing"/> mirrors them), with stiffness
+        /// <paramref name="k"/> (1/s²) and damping <paramref name="damp"/> (1/s). Weak muscles let the limbs flail and
+        /// the impact fold them; stronger ones settle the body into the authored lie.
+        /// </summary>
+        public void DrivePose(Pose pose, float facing, float k, float damp)
+        {
+            var d = _rig.def;
+            foreach (var b in Bodies)
+            {
+                if (b == B.Hips) continue;
+                var jp = JointParent(b);
+                float rel = 0f;
+                for (var x = b; x != jp && x != B.Root; x = d.parent[(int)x]) rel += pose.a[(int)x];
+                var child = bodies[b];
+                var parent = bodies[jp];
+                float err = Mathf.DeltaAngle(child.rotation - parent.rotation, facing * rel) * Mathf.Deg2Rad;
+                float w = (child.angularVelocity - parent.angularVelocity) * Mathf.Deg2Rad;
+                float torque = (k * err - damp * w) * child.inertia;
+                child.AddTorque(torque);
+                parent.AddTorque(-torque);
+            }
+        }
+
+        /// <summary>Ends a fall as a K.O.: the tether lets go and the finishing blow throws the body.</summary>
+        public void Release(Vector2 impulse, Vector2 contact)
+        {
+            Tethered = false;
+            foreach (var b in Bodies)
+            {
+                bodies[b].interpolation = RigidbodyInterpolation2D.Interpolate;
+                bodies[b].gravityScale = 1f;
+            }
+            Throw(impulse, contact);
+        }
+
+        /// <summary>
+        /// The fallen body as a pose of the rig: each body's angle relative to its rig parent and the hips' offset,
+        /// in the rig's root space (facing right). Bones that are not bodies (neck, hands, sword, feet) keep the angle
+        /// the last pose gave them. The result is plain bone angles: no IK goals, no grip.
+        /// </summary>
+        public void Capture(Pose into)
+        {
+            var rig = _rig;
+            into.CopyFrom(rig.current);
+            var root = rig.transform;
+            float RootAngle(Transform t)
+            {
+                Vector3 y = root.InverseTransformVector(t.TransformVector(Vector3.up));
+                return Mathf.Atan2(-y.x, y.y) * Mathf.Rad2Deg;
+            }
+            var abs = new float[(int)B.COUNT];
+            for (int i = 1; i < (int)B.COUNT; i++)      // the enum lists every parent before its children
+            {
+                var b = (B)i;
+                float parentAbs = abs[(int)rig.def.parent[i]];
+                if (bodies.ContainsKey(b))
+                {
+                    abs[i] = RootAngle(rig.Bone(b));
+                    into.a[i] = KMath.Wrap(abs[i] - parentAbs);
+                }
+                else abs[i] = parentAbs + into.a[i];
+            }
+            Vector2 hips = root.InverseTransformPoint(rig.Bone(B.Hips).position);
+            into.hip = hips - rig.def.pivot[(int)B.Hips];
+            for (int l = 0; l < 4; l++) into.ik[l] = false;
+            into.hasFootAbs[0] = into.hasFootAbs[1] = false;
+            into.hasSwAbs = false;
+            into.grip = false;
+            into.MarkDirty();
+        }
+
+        void Build(FighterRig rig, bool tethered)
+        {
+            Tethered = tethered;
             _rig = rig;
             var d = rig.def;
-            _container = new GameObject(rig.def.name + "_Ragdoll");
+            _container = new GameObject(rig.def.name + (tethered ? "_Fall" : "_Ragdoll"));
             // under the fight root (KageGame in the dev arena), so a headless fight cleans it up with the rest
             var fighter = rig.transform.parent;
             _container.transform.SetParent(fighter != null ? fighter.parent : null, false);
@@ -64,7 +214,7 @@ namespace Kage
                 Vector3 x = m.GetColumn(0);
                 float det = x.x * y.y - x.y * y.x;
                 float ang = Mathf.Atan2(-y.x, y.y) * Mathf.Rad2Deg;
-                world[b] = (m.GetColumn(3), ang, Mathf.Sign(det));
+                world[b] = (m.GetColumn(3), ang, Mathf.Sign(det) * y.magnitude);
                 _saved.Add(new Saved { t = t, parent = t.parent, lp = t.localPosition, lr = t.localRotation, ls = t.localScale });
             }
             foreach (var b in Bodies)
@@ -74,7 +224,7 @@ namespace Kage
                 t.SetParent(_container.transform, false);
                 t.localPosition = w.pos;
                 t.localRotation = Quaternion.Euler(0f, 0f, w.ang);
-                t.localScale = new Vector3(w.sx, 1f, 1f);
+                t.localScale = new Vector3(w.sx, Mathf.Abs(w.sx), 1f);      // keeps the body scale (squash dropped)
                 t.gameObject.layer = KageGame.LayerRagdoll;
             }
 
@@ -86,7 +236,8 @@ namespace Kage
                 rb.mass = b switch { B.Hips => 3f, B.Chest => 3f, B.Head => 1f, _ => 0.7f };
                 rb.linearDamping = 0.15f;
                 rb.angularDamping = 0.6f;
-                rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+                // a tethered fall carries the hurtboxes: no interpolation, so the bones are exactly the bodies at every hit query
+                rb.interpolation = tethered ? RigidbodyInterpolation2D.None : RigidbodyInterpolation2D.Interpolate;
                 rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
                 _added.Add(rb);
                 bodies[b] = rb;
@@ -135,15 +286,19 @@ namespace Kage
                 j.limits = new JointAngleLimits2D { min = -lim, max = lim };
                 _added.Add(j);
             }
+        }
 
+        void Throw(Vector2 impulse, Vector2 contact)
+        {
             // throw it: everything inherits the blow, the struck part gets the extra kick + spin
             Rigidbody2D nearest = null;
             float best = float.MaxValue;
-            foreach (var kv in bodies)
+            foreach (var b in Bodies)
             {
-                kv.Value.linearVelocity = impulse * Random.Range(0.85f, 1.05f);
-                float dd = ((Vector2)kv.Value.transform.position - contact).sqrMagnitude;
-                if (dd < best) { best = dd; nearest = kv.Value; }
+                var rb = bodies[b];
+                rb.linearVelocity = impulse * Random.Range(0.85f, 1.05f);
+                float dd = ((Vector2)rb.transform.position - contact).sqrMagnitude;
+                if (dd < best) { best = dd; nearest = rb; }
             }
             if (nearest != null) nearest.AddForceAtPosition(impulse * 0.7f, contact, ForceMode2D.Impulse);
             bodies[B.Chest].angularVelocity = -Mathf.Sign(impulse.x) * 240f;
@@ -160,6 +315,7 @@ namespace Kage
             for (int i = _added.Count - 1; i >= 0; i--)
                 if (_added[i] != null) DestroyImmediate(_added[i]);
             _added.Clear();
+            bodies.Clear();
             foreach (var s in _saved)
             {
                 s.t.SetParent(s.parent, false);
@@ -169,8 +325,8 @@ namespace Kage
                 s.t.gameObject.layer = 0;
             }
             _saved.Clear();
-            if (_container != null) Destroy(_container);
-            Destroy(this);
+            if (_container != null) DestroyImmediate(_container);
+            DestroyImmediate(this);
         }
     }
 }

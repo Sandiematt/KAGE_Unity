@@ -103,6 +103,7 @@ namespace Kage
                 health = Mathf.Max(0f, health - info.dmg);
                 rig.Flash(Color.white, 0.8f, 14f);
                 Knock(KnockVelocity(new Vector2(info.kb.x * 0.25f, 0f)));
+                KickFall(info);
                 if (health <= 0f) KnockOut(info);
                 return HitResult.Hit;
             }
@@ -145,6 +146,7 @@ namespace Kage
             float speed = Mathf.Clamp(170f + Mathf.Abs(v.x) * 55f + Mathf.Max(0f, v.y) * 22f, 170f, 460f);
             _tumbleVel = backwards ? speed : -speed;
             rig.Squash(-0.06f);
+            StartPhysicalFall(v);
         }
 
         void LaunchedUpdate()
@@ -189,7 +191,8 @@ namespace Kage
             rb.linearVelocity = Vector2.zero;
             rb.simulated = false;
             SetHurtboxesActive(false);      // the ragdoll bodies take the bones; the hurt circles stay out of them
-            _ragdoll = Ragdoll2D.Activate(rig, impulse, info.contact);
+            if (FallingPhysically) _ragdoll.Release(impulse, info.contact);     // a fall becomes the free KO ragdoll
+            else _ragdoll = Ragdoll2D.Activate(rig, impulse, info.contact);
             Vfx.I?.KoBurst(info.contact, fxMain, info.attacker != null ? info.attacker.fxMain : fxMain);
             GameFeel.SlowMo(0.25f, 0.9f);
             GameFeel.Shake(0.5f);

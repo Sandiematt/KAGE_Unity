@@ -227,6 +227,7 @@ namespace Kage
 
         void SetState(FState s)
         {
+            if (s != FState.Launched && s != FState.Down && s != FState.KO) EndPhysicalFall();
             if (s != FState.Attack) { move = null; rig.SetSwordFront(false); }
             _start.CopyFrom(_display);
             _start.Normalize();
@@ -319,6 +320,7 @@ namespace Kage
 
             if (state is FState.Idle or FState.Walk or FState.Run) UpdateGait();
             UpdateGravity();
+            if (state is FState.Launched or FState.Down) DriveFall();
             if (!Grounded && rb.bodyType == RigidbodyType2D.Dynamic) _lastVy = rb.linearVelocity.y;
             ClampStage();
         }

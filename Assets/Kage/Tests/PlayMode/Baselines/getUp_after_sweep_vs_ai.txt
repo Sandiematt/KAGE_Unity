@@ -11,7 +11,7 @@
 144 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 149 Hit ronin>kage risingMoon#0 dmg=8 pos=0 crit=0 lvl=Mid zone=Legs i=0 n=-
 163 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-183 Hit ronin>kage cleave#0 dmg=12 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+183 Hit ronin>kage cleave#0 dmg=12 pos=0 crit=0 lvl=Overhead zone=Body i=0 n=-
 [frames]
 0 kage -0.40000 0.02000 Idle - hp=100 ronin 0.40000 0.02000 Idle - hp=100
 1 kage -0.40000 0.02000 Idle - hp=100 ronin 0.40000 0.02000 Idle - hp=100

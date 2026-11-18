@@ -65,6 +65,8 @@ SAN-63 splits `Fighter` into these partial files. Later tickets put their code i
 | `Fighter.Throw.cs` | grab, carry, release, `BeginThrown` |
 | `Fighter.Specials.cs` | Mirror Guard counter, Crescent spawn, Thousand Shadows, and `TrySpecialDown()` (Special + Down, see ADR-0004) |
 | `Fighter.Pose.cs` | `LateUpdate` pose output, blends, gait and air poses, trails |
+| `Fighter.Fall.cs` | physical falls (SAN-113): the tethered ragdoll for launched and down, its drive, and the hand-back to the get-up |
+| `Fighter.SwordBreak.cs` | sword break (SAN-113): `SwordBroken`, `BreakSword`, `ResetForFight`, the unarmed move filter and fist guard |
 
 New partial files expected later: `Fighter.Posture.cs` (SAN-86), `Fighter.Parry.cs` (SAN-91), `Fighter.PerfectDodge.cs` (SAN-92), `Fighter.Armour.cs` (the first of SAN-80 / SAN-102), `Fighter.Targets.cs` (SAN-83), `Fighter.Kunai.cs` (SAN-88), `Fighter.RageArt.cs` (SAN-82).
 

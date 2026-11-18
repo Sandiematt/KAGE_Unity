@@ -9,7 +9,7 @@ namespace Kage
     /// Dev arena entry point (ADR-0001). Builds everything at runtime from code — camera, post-processing, stage,
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
-    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · R restart · P pause.
+    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F7 break/restore sword · R restart · P pause.
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class KageGame : MonoBehaviour
@@ -171,7 +171,7 @@ namespace Kage
             bag.gameObject.SetActive(training);
             player.opponent = training ? null : enemy;
             player.extraTarget = training ? bag : null;
-            player.roundsWon = enemy.roundsWon = 0; player.ResetKunai(); enemy.ResetKunai();
+            player.roundsWon = enemy.roundsWon = 0; player.ResetForFight(); enemy.ResetForFight();
             _round = 1;
             Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train");
             _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
@@ -350,6 +350,11 @@ namespace Kage
                 Hud.Banner(_ai.passive ? "AI PASSIVE (practice)" : "AI ACTIVE", Color.white, 1.2f);
             }
             if (kb.pKey.wasPressedThisFrame) GameFeel.paused = !GameFeel.paused;
+            if (kb.f7Key.wasPressedThisFrame)       // dev: break (or restore) the player's sword (SAN-113)
+            {
+                if (player.SwordBroken) player.RestoreSword(); else player.BreakSword();
+                Hud?.Banner(player.SwordBroken ? "SWORD BROKEN (F7)" : "SWORD RESTORED (F7)", Color.white, 1.2f);
+            }
             if (kb.f9Key.wasPressedThisFrame) ToggleGallery();
             if (Gallery != null && Gallery.page >= 0)
             {
@@ -359,7 +364,7 @@ namespace Kage
             if (kb.rKey.wasPressedThisFrame)
             {
                 if (mode == Mode.Training) { bag.ResetBag(); player.ResetForRound(-0.4f, 1f); player.BeginFight(); }
-                else { player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; enemy.meter = 0f; _round = 1; StartRound(); }
+                else { player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; enemy.meter = 0f; player.ResetForFight(); enemy.ResetForFight(); _round = 1; StartRound(); }
             }
         }
 
