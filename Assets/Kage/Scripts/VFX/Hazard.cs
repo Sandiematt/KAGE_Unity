@@ -73,10 +73,14 @@ namespace Kage
 
         void OnDestroy() => Ctx?.Hazards.Remove(this);
 
-        /// <summary>One fight-loop frame. (SAN-92 will scale it by the world time scale.)</summary>
+        /// <summary>
+        /// One fight-loop frame. Under the world time scale (SAN-92) a hazard its owner doesn't keep at full speed only
+        /// counts (telegraph, strike) on the slowed world's frames.
+        /// </summary>
         public void Tick()
         {
             if (Phase == HazardPhase.Done) return;
+            if (!Ctx.Clock.Advances(Owner)) return;
             Age++;
             int telegraph = Def.telegraphFrames;
             if (Age <= telegraph) return;

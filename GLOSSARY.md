@@ -8,7 +8,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Fight loop**: the component that runs one frame for every fighter in a fixed order: input, fighter tick, clashes, hits, projectiles and hazards, late tick (ADR-0002).
 - **Fight context**: the per-fight services: seed, random source, fight clock, event stream, fighters, props (ADR-0002).
 - **Fight clock**: counts frames; owns hitstop, whole-screen slow motion and the world time scale.
-- **World time scale**: the speed of every fighter, projectile and hazard except the exempt one. 0.4 during a perfect dodge, 0 during the Crimson Moon freeze.
+- **World time scale**: the speed of every fighter, projectile and hazard except the **exempt** fighter (Kage) and what he owns. 0.4 during a perfect dodge, 0 during the Crimson Moon freeze. Counted by the fight clock in loop frames: a slowed fighter takes a logic frame only on the slowed world's frames (0.4 of them), its body moves at 0.4 of its speed in between, and a frozen one is held still. Not `Time.timeScale` (that is hitstop's and whole-screen slow motion's). *Avoid:* witch time, bullet time, local time scale.
 - **Hitstop**: a short freeze of the whole fight on impact. *Avoid:* hit-pause, freeze frame.
 - **Seed / random stream**: every gameplay roll comes from a named stream of the fight's seeded random source. Cosmetic randomness doesn't.
 - **Fight harness**: the test seam that builds a fight from data, drives it with scripted input under a fixed seed and checks events and public state. *Avoid:* simulator.
@@ -75,7 +75,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Parry**: a Guard press within a short window before a hit lands. The hit does nothing; the attacker staggers and takes posture. A mistimed press starts a **parry lockout**. Unblockable hits can't be parried. *Avoid:* deflect, perfect block, just guard.
 - **Posture**: a bar on every fighter (`postureMax` in character data: 60, Raikon 100) that fills when it guards (hit damage × 1.5 × the window's postureMul) and a little on clean hits (× 0.3), and drains after 1 s (60 frames) without a posture gain, not while Guard is held. Numbers in `guard.json`. *Avoid:* stamina, guard meter, stance, poise, balance.
 - **Guard-break**: posture full: 45 frames (0.75 s) helpless, and the next hit is a guaranteed critical; the bar is left at 40 %. A **guard-broken** fighter is in those frames (`Fighter.GuardBroken`). *Avoid:* guard crush, stagger (for this).
-- **Perfect dodge**: a dash or roll started just before a hit would land: the world slows (Kage doesn't), Kage gains Rage, an afterimage shows. Player only. *Avoid:* witch time, just dodge.
+- **Perfect dodge**: a dash or roll started just before a hit would land: the hit reaches Kage's hurtboxes within the **perfect-dodge window** (8 of his frames from the start of the dash, roll or backflip, plus the dash perk's bonus). The hit does nothing (`PerfectDodged`, no damage), the world slows to 0.4 for 24 frames (Kage doesn't), Kage gains 12 Rage, blue afterimages show. Once per dash or roll; player only. Numbers in `dodge.json`. A dash or roll outside the window is a **normal dodge**: only its own invulnerability. *Avoid:* witch time, just dodge.
 - **Clash**: two blade windows whose sweeps cross on the same frame: no damage, both recoil, a little posture each, sparks. Blades only, never fists or feet.
 
 ## Meter and specials

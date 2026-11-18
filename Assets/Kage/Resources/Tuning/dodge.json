@@ -1,0 +1,13 @@
+{
+    "windowFrames": 8,
+    "dashBonusWindowFrames": 30.0,
+    "worldScale": 0.4,
+    "slowFrames": 24,
+    "meterGain": 12.0,
+    "afterimages": 3,
+    "afterimageLife": 0.45,
+    "afterimageTint": { "r": 0.55, "g": 0.82, "b": 1.0, "a": 0.45 },
+    "afterimageSpacing": 0.18,
+    "screenTint": { "r": 0.47, "g": 0.78, "b": 1.0, "a": 0.3 },
+    "screenTintSeconds": 0.4
+}
