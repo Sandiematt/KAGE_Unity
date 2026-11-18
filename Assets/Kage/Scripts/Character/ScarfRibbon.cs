@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Kage
@@ -15,6 +16,8 @@ namespace Kage
             public Vector2[] p, prev;
             public float seg, width, phase;
             public Vector3 anchorLocal;
+            public bool hasColours;
+            public Color front, back;
             public Ribbon ribbon;
         }
 
@@ -33,11 +36,18 @@ namespace Kage
             _def = d;
             Transform chest = rig.Bone(B.Chest);
             Vector2 cp = d.pivot[(int)B.Chest];
-            _tails = new[]
+            var tails = new List<Tail>
             {
                 MakeTail(d.scarfAnchorA - cp, 0.78f, 0.105f, 0f),
                 MakeTail(d.scarfAnchorB - cp, 0.64f, 0.085f, 1.7f),
             };
+            foreach (var s in d.scarfStrands)
+            {
+                var t = MakeTail(s.anchor - cp, s.length, s.width, s.phase);
+                t.hasColours = true; t.front = s.front; t.back = s.back;
+                tails.Add(t);
+            }
+            _tails = tails.ToArray();
             SetOrder(rig.baseOrder + 3);
             ResetChain();
         }
@@ -139,9 +149,10 @@ namespace Kage
 
         void Draw()
         {
-            Color front = _def.scarfColor, backC = _def.scarfBack, edge = Palette.TrimBright;
+            Color edge = _def.scarfEdge;
             foreach (var t in _tails)
             {
+                Color front = t.hasColours ? t.front : _def.scarfColor, backC = t.hasColours ? t.back : _def.scarfBack;
                 var r = t.ribbon;
                 r.Begin();
                 for (int i = 0; i < N; i++)
