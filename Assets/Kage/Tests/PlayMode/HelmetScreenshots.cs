@@ -62,7 +62,7 @@ namespace Kage.Tests
                         case "hit": f.Run(20); f.Kage.rig.Apply(PoseLib.HurtHigh()); break;
                     }
                     Vector2 c = f.Kage.rig.Bone(B.Head).position;
-                    head[pose].Add(Render(c + new Vector2(0.0f, 0.02f), 0.62f, label + "  " + pose));
+                    head[pose].Add(Render(c + new Vector2(0.0f, 0.1f), 0.68f, label + "  " + pose));
                     if (pose == "idle")
                     {
                         File.WriteAllBytes(Path.Combine(OutDir, $"helmet_{id}.png"), Png(Render(c + new Vector2(0.05f, 0.05f), 0.5f, label, 800, 800), 800, 800));
