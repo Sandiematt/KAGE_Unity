@@ -5,7 +5,7 @@
 
 ## Context
 
-`FrameInput` has `dx, dy, p, k, s, x, tapLeft2, tapRight2, jump, dash, dashHeld`. Guarding is "hold back" (`_guardHeld = fwd < 0`). The spec adds a Guard button, parry, posture and guard-break, perfect dodge and clash, plus kunai on Special + Down and ability slots for boss AI. Four defence tickets (SAN-86, SAN-91, SAN-92, SAN-93) can run close together and all touch how an incoming hit is resolved.
+`FrameInput` had `dx, dy, p, k, s, x, tapLeft2, tapRight2, jump, dash, dashHeld`, and guarding was "hold back" (`_guardHeld = fwd < 0`) until SAN-86. The spec adds a Guard button, parry, posture and guard-break, perfect dodge and clash, plus kunai on Special + Down and ability slots for boss AI. Four defence tickets (SAN-86, SAN-91, SAN-92, SAN-93) can run close together and all touch how an incoming hit is resolved.
 
 Today Special + Down with a full meter triggers Thousand Shadows (`TryBuffered`: `X && dy < 0 && canUltimate && meter >= 100`). SAN-88 puts the kunai on Special + Down too.
 
@@ -123,3 +123,52 @@ partial void ResolveClashes(List<HitSweep> sweeps);        // declared by SAN-65
 - Extending it (SAN-102, SAN-98): add a line to `ArmourCheck`, e.g. `if (light && Has(CharacterFlags.Armour)) resistsFlinch = true;` for the boss-wide flag, and for frontal armour a test of `info.kb.x` against `facing`. `ResistsFlinch` is the single entry point and `ReceiveHit` needs no change.
 - Throws (grabs) are not hits, so armour never stops a grab. The spear's Raised Guard (`Armour(5, 24)`) is honoured from now on.
 - Tests: `ArmourTests` (the check at the `ReceiveHit` seam with a plain armoured move) and the swing, grip and guard in `FistsFamilyFightTests`.
+
+## Notes from the implementation (SAN-86: the Guard button, posture and guard-break)
+
+**Controls** (one table, `Scripts/Combat/KeyBindings.cs`; `KeyBindings.Label(GameAction, InputDeviceKind)` gives a prompt's text):
+
+| Action | Keyboard | Gamepad |
+|---|---|---|
+| Move | A / D, ← / → | left stick, d-pad |
+| Jump | W, ↑, Space | stick or d-pad up |
+| Down (crouch, low guard) | S, ↓ | stick or d-pad down |
+| Punch | J (or Z) | X / □ |
+| Kick | K (or X) | A / ✕ |
+| Weapon | L (or C) | Y / △ |
+| Special | I (or V) | B / ○ |
+| **Guard** | **O (or B)** | **RB / R1 (or RT / R2)** |
+| Dash | Shift | LB / L1 (or LT / L2) |
+
+The gamepad's RB used to be a second Special and RT a third Dash; both are Guard now. Guard sits next to the attack keys (O above L) so it can be held while the other hand moves; Down + Guard is S + O. The in-game move list (Tab, `Hud.BuildMoveList`) and the HUD hint show it.
+
+**Input.** `FrameInput.guard` and `guardPressed` exist as decided. `PlayerInputSource` reads every button through `KeyBindings` and latches `guardPressed` between physics steps; `ScriptedInput` takes `"G"` (held for the step, pressed on its first frame); `AIInputSource` sets `guard` (and `dy = -1` for a low guard) where it used to hold back, with no horizontal input. `Fighter.ReadGuard` (Fighter.Guard.cs) turns the input into `GuardHeld` and `FramesSinceGuardPress` (0 on the press frame; the parry window reads it, SAN-91). `FrameInput.Any` still ignores Guard.
+
+**The stance.** `Fighter.GuardStance`, called from `Neutral` after attacks, dash, roll and jump have had their chance (so all four come straight out of the guard): Guard held on the ground stands in `Idle` (or `Crouch` with Down), ignores horizontal input and slows to a stop. `IsGuarding` = Guard held, grounded, and `Idle`, `Walk`, `Crouch` or `Blockstun`, the same states as the hold-back guard. The stance pose is SAN-113's `PoseLib.Block` (blade held straight up) and `CrouchBlock`. No guarding in the air. `Fighter.GuardBlocks(level, low)` is the level rule, unchanged.
+
+**Defence order as built** (`Fighter.ReceiveHitCore`): step 4 counter window; step 5 `TryParry` → `partial void ParryCheck(ref DefenceCheck c)` (declared in Fighter.Guard.cs; SAN-91 implements it in Fighter.Parry.cs and sets `resolved`, `result = HitResult.Parried`); step 6 `TryGuard`; step 7 `ApplyGuardBreakCrit`, damage, `CleanHitPosture`, armour, launch or hitstun, KO. `HitResult.Parried` and `HitResult.Dodged` exist; `PublishHit` maps them to the `Parried` and `PerfectDodged` events, so SAN-91 and SAN-92 only return them. `PreHitCheck` (step 2) and `FightLoop.ResolveClashes` (step 1) are unchanged from SAN-65.
+
+**Posture** (Fighter.Posture.cs; every number in `Resources/Tuning/guard.json`, class `GuardTuning`):
+
+| Number | Value | Meaning |
+|---|---|---|
+| `postureMax` (character data) | 60 (Kage, regular foes), 100 (Raikon) | the bar |
+| `blockPostureFactor` | 1.5 | a guarded hit adds damage × 1.5 × `HitWindow.postureMul` |
+| `hitPostureFactor` | 0.3 | a clean hit adds damage × 0.3 × postureMul, capped at the bar, never a break |
+| `drainDelayFrames` | 60 | frames without a posture gain before it drains |
+| `drainPerFrame` | 0.2 | 12 a second |
+| `drainWhileGuarding` | false | holding Guard stops the drain (as the JS game), so turtling costs |
+| `breakFrames` | 45 | 0.75 s helpless (hitstun, `PoseLib.GuardBroken`) |
+| `breakPushKept` | 0.2 | a broken fighter keeps a fifth of the block's push-back, so the punish can reach |
+| `postureAfterBreak` | 0.4 | the bar left after a break (JS refills to 60 of 100) |
+| `chipFactor`, `blockstunFactor`, `minBlockstun` | 0.15, 0.6, 8 | the existing chip and blockstun numbers, moved to data |
+
+`damage` is the hit's damage after every multiplier (the `HitInfo.dmg` that reaches the defender). With 60 posture about two blocked strings break a regular guard (a jab blocked adds 6, an iai 13.5). The JS game's numbers are 100 posture, damage × 1.3 per block on JS damage (about 2.3 × Unity damage), 1 s delay, 20 a second; the Unity bar and drain keep that pace.
+
+**Guard-break and the critical.** A full bar from a guarded hit (or from `AddPosture(amount, by, moveId)`, the public entry for a parry's or a clash's posture, SAN-91 / SAN-93) breaks the guard: the fighter goes into hitstun for `breakFrames`, `GuardBroken` is true for those frames, and the hit's result is still `Blocked`. The next hit to reach step 7 while `GuardBroken` becomes a critical if the attacker's roll didn't make it one: `dmg = max(1, round(dmg × 1.5))` on the damage that arrived (for an unmultiplied hit this equals the crit formula exactly), and the break is spent. The attacker's crit roll is still rolled (the "crit" stream is unchanged). The attacker learns of it through the defender's `LastHitCrit` / `LastHitDamage`, so the `Hit` event, hitstop and the `onHit` callback all show the critical.
+
+**Events.** `Hit` and `Blocked` carry `Posture` (what the target's bar rose by). `GuardBroken` is published after the event of the hit that caused it, on the same frame: `Fighter.FlushGuardBreak` runs at the end of `OnHitResolved` for both the target and the attacker (a parried attacker breaks there too). A caller outside hit resolution (the clash) calls `FlushGuardBreak` after publishing its own event; any break still pending is flushed at the start of the fighter's next tick.
+
+**Baseline replay re-recorded.** All 27 `_vs_ai` scenarios (and their legacy copies under `Baselines/Legacy`) changed; the 27 `_vs_bag` scenarios did not. Two causes: the posture field on `Hit` and `Blocked` lines, and the AI guarding in place instead of walking backward. A temporary patch restoring the old semantics on this code (walking back counts as Guard, no guard stance, the AI guarding by holding back) reproduced all 54 old files exactly apart from `pos=`, so the Guard input reproduces the old blocks and posture changes nothing else. With the real code every block the old AI made is still made (17 blocks before, 20 after, since the AI no longer backs out of range). The legacy copy was re-recorded once for this deliberate change; the note on `BaselineReplay.LegacyPathOf` says so.
+
+**Tests.** `GuardPostureTests` (fight harness: the stance, the level rules at the `ReceiveHit` seam and in real fights, posture fill with `postureMul`, drain, no drain while guarding, guard-break timing, the guaranteed critical and its event order, the AI guarding through the Guard input, the HUD bars), `GuardInputTests` (keyboard O/B, S + O, gamepad RB/RT, LB/LT still dash, B still Special, the labels), `TuningTests.TheShippedGuardTuningIsTheSpecsDefenceNumbers`. Review sheet: `GuardScreenshots` → `Screenshots/review/SAN-86/`.

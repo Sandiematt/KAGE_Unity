@@ -87,9 +87,9 @@ namespace Kage
             s.meterLabel = MakeText("MeterLabel", _root, 15, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.6f), anchor, new Vector2(sx * 680, -104), new Vector2(200, 20), false);
             s.meterLabel.text = "SHADOW";
             // posture (SAN-86): fills as the fighter guards; full breaks the guard
-            s.postureBack = MakeBar("PostureBack", anchor, new Vector2(sx * 330, -121), new Vector2(480, 9), right, new Color(0.06f, 0.02f, 0.03f, 0.85f), new Color(0.06f, 0.02f, 0.03f, 0.85f));
-            s.posture = MakeBar("Posture", anchor, new Vector2(sx * 330, -121), new Vector2(474, 5), right, KMath.Hex("#8A7A5A"), KMath.Hex("#FFE7A8"));
-            s.postureLabel = MakeText("PostureLabel", _root, 13, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.5f), anchor, new Vector2(sx * 680, -121), new Vector2(200, 18), false);
+            s.postureBack = MakeBar("PostureBack", anchor, new Vector2(sx * 330, -120), new Vector2(480, 11), right, new Color(0.06f, 0.02f, 0.03f, 0.85f), new Color(0.06f, 0.02f, 0.03f, 0.85f));
+            s.posture = MakeBar("Posture", anchor, new Vector2(sx * 330, -120), new Vector2(474, 7), right, KMath.Hex("#8A7A5A"), KMath.Hex("#FFE7A8"));
+            s.postureLabel = MakeText("PostureLabel", _root, 13, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.5f), anchor, new Vector2(sx * 680, -120), new Vector2(200, 18), false);
             s.postureLabel.text = "POSTURE";
             s.name = MakeText("Name", _root, 34, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, Color.white, anchor, new Vector2(sx * 250, -26), new Vector2(400, 44), true);
             s.pips = new Image[2];

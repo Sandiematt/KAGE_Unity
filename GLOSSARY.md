@@ -58,7 +58,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Hit level**: High, Mid, Low, Overhead, Unblockable.
 - **Light hit / heavy hit**: a window without / with the `heavy` flag. Armour ignores light hits.
 - **Critical**: a ×1.5 hit, rolled by the attacker, or guaranteed after a guard-break.
-- **Chip damage**: the health a blade takes off through a guard.
+- **Chip damage**: the health a blade takes off through a guard (damage × 0.15, rounded up).
 - **Knockback, launch, juggle, knockdown, OTG (a hit on a downed fighter), kip-up, ragdoll**: as in today's code.
 - **Hitstun / blockstun / stagger**: the helpless frames after a hit, after a guarded hit, and after being parried or countered. *Avoid:* stun (on its own), daze.
 - **Throw**: a grab, carry and release into a physics launch. The light one is the shoulder throw (Punch + forward); the **heavy grapple** is the fists family's Iron Grip (Weapon + forward): longer reach, overhead carry, armoured until the release. **No-grab**: throws fail on this character.
@@ -68,10 +68,10 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 
 ## Defence
 
-- **Guard**: the Guard button, and the state of holding it: blocks hits by the level rules. **Low guard**: Guard with Down. A guarded hit is **blocked**. *Avoid:* block (as the button or state), shield, defend, hold-back guard (gone).
+- **Guard**: the Guard button (keyboard O or B, gamepad RB or RT; `KeyBindings`), and the state of holding it on the ground (the **guard stance**): blocks hits by the level rules. **Low guard**: Guard with Down. A guarded hit is **blocked**. Walking backward doesn't guard. *Avoid:* block (as the button or state), shield, defend, hold-back guard (gone).
 - **Parry**: a Guard press within a short window before a hit lands. The hit does nothing; the attacker staggers and takes posture. A mistimed press starts a **parry lockout**. Unblockable hits can't be parried. *Avoid:* deflect, perfect block, just guard.
-- **Posture**: a bar on every fighter that fills when it guards (hit damage × a factor) and a little on clean hits, and drains after about 1 s without guarding or being hit. *Avoid:* stamina, guard meter, stance, poise, balance.
-- **Guard-break**: posture full: about 0.75 s helpless, and the next hit is a guaranteed critical. *Avoid:* guard crush, stagger (for this).
+- **Posture**: a bar on every fighter (`postureMax` in character data: 60, Raikon 100) that fills when it guards (hit damage × 1.5 × the window's postureMul) and a little on clean hits (× 0.3), and drains after 1 s (60 frames) without a posture gain, not while Guard is held. Numbers in `guard.json`. *Avoid:* stamina, guard meter, stance, poise, balance.
+- **Guard-break**: posture full: 45 frames (0.75 s) helpless, and the next hit is a guaranteed critical; the bar is left at 40 %. A **guard-broken** fighter is in those frames (`Fighter.GuardBroken`). *Avoid:* guard crush, stagger (for this).
 - **Perfect dodge**: a dash or roll started just before a hit would land: the world slows (Kage doesn't), Kage gains Rage, an afterimage shows. Player only. *Avoid:* witch time, just dodge.
 - **Clash**: two blade windows whose sweeps cross on the same frame: no damage, both recoil, a little posture each, sparks. Blades only, never fists or feet.
 
@@ -98,7 +98,8 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Boss bar**: the HUD bar for a boss: art card, name, title, health, phase marks.
 - **Fight format**: duel (best of three, clock), boss (one round, no clock), stretch (no rounds, no clock).
 - **Title card**: the plain card that opens a stage in place of story scenes.
-- **Tutorial prompt**: a Prologue prompt at a road position, showing the bound key, that waits until the action is done.
+- **Tutorial prompt**: a Prologue prompt at a road position, showing the bound key (`KeyBindings.Label`), that waits until the action is done.
+- **Key bindings**: the one table of fight controls, action to keyboard keys and gamepad buttons (`KeyBindings`, ADR-0004). *Avoid:* key map, controls config.
 - **Dev arena**: `KageGame`'s duel and training dojo, for trying fighters and weapons in the Editor. **Campaign flow**: title → campaign map → pre-fight loadout → stage → results → map.
 
 ## Economy and save

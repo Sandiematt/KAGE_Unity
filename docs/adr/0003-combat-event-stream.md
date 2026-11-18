@@ -104,6 +104,15 @@ Positions are not part of the line. The replay stores per-frame positions separa
 
 A ticket that needs a new event type adds it to the end of the enum, so the order of earlier types doesn't change.
 
+
+## Notes from the implementation (SAN-86)
+
+- `Hit` and `Blocked` now carry `Posture`: what the target's bar rose by (damage × 1.5 × the window's postureMul on a block, × 0.3 on a clean hit, after the cap). Throws and Thousand Shadows cuts don't add posture, so their `Hit` lines keep `pos=0`.
+- `GuardBroken` (factory `CombatEvent.GuardBroken`): Source is the fighter whose hit filled the bar, Target the broken fighter, `MoveId` and `Window` the hit's, `Posture` the bar that filled (the target's posture maximum), `Contact` the hit's. It follows the `Blocked` event of that hit on the same frame (`Fighter.FlushGuardBreak`).
+- The `Hit` on a guard-broken fighter has `Crit = 1` and the critical damage, though the attacker didn't roll it.
+- `HitResult.Parried` and `HitResult.Dodged` map to `Parried` and `PerfectDodged` in `PublishHit`, ready for SAN-91 and SAN-92.
+- The baseline replay was re-recorded for the posture field and the AI's Guard input (ADR-0004, SAN-86 notes).
+
 ## Consequences
 
 - The HUD, rating, tutorial and tests share one definition of what happened.

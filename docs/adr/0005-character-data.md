@@ -179,6 +179,11 @@ These numbers are the values after every JS module has loaded (later JS modules 
 - **Roster:** `Roster/Raikon.cs` is `CharacterDef.FromJs("raikon")` with his part set, family `tachi` and effect colours. Mass, posture, moves, phases and abilities are SAN-81 / SAN-107; until the tachi family is registered he fights with the katana set (`EquipWeapon` logs a warning).
 - **Review images:** `Screenshots/review/SAN-71/raikon_side_by_side.png` (painting, bind pose, fight idle), `raikon_poses.png`, `raikon_soft_motion.png`, tiles in `tiles/` (`RaikonScreenshots`, needs a GPU).
 
+## Notes from the implementation (SAN-86, posture)
+
+- `postureMax` is applied: `Fighter.PostureMax` is the posture bar (`Fighter.Posture`, Fighter.Posture.cs). The default is now 60 (was a placeholder 100): with the guard factor of 1.5 about two blocked strings break a regular guard, the JS game's pace. Kage, the Ronin, the Footman and the Hollows use the default; `Raikon.Def()` sets 100 (a boss's bar is larger; SAN-107 tunes it, and each sub-boss ticket sets its own). Tests can change `Fighter.PostureMax` at run time.
+- The other posture numbers are not character data: they are in `Resources/Tuning/guard.json` (ADR-0004, SAN-86 notes).
+
 ## Consequences
 
 - Every opponent is one character file, one part-set file and two catalog lines, so opponent tickets don't collide.
