@@ -138,7 +138,7 @@ namespace Kage
                 Enqueue(18 + N(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
                 return;
             }
-            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f) { Enqueue(2, 0, 0, Btn.X); return; }
+            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f && self.moves.Select(Btn.X, 0, 0, false, self)?.projectileFrame >= 0) { Enqueue(2, 0, 0, Btn.X); return; }     // the ranged Special (a family whose Special is a melee move, like the fists, never throws it at range)
             if (dist > 2.2f)
             {
                 if (r < 0.62f) Enqueue(14 + N(16), 1, 0, Btn.None);

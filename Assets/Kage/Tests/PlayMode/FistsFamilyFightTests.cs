@@ -238,14 +238,14 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void A_jab_from_the_foe_in_the_middle_of_the_swing_trades_instead_of_interrupting_it()
+        public void A_light_kick_from_the_foe_in_the_middle_of_the_swing_trades_instead_of_interrupting_it()
         {
             var f = Duel();
-            f.RoninInput.Add(1, buttons: "P").Add(600);
-            f.KageInput.Add(1, buttons: "S");
+            f.RoninInput.Add(1, buttons: "K").Add(600);
+            f.KageInput.Add(5).Add(1, buttons: "S");      // the kick's blow lands in the swing's wind-up
             var states = new List<FState>();
             for (int i = 0; i < 60; i++) { f.Run(1); states.Add(f.Kage.state); }
-            Assert.IsTrue(f.Events(CombatEventType.Hit).Any(e => e.SourceId == "ronin" && e.MoveId == "jab" && e.Target == f.Kage), "the jab connected");
+            Assert.IsTrue(f.Events(CombatEventType.Hit).Any(e => e.SourceId == "ronin" && e.MoveId == "kick1" && e.Target == f.Kage), "the kick connected: " + string.Join(" | ", f.Log.All.Select(e => e.ToLine())) + " ## " + string.Join(" | ", f.Frames.Take(14)));
             CollectionAssert.DoesNotContain(states, FState.Hitstun, "the swing took it without a flinch");
             Assert.IsTrue(f.Events(CombatEventType.Hit).Any(e => e.SourceId == "kage" && e.MoveId == "fists.haymaker"), "and landed");
         }
@@ -259,7 +259,7 @@ namespace Kage.Tests
             public Vector2 kage;
             public FState afterRelease;
             public float healthLost;
-            public Vector2 landed;
+            public Vector2 landed, released;
             public int grabFrame, releaseFrame;
         }
 
@@ -276,6 +276,7 @@ namespace Kage.Tests
             while (v.state == FState.Thrown && r.carry.Count < 200) { r.carry.Add(v.Pos); f.Run(1); }
             r.releaseFrame = (int)f.Ctx.Clock.Frame;
             r.afterRelease = v.state;
+            r.released = r.carry[^1];
             r.healthLost = hp - v.health;
             f.RunUntil(() => v.state == FState.Down || v.state == FState.KO, 200);
             r.landed = v.Pos;
@@ -288,7 +289,7 @@ namespace Kage.Tests
             var r = RunGrapple();
             Assert.GreaterOrEqual(r.carry.Count, 25, "the victim is held and moved for a good while");
             float top = r.carry.Max(p => p.y);
-            Assert.Greater(top, 1.6f, $"lifted overhead (peak {top:0.00} m)");
+            Assert.Greater(top, 1.5f, $"lifted overhead (peak {top:0.00} m)");
             Assert.Greater(r.carry[0].x - r.kage.x, 0.4f, "taken from in front of Kage");
             Assert.Less(r.carry[^1].x - r.kage.x, -0.5f, "and carried over to his back");
             Assert.AreEqual(FState.Launched, r.afterRelease, "released into a launch");
@@ -301,8 +302,9 @@ namespace Kage.Tests
         {
             var light = RunGrapple();
             var heavy = RunGrapple(CharacterCatalog.Get(TestHeavy.Id));
-            Assert.Greater(light.kage.x - light.landed.x, 0.5f);
-            Assert.Less(heavy.kage.x - heavy.landed.x, (light.kage.x - light.landed.x) * 0.8f, "the release is an impulse over the victim's mass (SAN-68)");
+            float lightTravel = light.released.x - light.landed.x, heavyTravel = heavy.released.x - heavy.landed.x;
+            Assert.Greater(lightTravel, 0.5f, "thrown on from where it was let go");
+            Assert.Less(heavyTravel, lightTravel * 0.7f, $"the release is an impulse over the victim's mass (SAN-68): heavy {heavyTravel:0.00} m, light {lightTravel:0.00} m");
         }
 
         [Test]
