@@ -139,10 +139,13 @@ namespace Kage
         /// <summary>
         /// Puts a row of Kages on the stage, one per save, centred at the given stage px (their feet on the card baseline).
         /// </summary>
-        public void ShowRow(IList<SaveData> saves, IList<float> stageX, string key)
+        public void ShowRow(IList<SaveData> saves, IList<float> stageX, string key, float panPx = 0f)
         {
             string sig = "row|" + key;
-            SetFrame(RowFrame);
+            // a scrolled row: the camera pans along it by as many stage px as the cards moved
+            var frameRow = RowFrame;
+            frameRow.cx += panPx * K(RowFrame);
+            SetFrame(frameRow);
             if (sig == Signature || sig == pendingSig) return;
             pendingSig = sig;
             var list = new List<SaveData>(saves);
@@ -209,7 +212,7 @@ namespace Kage
         // ((px - 800) k + cx, (450 - py) k + cy) with k = 2 size / 900.
 
         // weapons: Kage whole, his feet low on the sun's left (JS: the ghost warrior at 0.42 of the 1000 px preview)
-        static readonly Frame BodyFrame = new Frame { size = 1.39f, cx = 1.07f, cy = 0.865f };
+        static readonly Frame BodyFrame = new Frame { size = 1.55f, cx = 1.343f, cy = 0.964f };
         // helmets: his head and shoulders, big, the sun behind (JS: the figure at 1.5 x the preview's height)
         static readonly Frame HeadFrame = new Frame { size = 0.87f, cx = 0.578f, cy = 1.52f };
         // armour cards: a row of whole figures, feet on the card baseline
@@ -227,8 +230,10 @@ namespace Kage
         void SetFrame(Frame f)
         {
             if (target.size == f.size && target.cx == f.cx && target.cy == f.cy) return;
+            // only a pan (a scrolled row) follows at once, so the fighters stay in their cards while the cards move
+            bool onlyPan = target.size > 0f && Mathf.Approximately(target.size, f.size) && Mathf.Approximately(target.cy, f.cy);
             target = f;
-            if (Signature == null) snap = true;
+            if (Signature == null || onlyPan) snap = true;
         }
 
         void Apply(Frame f)

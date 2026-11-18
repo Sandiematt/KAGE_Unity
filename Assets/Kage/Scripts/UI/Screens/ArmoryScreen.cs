@@ -16,8 +16,8 @@ namespace Kage
     {
         const float TileW = 127f, TileGap = 10f, GridX = 40f, GridY = 748f, GridW = 950f, GridH = 112f;
 
-        float scroll;
-        RectTransform tileContent;
+        float scroll, cardScroll, cardMax;
+        RectTransform tileContent, cardsFront, cardsBack;
         float tileMax;
         static readonly Color Violet = Ui.Hex("#a98bff"), Blue = Ui.Hex("#7fb8ff"), Lit = Ui.Hex("#e9c46a");
 
@@ -95,15 +95,14 @@ namespace Kage
             }
             var saves = new List<SaveData>();
             var xs = new List<float>();
-            float pitch, cardW;
-            CardGeometry(v.Tiles.Length, out pitch, out cardW);
             for (int i = 0; i < v.Tiles.Length; i++)
             {
                 saves.Add(ArmoryView.PreviewSave(save, ArmoryTab.Armor, v.Tiles[i].Id));
-                xs.Add(CardX(i, pitch) + 3f + 0.54f * (cardW - 6f));
+                xs.Add(CardX(i) + 3f + 0.54f * (CardW - 6f));
             }
             string key = v.Line + "|" + save.equipped.weapon + ":" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
-            world.ShowRow(saves, xs, key);
+            // the row scrolls by the camera panning with it, so each Kage stays in his card
+            world.ShowRow(saves, xs, key, cardScroll);
         }
 
         // ---------------- the top bar ----------------
@@ -506,13 +505,17 @@ namespace Kage
 
         // ---------------- the Armor tab ----------------
 
-        static void CardGeometry(int n, out float pitch, out float cardW)
-        {
-            pitch = n <= 8 ? 191f : (1516f / n);
-            cardW = pitch - 14f;
-        }
+        // JS .al-row: cards 177 wide, 14 apart, from x = 42; the row (x 40 to 1560) scrolls when there are more than eight
+        const float CardW = 177f, CardPitch = 191f, RowX = 40f, RowW = 1520f;
 
-        static float CardX(int i, float pitch) { return 42f + i * pitch; }
+        static float CardX(int i) { return 42f + i * CardPitch; }
+
+        void KeepCardVisible(int i)
+        {
+            float lo = CardX(i) - RowX - 4f, hi = CardX(i) - RowX + CardW + 4f;
+            if (lo < cardScroll) cardScroll = Mathf.Clamp(lo, 0f, cardMax);
+            else if (hi > cardScroll + RowW) cardScroll = Mathf.Clamp(hi - RowW, 0f, cardMax);
+        }
 
         void ArmorBody(ArmoryView v, SaveData save, RectTransform back)
         {
@@ -545,10 +548,21 @@ namespace Kage
                 cx += w + 10f;
             }
 
-            // the cards
-            float pitch, cardW;
-            CardGeometry(v.Tiles.Length, out pitch, out cardW);
-            for (int i = 0; i < v.Tiles.Length; i++) Card(v, v.Tiles[i], i, CardX(i, pitch), cardW, back);
+            // the cards, in a row that is clipped to its window and scrolls
+            int n = v.Tiles.Length;
+            cardMax = Mathf.Max(0f, CardX(n - 1) + CardW + 4f - RowX - RowW);
+            cardScroll = Mathf.Clamp(cardScroll, 0f, cardMax);
+            for (int i = 0; i < n; i++)
+                if (v.Tiles[i].Selected) KeepCardVisible(i);
+            cardsFront = Ui.Node(Root, "Cards", RowX, 0, RowW, 900);
+            cardsFront.gameObject.AddComponent<RectMask2D>();
+            cardsBack = null;
+            if (back != null)
+            {
+                cardsBack = Ui.Node(back, "Cards", RowX, 0, RowW, 900);
+                cardsBack.gameObject.AddComponent<RectMask2D>();
+            }
+            for (int i = 0; i < n; i++) Card(v, v.Tiles[i], i, CardX(i) - RowX - cardScroll, CardW);
 
             ArmorDetail(v);
         }
@@ -577,14 +591,14 @@ namespace Kage
             return r;
         }
 
-        void Card(ArmoryView v, ArmoryTile t, int index, float x, float w, RectTransform back)
+        void Card(ArmoryView v, ArmoryTile t, int index, float x, float w)
         {
             const float Y = 158f, H = 412f;
             var hue = HueOf(t.Id);
             // behind the fighter: the card's dark ground and the glow
-            if (back != null)
+            if (cardsBack != null)
             {
-                var bg = Ui.Node(back, "Card_" + t.Id, x, Y, w, H);
+                var bg = Ui.Node(cardsBack, "Card_" + t.Id, x, Y, w, H);
                 Ui.Shape(bg, 0, 0, w, H, Octagon(0, 0, w, H, 10f), Ui.PanelA(0.82f), Ui.Mix(Ui.Panel, Color.black, 0.96f), null, false);
                 // CSS ellipse 90% 60% at 52% 42%, clear at 72%: an oval glow, scaled about its own centre
                 float gr = 0.65f * w;
@@ -593,7 +607,7 @@ namespace Kage
                 glow.rectTransform.anchoredPosition = new Vector2(w * 0.52f, -H * 0.42f);
                 glow.rectTransform.localScale = new Vector3(1f, 0.43f * H / gr, 1f);
             }
-            var rt = Ui.Node(Root, "Card_" + t.Id, x, Y, w, H);
+            var rt = Ui.Node(cardsFront, "Card_" + t.Id, x, Y, w, H);
             bool sel = t.Selected;
             if (sel)
             {
@@ -643,7 +657,12 @@ namespace Kage
 
             string id = t.Id;
             float cardX = x;
-            var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f => rt.anchoredPosition = new Vector2(cardX, -(Y - (f ? 4f : 0f))));
+            int idx = index;
+            var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f =>
+            {
+                rt.anchoredPosition = new Vector2(cardX, -(Y - (f ? 4f : 0f)));
+                if (f) KeepCardVisible(idx);
+            });
             item.onUserFocus = () => A.Select(id);
         }
 
