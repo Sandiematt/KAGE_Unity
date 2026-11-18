@@ -15,7 +15,8 @@ namespace Kage
         /// <param name="save">Whose level and gear; null = a fresh save.</param>
         public static CharacterDef Def(SaveData save = null)
         {
-            var stats = GameRules.PlayerCombatStats(save ?? GameRules.DefaultSave(false));
+            save ??= GameRules.DefaultSave(false);
+            var stats = GameRules.PlayerCombatStats(save);
             return new CharacterDef
             {
                 id = Id,
@@ -24,6 +25,7 @@ namespace Kage
                 jsHealth = stats.Hp,
                 defense = (float)stats.Defense,
                 partSet = "kage",
+                helmet = save.equipped?.helmet,
                 colors = new FighterColors(Palette.Trim, Color.white, Palette.TrimDeep),
                 family = "katana",
                 aiProfile = null,

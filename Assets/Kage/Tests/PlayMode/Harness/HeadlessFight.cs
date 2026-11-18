@@ -33,13 +33,14 @@ namespace Kage.Tests
         readonly List<string> _frames = new();
 
         /// <param name="foeDef">Who the foe is (default the Ronin's catalog entry), for example the heavy test dummy.</param>
-        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, CharacterDef foeDef = null)
+        /// <param name="kageDef">Kage's character data (default his catalog entry), for example with a helmet equipped.</param>
+        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, CharacterDef foeDef = null, CharacterDef kageDef = null)
         {
             Root = new GameObject("HeadlessFight");
             var b = new FightBuilder(Root.transform, seed, manualClock: true);
             b.AddGround();
             KageInput = new ScriptedInput();
-            Kage = b.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, KageInput);
+            Kage = b.Spawn(kageDef ?? CharacterCatalog.Get(KageCharacter.Id), 0, KageInput);
             if (foe == Foe.Bag)
             {
                 Bag = b.AddBag(Root.transform, BagAnchor);

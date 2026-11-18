@@ -101,7 +101,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Coins, gems, XP**: JS currencies and experience.
 - **Rating**: S, A, B or C at the end of a fight, from the JS formula (health left, time, max combo, parries, flawless).
 - **Rewards**: coins, gems and reward items for a stage: base coins by chapter and stage kind, first-clear gems, half coins on a repeat clear.
-- **Gear**: helmets and armour. **Loadout**: the equipped weapon, helmet and armour with their levels. **Starter gear**: Kagetsu, Shiro Maki (shown as Crimson Scarf), Tachibana Yoroi (shown as Shinobi Garb). Use the JS ids in code and data, the JS display names in UI.
+- **Gear**: helmets and armour. **Loadout**: the equipped weapon, helmet and armour with their levels. **Starter gear**: Kagetsu, Shiro Maki (shown as Crimson Scarf), Tachibana Yoroi (shown as Shinobi Garb). **Helmet visual**: the drawing of an equipped helmet, layered on Kage's head by his part set (`HelmetVisuals`); a helmet with no drawing leaves his head as it is. Use the JS ids in code and data, the JS display names in UI.
 - **Tier**: an item's rarity (starter, common, rare, epic, trophy, boss). Shop weapons climb tiers with weapon level.
 - **Exclusive / locked item**: never sold; unlocked by a stage reward. **Lock hint**: the text that says how.
 - **Armory**: the screen to buy, upgrade and equip. *Avoid:* shop (for the screen), store, inventory.

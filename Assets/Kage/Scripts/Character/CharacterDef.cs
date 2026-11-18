@@ -61,6 +61,8 @@ namespace Kage
         /// <summary>Id of the part set that draws this character (<see cref="CharacterCatalog.PartSet"/>).</summary>
         public string partSet;
         public FighterColors colors;
+        /// <summary>The JS id of the equipped helmet that is drawn on this character (Kage's part set layers it, <see cref="HelmetVisuals"/>); null or an id with no drawing = none.</summary>
+        public string helmet;
 
         // ---- fighting ----
         /// <summary>Weapon family id (ADR-0006): "katana", "twin", "spear", "chain", "cleaver", "fists", "tachi".</summary>
