@@ -8,6 +8,9 @@ namespace Kage
     /// <see cref="Step"/> is one frame, and it runs every fighter in <c>ctx.Fighters</c> order:
     /// <list type="number">
     /// <item>If the clock freezes this frame (hitstop, slow motion), only end the frame.</item>
+    /// <item>World time scale (SAN-92): bodies the last frame slowed get their logic velocity back
+    /// (<see cref="Fighter.RestoreWorldTime"/>). A fighter the slowed world doesn't advance this frame
+    /// (<see cref="FightClock.Advances"/>) skips its input and tick, so it records no sweeps either.</item>
     /// <item>Push settle: a fighter the last physics step pushed gets its own horizontal speed back
     /// (SAN-68, Fighter.SettlePush). Under the legacy switch the old manual push runs here instead.</item>
     /// <item>Input: poll every fighter's input source, in fighter order.</item>
@@ -21,6 +24,8 @@ namespace Kage
     /// counts its telegraph or strikes (SAN-75). Both run in play and on a manual clock alike.</item>
     /// <item>Push: each fighter puts its push collider on the Push or PushPassThrough layer for this frame
     /// (SAN-68); the physics step that follows keeps fighters apart. Off under the legacy switch.</item>
+    /// <item>World time scale: each slowed body's velocity and gravity are scaled for the physics step that follows
+    /// (<see cref="Fighter.ScaleWorldTime"/>); at scale 0 it is held still.</item>
     /// <item>End the frame: <c>Clock.Frame++</c>.</item>
     /// </list>
     /// In play, FixedUpdate calls Step and Unity simulates physics after it. On a manual clock nothing
@@ -56,6 +61,8 @@ namespace Kage
             if (run)
             {
                 var fs = ctx.Fighters;
+                var clock = ctx.Clock;
+                foreach (var f in fs) if (Live(f)) f.RestoreWorldTime();
                 if (ctx.LegacyHits)
                 {
                     for (int i = 0; i < fs.Count; i++)
@@ -63,9 +70,9 @@ namespace Kage
                             if (Live(fs[i]) && Live(fs[j])) Pushbox(fs[i], fs[j]);
                 }
                 else foreach (var f in fs) if (Live(f)) f.SettlePush();
-                foreach (var f in fs) if (Live(f)) f.PollInput();
+                foreach (var f in fs) if (Live(f) && clock.Advances(f)) f.PollInput();
                 ctx.Sweeps.Clear();
-                foreach (var f in fs) if (Live(f)) f.Tick();
+                foreach (var f in fs) if (Live(f) && clock.Advances(f)) f.Tick();
                 if (!ctx.LegacyHits && ctx.Sweeps.Count > 0)
                 {
                     ResolveClashes(ctx.Sweeps);
@@ -84,6 +91,7 @@ namespace Kage
                     foreach (var h in _hazardTmp) if (h != null) h.Tick();
                 }
                 foreach (var f in fs) if (Live(f)) f.SyncPush();
+                foreach (var f in fs) if (Live(f)) f.ScaleWorldTime(clock.ScaleFor(f));
             }
             ctx.Clock.EndFrame();
             return run;

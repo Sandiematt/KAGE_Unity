@@ -40,6 +40,19 @@ namespace Kage.Tests
             Assert.Less(file.hitPostureFactor, file.blockPostureFactor, "clean hits add a little");
         }
 
+        [Test]
+        public void TheShippedDodgeTuningIsTheSpecsPerfectDodgeNumbers()
+        {
+            // dodge.json (SAN-92): the file and the in-code defaults agree, and they are the spec's numbers
+            var file = Tuning.Get<DodgeTuning>();
+            var code = new DodgeTuning();
+            Assert.AreEqual(JsonUtility(code), JsonUtility(file), "dodge.json matches the DodgeTuning defaults");
+            Assert.AreEqual(8, file.windowFrames, "about 8 frames");
+            Assert.AreEqual(24, file.slowFrames, "about 0.4 s");
+            Assert.AreEqual(0.4f, file.worldScale, "the glossary's 0.4 world speed");
+            Assert.AreEqual(12f, file.meterGain, "the JS game's +12 Rage");
+        }
+
         static string JsonUtility(object o) => UnityEngine.JsonUtility.ToJson(o);
 
         [Test]

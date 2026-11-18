@@ -39,6 +39,13 @@ namespace Kage
         public void PoseOutput(float alpha, float dt, float time)
         {
             if (rig == null || def == null || rig.def == null || _stance == null) return;
+            if (_worldApplied < 1f)
+            {
+                // slowed by the world time scale (SAN-92): its logic frames come 1/s apart, so in play the pose interpolates
+                // over the slowed world's frame, and secondary motion (cloth, hair) runs slow too
+                if (!Headless && ctx != null) alpha = Mathf.Clamp01(ctx.Clock.WorldPhase + alpha * _worldApplied);
+                dt *= _worldApplied;
+            }
             if (state == FState.KO || FallingPhysically) { rig.Secondary(dt, Vector2.zero); return; }
             float sf = stateFrame + alpha;
             switch (state)
@@ -106,7 +113,7 @@ namespace Kage
             }
             ApplyGrip(_display);     // no handle to hold, or the family holds it one-handed; a polearm's wide grip
             rig.Apply(_display);
-            rig.Secondary(dt, rb.linearVelocity);
+            rig.Secondary(dt, LogicVelocity);
             if (!Headless) UpdateTrails();
         }
 
@@ -136,7 +143,7 @@ namespace Kage
         /// </summary>
         void AirPose(float sf, float t)
         {
-            Vector2 vel = rb.linearVelocity;
+            Vector2 vel = LogicVelocity;
             float vy = vel.y, vxl = vel.x * facing;
 
             float kApex = KMath.Smooth01(Mathf.InverseLerp(6f, 0.6f, vy));

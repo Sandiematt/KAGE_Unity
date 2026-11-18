@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Kage
 {
     public enum FState { Intro, Idle, Walk, Crouch, Air, Land, Attack, Hitstun, Blockstun, Launched, Down, Thrown, KO, Victory, Ultimate, Run, Dash, Skid }
-    /// <summary>What one hit did. <c>Parried</c> (SAN-91) and <c>Dodged</c> (SAN-92) are declared by SAN-86 (ADR-0004) and unused until then.</summary>
+    /// <summary>What one hit did. <c>Parried</c> (SAN-91) and <c>Dodged</c> (a perfect dodge, SAN-92) are declared by SAN-86 (ADR-0004).</summary>
     public enum HitResult { Whiff, Hit, Blocked, Countered, Parried, Dodged }
 
     public struct HitInfo
@@ -245,6 +245,7 @@ namespace Kage
             _start.Normalize();
             state = s;
             stateFrame = 0;
+            _stateEntries++;        // a new dash or dodge move can perfect-dodge again (Fighter.PerfectDodge.cs)
         }
 
         // =====================================================================================
