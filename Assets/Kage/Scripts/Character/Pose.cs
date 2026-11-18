@@ -165,7 +165,17 @@ namespace Kage
             Vector2 fistToWrist = -KMath.Rot(d.fistLocal, rHandF);
             float reach = (d.BindLocal(B.ArmNL).magnitude + d.BindLocal(B.HandN).magnitude) * 0.995f;
             Vector2 fist = pivot + axis * GripSpacing;
-            if ((fist + fistToWrist - shN).sqrMagnitude <= reach * reach) return fist + fistToWrist;
+            float near = Mathf.Abs(d.BindLocal(B.ArmNL).magnitude - d.BindLocal(B.HandN).magnitude) * 1.1f;
+            float dist = (fist + fistToWrist - shN).magnitude;
+            if (dist < near)
+            {
+                // hands up by the near shoulder (Kasumi): the arm can't fold that far, so the wrist bends back and
+                // the fist points down the forearm at the handle
+                Vector2 away = (fist - shN).sqrMagnitude > 1e-6f ? (fist - shN).normalized : Vector2.down;
+                handWorld = KMath.Ang(-away) - KMath.Ang(d.fistLocal);
+                return fist + away * d.fistLocal.magnitude;
+            }
+            if (dist <= reach) return fist + fistToWrist;
 
             // slide towards the pommel: the point of the handle closest to the shoulder
             Vector2 back = pivot + axis * GripPommel;
@@ -209,7 +219,8 @@ namespace Kage
             output.hip = Vector2.LerpUnclamped(p.hip, q.hip, t);
             for (int l = 0; l < 4; l++)
             {
-                output.ik[l] = p.ik[l] && q.ik[l];
+                // a blend that has arrived (t = 1) takes on the target's IK, so the next blend from it keeps the goals
+                output.ik[l] = (p.ik[l] && q.ik[l]) || (t >= 1f && q.ik[l]) || (t <= 0f && p.ik[l]);
                 output.target[l] = Vector2.LerpUnclamped(p.target[l], q.target[l], t);
             }
             for (int f = 0; f < 2; f++)
@@ -221,7 +232,7 @@ namespace Kage
             output.swAbs = Mathf.LerpUnclamped(p.swAbs, q.swAbs, t);
             // both gripping: the output re-grips on its own blended sword; else the near wrist blends between the
             // resolved goals (a gripping pose's goal is where its grip put the hand), so letting go and re-gripping is smooth
-            output.grip = p.grip && q.grip;
+            output.grip = (p.grip && q.grip) || (t >= 1f && q.grip) || (t <= 0f && p.grip);
             output._resolved = false;
         }
     }
