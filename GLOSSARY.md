@@ -28,6 +28,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Team**: 0 is Kage's side, 1 is the foes. Hits never land on your own team.
 - **Archetype**: the JS AI role of a foe: regular, agile, defensive, ranged, heavy, boss.
 - **AI profile**: the data that drives the AI for an archetype: preferred range, aggression, guard and parry rate, move weights, reaction frames, combo length.
+- **Attack rate**: a character's share (0..1) of the attacks its AI has chosen that it actually throws (`CharacterDef.attackRate`). The tutorial Hollow's is 0.3. *Avoid:* aggression (that is the JS profile's `aggr`, a different number).
 - **Engagement / engaged foe**: in a group fight, at most two foes are engaged (allowed to attack). The rest **circle** and wait. *Avoid:* aggro.
 - **Health scale**: the one shared multiplier from JS health to Unity health (about 0.431). **JS health**: a character's raw health in the JS data, before the scale. *Avoid:* HP multiplier, difficulty scaling.
 - **Damage multiplier**: a character's or weapon's multiplier on Unity window damage.
