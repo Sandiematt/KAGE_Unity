@@ -67,6 +67,8 @@ namespace Kage.Tests
             var ids = KageGame.DevFoeIds();
             CollectionAssert.Contains(ids, "ronin");
             CollectionAssert.Contains(ids, "order_footman");
+            CollectionAssert.Contains(ids, "hollow_shade");
+            CollectionAssert.Contains(ids, "hollow_tutorial");
             CollectionAssert.DoesNotContain(ids, "kage", "the player");
             CollectionAssert.DoesNotContain(ids, "test_heavy", "a test dummy");
             Assert.AreEqual("ronin", ids[0], "the Ronin is the default sparring partner");
