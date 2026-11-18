@@ -20,6 +20,7 @@ namespace Kage
             Add(OrderFootman.Def());
             Add(HollowShade.Def());
             Add(HollowTutorial.Def());
+            Add(Raikon.Def());             // the Act I boss (look: SAN-71; fight: SAN-107)
 
             // ---- part sets ----
             Add(new KagePartSet());
@@ -27,6 +28,7 @@ namespace Kage
             Add(new OrderFootmanPartSet());
             Add(new HollowShadePartSet());
             Add(new HollowTutorialPartSet());
+            Add(new RaikonPartSet());
         }
 
         static void Add(CharacterDef d) => _defs[d.id] = d;

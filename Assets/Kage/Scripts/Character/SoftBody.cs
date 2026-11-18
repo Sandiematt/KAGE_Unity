@@ -305,6 +305,192 @@ namespace Kage
         }
     }
 
+    /// <summary>
+    /// Spring chains (SAN-71: Raikon's cape, ponytail, hat tassels and fur mantle). Each chain is a verlet rope pinned at
+    /// its root to the bone, with inertia, gravity and air drag (it trails the body's motion and a breeze behind the
+    /// fighter), pulled back to its drawn shape by shape matching that weakens towards the tip. Every mesh vertex is bound
+    /// to its two nearest chains at the nearest point along each, and follows that point's position and turn, blended by
+    /// distance; so a part bends smoothly and stays joined where it is pinned.
+    /// </summary>
+    public class SoftChains
+    {
+        sealed class Chain
+        {
+            public Vector2[] rest;      // bone-local rest points, root first
+            public float[] restAng;     // rest angle of each segment (deg)
+            public Vector2[] p, prev;   // world particles
+            public Vector2[] local;     // bone-local current particles
+            public float[] jointAng;    // turn at each particle (deg), from its segments
+        }
+
+        readonly Mesh _mesh;
+        readonly Transform _bone;
+        readonly Chain[] _c;
+        readonly Vector3[] _base, _out;
+        readonly int[] _ca, _cb, _ia, _ib;
+        readonly float[] _ta, _tb, _w;
+        readonly Vector2[] _oa, _ob;
+        readonly ChainFeel _feel;
+        float _time;
+        Vector2 _bodyVel;
+        public float groundY = float.MinValue;
+
+        /// <param name="mesh">the part's mesh, in the bone's local space</param>
+        /// <param name="bone">the bone the part (and every chain root) is pinned to</param>
+        /// <param name="chains">chains in the same space as the mesh, root first</param>
+        public SoftChains(Mesh mesh, Transform bone, IList<Vector2[]> chains, ChainFeel feel)
+        {
+            _mesh = mesh;
+            _mesh.MarkDynamic();
+            _bone = bone;
+            _feel = feel;
+            _c = new Chain[chains.Count];
+            for (int k = 0; k < _c.Length; k++)
+            {
+                var r = chains[k];
+                var c = new Chain { rest = r, restAng = new float[r.Length - 1], p = new Vector2[r.Length], prev = new Vector2[r.Length], local = new Vector2[r.Length], jointAng = new float[r.Length] };
+                for (int i = 0; i < r.Length - 1; i++) c.restAng[i] = KMath.Ang(r[i + 1] - r[i]);
+                _c[k] = c;
+            }
+            _base = mesh.vertices;
+            _out = new Vector3[_base.Length];
+            int n = _base.Length;
+            _ca = new int[n]; _cb = new int[n]; _ia = new int[n]; _ib = new int[n];
+            _ta = new float[n]; _tb = new float[n]; _w = new float[n];
+            _oa = new Vector2[n]; _ob = new Vector2[n];
+            for (int v = 0; v < n; v++)
+            {
+                Vector2 q = _base[v];
+                int best = -1, second = -1; float d1 = float.MaxValue, d2 = float.MaxValue;
+                int bi1 = 0, bi2 = 0; float bt1 = 0, bt2 = 0;
+                for (int k = 0; k < _c.Length; k++)
+                {
+                    Closest(_c[k].rest, q, out int si, out float st, out float d);
+                    if (d < d1) { second = best; d2 = d1; bi2 = bi1; bt2 = bt1; best = k; d1 = d; bi1 = si; bt1 = st; }
+                    else if (d < d2) { second = k; d2 = d; bi2 = si; bt2 = st; }
+                }
+                if (second < 0) { second = best; d2 = d1; bi2 = bi1; bt2 = bt1; }
+                _ca[v] = best; _ia[v] = bi1; _ta[v] = bt1; _oa[v] = q - At(_c[best].rest, bi1, bt1);
+                _cb[v] = second; _ib[v] = bi2; _tb[v] = bt2; _ob[v] = q - At(_c[second].rest, bi2, bt2);
+                float wa = 1f / (d1 * d1 + 1e-5f), wb = 1f / (d2 * d2 + 1e-5f);
+                _w[v] = best == second ? 1f : wa / (wa + wb);
+            }
+            Reset();
+        }
+
+        static Vector2 At(Vector2[] pts, int i, float t) => Vector2.LerpUnclamped(pts[i], pts[i + 1], t);
+
+        static void Closest(Vector2[] pts, Vector2 q, out int seg, out float t, out float dist)
+        {
+            seg = 0; t = 0f; dist = float.MaxValue;
+            for (int i = 0; i < pts.Length - 1; i++)
+            {
+                Vector2 a = pts[i], ab = pts[i + 1] - a;
+                float u = Mathf.Clamp01(Vector2.Dot(q - a, ab) / Mathf.Max(1e-9f, ab.sqrMagnitude));
+                float d = (a + ab * u - q).magnitude;
+                if (d < dist) { dist = d; seg = i; t = u; }
+            }
+        }
+
+        /// <summary>Back to the drawn shape (round reset, or a teleport).</summary>
+        public void Reset()
+        {
+            foreach (var c in _c)
+                for (int i = 0; i < c.rest.Length; i++) c.p[i] = c.prev[i] = _bone.TransformPoint(c.rest[i]);
+            _bodyVel = Vector2.zero;
+            Deform();
+        }
+
+        /// <param name="bodyVel">world velocity of the body (m/s); fast motion loosens the chains so they fly</param>
+        public void Tick(float dt, float facing, Vector2 bodyVel = default)
+        {
+            if (dt > 0f)
+            {
+                _time += dt;
+                const int sub = 3;
+                float h = Mathf.Min(dt, 1f / 30f) / sub;
+                if (((Vector2)_bone.TransformPoint(_c[0].rest[0]) - _c[0].p[0]).sqrMagnitude > 1.2f) Reset();
+                _bodyVel = Vector2.Lerp(_bodyVel, bodyVel, 1f - Mathf.Exp(-12f * dt));
+                for (int s = 0; s < sub; s++) Step(h, facing);
+            }
+            Deform();
+        }
+
+        void Step(float h, float facing)
+        {
+            Vector2 back = new Vector2(-facing, 0f);
+            float freedom = Mathf.Clamp01(_bodyVel.magnitude / 7f);
+            for (int k = 0; k < _c.Length; k++)
+            {
+                var c = _c[k];
+                int n = c.rest.Length;
+                float gust = _feel.breeze * (0.6f + Mathf.PerlinNoise(_time * 0.8f + k * 3.1f, 1.9f) * 0.9f);
+                Vector2 air = back * gust;
+                c.p[0] = c.prev[0] = _bone.TransformPoint(c.rest[0]);
+                for (int i = 1; i < n; i++)
+                {
+                    float u = i / (float)(n - 1);
+                    Vector2 target = _bone.TransformPoint(c.rest[i]);
+                    Vector2 v = (c.p[i] - c.prev[i]) / h;
+                    float flutter = Mathf.Sin(_time * 5.7f - i * 1.1f + k * 2.3f) * (1.5f + 5f * freedom) * u * u;
+                    Vector2 acc = new Vector2(0f, -_feel.gravity) + Vector2.ClampMagnitude((air - v) * _feel.drag * Mathf.Lerp(0.5f, 1.5f, u), 60f)
+                                  + new Vector2(0f, flutter);
+                    Vector2 vel = (c.p[i] - c.prev[i]) * 0.985f;
+                    c.prev[i] = c.p[i];
+                    c.p[i] += vel + acc * h * h;
+                    float stiff = Mathf.Lerp(_feel.stiffRoot, _feel.stiffTip, Mathf.Pow(u, 0.7f)) * Mathf.Lerp(1f, 0.5f, freedom * u);
+                    c.p[i] = Vector2.Lerp(c.p[i], target, stiff);
+                }
+                for (int it = 0; it < 3; it++)
+                {
+                    for (int i = 0; i < n - 1; i++)
+                    {
+                        float rest = ((Vector2)_bone.TransformVector(c.rest[i + 1] - c.rest[i])).magnitude;
+                        Vector2 d = c.p[i + 1] - c.p[i];
+                        float len = d.magnitude;
+                        if (len < 1e-6f) continue;
+                        Vector2 corr = d * ((len - rest) / len);
+                        if (i == 0) c.p[i + 1] -= corr;
+                        else { c.p[i] += corr * 0.5f; c.p[i + 1] -= corr * 0.5f; }
+                    }
+                    for (int i = 1; i < n; i++)
+                        if (c.p[i].y < groundY + 0.02f) c.p[i].y = groundY + 0.02f;
+                }
+            }
+        }
+
+        void Deform()
+        {
+            foreach (var c in _c)
+            {
+                int n = c.rest.Length;
+                for (int i = 0; i < n; i++) c.local[i] = _bone.InverseTransformPoint(c.p[i]);
+                // turn of each segment, then of each particle (average of its segments), so vertices turn smoothly
+                for (int i = 0; i < n; i++)
+                {
+                    float a0 = i > 0 ? Mathf.DeltaAngle(c.restAng[i - 1], KMath.Ang(c.local[i] - c.local[i - 1])) : float.NaN;
+                    float a1 = i < n - 1 ? Mathf.DeltaAngle(c.restAng[i], KMath.Ang(c.local[i + 1] - c.local[i])) : float.NaN;
+                    c.jointAng[i] = float.IsNaN(a0) ? a1 : float.IsNaN(a1) ? a0 : (a0 + a1) * 0.5f;
+                    if (i == 0) c.jointAng[i] *= 0.5f;   // the root is pinned: half the first segment's turn
+                }
+            }
+            for (int v = 0; v < _base.Length; v++)
+            {
+                Vector2 qa = Place(_c[_ca[v]], _ia[v], _ta[v], _oa[v]);
+                Vector2 q = _ca[v] == _cb[v] ? qa : Vector2.LerpUnclamped(Place(_c[_cb[v]], _ib[v], _tb[v], _ob[v]), qa, _w[v]);
+                _out[v] = new Vector3(q.x, q.y, 0f);
+            }
+            _mesh.vertices = _out;
+            _mesh.RecalculateBounds();
+        }
+
+        static Vector2 Place(Chain c, int i, float t, Vector2 offset)
+        {
+            float ang = Mathf.Lerp(c.jointAng[i], c.jointAng[i + 1], t);
+            return Vector2.LerpUnclamped(c.local[i], c.local[i + 1], t) + KMath.Rot(offset, ang);
+        }
+    }
+
     /// <summary>Destroys meshes that were instantiated for a temporary object (ghost afterimages).</summary>
     public class MeshOwner : MonoBehaviour
     {
