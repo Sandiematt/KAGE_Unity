@@ -41,6 +41,14 @@ namespace Kage
         public int clothLayer;         // coat: 0 = front flap cloth, 1 = tail cloth (side + back panels)
     }
 
+    /// <summary>An extra scarf tail (armour visuals, SAN-85): a short strip on the scarf's knot that streams like the two main tails.</summary>
+    public struct ScarfStrand
+    {
+        public Vector2 anchor;          // bind space, carried by the chest
+        public float length, width, phase;
+        public Color front, back;
+    }
+
     public class HurtDef
     {
         public B bone; public Vector2 local; public float radius; public HitZone zone;
@@ -62,6 +70,8 @@ namespace Kage
         public bool scarf = true;
         public Color scarfColor = Palette.Trim, scarfBack = Palette.TrimDeep;
         public Vector2 scarfAnchorA, scarfAnchorB;   // bind space, carried by the chest
+        public Color scarfEdge = Palette.TrimBright; // the lit edge of the scarf's ribbons
+        public readonly List<ScarfStrand> scarfStrands = new();   // extra tails beside the two main ones (armour looks)
         public float bladeBindAngle;                  // world angle of the blade in bind pose
         public Vector2 bladeTipLocal;                 // sword-bone local tip
         public Vector2 bladeBaseLocal;                // sword-bone local blade base (guard)
