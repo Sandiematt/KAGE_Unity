@@ -146,6 +146,7 @@ namespace Kage
             MoveRate = c.moveRate;
             PostureMax = c.postureMax;
             KnockbackTaken = c.knockbackTaken;
+            ApplyGear(c.perks);
             maxHealth = health = c.MaxHealth();
         }
 

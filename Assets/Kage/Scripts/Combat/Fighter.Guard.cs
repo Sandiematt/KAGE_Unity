@@ -91,7 +91,8 @@ namespace Kage
         /// Defence step 6, the guard branch of <see cref="ReceiveHit"/>: true (and Blocked) when this fighter is guarding
         /// and the hit's level allows it. A guarded hit puts the fighter in blockstun, takes chip damage off a blade
         /// hit, and adds posture (damage × <see cref="GuardTuning.blockPostureFactor"/> × the window's postureMul); a
-        /// full bar breaks the guard (<see cref="BreakGuard"/>).
+        /// full bar breaks the guard (<see cref="BreakGuard"/>). A block builds Rage (<see cref="BlockRageGain"/>: damage × 0.4, × the
+        /// Rage and blockRage perks), as in the JS game.
         /// </summary>
         bool TryGuard(HitInfo info, out HitResult result)
         {
@@ -105,6 +106,7 @@ namespace Kage
             health = Mathf.Max(1f, health - (w.sword ? Mathf.Ceil(info.dmg * t.chipFactor) : 0f));
             rig.Flash(new Color(0.85f, 0.9f, 1f), 0.35f);
             if (w.breaksWeapon) BreakSword();
+            meter = Mathf.Min(100f, meter + BlockRageGain(info.dmg));      // blocking builds Rage, more with the blockRage perk (SAN-84)
             AddPosture(info.dmg * t.blockPostureFactor * w.postureMul, true, info);
             return true;
         }

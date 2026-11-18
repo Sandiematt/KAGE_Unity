@@ -79,6 +79,8 @@ namespace Kage
         public string weaponId;
         /// <summary>Weapon level 1..8 (the player's upgrade; foes fight at 1). Scales damage, move rate and reach (ADR-0006).</summary>
         public int weaponLevel = 1;
+        /// <summary>The summed perks of the equipped helmet and armour (Kage only, from his save; SAN-84). None for every foe.</summary>
+        public GearPerks perks;
         /// <summary>"regular", "agile", "defensive", "ranged", "heavy", "boss"; null for the player.</summary>
         public string aiProfile;
         /// <summary>How often the AI throws an attack it has chosen, 0..1 (1 = the profile as is). The tutorial Hollow uses 0.3. SAN-95's per-profile tuning builds on it.</summary>

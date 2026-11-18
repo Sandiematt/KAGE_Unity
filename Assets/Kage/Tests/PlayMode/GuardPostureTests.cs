@@ -365,6 +365,50 @@ namespace Kage.Tests
             Assert.AreEqual(Mathf.RoundToInt(plain * DamageCalc.CritMul), crit.Damage);
         }
 
+        // ---------------------------------------------------------------- gear perks (SAN-84 hooks)
+
+        /// <summary>Kage holding Guard, with these perks on his character data.</summary>
+        HeadlessFight GuardingWith(GearPerks perks)
+        {
+            var def = CharacterCatalog.Get(KageCharacter.Id);
+            def.perks = perks;
+            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -0.37f, 0.37f, kageDef: def);
+            _fights.Add(f);
+            f.RoninInput.Add(1200);
+            f.KageInput.Add(600, buttons: "G");
+            f.Run(8);
+            Assert.IsTrue(f.Kage.IsGuarding);
+            return f;
+        }
+
+        [Test]
+        public void A_block_builds_Rage_and_the_blockRage_perk_multiplies_it()
+        {
+            var plain = GuardingWith(default);
+            var perk = GuardingWith(new GearPerks { blockRage = 1f });
+            plain.Kage.meter = perk.Kage.meter = 0f;
+            plain.Kage.ReceiveHit(Incoming(plain.Ronin, HitLevel.Mid, dmg: 10));
+            perk.Kage.ReceiveHit(Incoming(perk.Ronin, HitLevel.Mid, dmg: 10));
+            Assert.AreEqual(plain.Kage.BlockRageGain(10f), plain.Kage.meter, 1e-4f, "JS: damage x 0.4");
+            Assert.Greater(plain.Kage.meter, 0f);
+            Assert.AreEqual(2f * plain.Kage.meter, perk.Kage.meter, 1e-4f, "blockRage 1 doubles it");
+        }
+
+        [Test]
+        public void The_stunRes_perk_shortens_the_guard_break()
+        {
+            var f = GuardingWith(new GearPerks { stunRes = 1f });
+            f.Kage.PostureMax = 1f;
+            f.Kage.ReceiveHit(Incoming(f.Ronin, HitLevel.Mid, dmg: 4));
+            Assert.IsTrue(f.Kage.GuardBroken);
+            int helpless = f.Kage.ScaleStun(T.breakFrames, Fighter.BreakStunResist);
+            Assert.Less(helpless, T.breakFrames, "stunRes 1 cuts it (JS: x (1 - 0.5 stunRes))");
+            f.Run(helpless - 1);
+            Assert.IsTrue(f.Kage.GuardBroken);
+            f.Run(1);
+            Assert.IsFalse(f.Kage.GuardBroken, "over after the shortened time");
+        }
+
         // ---------------------------------------------------------------- the AI
 
         sealed class Recording : IInputSource

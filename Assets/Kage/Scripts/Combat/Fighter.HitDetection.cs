@@ -270,7 +270,7 @@ namespace Kage
             if (res == HitResult.Hit)
             {
                 moveHit = true;
-                meter = Mathf.Min(100f, meter + 5f + info.dmg * 0.6f);
+                meter = Mathf.Min(100f, meter + (5f + info.dmg * 0.6f) * RageMul);
                 comboCount++;
                 GameFeel.Hitstop(w.hitstop + (info.crit ? 3 : 0));
                 GameFeel.Shake(w.shake * (info.crit ? 1.5f : 1f));

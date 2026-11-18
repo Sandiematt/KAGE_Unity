@@ -23,6 +23,11 @@ namespace Kage.Rules
         /// <summary>Damage reduction from helmet and armour, capped at 0.5.</summary>
         public double Defense;
         public double WeaponDmg;
+        /// <summary>
+        /// The damage multiplier Kage himself carries into a fight: +1.2 % per player level, times the gear's damage perk
+        /// (JS <c>makePlayer</c>: <c>(1 + 0.012 × (level − 1)) × (1 + perks.dmg)</c>). It does not include the weapon (<see cref="WeaponDmg"/>).
+        /// </summary>
+        public double DamageMul;
         /// <summary>The summed helmet and armour perks (dash, speed, ammo, stunRes, rage, kunai, dmg, blockRage).</summary>
         public Dictionary<string, double> Perks = new Dictionary<string, double>();
     }
@@ -39,6 +44,7 @@ namespace Kage.Rules
         const double GearDefPerLevel = 0.012, GearHpGrowthPerLevel = 0.1;
         const int PlayerBaseHealth = 220, PlayerHealthPerLevel = 4;
         const double PlayerDefenseCap = 0.5;
+        const double PlayerDamagePerLevel = 0.012;
 
         static readonly int[] FallbackStats = { 40, 50, 40 };
 
@@ -168,6 +174,9 @@ namespace Kage.Rules
             };
             AddPerks(stats.Perks, Item(GearKind.Helmets, h));
             AddPerks(stats.Perks, Item(GearKind.Armors, a));
+            double dmgPerk;
+            stats.Perks.TryGetValue("dmg", out dmgPerk);
+            stats.DamageMul = (1 + PlayerDamagePerLevel * (save.level - 1)) * (1 + dmgPerk);
             return stats;
         }
 

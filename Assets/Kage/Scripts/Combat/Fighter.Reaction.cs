@@ -14,8 +14,8 @@ namespace Kage
             {
                 case FState.KO: case FState.Thrown: case FState.Intro: case FState.Victory: case FState.Ultimate: return false;
                 case FState.Down: return w.otg && _otgHits < 2;
-                case FState.Attack: return move == null || !move.Invulnerable(moveFrame);
-                case FState.Dash: return _dashAir || _dashDir > 0 || _dashFrame > BackDashInvuln;
+                case FState.Attack: return move == null || !MoveInvulnerable();
+                case FState.Dash: return DashHittable();
             }
             return true;
         }
@@ -125,7 +125,7 @@ namespace Kage
             }
 
             health = Mathf.Max(0f, health - info.dmg);
-            meter = Mathf.Min(100f, meter + 3f + info.dmg * 0.3f);
+            meter = Mathf.Min(100f, meter + (3f + info.dmg * 0.3f) * RageMul);
             CleanHitPosture(info);
             rig.Flash(Color.white, 0.95f, 14f);
 
@@ -141,7 +141,7 @@ namespace Kage
             {
                 SetState(FState.Hitstun);
                 rig.Squash(w.heavy ? 0.09f : 0.05f);
-                _stun = w.stun;
+                _stun = ScaleStun(w.stun);
                 _hurt = w.level == HitLevel.Low || info.zone == HitZone.Legs ? _hurtLow : info.zone == HitZone.Head ? _hurtHigh : _hurtBody;
                 Knock(KnockVelocity(new Vector2(info.kb.x, Mathf.Max(0f, info.kb.y * 0.3f))));
             }

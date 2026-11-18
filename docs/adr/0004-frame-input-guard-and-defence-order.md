@@ -158,10 +158,12 @@ The gamepad's RB used to be a second Special and RT a third Dash; both are Guard
 | `drainDelayFrames` | 60 | frames without a posture gain before it drains |
 | `drainPerFrame` | 0.2 | 12 a second |
 | `drainWhileGuarding` | false | holding Guard stops the drain (as the JS game), so turtling costs |
-| `breakFrames` | 45 | 0.75 s helpless (hitstun, `PoseLib.GuardBroken`) |
+| `breakFrames` | 45 | 0.75 s helpless (hitstun, `PoseLib.GuardBroken`), × (1 − 0.5 stunRes) with the stunRes perk (SAN-84) |
 | `breakPushKept` | 0.2 | a broken fighter keeps a fifth of the block's push-back, so the punish can reach |
 | `postureAfterBreak` | 0.4 | the bar left after a break (JS refills to 60 of 100) |
 | `chipFactor`, `blockstunFactor`, `minBlockstun` | 0.15, 0.6, 8 | the existing chip and blockstun numbers, moved to data |
+
+A block also builds Rage: `Fighter.BlockRageGain(damage)` (SAN-84; JS damage × 0.4 × the Rage perk × (1 + blockRage)).
 
 `damage` is the hit's damage after every multiplier (the `HitInfo.dmg` that reaches the defender). With 60 posture about two blocked strings break a regular guard (a jab blocked adds 6, an iai 13.5). The JS game's numbers are 100 posture, damage × 1.3 per block on JS damage (about 2.3 × Unity damage), 1 s delay, 20 a second; the Unity bar and drain keep that pace.
 

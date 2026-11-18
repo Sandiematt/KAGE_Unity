@@ -126,10 +126,10 @@ namespace Kage
                     DestroyWorld();
                     break;
                 case FlowScreen.Loadout:
-                    if (World == null || World.StageId != c.StageId || World.phase != StageWorld.Phase.Tableau)
+                    if (World == null || World.StageId != c.StageId || World.phase != StageWorld.Phase.Tableau || World.LoadoutKey != KageCharacter.LoadoutKey(c.Save))
                     {
                         DestroyWorld();
-                        World = StageWorld.Create(transform, c.StageId);
+                        World = StageWorld.Create(transform, c.StageId, c.Save);
                     }
                     break;
                 case FlowScreen.Stage:
@@ -160,14 +160,14 @@ namespace Kage
         void EnsureStageWorld()
         {
             var c = Controller;
-            if (World != null && World.StageId == c.StageId && World.phase == StageWorld.Phase.Tableau)
+            if (World != null && World.StageId == c.StageId && World.phase == StageWorld.Phase.Tableau && World.LoadoutKey == KageCharacter.LoadoutKey(c.Save))
             {
                 BeginWorld();
                 return;
             }
             if (World != null && World.StageId == c.StageId && worldAttempt == c.Attempt) return;
             DestroyWorld();
-            World = StageWorld.Create(transform, c.StageId);
+            World = StageWorld.Create(transform, c.StageId, c.Save);
             BeginWorld();
         }
 

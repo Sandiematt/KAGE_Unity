@@ -78,8 +78,9 @@ namespace Kage
             SetState(FState.Hitstun);
             _guardBrokenPose ??= PoseLib.GuardBroken();
             _hurt = _guardBrokenPose;
-            _stun = t.breakFrames;
-            _guardBreakLeft = t.breakFrames;
+            int helpless = ScaleStun(t.breakFrames, BreakStunResist);      // the stunRes perk shortens it (SAN-84)
+            _stun = helpless;
+            _guardBreakLeft = helpless;
             // staggered in place, open to the attacker: most of the block's push-back is cancelled
             if (rb.bodyType == RigidbodyType2D.Dynamic) rb.linearVelocity = new Vector2(rb.linearVelocity.x * t.breakPushKept, rb.linearVelocity.y);
             rig.Squash(0.08f);
