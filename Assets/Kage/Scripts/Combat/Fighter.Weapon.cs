@@ -34,6 +34,9 @@ namespace Kage
         /// <summary>Where the near hand sits from the far hand when a held-grip pose is split for dual wield (root space, facing right).</summary>
         static readonly Vector2 DualHandOffset = new(0.14f, 0.16f);
 
+        /// <summary>Where the near hand sits from the far hand in a one-handed family's held stance (root space, facing right).</summary>
+        static readonly Vector2 OneHandOffset = new(-0.08f, -0.2f);
+
         Vector2 _bladeTip, _bladeBase;
         bool _bladeSet;
 
@@ -42,8 +45,34 @@ namespace Kage
         /// <summary>HandN-local tip of the second blade: the same length as the first. The near hand's own axis is the blade's.</summary>
         public Vector2 NearBladeTipLocal => NearBladeBaseLocal + Vector2.right * BladeReach;
 
-        /// <summary>Sword-bone local tip of the Blade hit points: the family's blade length × the weapon's reach.</summary>
-        public Vector2 BladeTipLocal => _bladeSet ? _bladeTip : def.bladeTipLocal;
+        Vector2 StaticBladeTip => _bladeSet ? _bladeTip : def.bladeTipLocal;
+
+        /// <summary>
+        /// Sword-bone local tip of the Blade hit points: the family's blade length x the weapon's reach, plus the move's
+        /// current extension along the blade (<see cref="BladeExtension"/>, the chain sickle's lash).
+        /// </summary>
+        public Vector2 BladeTipLocal
+        {
+            get
+            {
+                Vector2 t = StaticBladeTip;
+                float e = BladeExtension;
+                return e > 0f ? t + BladeDirLocal * e : t;
+            }
+        }
+
+        /// <summary>Sword-bone local direction of the blade line (unit).</summary>
+        public Vector2 BladeDirLocal => (StaticBladeTip - BladeBaseLocal).normalized;
+
+        /// <summary>Metres the move has run the Blade line past the blade at the current move time (x the weapon's reach); 0 outside moves that extend.</summary>
+        public float BladeExtension => BladeExtensionAt(0f);
+
+        /// <summary>The extension <paramref name="alpha"/> of a logic frame past the current move time (a rendered frame between two logic frames).</summary>
+        public float BladeExtensionAt(float alpha)
+        {
+            if (state != FState.Attack || move == null || move.extension.Count == 0) return 0f;
+            return move.ExtensionAt(_moveTime + alpha * PlaybackRate) * Weapon.reach;
+        }
 
         /// <summary>
         /// Sword-bone local start of the Blade hit points: the guard. A polearm's line starts a little behind its lead
@@ -51,8 +80,8 @@ namespace Kage
         /// </summary>
         public Vector2 BladeBaseLocal => _bladeSet ? _bladeBase : def.bladeBaseLocal;
 
-        /// <summary>Metres from guard to the last Blade hit point.</summary>
-        public float BladeReach => (BladeTipLocal - def.bladeBaseLocal).magnitude;
+        /// <summary>Metres from guard to the last Blade hit point of the blade itself (the extension isn't counted).</summary>
+        public float BladeReach => (StaticBladeTip - def.bladeBaseLocal).magnitude;
 
         MoveSets _ownSets;
 
@@ -115,6 +144,7 @@ namespace Kage
                 // each holds a blade (the near blade is posed with the pose)
                 bool dual = Dual;
                 if (dual) p.SplitHands(DualHandOffset);
+                else if (Family != null && Family.grip == GripPose.OneHand && !BareHanded) p.SplitHands(OneHandOffset);     // the near hand holds the chain's loose end
                 p.grip = false;
                 p.dual = dual;
                 return;

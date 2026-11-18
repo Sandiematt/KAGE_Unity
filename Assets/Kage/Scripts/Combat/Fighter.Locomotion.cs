@@ -188,7 +188,7 @@ namespace Kage
                 {
                     if (!_airAttackUsed && _bufferAge <= 6 && _buffer != Btn.None && _buffer != Btn.X)
                     {
-                        var m = moves.Select(_buffer, 0, 0, true, this);
+                        var m = moves.Select(_buffer, 0, _bufferDy, true, this);     // Down + weapon in the air picks the dive (twin, chain)
                         if (m != null) { ConsumeBuffer(); _airAttackUsed = true; StartMove(m); _fromJump = true; return; }
                     }
                 }
@@ -265,7 +265,7 @@ namespace Kage
             int dirIn = inp.dx == 0 ? 0 : (int)Mathf.Sign(inp.dx * facing);
             if (!_airAttackUsed && _bufferAge <= 6 && _buffer != Btn.None && _buffer != Btn.X)
             {
-                var m = moves.Select(_buffer, 0, 0, true, this);
+                var m = moves.Select(_buffer, 0, _bufferDy, true, this);     // Down + weapon in the air picks the dive (twin, chain)
                 if (m != null) { ConsumeBuffer(); _airAttackUsed = true; StartMove(m); _fromJump = true; return; }
             }
             if (!_airDashUsed && _airFrame > 3 && _dashBuf <= 4)

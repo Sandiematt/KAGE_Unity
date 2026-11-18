@@ -32,6 +32,9 @@ namespace Kage
         public float postureMul = 1f;
     }
 
+    /// <summary>A key of a move's blade extension curve (<see cref="MoveDef.Extend"/>).</summary>
+    public struct ExtKey { public int frame; public float metres; public Ease ease; }
+
     public class MotionEvt { public int from, to; public Vector2 vel; public bool setY; }
     public class FxEvt { public int from, to; public FxKind kind; }
 
@@ -64,6 +67,11 @@ namespace Kage
         public float grabRange = 0.95f, carryFrom = 0.62f, carryTo = -0.78f, carryHeight = 1.3f;
         public Vector2 throwKb = new Vector2(-2.4f, -3f);
         public int meterCost;
+        /// <summary>
+        /// How far the weapon's <see cref="HitPoint.Blade"/> line runs past its blade, in metres at reach x1 (SAN-87: the
+        /// chain sickle's lash). Keys are eased like pose keys from 0 at frame 0; empty = never extended.
+        /// </summary>
+        public readonly List<ExtKey> extension = new();
         public int projectileFrame = -1;
         public int counterFrom = -1, counterTo = -1;
         public int gravityOffFrom = -1, gravityOffTo = -1;
@@ -103,6 +111,28 @@ namespace Kage
         {
             fx.Add(new FxEvt { from = from, to = to, kind = k });
             return this;
+        }
+
+        /// <summary>The blade line is <paramref name="metres"/> longer at <paramref name="frame"/> (eased from the previous key; 0 before the first).</summary>
+        public MoveDef Extend(int frame, float metres, Ease e = Ease.Linear)
+        {
+            extension.Add(new ExtKey { frame = frame, metres = metres, ease = e });
+            return this;
+        }
+
+        /// <summary>The blade extension at a (fractional) move frame, in metres at reach x1.</summary>
+        public float ExtensionAt(float f)
+        {
+            if (extension.Count == 0) return 0f;
+            int prevFrame = 0;
+            float prev = 0f;
+            foreach (var k in extension)
+            {
+                if (f < k.frame) return Mathf.Lerp(prev, k.metres, KMath.Apply(k.ease, (f - prevFrame) / Mathf.Max(1, k.frame - prevFrame)));
+                prevFrame = k.frame;
+                prev = k.metres;
+            }
+            return prev;
         }
 
         public MoveDef Invuln(int from, int to) { invulnFrom = from; invulnTo = to; return this; }
