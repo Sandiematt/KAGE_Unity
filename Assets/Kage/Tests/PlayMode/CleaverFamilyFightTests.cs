@@ -251,7 +251,6 @@ namespace Kage.Tests
         }
 
         [TestCase("S", 0, 0)]
-        [TestCase("S", 1, 0)]
         [TestCase("S", -1, 0)]
         [TestCase("P", 0, 0)]
         public void The_rear_hand_stays_on_the_handle_through_the_main_cleaver_moves(string button, int fwd, int dy)
@@ -262,7 +261,6 @@ namespace Kage.Tests
             f.Run(1);
             string id = f.Kage.move?.id;
             Assert.IsNotNull(id);
-            if (id == "cleaver.charge") Assert.Ignore("the charge lets the near hand go on purpose: the forearm leads");
             var worst = 0f;
             while (f.Kage.state == FState.Attack)
             {
