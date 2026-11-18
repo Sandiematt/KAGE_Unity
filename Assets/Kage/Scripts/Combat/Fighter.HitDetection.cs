@@ -247,16 +247,24 @@ namespace Kage
         void PublishHit(IHittable t, HitInfo info, HitResult res)
         {
             if (ctx == null || res == HitResult.Whiff) return;
-            var type = res switch { HitResult.Blocked => CombatEventType.Blocked, HitResult.Countered => CombatEventType.Countered, _ => CombatEventType.Hit };
+            var type = res switch
+            {
+                HitResult.Blocked => CombatEventType.Blocked, HitResult.Countered => CombatEventType.Countered,
+                HitResult.Parried => CombatEventType.Parried, HitResult.Dodged => CombatEventType.PerfectDodged, _ => CombatEventType.Hit,
+            };
             var target = t as Fighter;
             float dmg = target != null ? target.LastDamageTaken : (res == HitResult.Hit ? info.dmg : 0f);
+            // posture the target took from this hit (SAN-86); a parry's or a clash's posture is the checks' own business
+            float posture = target != null && res is HitResult.Hit or HitResult.Blocked ? target.LastPostureTaken : 0f;
             var w = info.w;
             ctx.Events.Publish(CombatEvent.HitResolved(ctx.Clock.Frame, type, this, target, FightContext.IdOf(t), info.moveId, info.window,
-                dmg, info.crit, w != null ? w.level : HitLevel.Mid, info.zone, info.contact, info.kb));
+                dmg, info.crit, w != null ? w.level : HitLevel.Mid, info.zone, info.contact, info.kb, posture));
         }
 
         void OnHitResolved(IHittable t, HitInfo info, HitResult res)
         {
+            // a guard-broken target turned the hit into a guaranteed critical (ADR-0004 step 7)
+            if (res == HitResult.Hit && t is Fighter hf && hf.LastHitCrit && !info.crit) { info.crit = true; info.dmg = hf.LastHitDamage; }
             var w = info.w;
             Vector2 dir = new Vector2(facing, 0.15f).normalized;
             if (res == HitResult.Hit)
@@ -280,6 +288,9 @@ namespace Kage
                     Knock(new Vector2(KnockVelocity(new Vector2(-facing * 1.6f, 0f)).x, rb.linearVelocity.y));     // recoil off a cornered guard
             }
             PublishHit(t, info, res);
+            // a guard-break follows the event of the hit that caused it (on the target; on this fighter after a parry)
+            (t as Fighter)?.FlushGuardBreak();
+            FlushGuardBreak();
             if (t is Fighter f) onHit?.Invoke(this, f, info, res);
         }
     }

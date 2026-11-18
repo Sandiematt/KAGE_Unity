@@ -28,6 +28,21 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void TheShippedGuardTuningIsTheSpecsDefenceNumbers()
+        {
+            // guard.json (SAN-86): the file and the in-code defaults agree, and they are the spec's numbers
+            var file = Tuning.Get<GuardTuning>();
+            var code = new GuardTuning();
+            Assert.AreEqual(JsonUtility(code), JsonUtility(file), "guard.json matches the GuardTuning defaults");
+            Assert.AreEqual(1.5f, file.blockPostureFactor, "posture on block: damage x about 1.5");
+            Assert.AreEqual(60, file.drainDelayFrames, "drains after about 1 s");
+            Assert.AreEqual(45, file.breakFrames, "about 0.75 s helpless");
+            Assert.Less(file.hitPostureFactor, file.blockPostureFactor, "clean hits add a little");
+        }
+
+        static string JsonUtility(object o) => UnityEngine.JsonUtility.ToJson(o);
+
+        [Test]
         public void AMissingFileMeansTheInCodeDefaults()
         {
             var t = Tuning.Get<NoFileTuning>();

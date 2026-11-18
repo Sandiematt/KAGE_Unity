@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Kage
 {
     public enum FState { Intro, Idle, Walk, Crouch, Air, Land, Attack, Hitstun, Blockstun, Launched, Down, Thrown, KO, Victory, Ultimate, Run, Dash, Skid }
-    public enum HitResult { Whiff, Hit, Blocked, Countered }
+    /// <summary>What one hit did. <c>Parried</c> (SAN-91) and <c>Dodged</c> (SAN-92) are declared by SAN-86 (ADR-0004) and unused until then.</summary>
+    public enum HitResult { Whiff, Hit, Blocked, Countered, Parried, Dodged }
 
     public struct HitInfo
     {
@@ -32,7 +33,7 @@ namespace Kage
 
     /// <summary>
     /// A fighter: Rigidbody2D body (gravity, knockback, launches, bounces), a 60 Hz state machine,
-    /// move playback with hit windows, blocking by holding back, throws, juggles, knockdowns,
+    /// move playback with hit windows, the Guard button with posture and guard-break, throws, juggles, knockdowns,
     /// kip-ups, a physics ragdoll on K.O., and the Kage-only ultimate.
     /// </summary>
     public partial class Fighter : MonoBehaviour, IHittable
@@ -57,8 +58,13 @@ namespace Kage
         public int team;
         /// <summary>Character id, plus "#n" for the n-th copy ("kage", "ronin", "order_footman#2").</summary>
         [System.NonSerialized] public string FighterId, CharacterId;
-        /// <summary>Health the last ReceiveHit removed (after crit and guard), for the event stream.</summary>
-        public float LastDamageTaken { get; private set; }
+        /// <summary>Health the last ReceiveHit removed (after crit and guard), for the event stream. Setting it clears the last hit's posture and crit (Fighter.Posture.cs).</summary>
+        public float LastDamageTaken
+        {
+            get => _lastDamageTaken;
+            private set { _lastDamageTaken = value; LastPostureTaken = 0f; LastHitCrit = false; LastHitDamage = 0; }
+        }
+        float _lastDamageTaken;
 
         // ---- character (ADR-0005) ----
         /// <summary>The character data this fighter was built from.</summary>
@@ -69,7 +75,7 @@ namespace Kage
         public float SpeedMul = 1f;
         /// <summary>
         /// Damage dealt and damage reduction (<see cref="DamageCalc"/>), attack playback rate (× the weapon's speed,
-        /// <see cref="PlaybackRate"/>), and the posture bar size (SAN-86, not applied yet).
+        /// <see cref="PlaybackRate"/>), and the posture bar size (<see cref="Posture"/>, SAN-86).
         /// </summary>
         public float DamageMul = 1f, Defense, MoveRate = 1f, PostureMax = 100f;
         /// <summary>Extra multiplier on knockback received, on top of mass.</summary>
@@ -209,6 +215,7 @@ namespace Kage
             if (rig.scarf != null) rig.scarf.ResetChain();
             rig.ResetSoft();
             _liePose = _lie;
+            ResetPosture();
             SetState(FState.Intro);
         }
 
@@ -283,8 +290,9 @@ namespace Kage
             Vector2 v = rb.linearVelocity;
             Grounded = rb.position.y < 0.045f && v.y <= 0.1f && rb.bodyType == RigidbodyType2D.Dynamic;
             int fwd = Mathf.RoundToInt(Mathf.Sign(inp.dx) * (inp.dx != 0 ? 1 : 0) * facing);
-            _guardHeld = fwd < 0 && controlEnabled;
+            ReadGuard(inp);
             _crouchHeld = inp.dy < 0;
+            PostureTick();
 
             switch (state)
             {

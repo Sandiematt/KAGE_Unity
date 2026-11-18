@@ -24,11 +24,11 @@ namespace Kage.Tests
             _roots.Clear();
         }
 
-        /// <summary>Kage on the left, the Ronin standing still on the right (or holding back when <paramref name="guard"/>).</summary>
+        /// <summary>Kage on the left, the Ronin standing still on the right (or holding Guard when <paramref name="guard"/>).</summary>
         HeadlessFight Duel(bool guard = false)
         {
             var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, HeadlessFight.KageX, 0.6f);
-            f.RoninInput.Add(600, fwd: guard ? -1 : 0);
+            f.RoninInput.Add(600, buttons: guard ? "G" : "");
             _fights.Add(f);
             return f;
         }

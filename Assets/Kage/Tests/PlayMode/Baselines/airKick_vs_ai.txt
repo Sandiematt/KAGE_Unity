@@ -4,12 +4,12 @@
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 1 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 10 MoveStarted kage>- airKick#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-26 Hit kage>ronin airKick#0 dmg=8 pos=0 crit=0 lvl=Overhead zone=Head i=0 n=-
+26 Hit kage>ronin airKick#0 dmg=8 pos=2.4 crit=0 lvl=Overhead zone=Head i=0 n=-
 60 MoveStarted ronin>- getUp#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 92 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-98 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+98 Hit ronin>kage jab#0 dmg=4 pos=1.2 crit=0 lvl=High zone=Body i=0 n=-
 105 MoveStarted ronin>- cross#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-113 Hit ronin>kage cross#0 dmg=5 pos=0 crit=0 lvl=High zone=Head i=0 n=-
+113 Hit ronin>kage cross#0 dmg=5 pos=1.5 crit=0 lvl=High zone=Head i=0 n=-
 [frames]
 0 kage -0.34833 0.15210 Air - hp=100 ronin 0.39167 0.02000 Idle - hp=100
 1 kage -0.32528 0.27629 Air - hp=100 ronin 0.41472 0.02000 Attack sweep:0 hp=100
@@ -75,7 +75,7 @@
 61 kage 0.71875 0.01500 Idle - hp=100 ronin 1.45369 0.01500 Attack getUp:1 hp=92
 62 kage 0.71874 0.01500 Idle - hp=100 ronin 1.45370 0.01500 Attack getUp:2 hp=92
 63 kage 0.71873 0.01500 Idle - hp=100 ronin 1.45371 0.01500 Attack getUp:3 hp=92
-64 kage 0.71873 0.01500 Idle - hp=100 ronin 1.45372 0.01500 Attack getUp:4 hp=92
+64 kage 0.71873 0.01500 Idle - hp=100 ronin 1.45371 0.01500 Attack getUp:4 hp=92
 65 kage 0.71873 0.01500 Idle - hp=100 ronin 1.45372 0.01500 Attack getUp:5 hp=92
 66 kage 0.71872 0.01500 Idle - hp=100 ronin 1.45372 0.01500 Attack getUp:6 hp=92
 67 kage 0.71872 0.01500 Idle - hp=100 ronin 1.45372 0.01500 Attack getUp:7 hp=92

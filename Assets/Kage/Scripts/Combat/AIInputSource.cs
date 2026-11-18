@@ -6,7 +6,8 @@ namespace Kage
     /// <summary>
     /// Opponent brain that drives a fighter through the same input interface as the player.
     /// Utility-style choice by range every few frames: approach, poke, combo, throw, sweep,
-    /// jump-in, roll, retreat; reads the player's active move to guard high/low; punishes after
+    /// jump-in, roll, retreat; reads the player's active move to guard high/low with the Guard input (ADR-0004: walking
+    /// backward doesn't guard); punishes after
     /// blocking; extends combos on hit; mashes to kip-up.
     /// </summary>
     public class AIInputSource : IInputSource
@@ -64,7 +65,7 @@ namespace Kage
             if (_guardFrames > 0)
             {
                 _guardFrames--;
-                o.dx = (int)-face;
+                o.guard = true;                 // the same Guard input the player has; Down makes it a low guard
                 o.dy = _guardLow ? -1 : 0;
                 if (_guardFrames == 0 && self.state == FState.Blockstun) Punish(dist);
                 return o;

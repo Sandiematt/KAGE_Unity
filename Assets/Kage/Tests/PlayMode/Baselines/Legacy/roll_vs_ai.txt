@@ -5,9 +5,9 @@
 0 MoveStarted kage>- roll#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 1 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 35 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-43 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+43 Hit ronin>kage iai#0 dmg=9 pos=2.7 crit=0 lvl=Mid zone=Body i=0 n=-
 53 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-59 Hit ronin>kage risingMoon#0 dmg=8 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+59 Hit ronin>kage risingMoon#0 dmg=8 pos=2.4 crit=0 lvl=Mid zone=Body i=0 n=-
 72 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]
 0 kage -0.77000 0.02000 Attack roll:0 hp=100 ronin 0.37000 0.02000 Idle - hp=100

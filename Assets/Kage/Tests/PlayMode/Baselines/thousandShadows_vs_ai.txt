@@ -9,7 +9,7 @@
 51 Hit kage>ronin thousandShadows#-1 dmg=4 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
 63 Hit kage>ronin thousandShadows#-1 dmg=4 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
 75 Hit kage>ronin thousandShadows#-1 dmg=4 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
-110 Hit kage>ronin thousandShadows#-1 dmg=14 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
+110 Hit kage>ronin thousandShadows#-1 dmg=14 pos=4.2 crit=0 lvl=Unblockable zone=Body i=0 n=-
 [frames]
 0 kage -0.37000 0.02000 Ultimate - hp=100 ronin 0.37000 0.02000 Idle - hp=100
 1 kage -0.37000 0.02000 Ultimate - hp=100 ronin 0.37000 0.02000 Idle - hp=100

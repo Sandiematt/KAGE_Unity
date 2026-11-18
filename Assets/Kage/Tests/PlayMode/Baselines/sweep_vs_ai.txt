@@ -3,13 +3,13 @@
 [events]
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 0 MoveStarted kage>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-10 Blocked kage>ronin sweep#0 dmg=0 pos=0 crit=0 lvl=Low zone=Body i=0 n=-
+10 Blocked kage>ronin sweep#0 dmg=0 pos=9 crit=0 lvl=Low zone=Body i=0 n=-
 36 MoveStarted ronin>- kick1#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-45 Hit ronin>kage kick1#0 dmg=6 pos=0 crit=0 lvl=High zone=Head i=0 n=-
+45 Hit ronin>kage kick1#0 dmg=6 pos=1.8 crit=0 lvl=High zone=Head i=0 n=-
 55 MoveStarted ronin>- kick2#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-66 Hit ronin>kage kick2#0 dmg=6 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+66 Hit ronin>kage kick2#0 dmg=6 pos=1.8 crit=0 lvl=Mid zone=Body i=0 n=-
 74 MoveStarted ronin>- axe#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-89 Hit ronin>kage axe#0 dmg=10 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+89 Hit ronin>kage axe#0 dmg=10 pos=3 crit=0 lvl=Overhead zone=Legs i=0 n=-
 [frames]
 0 kage -0.37000 0.02000 Attack sweep:0 hp=100 ronin 0.37000 0.02000 Idle - hp=100
 1 kage -0.37000 0.02000 Attack sweep:1 hp=100 ronin 0.37000 0.02000 Crouch - hp=100

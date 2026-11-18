@@ -50,7 +50,7 @@ namespace Kage.Tests
         public void ARoninHoldingBackBlocksTheCrescentAndTakesOnlyChipDamage()
         {
             using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -1.2f, 0.9f, kageMeter: 35f);
-            f.RoninInput.Add(300, fwd: -1);
+            f.RoninInput.Add(300, buttons: "G");
             f.KageInput.Add(1, buttons: "X");
             f.Run(60);
 

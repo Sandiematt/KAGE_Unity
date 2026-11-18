@@ -91,7 +91,7 @@ namespace Kage.Tests
         public void AGuardedHitPublishesBlockedAndTheOnHitCallbackStillFires()
         {
             var f = Fight(61, Foe.Scripted, kageX: -0.4f, roninX: 0.4f);
-            f.RoninInput.Add(200, fwd: -1, dy: -1);      // crouch guard
+            f.RoninInput.Add(200, dy: -1, buttons: "G");      // low guard
             f.KageInput.Add(10).Add(1, dy: -1, buttons: "K");   // leg sweep (low)
             var results = new List<HitResult>();
             f.Kage.onHit += (att, def, info, res) => results.Add(res);

@@ -47,6 +47,7 @@ namespace Kage
                     move?.Evaluate(def, _moveTime + alpha * PlaybackRate, _start, _display);
                     break;
                 case FState.Idle:
+                    if (_guardPose) { BlendTo(Unarmed(_block), sf, 5f); break; }     // the guard: the blade held straight up
                     _target.CopyFrom(Unarmed(_stance));
                     float br = Mathf.Sin(time * 2.4f + (isPlayer ? 0f : 1.3f));
                     _target.hip.y += br * 0.007f;
@@ -64,7 +65,7 @@ namespace Kage
                     BlendTo(_dashAir ? _airDash : (_dashDir > 0 ? _dashF : _dashB), sf, 3f);
                     break;
                 case FState.Skid: BlendTo(_skid, sf, 4f); break;
-                case FState.Crouch: BlendTo(Unarmed(_guardHeld ? _crouchBlock : _crouch), sf, 5f); break;
+                case FState.Crouch: BlendTo(Unarmed(_guardPose ? _crouchBlock : _crouch), sf, 5f); break;
                 case FState.Land:
                     Pose.Blend(def, _land, _landDeep, _landHard, _target);
                     BlendTo(_target, sf, 2.5f);

@@ -16,6 +16,7 @@ namespace Kage
             var d = CharacterDef.FromJs(Id);
             d.partSet = "raikon";
             d.family = WeaponFamilies.Tachi;
+            d.postureMax = 100f;        // a boss's posture bar is larger (SAN-86); SAN-107 tunes it
             d.colors = new FighterColors(KMath.Hex("#FF4A3C"), KMath.Hex("#FFE2DC"), KMath.Hex("#7A0E14"));
             return d;
         }
