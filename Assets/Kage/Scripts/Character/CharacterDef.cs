@@ -48,8 +48,11 @@ namespace Kage
         public float speedMul = 1f;
         /// <summary>Attack playback rate (Footman 0.9). Applied by fractional move playback (ADR-0006, SAN-70).</summary>
         public float moveRate = 1f;
-        /// <summary>Posture bar size; larger for bosses. Used by the posture bar (SAN-86).</summary>
-        public float postureMax = 100f;
+        /// <summary>
+        /// Posture bar size (SAN-86): 60 for Kage and regular foes, larger for bosses (Raikon 100). A guarded hit fills it by
+        /// damage x 1.5 (guard.json), so about two blocked strings break a regular guard.
+        /// </summary>
+        public float postureMax = 60f;
         /// <summary>Rigidbody2D mass; knockback impulses are divided by it (SAN-68).</summary>
         public float mass = 1f;
         /// <summary>Extra multiplier on knockback received, on top of mass.</summary>

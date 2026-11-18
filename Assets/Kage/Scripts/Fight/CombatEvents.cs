@@ -40,7 +40,7 @@ namespace Kage
         public readonly string MoveId;           // move, projectile, hazard, ability or rage-art id
         public readonly int Window;              // index of the hit window in the move; -1 when not a window
         public readonly float Damage;            // health removed from Target after every multiplier, crit and defence
-        public readonly float Posture;           // posture added (SAN-86); 0 until then
+        public readonly float Posture;           // posture added: to Target (Hit, Blocked); the filled bar (GuardBroken) (SAN-86)
         public readonly bool Crit;
         public readonly HitLevel Level;
         public readonly HitZone Zone;
@@ -67,10 +67,20 @@ namespace Kage
         public static CombatEvent MoveStarted(int frame, Fighter source, string moveId) =>
             new(frame, CombatEventType.MoveStarted, source, null, null, null, moveId);
 
-        /// <summary>A hit result: <paramref name="type"/> is Hit, Blocked or Countered (later Parried, PerfectDodged).</summary>
+        /// <summary>
+        /// A hit result: <paramref name="type"/> is Hit, Blocked or Countered (later Parried, PerfectDodged).
+        /// <paramref name="posture"/> is the posture the target took (SAN-86): damage x factor on Blocked, a little on Hit.
+        /// </summary>
         public static CombatEvent HitResolved(int frame, CombatEventType type, Fighter source, Fighter target, string targetId,
-            string moveId, int window, float damage, bool crit, HitLevel level, HitZone zone, Vector2 contact, Vector2 knockback) =>
-            new(frame, type, source, target, null, targetId, moveId, window, damage, 0f, crit, level, zone, contact, knockback);
+            string moveId, int window, float damage, bool crit, HitLevel level, HitZone zone, Vector2 contact, Vector2 knockback, float posture = 0f) =>
+            new(frame, type, source, target, null, targetId, moveId, window, damage, posture, crit, level, zone, contact, knockback);
+
+        /// <summary>
+        /// Target's posture filled and its guard broke (SAN-86). Source is the fighter whose hit (or parry, or clash) filled it;
+        /// MoveId and Window are that hit's; Posture is the bar that filled (the target's posture maximum).
+        /// </summary>
+        public static CombatEvent GuardBroken(int frame, Fighter source, Fighter target, string moveId, int window, float postureMax, Vector2 contact) =>
+            new(frame, CombatEventType.GuardBroken, source, target, null, null, moveId, window, posture: postureMax, contact: contact);
 
         public static CombatEvent KnockedOut(int frame, Fighter source, Fighter target, string moveId, Vector2 contact, Vector2 impulse) =>
             new(frame, CombatEventType.KnockedOut, source, target, null, null, moveId, contact: contact, knockback: impulse);

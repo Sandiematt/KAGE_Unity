@@ -79,31 +79,44 @@ namespace Kage
             rb.AddForce(v * rb.mass, ForceMode2D.Impulse);
         }
 
+        /// <summary>
+        /// Defence steps 4 to 7 for a hit that reached this fighter (ADR-0004): counter window, parry
+        /// (<see cref="ParryCheck"/>), guard (<see cref="TryGuard"/>), then the hit itself: the guaranteed critical of a
+        /// guard-break, damage, a little posture, armour, launch or hitstun, KO.
+        /// </summary>
         public HitResult ReceiveHit(HitInfo info)
         {
             float before = health;
-            var res = ReceiveHitCore(info);
-            LastDamageTaken = before - health;
+            _hitPosture = 0f;
+            var res = ReceiveHitCore(ref info);
+            LastDamageTaken = before - health;      // clears the posture and crit of the last hit, then:
+            LastPostureTaken = _hitPosture;
+            LastHitCrit = res == HitResult.Hit && info.crit;
+            LastHitDamage = info.dmg;
             return res;
         }
 
-        HitResult ReceiveHitCore(HitInfo info)
+        HitResult ReceiveHitCore(ref HitInfo info)
         {
             var w = info.w;
-            // Mirror Guard: parry and teleport-slash behind the attacker
+            // step 4, the counter window. Mirror Guard: parry and teleport-slash behind the attacker
             if (state == FState.Attack && move != null && move.counterFrom >= 0 && moveFrame >= move.counterFrom && moveFrame <= move.counterTo && w.level != HitLevel.Unblockable)
             {
                 TriggerCounter(info.attacker);
                 return HitResult.Countered;
             }
 
-            if (TryGuard(info, out var guarded)) return guarded;
+            if (TryParry(info, out var parried)) return parried;      // step 5 (SAN-91)
+            if (TryGuard(info, out var guarded)) return guarded;      // step 6
 
+            // step 7: the hit
+            ApplyGuardBreakCrit(ref info);
             if (state == FState.Down)
             {
                 // ground hit: damage and a jolt, but no re-launch (prevents infinite down-loops)
                 _otgHits++;
                 health = Mathf.Max(0f, health - info.dmg);
+                CleanHitPosture(info);
                 rig.Flash(Color.white, 0.8f, 14f);
                 Knock(KnockVelocity(new Vector2(info.kb.x * 0.25f, 0f)));
                 KickFall(info);
@@ -113,9 +126,10 @@ namespace Kage
 
             health = Mathf.Max(0f, health - info.dmg);
             meter = Mathf.Min(100f, meter + 3f + info.dmg * 0.3f);
+            CleanHitPosture(info);
             rig.Flash(Color.white, 0.95f, 14f);
 
-            // armour (ADR-0004 step 7): the damage lands, the flinch doesn't, and a held victim stays held (Fighter.Armour.cs)
+            // armour (ADR-0004 step 7): the damage and posture land, the flinch doesn't, and a held victim stays held (Fighter.Armour.cs)
             bool resists = health > 0f && ResistsFlinch(info);
             if (_victim != null && !resists) ReleaseVictim(false);
 

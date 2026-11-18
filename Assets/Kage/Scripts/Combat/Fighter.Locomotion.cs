@@ -79,7 +79,6 @@ namespace Kage
         {
             FaceOpponent();
             fwd = inp.dx == 0 ? 0 : (int)Mathf.Sign(inp.dx * facing);
-            _guardHeld = fwd < 0 && controlEnabled;
             if (TryBuffered(inp, fwd)) return;
 
             bool rollF = facing > 0 ? inp.tapRight2 : inp.tapLeft2;
@@ -88,6 +87,7 @@ namespace Kage
             if (rollF && inp.dy >= 0) { StartMove(moves.roll); return; }
             if (rollB && inp.dy >= 0) { StartMove(moves.backflip); return; }
             if ((inp.dy > 0 || _jumpBuf <= 5) && Grounded) { Jump(fwd); return; }
+            if (GuardStance(inp)) return;         // Guard held: stand (or crouch) in guard; walking backward doesn't guard
 
             float dt = Time.fixedDeltaTime;
             Vector2 v = rb.linearVelocity;

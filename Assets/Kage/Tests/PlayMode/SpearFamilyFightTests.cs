@@ -291,7 +291,7 @@ namespace Kage.Tests
         public void A_low_guard_with_the_spear_keeps_the_point_off_the_floor()
         {
             var f = Alone();
-            f.KageInput.Add(40, dy: -1, fwd: -1);     // crouch and hold back: the low guard
+            f.KageInput.Add(40, dy: -1, buttons: "G");     // Guard with Down: the low guard
             f.Run(40);
             var cur = f.Kage.rig.current;
             Assert.Greater(f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y, -0.03f,

@@ -39,7 +39,7 @@ namespace Kage.Tests
                     ("cleaver_idle", () => Idle("onikiri", 40)),
                     ("cleaver_walk", () => Idle("onikiri", 18, fwd: 1)),
                     ("cleaver_crouch", () => Idle("onikiri", 40, dy: -1)),
-                    ("cleaver_low_guard", () => Idle("onikiri", 40, dy: -1, fwd: -1)),
+                    ("cleaver_low_guard", () => Idle("onikiri", 40, dy: -1, buttons: "G")),
                 },
                 new (string, Func<Color32[]>)[]
                 {
@@ -113,11 +113,11 @@ namespace Kage.Tests
             UnityEngine.Object.DestroyImmediate(sheet);
         }
 
-        static Color32[] Idle(string weapon, int frames, int fwd = 0, int dy = 0, bool closeUp = false, bool bladeUp = false)
+        static Color32[] Idle(string weapon, int frames, int fwd = 0, int dy = 0, bool closeUp = false, bool bladeUp = false, string buttons = "")
         {
             using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f, kageDef: KageWith(weapon));
             f.Run(2);
-            f.KageInput.Add(frames, fwd: fwd, dy: dy);
+            f.KageInput.Add(frames, fwd: fwd, dy: dy, buttons: buttons);
             f.Run(frames);
             if (bladeUp) return Render((Vector2)f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal * 0.5f), 0.55f);
             return closeUp ? Render((Vector2)f.Kage.rig.World(B.HandF, Vector2.zero) + new Vector2(0.15f, 0.1f), 0.5f) : Frame(f);

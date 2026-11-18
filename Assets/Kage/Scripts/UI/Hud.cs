@@ -6,15 +6,15 @@ namespace Kage
 {
     /// <summary>
     /// Fight HUD built in code (uGUI): slanted health bars with a lagging damage trail, shadow
-    /// meters with the 35% (Crescent) and 100% (Thousand Shadows) marks, round pips, timer,
+    /// meters with the 35% (Crescent) and 100% (Thousand Shadows) marks, posture bars (SAN-86), round pips, timer,
     /// announcer, technique banner, combo counter, floating combat text, move list, screen flash.
     /// </summary>
     public class Hud : MonoBehaviour
     {
         class Side
         {
-            public Text name, combo, meterLabel;
-            public InkBar hp, trail, meter, hpBack, meterBack;
+            public Text name, combo, meterLabel, postureLabel;
+            public InkBar hp, trail, meter, hpBack, meterBack, posture, postureBack;
             public Image[] pips;
             public float trailVal = 1f, comboShow;
             public int lastCombo;
@@ -61,7 +61,7 @@ namespace Kage
             _announce = MakeText("Announce", _root, 132, TextAnchor.MiddleCenter, Color.white, new Vector2(0.5f, 0.5f), new Vector2(0, 90), new Vector2(1600, 200), true);
             _banner = MakeText("Banner", _root, 46, TextAnchor.MiddleCenter, Color.white, new Vector2(0.5f, 0.5f), new Vector2(0, -150), new Vector2(1400, 80), true);
             _hint = MakeText("Hint", _root, 19, TextAnchor.LowerLeft, new Color(1, 1, 1, 0.62f), new Vector2(0f, 0f), new Vector2(380, 54), new Vector2(720, 90), false);
-            _hint.text = "MOVE  A/D   JUMP  W   CROUCH  S   GUARD  hold back\nPUNCH  J   KICK  K   KATANA  L   SHADOW ART  I   (↓+I at full meter)\nTAB move list   F2 duel/training   F3 AI level   R restart";
+            _hint.text = "MOVE  A/D   JUMP  W   CROUCH  S   GUARD  " + KeyBindings.Label(GameAction.Guard, InputDeviceKind.Keyboard) + " (+S low)\nPUNCH  J   KICK  K   KATANA  L   SHADOW ART  I   (↓+I at full meter)\nTAB move list   F2 duel/training   F3 AI level   R restart";
             _training = MakeText("Training", _root, 24, TextAnchor.MiddleCenter, KMath.Hex("#F06F6E"), new Vector2(0.5f, 1f), new Vector2(0, -200), new Vector2(900, 34), true);
             _announce.text = _banner.text = "";
 
@@ -86,6 +86,11 @@ namespace Kage
             Place(notch.rectTransform, anchor, new Vector2(sx * (330 - 237 + 474 * 0.35f), -104), new Vector2(3, 18));
             s.meterLabel = MakeText("MeterLabel", _root, 15, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.6f), anchor, new Vector2(sx * 680, -104), new Vector2(200, 20), false);
             s.meterLabel.text = "SHADOW";
+            // posture (SAN-86): fills as the fighter guards; full breaks the guard
+            s.postureBack = MakeBar("PostureBack", anchor, new Vector2(sx * 330, -121), new Vector2(480, 9), right, new Color(0.06f, 0.02f, 0.03f, 0.85f), new Color(0.06f, 0.02f, 0.03f, 0.85f));
+            s.posture = MakeBar("Posture", anchor, new Vector2(sx * 330, -121), new Vector2(474, 5), right, KMath.Hex("#8A7A5A"), KMath.Hex("#FFE7A8"));
+            s.postureLabel = MakeText("PostureLabel", _root, 13, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.5f), anchor, new Vector2(sx * 680, -121), new Vector2(200, 18), false);
+            s.postureLabel.text = "POSTURE";
             s.name = MakeText("Name", _root, 34, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, Color.white, anchor, new Vector2(sx * 250, -26), new Vector2(400, 44), true);
             s.pips = new Image[2];
             for (int i = 0; i < 2; i++)
@@ -180,12 +185,16 @@ namespace Kage
                 "  L · L · L ............ Iai Draw → Rising Moon (launcher) → Kage Cleave (overhead)\n" +
                 "  → + L ................ Shadow Step (dash through)   ↓ + L .... Low Reap\n" +
                 "  ← + L ................ Mirror Guard (parry → Kage Counter)   air L .. Crescent Spin\n\n" +
+                "<b><color=#F06F6E>GUARD</color></b>  (O or B · gamepad RB / RT)\n" +
+                "  hold O ............... Guard: blocks high and mid hits; overheads too   O + ↓ .. Low guard: blocks lows, not overheads\n" +
+                "  Guarding fills POSTURE; a full bar breaks the guard (helpless, next hit is a CRITICAL). It drains after a second.\n" +
+                "  Walking backward no longer guards. Attack, dash, roll or jump straight out of the guard.\n\n" +
                 "<b><color=#F06F6E>SHADOW ARTS</color></b>\n" +
                 "  I (35% meter) ........ Crimson Crescent (projectile)\n" +
                 "  ↓ + I (100% meter) ... Thousand Shadows\n\n" +
                 "<b><color=#F06F6E>MOVEMENT</color></b>\n" +
                 "  hold → walk, keep holding to run   Shift dash (→ / ← / air)   dash + hold → sprint\n" +
-                "  W / Space jump (tap = short hop), again in the air = double jump   hold ← guard\n" +
+                "  W / Space jump (tap = short hop), again in the air = double jump   ← walk back\n" +
                 "  →→ Shadow Roll (passes through)   ←← Backflip\n" +
                 "  When knocked down press any button for a quick kip-up.\n" +
                 "  Mixing J / K / L chains is allowed: J→K, J→L, K→L, J·J→K …";
@@ -193,6 +202,9 @@ namespace Kage
         }
 
         public void ToggleMoveList() => _moveListPanel.SetActive(!_moveListPanel.activeSelf);
+
+        /// <summary>The posture bar's fill (0..1) on the left (Kage's) or right (the opponent's) side, as last drawn.</summary>
+        public float PostureBar(bool right) => (right ? _r : _l).posture.fill;
         public bool MoveListOpen => _moveListPanel.activeSelf;
 
         static Sprite CircleSprite()
@@ -274,7 +286,7 @@ namespace Kage
         {
             if (f == null || !f.gameObject.activeInHierarchy)
             {
-                s.hp.Set(1f); s.trail.Set(1f); s.meter.Set(0f);
+                s.hp.Set(1f); s.trail.Set(1f); s.meter.Set(0f); s.posture.Set(0f);
                 return;
             }
             float hp = f.health / f.maxHealth;
@@ -285,6 +297,10 @@ namespace Kage
             bool full = f.meter >= 100f;
             s.meter.color = full ? Color.Lerp(Color.white, new Color(1.6f, 1.6f, 1.6f), Mathf.PingPong(Time.unscaledTime * 3f, 1f)) : Color.white;
             s.meterLabel.text = full ? "SHADOW  ·  READY" : (f.meter >= 35f ? "SHADOW  ·  CRESCENT" : "SHADOW");
+            s.posture.Set(f.PostureFill);
+            bool broken = f.GuardBroken;
+            s.posture.color = broken ? Color.Lerp(Color.white, new Color(1.6f, 0.4f, 0.35f), Mathf.PingPong(Time.unscaledTime * 6f, 1f)) : Color.white;
+            s.postureLabel.text = broken ? "POSTURE  ·  BROKEN" : "POSTURE";
             for (int i = 0; i < s.pips.Length; i++)
                 s.pips[i].color = i < f.roundsWon ? (f == _lFighter ? KMath.Hex("#F06F6E") : Palette.Amber) : new Color(1, 1, 1, 0.15f);
 

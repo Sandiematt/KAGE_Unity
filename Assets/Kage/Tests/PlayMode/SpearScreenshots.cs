@@ -40,7 +40,7 @@ namespace Kage.Tests
                     ("spear_idle", () => Idle("mizuchi", 40)),
                     ("spear_walk", () => Idle("mizuchi", 18, fwd: 1)),
                     ("spear_crouch", () => Idle("mizuchi", 40, dy: -1)),
-                    ("spear_low_guard", () => Idle("mizuchi", 40, dy: -1, fwd: -1)),
+                    ("spear_low_guard", () => Idle("mizuchi", 40, dy: -1, buttons: "G")),
                 },
                 // the weapon button
                 new (string, Func<Color32[]>)[]
@@ -104,11 +104,11 @@ namespace Kage.Tests
             UnityEngine.Object.DestroyImmediate(sheet);
         }
 
-        static Color32[] Idle(string weapon, int frames, int fwd = 0, int dy = 0, bool closeUp = false)
+        static Color32[] Idle(string weapon, int frames, int fwd = 0, int dy = 0, bool closeUp = false, string buttons = "")
         {
             using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f, kageDef: KageWith(weapon));
             f.Run(2);
-            f.KageInput.Add(frames, fwd: fwd, dy: dy);
+            f.KageInput.Add(frames, fwd: fwd, dy: dy, buttons: buttons);
             f.Run(frames);
             return closeUp ? Render((Vector2)f.Kage.rig.World(B.HandF, Vector2.zero) + new Vector2(0.15f, 0.1f), 0.5f) : Frame(f);
         }

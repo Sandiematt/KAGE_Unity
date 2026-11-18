@@ -55,6 +55,10 @@ namespace Kage
         public static Pose Land() => new Pose().Hip(0f, -0.2f, 0f).Chest(-14f).Head(10f)
             .Feet(0.22f, -0.24f).HandN(0.22f, 1.0f).HandF(0.26f, 0.75f).Blade(-30f);
 
+        /// <summary>Guard broken (SAN-86): knocked upright and open, the blade thrown up and back, the near arm flung wide.</summary>
+        public static Pose GuardBroken() => new Pose().Hip(-0.08f, -0.06f, 10f).Chest(22f).Neck(8f).Head(18f)
+            .Feet(0.26f, -0.3f).HandN(-0.16f, 1.22f, 70f).HandF(0.02f, 1.42f).Blade(140f);
+
         public static Pose HurtHigh() => new Pose().Hip(-0.05f, -0.08f, 6f).Chest(16f).Neck(8f).Head(22f)
             .Feet(0.22f, -0.28f).HandN(0.0f, 1.0f, 40f).HandF(-0.02f, 0.82f).Blade(-120f);
 
