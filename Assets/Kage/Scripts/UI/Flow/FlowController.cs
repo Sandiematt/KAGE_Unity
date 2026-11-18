@@ -12,6 +12,8 @@ namespace Kage
         Stage,
         Results,
         Settings,
+        /// <summary>The Armory (SAN-90): reached from the title, the loadout and the results, and back to where it came from.</summary>
+        Armory,
     }
 
     /// <summary>
@@ -56,6 +58,12 @@ namespace Kage
 
         /// <summary>Turning dev mode off was asked for and waits for the player's answer.</summary>
         public bool DevOffPending { get; private set; }
+
+        /// <summary>The Armory's state while it is open (SAN-90); null on every other screen.</summary>
+        public ArmoryController Armory { get; private set; }
+
+        /// <summary>The screen the Armory was opened from (Title, Loadout or Results): Back returns there.</summary>
+        public FlowScreen ArmoryFrom { get; private set; }
 
         /// <summary>Raised after anything the screens show changed (screen, selection, pause, save).</summary>
         public event Action Changed;
@@ -214,6 +222,29 @@ namespace Kage
             Raise();
         }
 
+        // ---------------- armory ----------------
+
+        /// <summary>
+        /// Opens the Armory from the title, the pre-fight loadout or the results (the JS game's Armory tile, Change gear and Upgrade).
+        /// It buys, upgrades and equips through the rules and saves each change; Back returns to where it came from.
+        /// </summary>
+        public bool OpenArmory()
+        {
+            if (Screen != FlowScreen.Title && Screen != FlowScreen.Loadout && Screen != FlowScreen.Results) return false;
+            ArmoryFrom = Screen;
+            Armory = new ArmoryController(Save, s => persist(s), Raise);
+            Screen = FlowScreen.Armory;
+            Raise();
+            return true;
+        }
+
+        void CloseArmory()
+        {
+            Armory = null;
+            Screen = ArmoryFrom;
+            Raise();
+        }
+
         // ---------------- back ----------------
 
         /// <summary>The Back / Escape key: one step back, whatever screen this is.</summary>
@@ -238,6 +269,9 @@ namespace Kage
                     break;
                 case FlowScreen.Results:
                     ContinueFromResults();
+                    break;
+                case FlowScreen.Armory:
+                    CloseArmory();
                     break;
             }
         }

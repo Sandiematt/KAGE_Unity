@@ -98,7 +98,7 @@ namespace Kage
 
             v.Buttons = win
                 ? new[] { new ResultButton { Key = "continue", Label = "Continue" }, new ResultButton { Key = "retry", Label = "Replay" } }
-                : new[] { new ResultButton { Key = "retry", Label = "Retry" }, new ResultButton { Key = "continue", Label = "Map" } };
+                : new[] { new ResultButton { Key = "retry", Label = "Retry" }, new ResultButton { Key = "armory", Label = "Upgrade" }, new ResultButton { Key = "continue", Label = "Map" } };
             return v;
         }
 

@@ -200,6 +200,8 @@ namespace Kage.Tests
             Assert.AreEqual("retry", Focus);
 
             flow.Send(MenuCommand.Right);
+            Assert.AreEqual("armory", Focus, "Upgrade sits between Retry and Map (JS)");
+            flow.Send(MenuCommand.Right);
             Assert.AreEqual("continue", Focus);
             flow.Send(MenuCommand.Submit);          // Map
             Assert.AreEqual(FlowScreen.Campaign, flow.Controller.Screen);
