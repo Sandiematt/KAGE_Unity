@@ -86,6 +86,27 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void The_cleaver_family_is_registered_with_Onikiri_a_heavy_two_handed_grip_and_a_blade_shorter_than_the_spears()
+        {
+            var cleaver = WeaponFamilies.Get("cleaver");
+            Assert.IsNotNull(cleaver);
+            Assert.AreEqual("onikiri", cleaver.referenceWeapon);
+            Assert.AreEqual(GripPose.HeavyTwoHand, cleaver.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, cleaver.rageArt);
+            Assert.IsNotNull(cleaver.visual);
+            Assert.Greater(cleaver.bladeLength, WeaponFamilies.Get("katana").bladeLength, "a cleaver is longer than the katana's blade");
+            Assert.Less(cleaver.bladeLength, WeaponFamilies.Get("spear").bladeLength, "the spear keeps the longest line");
+        }
+
+        [Test]
+        public void The_heavy_grip_holds_the_hands_further_apart_than_the_katana_and_closer_than_the_polearm()
+        {
+            Assert.Less(Pose.HeavySpacing, Pose.GripSpacing);
+            Assert.Greater(Pose.HeavySpacing, Pose.PolearmSpacing);
+            Assert.Less(Pose.HeavyPommel, Pose.HeavySpacing, "it slides back towards the pommel");
+        }
+
+        [Test]
         public void The_polearm_holds_its_hands_further_apart_than_the_katana()
         {
             Assert.Less(Pose.PolearmSpacing, 3f * Pose.GripSpacing, "a forearm or more behind the lead hand, against a fist's width");
@@ -103,7 +124,7 @@ namespace Kage.Tests
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "mizuchi", "yamigama", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "yamigama", "iwakudaki", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----
@@ -143,6 +164,21 @@ namespace Kage.Tests
             AssertCombat("mizuchi", 1, 1, 1, 1);
             AssertCombat("mizuchi", 8, 1.56, 1.175, 1.105);
             AssertCombat("mizuchi", 3, 1.16, 1.05, 1.03);
+        }
+
+        [Test]
+        public void Onikiri_at_level_1_is_x1_and_gains_the_JS_amounts_per_level()
+        {
+            AssertCombat("onikiri", 1, 1, 1, 1);
+            AssertCombat("onikiri", 8, 1.56, 1.175, 1.105);
+            AssertCombat("onikiri", 3, 1.16, 1.05, 1.03);
+        }
+
+        [TestCase("raider_cleaver")]
+        [TestCase("tyrant_cleaver")]
+        public void The_cleaver_foes_weapons_are_measured_against_Onikiri(string weapon)
+        {
+            AssertCombat(weapon, 1, 1, 1, 1);     // JS stats [82, 38, 54], the same as Onikiri
         }
 
         [TestCase("sentinel_spear")]

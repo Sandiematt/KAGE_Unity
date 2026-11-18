@@ -267,8 +267,8 @@ namespace Kage.Tests
             yield return null;
             Release(kb.f8Key);
             yield return null;
-            Assert.AreEqual("mizuchi", game.player.WeaponId, "the next registered player weapon: the spear family's Mizuchi");
-            Assert.AreEqual("spear", game.player.Family.id);
+            Assert.AreEqual("onikiri", game.player.WeaponId, "the next registered player weapon: the cleaver family's Onikiri");
+            Assert.AreEqual("cleaver", game.player.Family.id);
             Press(kb.leftShiftKey);
             yield return null;
             Press(kb.f8Key);
@@ -281,7 +281,7 @@ namespace Kage.Tests
             while (game.player.WeaponId != "fists" && cycled++ < 20) game.CycleWeapon();
             Assert.AreEqual("fists", game.player.WeaponId, "the cycle wraps to bare hands");
             var list = WeaponFamilies.PlayableWeapons();
-            Assert.AreEqual(list.Length - System.Array.IndexOf(list, "mizuchi"), cycled, "from the second weapon on through the rest of the list");
+            Assert.AreEqual(list.Length - System.Array.IndexOf(list, "onikiri"), cycled, "from the second weapon on through the rest of the list");
             Assert.AreEqual("fists", game.player.Family.id);
         }
     }
