@@ -47,12 +47,12 @@ namespace Kage
         }
 
         /// <summary>JS wPills: the coin and jade counts at the top right.</summary>
-        public static void Pills(Transform p, Rules.SaveData s, float rightEdge = 1560f)
+        public static void Pills(Transform p, Rules.SaveData s, float rightEdge = 1560f, float y = 22f)
         {
             float gemW = 168f, coinW = 192f;
             float gemX = rightEdge - gemW, coinX = gemX - 16f - coinW;
-            Pill(p, coinX, 22, coinW, true, UiParts.Num(s.coins));
-            Pill(p, gemX, 22, gemW, false, UiParts.Num(s.gems));
+            Pill(p, coinX, y, coinW, true, UiParts.Num(s.coins));
+            Pill(p, gemX, y, gemW, false, UiParts.Num(s.gems));
         }
 
         static void Pill(Transform p, float x, float y, float w, bool coin, string value)

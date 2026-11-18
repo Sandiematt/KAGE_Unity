@@ -72,3 +72,10 @@ A finished stage hands `GameRules.CompleteStage(save, stageId, FightResult resul
 - A Unity save is a JS save plus `devMode`. JS rules-test fixtures can be used as-is.
 - `Kage.Rules` depends on the Newtonsoft package (`com.unity.nuget.newtonsoft-json`, added by SAN-62).
 - Dev mode and real progress never mix: turning dev mode off always starts clean. Unlike the JS game, there is one save file, not a separate dev save. That is the spec's choice.
+
+## Notes from the implementation (SAN-90, the Armory and the save)
+
+- Buying, upgrading and equipping change the save only through `GameRules.BuyItem`, `UpgradeItem` and `EquipItem` (coins, gems, `owned` levels, `equipped`), and `FlowController` writes the save (`SaveStore`) after each one that happened, so the file always matches the screen. A refused action (not enough coins or gems, a locked or owned item, the level cap, an item not owned) changes nothing and writes nothing.
+- The next stage's fight and the pre-fight tableau read the loadout from that same save (`KageCharacter.Def(save)`, `LoadoutKey`), so the new gear is on Kage the moment the player is back on the loadout screen. In dev mode every item is owned, so the Armory shows Equip and Upgrade everywhere and nothing is Buy or Locked; the review images use a fresh save with a few items instead.
+- The Armory's own selection (tab, row, tile) is screen state only; it is never saved.
+
