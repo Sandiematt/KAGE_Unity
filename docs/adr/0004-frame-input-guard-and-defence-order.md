@@ -204,6 +204,6 @@ A block also builds Rage: `Fighter.BlockRageGain(damage)` (SAN-84; JS damage × 
 | `afterimages`, `afterimageLife`, `afterimageSpacing`, `afterimageTint` | 3, 0.45 s, 0.18 m, light blue | the afterimage trail |
 | `screenTint`, `screenTintSeconds` | blue at 0.3, 0.4 s | the screen tint |
 
-**Baseline.** No baseline scenario perfect-dodges (the baseline replay is unchanged, both the new and the legacy copies).
+**Baseline and the legacy switch.** No baseline scenario perfect-dodges, so the baseline replay is unchanged. Under the legacy switch (hits resolved inside the attacker's tick, `Fighter.TryTarget`) step 2 never runs, as before SAN-65: the legacy path has no perfect dodge, and its baseline copy is unchanged too. The world time scale itself works on either path.
 
 **Tests.** `PerfectDodgeTests` (fight harness: dash inside and outside the window, roll and backflip on both sides of the window's last frame, standing, walking and guarding never dodge, the dash perk's wider window, the meter gained once, one per dash and again on the next dash, the event's zero damage after an earlier hit, foes never dodge, the world slowed for its frames but not Kage, slowed walking, jumping and freezing, projectiles and hazards at their owner's scale, determinism of a fight with a perfect dodge), `WorldTimeScaleTests` (EditMode: the clock's counting), `TuningTests.TheShippedDodgeTuningIsTheSpecsPerfectDodgeNumbers`. Review sheet: `PerfectDodgeScreenshots` → `Screenshots/review/SAN-92/`.
