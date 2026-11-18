@@ -41,7 +41,8 @@ namespace Kage.Tests
 
             foreach (var fighter in new[] { f.Kage, f.Ronin })
             {
-                var boxes = fighter.GetComponentsInChildren<Hurtbox>();
+                // by owner, not by hierarchy: a fighter in a physical fall (SAN-113) has its bones on ragdoll bodies outside its object
+                var boxes = Object.FindObjectsByType<Hurtbox>(FindObjectsSortMode.None).Where(b => ReferenceEquals(b.Owner, fighter)).ToArray();
                 Assert.AreEqual(fighter.def.hurt.Count, boxes.Length, fighter.FighterId);
                 foreach (var b in boxes)
                 {

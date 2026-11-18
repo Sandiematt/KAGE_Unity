@@ -37,12 +37,15 @@ namespace Kage
             float s = Mathf.Abs(transform.lossyScale.y);
             Vector2 pivot = def.pivot[(int)B.Hips];
             Vector2 local;
-            float angle;
+            float angle, settle = 0f;
             if (state == FState.Down)
             {
                 var lie = _liePose ?? _lie;
                 local = new Vector2(pivot.x + lie.hip.x, pivot.y + lie.hip.y);
                 angle = lie.a[(int)B.Hips];
+                // the impact folds the limbs; then the muscles settle the body into the authored lie
+                settle = Mathf.Clamp01((stateFrame - 4) / 14f);
+                _ragdoll.DrivePose(lie, facing, Mathf.Lerp(8f, 160f, settle), Mathf.Lerp(2f, 18f, settle));
             }
             else
             {
@@ -50,9 +53,11 @@ namespace Kage
                 float h = Mathf.Lerp(LieHipsHeight, pivot.y, Mathf.Clamp01(rb.position.y / 0.7f));
                 local = new Vector2(pivot.x, h);
                 angle = _tumbleAng;
+                _ragdoll.DrivePose(_tumble, facing, 30f, 4f);      // loose: the limbs flail round the tumble shape
             }
             Vector2 target = rb.position + new Vector2(local.x * facing, local.y) * s;
-            _ragdoll.Drive(target, rb.linearVelocity, facing * angle, 1f);
+            // once settled, a firmer pull slides the body (against the ground's friction) to where it lies in gameplay
+            _ragdoll.Drive(target, rb.linearVelocity, facing * angle, 1f, 1f + 2f * settle);
         }
 
         /// <summary>The fall is over (get-up, stagger, round reset): the captured fallen pose becomes the rig's pose again.</summary>

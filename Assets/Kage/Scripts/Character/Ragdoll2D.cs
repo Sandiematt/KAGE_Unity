@@ -103,10 +103,10 @@ namespace Kage
         /// and a torque turns the hips and chest towards <paramref name="angleTarget"/> (world degrees), scaled by
         /// <paramref name="turnWeight"/>. Ground contacts, joint limits and the limbs' own momentum do the rest.
         /// </summary>
-        public void Drive(Vector2 hipsTarget, Vector2 targetVel, float angleTarget, float turnWeight)
+        public void Drive(Vector2 hipsTarget, Vector2 targetVel, float angleTarget, float turnWeight, float posGain = 1f)
         {
             var hips = bodies[B.Hips];
-            Vector2 acc = PosK * (hipsTarget - hips.position) + PosD * (targetVel - hips.linearVelocity);
+            Vector2 acc = PosK * posGain * (hipsTarget - hips.position) + PosD * Mathf.Sqrt(posGain) * (targetVel - hips.linearVelocity);
             acc = Vector2.ClampMagnitude(acc, MaxAccel);
             foreach (var b in Bodies) bodies[b].AddForce(acc * bodies[b].mass);
             if (turnWeight <= 0f) return;
@@ -120,6 +120,31 @@ namespace Kage
         }
 
         static readonly B[] TurnBodies = { B.Hips, B.Chest };
+
+        /// <summary>
+        /// Joint muscles: a torque pair on every joint turns the child towards its angle in <paramref name="pose"/>
+        /// (plain bone angles, root space facing right; <paramref name="facing"/> mirrors them), with stiffness
+        /// <paramref name="k"/> (1/s²) and damping <paramref name="damp"/> (1/s). Weak muscles let the limbs flail and
+        /// the impact fold them; stronger ones settle the body into the authored lie.
+        /// </summary>
+        public void DrivePose(Pose pose, float facing, float k, float damp)
+        {
+            var d = _rig.def;
+            foreach (var b in Bodies)
+            {
+                if (b == B.Hips) continue;
+                var jp = JointParent(b);
+                float rel = 0f;
+                for (var x = b; x != jp && x != B.Root; x = d.parent[(int)x]) rel += pose.a[(int)x];
+                var child = bodies[b];
+                var parent = bodies[jp];
+                float err = Mathf.DeltaAngle(child.rotation - parent.rotation, facing * rel) * Mathf.Deg2Rad;
+                float w = (child.angularVelocity - parent.angularVelocity) * Mathf.Deg2Rad;
+                float torque = (k * err - damp * w) * child.inertia;
+                child.AddTorque(torque);
+                parent.AddTorque(-torque);
+            }
+        }
 
         /// <summary>Ends a fall as a K.O.: the tether lets go and the finishing blow throws the body.</summary>
         public void Release(Vector2 impulse, Vector2 contact)

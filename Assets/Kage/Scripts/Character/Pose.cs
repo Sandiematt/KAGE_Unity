@@ -138,10 +138,11 @@ namespace Kage
             float rHandF = rArmFL + a[(int)B.HandF];
             if (hasSwAbs) a[(int)B.Sword] = KMath.Wrap(swAbs - d.bladeBindAngle - rHandF);
 
-            if (grip && ik[(int)Limb.ArmN]) target[(int)Limb.ArmN] = GripWrist(d, shF, rArmFU, rArmFL, rHandF, shN);
+            float handN = rHandF;
+            if (grip && ik[(int)Limb.ArmN]) target[(int)Limb.ArmN] = GripWrist(d, shF, rArmFU, rArmFL, rHandF, shN, out handN);
             Limb2(d, Limb.ArmN, B.ArmNU, B.ArmNL, B.HandN, R[(int)B.Chest], shN, -1f);
             if (grip && ik[(int)Limb.ArmN])
-                a[(int)B.HandN] = KMath.Wrap(rHandF - (R[(int)B.Chest] + a[(int)B.ArmNU] + a[(int)B.ArmNL]));
+                a[(int)B.HandN] = KMath.Wrap(handN - (R[(int)B.Chest] + a[(int)B.ArmNU] + a[(int)B.ArmNL]));
             _resolved = true;
         }
 
@@ -150,27 +151,33 @@ namespace Kage
 
         /// <summary>
         /// The near wrist goal for the two-handed grip: the near fist on the handle a fist behind the far hand,
-        /// with the hand turned like the far hand. When the near shoulder can't reach that far the fist slides
-        /// back along the handle towards the pommel.
+        /// the hand turned like the far hand (<paramref name="handWorld"/>, root-space degrees). When the near
+        /// shoulder can't reach that, the fist slides back along the handle towards the pommel, and if that is
+        /// still too far the hand turns to point its fist at the handle, which adds the hand's length to the reach.
         /// </summary>
-        Vector2 GripWrist(RigDef d, Vector2 shF, float rArmFU, float rArmFL, float rHandF, Vector2 shN)
+        Vector2 GripWrist(RigDef d, Vector2 shF, float rArmFU, float rArmFL, float rHandF, Vector2 shN, out float handWorld)
         {
+            handWorld = rHandF;
             Vector2 elbow = shF + KMath.Rot(d.BindLocal(B.ArmFL), rArmFU);
             Vector2 wristF = elbow + KMath.Rot(d.BindLocal(B.HandF), rArmFL);
             Vector2 pivot = wristF + KMath.Rot(d.BindLocal(B.Sword), rHandF);
             Vector2 axis = KMath.Dir(rHandF + a[(int)B.Sword] + d.bladeBindAngle);
             Vector2 fistToWrist = -KMath.Rot(d.fistLocal, rHandF);
             float reach = (d.BindLocal(B.ArmNL).magnitude + d.BindLocal(B.HandN).magnitude) * 0.995f;
-            Vector2 w = pivot + axis * GripSpacing + fistToWrist;
-            if ((w - shN).sqrMagnitude > reach * reach)
-            {
-                Vector2 back = pivot + axis * GripPommel + fistToWrist;
-                // slide towards the pommel as far as the arm needs (the closest point of the handle to the shoulder)
-                Vector2 seg = back - w;
-                float t = Mathf.Clamp01(Vector2.Dot(shN - w, seg) / Mathf.Max(1e-6f, seg.sqrMagnitude));
-                w += seg * t;
-            }
-            return w;
+            Vector2 fist = pivot + axis * GripSpacing;
+            if ((fist + fistToWrist - shN).sqrMagnitude <= reach * reach) return fist + fistToWrist;
+
+            // slide towards the pommel: the point of the handle closest to the shoulder
+            Vector2 back = pivot + axis * GripPommel;
+            Vector2 seg = back - fist;
+            float t = Mathf.Clamp01(Vector2.Dot(shN - fist, seg) / Mathf.Max(1e-6f, seg.sqrMagnitude));
+            fist += seg * t;
+            if ((fist + fistToWrist - shN).sqrMagnitude <= reach * reach) return fist + fistToWrist;
+
+            // still too far: point the fist at the handle from the shoulder
+            Vector2 dir = (fist - shN).normalized;
+            handWorld = KMath.Ang(dir) - KMath.Ang(d.fistLocal);
+            return fist - dir * d.fistLocal.magnitude;
         }
 
         void Limb2(RigDef d, Limb limb, B upper, B lower, B end, float parentR, Vector2 root, float bend)
