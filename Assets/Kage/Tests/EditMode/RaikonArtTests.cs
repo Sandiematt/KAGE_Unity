@@ -21,7 +21,7 @@ namespace Kage.Tests
             var def = CharacterCatalog.Get("raikon");
             var sw = System.Diagnostics.Stopwatch.StartNew();
             _rig = CharacterCatalog.PartSet(def.partSet).Build(def);
-            Debug.Log($"[SAN-71] Raikon's first build (SVG read and cut): {sw.ElapsedMilliseconds} ms, " +
+            Debug.Log($"[SAN-71] Raikon's first build (from the bake):{sw.ElapsedMilliseconds} ms, " +
                       $"{_rig.parts.Sum(p => (p.mesh != null ? p.mesh.triangles.Length / 3 : 0) + (p.polys?.Count ?? 0))} triangles, " +
                       $"{_rig.parts.Sum(p => p.mesh != null ? p.mesh.vertexCount : 0)} vertices; " +
                       string.Join(", ", _rig.parts.Where(p => p.mesh != null).Select(p => p.name + "=" + p.mesh.vertexCount)));

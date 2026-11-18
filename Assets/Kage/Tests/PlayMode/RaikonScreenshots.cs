@@ -56,7 +56,7 @@ namespace Kage.Tests
                     ("cleave_f14", () => Shot(s => s.Add(1, buttons: "S"), 0, f => Cleave(f, 14))),
                     ("cleave_f22", () => Shot(s => s.Add(1, buttons: "S"), 0, f => Cleave(f, 22))),
                     ("jump", () => Shot(s => s.Add(1, dy: 1).Add(30), 14)),
-                    ("facing_left_idle", () => Shot(s => s.Add(40), 40, facingLeft: true)),
+                    ("low_guard", () => Shot(s => s.Add(40), 40, pose: PoseLib.CrouchBlock())),
                 },
             };
             Sheet(Path.Combine(Root, "raikon_poses.png"), tiles, poses);
@@ -95,14 +95,14 @@ namespace Kage.Tests
             var bind = Render(new Vector2(0f, 1.42f), w, h, 1.5f);
             UnityEngine.Object.DestroyImmediate(go);
 
+            // his fight idle (facing right, mirrored to face left like the painting)
             Color32[] idle;
             using (var f = Fight())
             {
-                f.Kage.ResetForRound(0f, -1f);
                 f.Run(2);
                 f.KageInput.Add(40);
                 f.Run(40);
-                idle = Render(new Vector2(f.Kage.Pos.x, 1.42f), w, h, 1.5f);
+                idle = Mirror(Render(new Vector2(f.Kage.Pos.x + 0.1f, 1.42f), w, h, 1.5f), w, h);
             }
 
             SavePng(Path.Combine(tiles, "side_painting.png"), left, w, h);
@@ -115,6 +115,14 @@ namespace Kage.Tests
             sheet.Apply();
             File.WriteAllBytes(Path.Combine(Root, "raikon_side_by_side.png"), sheet.EncodeToPNG());
             UnityEngine.Object.DestroyImmediate(sheet);
+        }
+
+        static Color32[] Mirror(Color32[] px, int w, int h)
+        {
+            var r = new Color32[px.Length];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++) r[y * w + x] = px[y * w + (w - 1 - x)];
+            return r;
         }
 
         static HeadlessFight Fight() => new(KageMoveScenarios.Seed, Foe.None, 0f, kageDef: CharacterCatalog.Get(Raikon.Id));
