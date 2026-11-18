@@ -39,7 +39,14 @@ namespace Kage
         public List<Color> Layers { get; } = new();
 
         /// <summary>Curve flattening: the largest distance (SVG px) between a curve and its polyline.</summary>
-        public float maxCordDeviation = 0.2f;
+        public float maxCordDeviation = 0.5f;
+
+        /// <summary>
+        /// The layer that is the trace's canvas (-1: none). In a cutout trace that colour is exactly where no other colour
+        /// is, so a cut paints the whole region in it first and the other colours over it, instead of cutting the
+        /// canvas's large, many-holed shape (same picture, far less work).
+        /// </summary>
+        public int backgroundLayer = -1;
 
         public static SvgArt Parse(string svg)
         {
@@ -93,10 +100,32 @@ namespace Kage
         /// Every colour inside <paramref name="region"/> (polygons in SVG pixels, combined even-odd, so a polygon inside
         /// another is a hole), as triangles in SVG pixels, in paint order.
         /// </summary>
-        public List<SvgPiece> Cut(IList<Vector2[]> region)
+        public List<SvgPiece> Cut(IList<Vector2[]> region, float cell = 0f)
         {
             var result = new List<SvgPiece>();
             if (region == null || region.Count == 0) return result;
+            if (cell <= 0f) { CutOne(region, result); return result; }
+
+            // cut cell by cell: the region's pieces then have no triangle bigger than a cell (soft parts bend smoothly)
+            Vector2 lo = new(float.MaxValue, float.MaxValue), hi = new(float.MinValue, float.MinValue);
+            foreach (var poly in region) foreach (var p in poly) { lo = Vector2.Min(lo, p); hi = Vector2.Max(hi, p); }
+            var sub = new List<Vector2[]>();
+            for (float y = Mathf.Floor(lo.y / cell) * cell; y < hi.y; y += cell)
+                for (float x = Mathf.Floor(lo.x / cell) * cell; x < hi.x; x += cell)
+                {
+                    sub.Clear();
+                    foreach (var poly in region)
+                    {
+                        var c = ClipRect(poly, x, y, x + cell, y + cell);
+                        if (c.Length >= 3 && Mathf.Abs(Area(c)) > 0.01f) sub.Add(c);
+                    }
+                    if (sub.Count > 0) CutOne(sub, result);
+                }
+            return result;
+        }
+
+        void CutOne(IList<Vector2[]> region, List<SvgPiece> result)
+        {
             var clipContours = new BezierContour[region.Count];
             Vector2 lo = new(float.MaxValue, float.MaxValue), hi = new(float.MinValue, float.MinValue);
             for (int i = 0; i < region.Count; i++)
@@ -109,11 +138,11 @@ namespace Kage
             {
                 StepDistance = 10000f,
                 MaxCordDeviation = maxCordDeviation,
-                MaxTanAngleDeviation = 0.1f,
-                SamplingStepSize = 0.02f,
+                MaxTanAngleDeviation = 1.5f,          // a trace's curves are short: the cord deviation alone decides
+                SamplingStepSize = 0.1f,
             };
             var regionShape = new Shape { Contours = clipContours, Fill = new SolidFill { Color = Color.white, Mode = FillMode.OddEven } };
-            if (region.Count > 1)
+            if (HasHole(region))
             {
                 // the module's clipper unions its contours (a hole would be filled), so a region with holes clips by
                 // its own even-odd triangulation: the union of those triangles is exactly the region
@@ -132,6 +161,13 @@ namespace Kage
 
             for (int li = 0; li < _layers.Count; li++)
             {
+                if (li == backgroundLayer)
+                {
+                    // the background colour is wherever no other colour is: paint the whole region in it, under the rest
+                    var fill = new Shape { Contours = regionShape.Contours, Fill = new SolidFill { Color = Layers[li], Mode = ((SolidFill)regionShape.Fill).Mode } };
+                    Emit(VectorUtils.TessellateScene(new Scene { Root = new SceneNode { Shapes = new List<Shape> { fill } } }, opts), li, result);
+                    continue;
+                }
                 var layer = _layers[li];
                 // a contour that misses the region adds no winding inside it (even-odd), so it can be left out
                 var keep = new List<BezierContour>();
@@ -141,18 +177,71 @@ namespace Kage
 
                 var shape = new Shape { Contours = keep.ToArray(), Fill = layer.shape.Fill };
                 var node = new SceneNode { Shapes = new List<Shape> { shape }, Clipper = clipper };
-                var geoms = VectorUtils.TessellateScene(new Scene { Root = node }, opts);
-                foreach (var g in geoms)
-                {
-                    if (g.Indices == null || g.Indices.Length < 3) continue;
-                    var v = new Vector2[g.Vertices.Length];
-                    for (int i = 0; i < v.Length; i++) v[i] = g.WorldTransform.MultiplyPoint(g.Vertices[i]);
-                    var t = new int[g.Indices.Length];
-                    for (int i = 0; i < t.Length; i++) t[i] = g.Indices[i];
-                    result.Add(new SvgPiece { color = Layers[li], layer = li, vertices = v, triangles = t });
-                }
+                Emit(VectorUtils.TessellateScene(new Scene { Root = node }, opts), li, result);
             }
-            return result;
+        }
+
+        void Emit(List<VectorUtils.Geometry> geoms, int li, List<SvgPiece> result)
+        {
+            foreach (var g in geoms)
+            {
+                if (g.Indices == null || g.Indices.Length < 3) continue;
+                var v = new Vector2[g.Vertices.Length];
+                for (int i = 0; i < v.Length; i++) v[i] = g.WorldTransform.MultiplyPoint(g.Vertices[i]);
+                var t = new int[g.Indices.Length];
+                for (int i = 0; i < t.Length; i++) t[i] = g.Indices[i];
+                result.Add(new SvgPiece { color = Layers[li], layer = li, vertices = v, triangles = t });
+            }
+        }
+
+        static float Area(Vector2[] p)
+        {
+            float a = 0f;
+            for (int i = 0, j = p.Length - 1; i < p.Length; j = i++) a += p[j].x * p[i].y - p[i].x * p[j].y;
+            return a * 0.5f;
+        }
+
+        /// <summary>A polygon clipped to an axis-aligned rectangle (Sutherland-Hodgman).</summary>
+        static Vector2[] ClipRect(Vector2[] poly, float x0, float y0, float x1, float y1)
+        {
+            var a = new List<Vector2>(poly);
+            var b = new List<Vector2>(poly.Length + 4);
+            for (int edge = 0; edge < 4 && a.Count > 0; edge++)
+            {
+                b.Clear();
+                for (int i = 0; i < a.Count; i++)
+                {
+                    Vector2 p = a[i], q = a[(i + 1) % a.Count];
+                    float dp = Side(edge, p, x0, y0, x1, y1), dq = Side(edge, q, x0, y0, x1, y1);
+                    if (dp >= 0f) b.Add(p);
+                    if ((dp >= 0f) != (dq >= 0f)) b.Add(Vector2.Lerp(p, q, dp / (dp - dq)));
+                }
+                (a, b) = (b, a);
+            }
+            return a.ToArray();
+        }
+
+        static float Side(int edge, Vector2 p, float x0, float y0, float x1, float y1) => edge switch
+        {
+            0 => p.x - x0, 1 => x1 - p.x, 2 => p.y - y0, _ => y1 - p.y,
+        };
+
+        /// <summary>True when one polygon lies inside another (a hole, under even-odd); separate islands are not.</summary>
+        static bool HasHole(IList<Vector2[]> region)
+        {
+            for (int i = 0; i < region.Count; i++)
+                for (int j = 0; j < region.Count; j++)
+                    if (i != j && Inside(region[j], region[i][0])) return true;
+            return false;
+        }
+
+        static bool Inside(Vector2[] poly, Vector2 p)
+        {
+            bool c = false;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+                if ((poly[i].y > p.y) != (poly[j].y > p.y) && p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
+                    c = !c;
+            return c;
         }
 
         static BezierContour Polygon(Vector2[] pts)

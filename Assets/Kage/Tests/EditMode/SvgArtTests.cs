@@ -80,6 +80,39 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void ABackgroundLayerIsPaintedOverTheWholeRegionUnderTheOtherColours()
+        {
+            var art = SvgArt.Parse(Trace);
+            art.backgroundLayer = 0;
+            var pieces = art.Cut(new[] { Rect(0, 0, 35, 100) });
+            Assert.AreEqual(35 * 100, Area(pieces, Black), 1f, "the whole region in black");
+            Assert.AreEqual(25 * 40 - 5 * 10, Area(pieces, Red), 1f, "the red over it, as before");
+            Assert.AreEqual(0, pieces[0].layer, "black first, so the red paints over it");
+        }
+
+        [Test]
+        public void CuttingCellByCellGivesTheSameColoursInSmallTriangles()
+        {
+            var art = SvgArt.Parse(Trace);
+            var pieces = art.Cut(new[] { Rect(0, 0, 35, 100) }, cell: 8f);
+            Assert.AreEqual(25 * 40 - 5 * 10, Area(pieces, Red), 1f);
+            Assert.AreEqual(35 * 100 - (25 * 40 - 5 * 10), Area(pieces, Black), 1f);
+            foreach (var p in pieces)
+                for (int i = 0; i < p.triangles.Length; i += 3)
+                    for (int k = 0; k < 3; k++)
+                        Assert.LessOrEqual((p.vertices[p.triangles[i + k]] - p.vertices[p.triangles[i + (k + 1) % 3]]).magnitude, 8f * 1.415f, "no edge longer than a cell's diagonal");
+        }
+
+        [Test]
+        public void SeparateIslandsAreAllKept()
+        {
+            var art = SvgArt.Parse(Trace);
+            // two strips of the red square, left and right, away from the island
+            var pieces = art.Cut(new[] { Rect(10, 10, 20, 50), Rect(44, 10, 50, 50) });
+            Assert.AreEqual(10 * 40 + 6 * 40, Area(pieces, Red), 1f);
+        }
+
+        [Test]
         public void CutsAreInSvgPixelsWithYDown()
         {
             var art = SvgArt.Parse(Trace);

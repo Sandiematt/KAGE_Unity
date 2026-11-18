@@ -17,10 +17,12 @@ namespace Kage
             Add(KageCharacter.Def());
             Add(Ronin.Def());              // dev only: today's recolour
             Add(TestHeavy.Def());          // dev only: the mass-3 dummy (SAN-68)
+            Add(Raikon.Def());             // the Act I boss (look: SAN-71; fight: SAN-107)
 
             // ---- part sets ----
             Add(new KagePartSet());
             Add(new RoninPartSet());
+            Add(new RaikonPartSet());
         }
 
         static void Add(CharacterDef d) => _defs[d.id] = d;
