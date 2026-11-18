@@ -12,7 +12,7 @@ the numbers from `PhysicsLayers` (`Assets/Kage/Scripts/Core/PhysicsLayers.cs`).
 | # | Name | What is on it |
 |---|---|---|
 | 8 | `Fighter` | the fighter's body box (ground contact only) |
-| 9 | `Ragdoll` | KO ragdoll bodies |
+| 9 | `Ragdoll` | ragdoll bodies: KO, and physical falls (SAN-113) |
 | 10 | `Ground` | floor and walls |
 | 11 | `Prop` | training bag and other props |
 | 12 | `Hurtbox` | hurt-circle triggers on bones (fighters and props) |
@@ -101,3 +101,15 @@ The KO ragdoll is unchanged.
 per fight: hits inside the attacker's tick (SAN-65), the fight loop's manual push with the push boxes
 switched off, and knockback that ignores mass. The layer matrix and materials are the same either way.
 The legacy switch replays `Tests/PlayMode/Baselines/Legacy` exactly.
+
+## Physical falls (SAN-113)
+
+A launch, knockdown, trip or sweep turns the fighter's rig into ragdoll bodies (`Ragdoll2D.ActivateFall`,
+`Fighter.Fall.cs`) for as long as it is launched or down. The gameplay body is untouched: its arc, bounce,
+landing and the down timer are as before, so the get-up starts on the same frame. The ragdoll is tethered
+to it: every frame one acceleration on all bodies pulls the hips towards where the canned pose had them
+(towards lying height as the body nears the floor), a torque turns hips and chest towards the gameplay
+tumble angle, and joint muscles pull the limbs loosely towards the tumble shape in the air and, a few
+frames after the impact, firmly into the lie. The hurt circles ride on the bodies, so hits on a falling
+or lying fighter land where its body is. The get-up blends from the captured fallen pose. A KO during a
+fall lets the tether go (the free KO ragdoll). The legacy switch keeps the canned fall.
