@@ -14,6 +14,9 @@ namespace Kage
         const float Scale = 400f;          // 400 reference px = 1 Unity unit (Kage is ~1.9 units tall)
         const float OriginX = 880f, OriginY = 815f;   // ground point between the feet
 
+        /// <summary>The reference-image scale and ground point, for art authored in other frames (helmet visuals).</summary>
+        public const float RefScale = Scale, OriginXRef = OriginX, OriginYRef = OriginY;
+
         public static Vector2 P(float x, float y) => new((OriginX - x) / Scale, (OriginY - y) / Scale);
 
         static Vector2[] V(params float[] xy)
