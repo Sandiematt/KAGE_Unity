@@ -125,7 +125,7 @@ namespace Kage.Tests
             if (frames > 0) f.Run(frames);
             until?.Invoke(f);
             if (pose != null) f.Kage.rig.Apply(pose);
-            return Render(new Vector2(f.Kage.Pos.x + 0.15f, 0.95f));
+            return Render(new Vector2(f.Kage.Pos.x + 0.15f, Mathf.Max(0.95f, f.Kage.rig.Bone(B.Hips).position.y + 0.25f)));
         }
 
         static Color32[] Fall(int frame)

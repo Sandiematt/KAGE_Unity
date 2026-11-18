@@ -18,7 +18,7 @@ namespace Kage
         public static Pose Stance() => new Pose().Hip(0f, -0.08f, -4f).Chest(-8f).Head(5f)
             .Feet(0.24f, -0.26f).HandF(ChudanX, ChudanY, 0f).Blade(ChudanBlade).Grip();
 
-        public const float ChudanX = 0.27f, ChudanY = 0.97f, ChudanBlade = 30f;
+        public const float ChudanX = 0.27f, ChudanY = 0.97f, ChudanBlade = 34f;
 
         /// <summary>Gedan-no-kamae: crouched, both hands low, the point lowered towards the opponent's knees.</summary>
         public static Pose Crouch() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-20f).Head(14f)
@@ -30,7 +30,7 @@ namespace Kage
 
         /// <summary>Low guard (Gedan): crouched, both hands low in front, the blade lowered straight across the legs.</summary>
         public static Pose CrouchBlock() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-16f).Head(8f)
-            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandF(0.26f, 0.86f).Blade(-80f).Grip();
+            .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandF(0.26f, 0.84f).Blade(-62f).Grip();
 
         // ---------------------------------------------------------------- reference stances (start / finish of swings)
         /// <summary>Jōdan-no-kamae: hands above the forehead, the blade raised up and back. Overhead cuts start here.</summary>
