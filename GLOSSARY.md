@@ -35,7 +35,8 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Speed multiplier**: how fast a character moves around (walk, run, dash). **Move rate**: how fast its attacks play. They are different things.
 - **Mass**: a character's physics mass. Knockback impulses are divided by it.
 - **Body scale**: uniform size of a character (Raikon about 1.24).
-- **Gameplay skeleton**: the 20 bones every character shares (`B` enum). Hurt circles, hit points and push colliders belong to it. **Part set**: the drawn parts placed on it for one character. **Soft parts**: parts moved by springs or cloth (Kage's scarf, hair and coat; Raikon's cape, ponytail, tassels and fur mantle).
+- **Gameplay skeleton**: the 20 bones every character shares (`B` enum). Hurt circles, hit points and push colliders belong to it. **Part set**: the drawn parts placed on it for one character. **Soft parts**: parts moved by springs or cloth (Kage's scarf, hair and coat; Raikon's cape, ponytail, tassels and fur mantle, which hang on **spring chains**, `SoftChains`).
+- **Colour trace**: an SVG with one compound shape per colour, like the owner's Raikon SVG. **Region**: the area of the trace that one part is cut from (`RaikonRegions`, written by `Tools/raikon_art/regions.py`). **Fill**: a shape in the trace's colours drawn behind a moving part where the painting shows nothing (the torso behind the arms). **Bake**: the cut stored in Resources so a spawn doesn't cut the SVG (`Kage > Bake Raikon Art`). *Avoid:* sprite sheet, slicing.
 - **Flags**: Armour, NoGrab, FrontalArmour, CanRageArt, CanThrowKunai.
 - **Opponent kit**: the small shared helpers every new foe's part set is drawn with (`OpponentKit`: Kage's skeleton alone, shapes, adders, depth slots; `OrderPalette` for the Order soldiers), so a foe is character data plus a part set (ADR-0005). *Avoid:* art pipeline (as a type name), sprite sheet (nothing is a sprite).
 
