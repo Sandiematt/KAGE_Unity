@@ -70,6 +70,7 @@ namespace Kage
             f.Setup(def, rigDef, team == 0 ? PlayerSortOrder : FoeSortOrder);
             if (def.bodyScale != 1f) go.transform.localScale = new Vector3(def.bodyScale, def.bodyScale, 1f);
             f.input = input;
+            (input as AIInputSource)?.Configure(def);
             f.team = team;
             int copies = 0;
             foreach (var o in Context.Fighters) if (o.CharacterId == def.id) copies++;

@@ -50,7 +50,9 @@ namespace Kage.Tests
                 Ai = new AIInputSource();
                 IInputSource input = Ai;
                 if (foe == Foe.Scripted) { RoninInput = new ScriptedInput { fallback = Ai }; input = RoninInput; }
-                Ronin = b.Spawn(foeDef ?? CharacterCatalog.Get(global::Kage.Ronin.Id), 1, input);
+                var def = foeDef ?? CharacterCatalog.Get(global::Kage.Ronin.Id);
+                Ai.Configure(def);   // a scripted foe's fallback AI takes the character's knobs too
+                Ronin = b.Spawn(def, 1, input);
             }
             Ctx = b.Build();
             Loop = b.Loop;

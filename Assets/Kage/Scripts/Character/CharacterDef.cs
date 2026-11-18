@@ -78,6 +78,8 @@ namespace Kage
         public int weaponLevel = 1;
         /// <summary>"regular", "agile", "defensive", "ranged", "heavy", "boss"; null for the player.</summary>
         public string aiProfile;
+        /// <summary>How often the AI throws an attack it has chosen, 0..1 (1 = the profile as is). The tutorial Hollow uses 0.3. SAN-95's per-profile tuning builds on it.</summary>
+        public float attackRate = 1f;
         /// <summary>Ability ids this character may use, in slot order (ADR-0008).</summary>
         public List<string> abilities = new();
         /// <summary>BossDef id when the character has phases (ADR-0008); else null.</summary>
