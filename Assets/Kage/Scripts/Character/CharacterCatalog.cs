@@ -18,11 +18,15 @@ namespace Kage
             Add(Ronin.Def());              // dev only: today's recolour
             Add(TestHeavy.Def());          // dev only: the mass-3 dummy (SAN-68)
             Add(OrderFootman.Def());
+            Add(HollowShade.Def());
+            Add(HollowTutorial.Def());
 
             // ---- part sets ----
             Add(new KagePartSet());
             Add(new RoninPartSet());
             Add(new OrderFootmanPartSet());
+            Add(new HollowShadePartSet());
+            Add(new HollowTutorialPartSet());
         }
 
         static void Add(CharacterDef d) => _defs[d.id] = d;

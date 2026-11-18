@@ -31,7 +31,9 @@ namespace Kage.Tests
         [Test]
         public void TheyAreSpawnedFromCharacterDataOnTheSharedKatanaSet()
         {
-            var shade = Duel("hollow_shade").Ronin;
+            var sf = Duel("hollow_shade");
+            var shade = sf.Ronin;
+            Assert.AreSame(sf.Kage.moves, shade.moves, "the Shade plays the one katana move set");
             Assert.AreEqual("hollow_shade", shade.FighterId);
             Assert.AreEqual(160f * 100f / 232f, shade.maxHealth, 1e-3);
             Assert.AreEqual(0.85f, shade.DamageMul, 1e-6);
@@ -40,7 +42,6 @@ namespace Kage.Tests
             Assert.AreEqual(95f * 100f / 232f, f.Ronin.maxHealth, 1e-3);
             Assert.AreEqual(0.3f, f.Ronin.DamageMul, 1e-6);
             Assert.AreSame(f.Kage.moves, f.Ronin.moves, "the one katana move set, not a copy");
-            Assert.AreSame(shade.moves, f.Ronin.moves);
         }
 
         [Test]
