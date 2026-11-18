@@ -28,17 +28,13 @@ namespace Kage
 
         public enum Look { Kage, Ronin }
 
-        public static RigDef Build(Look look)
+        /// <summary>
+        /// The gameplay skeleton alone (SAN-69): the 20 bones' pivots and parents, the hurt circles, and the fist, hilt, foot and
+        /// blade hit points, in bind pose, with no parts. Every part set draws on this one skeleton: art never moves a joint.
+        /// </summary>
+        public static RigDef Skeleton(string name)
         {
-            bool ronin = look == Look.Ronin;
-            var d = new RigDef { name = ronin ? "RONIN" : "KAGE" };
-            Color trim = ronin ? Palette.Amber : Palette.Trim;
-            Color trimDeep = ronin ? Palette.AmberDeep : Palette.TrimDeep;
-            Color body = Palette.Body, far = Palette.BodyFar;
-            d.rimColor = ronin ? Palette.Amber : Palette.Rim;
-            d.bodyColor = body;
-
-            // ---------- skeleton (bind = reference pose) ----------
+            var d = new RigDef { name = name };
             void Bone(B b, B parent, float x, float y) { d.pivot[(int)b] = P(x, y); d.parent[(int)b] = parent; }
             Bone(B.Root, B.Root, 880, 815);
             Bone(B.Hips, B.Root, 878, 520);
@@ -60,6 +56,38 @@ namespace Kage
             Bone(B.FootF, B.LegFL, 955, 763);
             Bone(B.CoatN, B.Hips, 835, 398);
             Bone(B.CoatF, B.Hips, 935, 398);
+
+            HurtDef H(B b, float x, float y, float r, HitZone z) => new(b, P(x, y) - d.pivot[(int)b], r, z);
+            d.hurt.Add(H(B.Head, 852, 168, 0.13f, HitZone.Head));
+            d.hurt.Add(H(B.Chest, 880, 300, 0.165f, HitZone.Body));
+            d.hurt.Add(H(B.Hips, 878, 455, 0.16f, HitZone.Body));
+            d.hurt.Add(H(B.LegNU, 842, 612, 0.1f, HitZone.Legs));
+            d.hurt.Add(H(B.LegNL, 835, 725, 0.085f, HitZone.Legs));
+            d.hurt.Add(H(B.LegFU, 925, 612, 0.1f, HitZone.Legs));
+            d.hurt.Add(H(B.LegFL, 957, 725, 0.085f, HitZone.Legs));
+
+            d.fistLocal = P(902, 468) - d.pivot[(int)B.HandN];
+            d.hiltLocal = P(792, 474) - d.pivot[(int)B.HandF];
+            d.footTipLocal = P(788, 800) - d.pivot[(int)B.FootN];
+            d.heelLocal = P(860, 806) - d.pivot[(int)B.FootN];
+
+            // the blade's line: reference guard (772,500) -> tip (522,658), mirrored to face right; its sword-bone local ends
+            float ang = KMath.Ang(P(522, 658) - P(772, 500));
+            d.bladeBindAngle = ang;
+            d.bladeBaseLocal = KMath.Rot(new Vector2(0.08f, 0f), ang);
+            d.bladeTipLocal = KMath.Rot(new Vector2(0.80f, 0.03f), ang);
+            return d;
+        }
+
+        public static RigDef Build(Look look)
+        {
+            bool ronin = look == Look.Ronin;
+            var d = Skeleton(ronin ? "RONIN" : "KAGE");
+            Color trim = ronin ? Palette.Amber : Palette.Trim;
+            Color trimDeep = ronin ? Palette.AmberDeep : Palette.TrimDeep;
+            Color body = Palette.Body, far = Palette.BodyFar;
+            d.rimColor = ronin ? Palette.Amber : Palette.Rim;
+            d.bodyColor = body;
 
             void Part(string name, B bone, int order, Color c, PartRole role, Vector2[] pts, bool rim = true, int sub = 0, Color? rimCol = null, float glow = 1f, bool swordLayer = false)
             {
@@ -146,20 +174,6 @@ namespace Kage
             Part("ArmN_Wrist", B.ArmNL, 27, trim, PartRole.Trim, V(900,430, 932,430, 932,447, 900,447), false, 1);
             Part("HandN_Fist", B.HandN, 28, body, PartRole.Body, V(888,442, 926,440, 932,462, 924,486, 898,490, 880,480, 877,458));
 
-            // ---------- hurt boxes ----------
-            HurtDef H(B b, float x, float y, float r, HitZone z) => new(b, P(x, y) - d.pivot[(int)b], r, z);
-            d.hurt.Add(H(B.Head, 852, 168, 0.13f, HitZone.Head));
-            d.hurt.Add(H(B.Chest, 880, 300, 0.165f, HitZone.Body));
-            d.hurt.Add(H(B.Hips, 878, 455, 0.16f, HitZone.Body));
-            d.hurt.Add(H(B.LegNU, 842, 612, 0.1f, HitZone.Legs));
-            d.hurt.Add(H(B.LegNL, 835, 725, 0.085f, HitZone.Legs));
-            d.hurt.Add(H(B.LegFU, 925, 612, 0.1f, HitZone.Legs));
-            d.hurt.Add(H(B.LegFL, 957, 725, 0.085f, HitZone.Legs));
-
-            d.fistLocal = P(902, 468) - d.pivot[(int)B.HandN];
-            d.hiltLocal = P(792, 474) - d.pivot[(int)B.HandF];
-            d.footTipLocal = P(788, 800) - d.pivot[(int)B.FootN];
-            d.heelLocal = P(860, 806) - d.pivot[(int)B.FootN];
             return d;
         }
 
@@ -435,10 +449,7 @@ namespace Kage
         static void BuildSword(RigDef d, bool ronin)
         {
             Vector2 grip = d.pivot[(int)B.Sword];
-            // reference: guard at (772,500) -> tip at (522,658); mirrored to face right
-            Vector2 dir = P(522, 658) - P(772, 500);
-            float ang = KMath.Ang(dir);
-            d.bladeBindAngle = ang;
+            float ang = d.bladeBindAngle;      // set by Skeleton: the reference blade line, guard (772,500) -> tip (522,658)
 
             Vector2[] L(params float[] xy)
             {
@@ -503,9 +514,6 @@ namespace Kage
             }
             SP("Tsuba", 2, Palette.Silver, PartRole.Metal, L(tsuba.ToArray()), true);
             SP("Habaki", 2, KMath.Hex("#B89A5A"), PartRole.Metal, L(0.052f, -0.017f, 0.074f, -0.016f, 0.074f, 0.016f, 0.052f, 0.017f));
-
-            d.bladeBaseLocal = KMath.Rot(new Vector2(0.08f, 0f), ang);
-            d.bladeTipLocal = KMath.Rot(new Vector2(0.80f, 0.03f), ang);
         }
     }
 }
