@@ -187,12 +187,13 @@ namespace Kage.Tests
         [Test]
         public void Every_tachi_blade_window_is_heavy_and_carries_posture_damage()
         {
-            foreach (var m in ((TachiMoves)new MoveSets().Get("tachi")).All.Distinct().Where(m => m.id.StartsWith("tachi.")))
+            var set = (TachiMoves)new MoveSets().Get("tachi");
+            foreach (var m in set.All.Distinct().Where(m => m.id.StartsWith("tachi.")))
                 foreach (var w in m.hits.Where(w => w.points.Contains(HitPoint.Blade)))
                 {
                     Assert.IsTrue(w.sword, m.id);
                     Assert.GreaterOrEqual(w.postureMul, 1.6f, m.id);
-                    if (m != ((TachiMoves)new MoveSets().Get("tachi")).groundStab) Assert.IsTrue(w.heavy || w.knockdown, m.id + " is a heavy blow");
+                    if (m != set.groundStab) Assert.IsTrue(w.heavy || w.knockdown, m.id + " is a heavy blow");
                 }
         }
 

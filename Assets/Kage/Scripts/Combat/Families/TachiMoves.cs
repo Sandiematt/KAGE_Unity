@@ -158,7 +158,6 @@ namespace Kage
 
             m.pommel.chain[Btn.P] = m.hiltRise;
             m.pommel.chain[Btn.S] = m.cut1;
-            m.pommel.chain[Btn.K] = m.kick;
             m.hiltRise.chain[Btn.S] = m.overhead;
 
             // Step Pommel: a stepping hilt strike (the shared throw when the foe is close enough to be thrown)
@@ -201,6 +200,7 @@ namespace Kage
                 .Hit(10, 14, FootN, 5, HitLevel.Mid, new Vector2(1.6f, 0.4f), stun: 16, hitstop: 5, shake: 0.1f, radius: 0.1f)
                 .Fx(9, 15, FxKind.TrailFootN).Cancel(14);
             m.kick.chain[Btn.S] = m.cut1;
+            m.pommel.chain[Btn.K] = m.kick;
 
             m.pushKick = new MoveDef("tachi.pushKick", "Push Kick", 30)
                 .Key(7, Carry(P().Hip(0f, -0.06f, 8f).Chest(8f).LegN(100f, -120f, 15f).FootF(-0.2f, 0.13f)))
