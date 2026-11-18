@@ -24,6 +24,11 @@ namespace Kage
         public string foeId = Ronin.Id;
         /// <summary>F5 sets this and reloads the arena; the new arena takes it once.</summary>
         public static string NextFoeId;
+        /// <summary>
+        /// Where the arena reads Kage's loadout from: the equipped weapon, helmet and armour and their levels (SAN-84). Null = the
+        /// save file on disk (<see cref="SaveStore"/>), so the arena shows what the campaign would fight with. Tests set it.
+        /// </summary>
+        public static System.Func<Rules.SaveData> SaveSource;
 
         public Hud Hud { get; private set; }
         public KageAudio Audio { get; private set; }
@@ -78,7 +83,7 @@ namespace Kage
             Hud = hudGo.AddComponent<Hud>();
             Hud.Build(_camera);
 
-            player = fight.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new PlayerInputSource());
+            player = fight.Spawn(KageCharacter.Def(SaveSource != null ? SaveSource() : SaveStore.AtPersistentDataPath().Load()), 0, new PlayerInputSource());
             _ai = new AIInputSource();
             if (NextFoeId != null) { foeId = NextFoeId; NextFoeId = null; }
             var foeDef = CharacterCatalog.Get(foeId) ?? CharacterCatalog.Get(Ronin.Id);

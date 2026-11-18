@@ -12,9 +12,9 @@ namespace Kage
     {
         public const float CritMul = 1.5f;
 
-        public static int Damage(int windowDmg, float damageMul, float weaponDmg, bool crit, float defense)
+        public static int Damage(int windowDmg, float damageMul, float weaponDmg, bool crit, float defense, float extraMul = 1f)
         {
-            float raw = windowDmg * damageMul * weaponDmg * (crit ? CritMul : 1f) * (1f - defense);
+            float raw = windowDmg * damageMul * weaponDmg * extraMul * (crit ? CritMul : 1f) * (1f - defense);
             return Mathf.Max(1, Mathf.RoundToInt(raw));
         }
 
@@ -23,12 +23,12 @@ namespace Kage
         /// the weapon's damage multiplier counts (every window of the family's move set, blade projectiles and the rage
         /// art; not throws or kunai). Props have no defence; a null attacker deals the window damage.
         /// </summary>
-        public static int For(Fighter attacker, IHittable target, int windowDmg, bool crit, bool weaponHit)
+        public static int For(Fighter attacker, IHittable target, int windowDmg, bool crit, bool weaponHit, float extraMul = 1f)
         {
             float mul = attacker != null ? attacker.DamageMul : 1f;
             float weapon = weaponHit && attacker != null ? attacker.Weapon.dmg : 1f;
             float defense = target is Fighter f ? f.Defense : 0f;
-            return Damage(windowDmg, mul, weapon, crit, defense);
+            return Damage(windowDmg, mul, weapon, crit, defense, extraMul);
         }
     }
 }
