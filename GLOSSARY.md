@@ -36,6 +36,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Body scale**: uniform size of a character (Raikon about 1.24).
 - **Gameplay skeleton**: the 20 bones every character shares (`B` enum). Hurt circles, hit points and push colliders belong to it. **Part set**: the drawn parts placed on it for one character. **Soft parts**: parts moved by springs or cloth (Kage's scarf, hair and coat; Raikon's cape, ponytail, tassels and fur mantle).
 - **Flags**: Armour, NoGrab, FrontalArmour, CanRageArt, CanThrowKunai.
+- **Opponent kit**: the small shared helpers every new foe's part set is drawn with (`OpponentKit`: Kage's skeleton alone, shapes, adders, depth slots; `OrderPalette` for the Order soldiers), so a foe is character data plus a part set (ADR-0005). *Avoid:* art pipeline (as a type name), sprite sheet (nothing is a sprite).
 
 ## Moves and hits
 
@@ -43,6 +44,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Move set**: every move a fighter can do with one weapon family.
 - **Weapon family** (or **family**): katana, twin blades (`twin`), spear/staff (`spear`), chain sickle (`chain`), cleaver, fists, and the heavy tachi (`tachi`). The equipped weapon picks the family.
 - **Weapon**: an item in the JS weapon table (Kagetsu, Tsubame, ...). **Reference weapon**: the weapon a family's multipliers are measured against.
+- **Polearm grip**: how the spear and staff family holds its weapon: both hands on the shaft, the rear hand a forearm behind the lead hand (`GripPose.Polearm`, `Pose.PolearmSpacing`), against the katana's fist-width grip. The **lead hand** is the one that leads on the shaft (the far hand bone); the **rear hand** is the near hand.
 - **Weapon level**: 1 to 8. **Player level**: Kage's XP level. Never just "level".
 - **Hit window**: the frames of a move in which its hit points can hit (`HitWindow`). *Avoid:* hitbox, active frames (in data).
 - **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family.

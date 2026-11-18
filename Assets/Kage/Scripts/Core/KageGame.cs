@@ -9,7 +9,7 @@ namespace Kage
     /// Dev arena entry point (ADR-0001). Builds everything at runtime from code — camera, post-processing, stage,
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
-    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
+    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F5 next opponent · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class KageGame : MonoBehaviour
@@ -20,6 +20,10 @@ namespace Kage
         public enum Mode { Duel, Training }
         public Mode startMode = Mode.Duel;
         [Range(0, 2)] public int aiLevel = 1;
+        [Tooltip("The opponent's character id (ronin, order_footman, ...). F5 cycles it.")]
+        public string foeId = Ronin.Id;
+        /// <summary>F5 sets this and reloads the arena; the new arena takes it once.</summary>
+        public static string NextFoeId;
 
         public Hud Hud { get; private set; }
         public KageAudio Audio { get; private set; }
@@ -76,16 +80,19 @@ namespace Kage
 
             player = fight.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new PlayerInputSource());
             _ai = new AIInputSource();
-            enemy = fight.Spawn(CharacterCatalog.Get(Ronin.Id), 1, _ai);
+            if (NextFoeId != null) { foeId = NextFoeId; NextFoeId = null; }
+            var foeDef = CharacterCatalog.Get(foeId) ?? CharacterCatalog.Get(Ronin.Id);
+            foeId = foeDef.id;
+            enemy = fight.Spawn(foeDef, 1, _ai);
             player.onHit += OnFighterHit;
             enemy.onHit += OnFighterHit;
             player.onKO += OnKO;
             enemy.onKO += OnKO;
             Hud.Bind(player);
-            Hud.SetNames("KAGE  影", "RONIN");
+            Hud.SetNames("KAGE  影", foeDef.displayName.ToUpperInvariant());
 
-            _shadowP = MakeShadow(true);
-            _shadowE = MakeShadow(false);
+            _shadowP = MakeShadow("KageShadow", Palette.Trim);
+            _shadowE = MakeShadow("FoeShadow", foeDef.colors.main);
 
             bag = fight.AddBag(stage.transform, new Vector2(1.6f, 2.65f));
             Fight = fight.Build();
@@ -97,12 +104,12 @@ namespace Kage
             SetMode(startMode);
         }
 
-        Transform MakeShadow(bool kage)
+        Transform MakeShadow(string name, Color glowColour)
         {
-            var t = new GameObject(kage ? "KageShadow" : "RoninShadow").transform;
+            var t = new GameObject(name).transform;
             t.SetParent(transform, false);
             MeshKit.MakeRenderer("Contact", t, MeshKit.Disc(Vector2.zero, 0.55f, new Color(0f, 0f, 0f, 0.75f), new Color(0f, 0f, 0f, 0f), 32, 1f, 0.12f), MeshKit.Alpha, -900);
-            var glow = MeshKit.MakeRenderer("Glow", t, MeshKit.Disc(Vector2.zero, 0.42f, (kage ? Palette.Trim : Palette.Amber).WithA(0.5f), new Color(0, 0, 0, 0), 32, 1f, 0.07f), Vfx.I.AddHDR(1.6f), -890);
+            var glow = MeshKit.MakeRenderer("Glow", t, MeshKit.Disc(Vector2.zero, 0.42f, glowColour.WithA(0.5f), new Color(0, 0, 0, 0), 32, 1f, 0.07f), Vfx.I.AddHDR(1.6f), -890);
             glow.transform.localPosition = new Vector3(0f, 0.005f, 0f);
             return t;
         }
@@ -173,7 +180,7 @@ namespace Kage
             player.extraTarget = training ? bag : null;
             player.roundsWon = enemy.roundsWon = 0; player.ResetForFight(); enemy.ResetForFight();
             _round = 1;
-            Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train");
+            Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train  ·  F5 foe");
             _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
             if (training)
             {
@@ -267,7 +274,7 @@ namespace Kage
                                 _phase = Phase.MatchOver;
                                 _phaseT = 0f;
                                 bool kageWon = player.roundsWon >= 2;
-                                Hud.Announce(kageWon ? "KAGE WINS" : "RONIN WINS", kageWon ? Palette.TrimBright : Palette.Amber, 3.5f);
+                                Hud.Announce(kageWon ? "KAGE WINS" : enemy.Character.displayName.ToUpperInvariant() + " WINS", kageWon ? Palette.TrimBright : enemy.fxMain, 3.5f);
                                 Hud.Banner("PRESS  R  TO DUEL AGAIN", Color.white, 30f);
                             }
                             else { _round++; StartRound(); }
@@ -341,7 +348,7 @@ namespace Kage
             {
                 aiLevel = (aiLevel + 1) % 3;
                 _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
-                Hud.SetMode("DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train");
+                Hud.SetMode("DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train  ·  F5 foe");
                 Hud.Banner("AI  " + AiNames[aiLevel], Color.white, 1.2f);
             }
             if (kb.f4Key.wasPressedThisFrame)
@@ -349,6 +356,7 @@ namespace Kage
                 _ai.passive = !_ai.passive;
                 Hud.Banner(_ai.passive ? "AI PASSIVE (practice)" : "AI ACTIVE", Color.white, 1.2f);
             }
+            if (kb.f5Key.wasPressedThisFrame) ReloadWithFoe(NextFoe(foeId));      // dev: next opponent (SAN-69)
             if (kb.pKey.wasPressedThisFrame) GameFeel.paused = !GameFeel.paused;
             if (kb.f7Key.wasPressedThisFrame)       // dev: break (or restore) the player's sword (SAN-113)
             {
@@ -372,6 +380,38 @@ namespace Kage
                 if (mode == Mode.Training) { bag.ResetBag(); player.ResetForRound(-0.4f, 1f); player.BeginFight(); }
                 else { player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; enemy.meter = 0f; player.ResetForFight(); enemy.ResetForFight(); _round = 1; StartRound(); }
             }
+        }
+
+        /// <summary>The opponents the dev arena offers: every foe character in the catalog (not Kage, not the test dummies), the Ronin first.</summary>
+        public static System.Collections.Generic.List<string> DevFoeIds()
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            foreach (var id in CharacterCatalog.Ids)
+                if (id != Ronin.Id && !id.StartsWith("test_") && !CharacterCatalog.Get(id).IsPlayer) ids.Add(id);
+            ids.Sort(System.StringComparer.Ordinal);
+            ids.Insert(0, Ronin.Id);
+            return ids;
+        }
+
+        /// <summary>The opponent after <paramref name="id"/> in <see cref="DevFoeIds"/>, wrapping round; the first for an unknown id.</summary>
+        public static string NextFoe(string id)
+        {
+            var ids = DevFoeIds();
+            int i = ids.IndexOf(id);
+            return ids[(i + 1) % ids.Count];
+        }
+
+        /// <summary>Dev (F5): restarts the arena against another opponent. A rebuild, so nothing of the old fight survives.</summary>
+        void ReloadWithFoe(string id)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (string.IsNullOrEmpty(scene.path)) { Hud?.Banner("no scene to reload", Color.white, 1.2f); return; }
+            NextFoeId = id;
+#if UNITY_EDITOR
+            UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(scene.path, new UnityEngine.SceneManagement.LoadSceneParameters(UnityEngine.SceneManagement.LoadSceneMode.Single));
+#else
+            UnityEngine.SceneManagement.SceneManager.LoadScene(scene.path);
+#endif
         }
 
         /// <summary>Dev (F8): equips the player's next weapon of a registered family, at level 1.</summary>

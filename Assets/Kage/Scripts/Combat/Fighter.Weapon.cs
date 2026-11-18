@@ -31,23 +31,10 @@ namespace Kage
         /// <summary>The family holds a second blade in the near hand (twin blades) and has a blade to hold.</summary>
         public bool Dual => !BareHanded && Family != null && Family.grip == GripPose.Dual;
 
-        /// <summary>
-        /// Output pose fix-up for a family that doesn't hold the stance's two-handed grip: the grip is let go, and a
-        /// dual wielder's hands split so each holds its own blade (the near blade is posed with the pose).
-        /// </summary>
-        void ApplyHeldGrip(Pose p)
-        {
-            if (GripHeld) return;
-            bool dual = Dual;
-            if (dual) p.SplitHands(DualHandOffset);
-            p.grip = false;
-            p.dual = dual;
-        }
-
         /// <summary>Where the near hand sits from the far hand when a held-grip pose is split for dual wield (root space, facing right).</summary>
         static readonly Vector2 DualHandOffset = new(0.14f, 0.16f);
 
-        Vector2 _bladeTip;
+        Vector2 _bladeTip, _bladeBase;
         bool _bladeSet;
 
         /// <summary>HandN-local start of the second (near hand) blade: just past the fist.</summary>
@@ -57,6 +44,12 @@ namespace Kage
 
         /// <summary>Sword-bone local tip of the Blade hit points: the family's blade length × the weapon's reach.</summary>
         public Vector2 BladeTipLocal => _bladeSet ? _bladeTip : def.bladeTipLocal;
+
+        /// <summary>
+        /// Sword-bone local start of the Blade hit points: the guard. A polearm's line starts a little behind its lead
+        /// hand, so a foe closer than the hand is met by the shaft instead of being passed by the point.
+        /// </summary>
+        public Vector2 BladeBaseLocal => _bladeSet ? _bladeBase : def.bladeBaseLocal;
 
         /// <summary>Metres from guard to the last Blade hit point.</summary>
         public float BladeReach => (BladeTipLocal - def.bladeBaseLocal).magnitude;
@@ -100,8 +93,50 @@ namespace Kage
             Vector2 b = def.bladeBaseLocal, t = def.bladeTipLocal;
             float drawn = (t - b).magnitude;
             float want = Family.bladeLength * Weapon.reach;
-            _bladeSet = Family.HasBlade && drawn > 0f && Mathf.Abs(want - drawn) > 1e-3f;
-            _bladeTip = _bladeSet ? b + (t - b) * (want / drawn) : t;
+            bool polearm = Family.grip == GripPose.Polearm;
+            _bladeSet = Family.HasBlade && drawn > 0f && (polearm || Mathf.Abs(want - drawn) > 1e-3f);
+            // a polearm's line is its straight shaft (the katana's blade is drawn with a slight curve)
+            Vector2 dir = polearm ? KMath.Dir(def.bladeBindAngle) : (t - b) / drawn;
+            _bladeTip = _bladeSet ? b + dir * want : t;
+            _bladeBase = polearm ? b - dir * 0.38f : b;
+        }
+
+        /// <summary>
+        /// Final touches on a posed hand grip: no handle to hold or a family that holds the weapon one-handed lets go;
+        /// a polearm holds its hands wide apart (<see cref="Pose.PolearmSpacing"/>) and its point never dips below the
+        /// floor (a low guard or a sweep tilts the shaft up instead of driving it into the ground).
+        /// </summary>
+        void ApplyGrip(Pose p)
+        {
+            if (!GripHeld)
+            {
+                // no handle to hold, or a family that holds its weapon(s) one-handed; a dual wielder's hands split and
+                // each holds a blade (the near blade is posed with the pose)
+                bool dual = Dual;
+                if (dual) p.SplitHands(DualHandOffset);
+                p.grip = false;
+                p.dual = dual;
+                return;
+            }
+            bool polearm = Family != null && Family.grip == GripPose.Polearm;
+            float spacing = polearm ? Pose.PolearmSpacing : Pose.GripSpacing, pommel = polearm ? Pose.PolearmPommel : Pose.GripPommel;
+            if (p.gripSpacing != spacing || p.gripPommel != pommel) { p.gripSpacing = spacing; p.gripPommel = pommel; p.MarkDirty(); }
+            if (polearm && p.ik[(int)Limb.ArmF])
+            {
+                const float floor = 0.05f;
+                p.Resolve(def);       // bakes the arm angles; the shaft's drawn direction is their sum
+                float len = BladeReach + 0.08f;
+                float y0 = p.target[(int)Limb.ArmF].y;
+                float deg = p.a[(int)B.Hips] + p.a[(int)B.Chest] + p.a[(int)B.ArmFU] + p.a[(int)B.ArmFL] + p.a[(int)B.HandF] + p.a[(int)B.Sword] + def.bladeBindAngle;
+                float ang = deg * Mathf.Deg2Rad;
+                if (y0 + len * Mathf.Sin(ang) < floor)
+                {
+                    float asin = Mathf.Asin(Mathf.Clamp((floor - y0) / len, -1f, 1f));
+                    p.hasSwAbs = true;
+                    p.swAbs = KMath.Wrap((Mathf.Cos(ang) >= 0f ? asin : Mathf.PI - asin) * Mathf.Rad2Deg);
+                    p.MarkDirty();
+                }
+            }
         }
     }
 }

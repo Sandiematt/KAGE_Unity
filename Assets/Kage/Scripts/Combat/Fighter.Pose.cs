@@ -103,7 +103,7 @@ namespace Kage
                     else _display.CopyFrom(_ref);
                     break;
             }
-            ApplyHeldGrip(_display);     // no handle to hold, or the family holds it one-handed (a dual wielder's hands split)
+            ApplyGrip(_display);     // no handle to hold, or the family holds it one-handed; a polearm's wide grip
             rig.Apply(_display);
             rig.Secondary(dt, rb.linearVelocity);
             if (!Headless) UpdateTrails();

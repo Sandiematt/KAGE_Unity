@@ -139,7 +139,7 @@ namespace Kage
             if (active)
             {
                 m.Evaluate(def, _moveTime, _start, _display);
-                ApplyHeldGrip(_display);
+                ApplyGrip(_display);
                 rig.Apply(_display);
                 foreach (var w in m.hits)
                     if (Touches(w.from, w.to)) WindowActive(w);

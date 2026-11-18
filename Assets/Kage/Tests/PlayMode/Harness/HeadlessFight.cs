@@ -34,7 +34,7 @@ namespace Kage.Tests
 
         /// <param name="foeDef">Who the foe is (default the Ronin's catalog entry), for example the heavy test dummy.</param>
         /// <param name="kageDef">Kage's character data (default his catalog entry), for example with a helmet equipped.</param>
-        /// <param name="bagAnchor">Where the training bag hangs from (default the dev arena's); lower it to reach the bag with low moves.</param>
+        /// <param name="bagAnchor">Where the training bag hangs from (default the dev arena's), for example low enough that the bag reaches the floor.</param>
         public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, CharacterDef foeDef = null, CharacterDef kageDef = null, Vector2? bagAnchor = null)
         {
             Root = new GameObject("HeadlessFight");

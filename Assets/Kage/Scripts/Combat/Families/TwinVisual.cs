@@ -1,13 +1,14 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Kage
 {
     /// <summary>
     /// Draws the twin blades (ADR-0006): the part set's katana is replaced by one short blade on the Sword bone (far
-    /// hand) and a second on the near hand's own bone (<c>HandN</c>), each built along its own axis in bind space.
-    /// Tsubame, Kagehira &amp; Yūrei and the daggers draw as short blades; Hisame's Mist Fans as open fans. Attaching
-    /// is idempotent (it removes what it added before), as an equip and a restored broken sword both call it.
+    /// hand) and a second on the near hand's own bone (<c>HandN</c>), each built along its own axis with the rig's family
+    /// part API (<see cref="FighterRig.AddFamilyPart"/>). Tsubame, Kagehira &amp; Yūrei and the daggers draw as short
+    /// blades; Hisame's Mist Fans as open fans. Attaching is idempotent (it removes what it added before), as an equip
+    /// and a restored broken sword both call it.
     /// </summary>
     public sealed class TwinVisual : IWeaponVisual
     {
@@ -22,46 +23,35 @@ namespace Kage
 
         public void Attach(FighterRig rig, string weaponId)
         {
-            rig.ClearWeaponParts();
-            rig.HideBaseSword(true);
+            rig.ClearFamilyParts();                  // idempotent: never add the parts twice
+            rig.SetBaseSwordHidden(true);
             var d = rig.def;
             var look = LookOf(weaponId);
 
-            // far blade: along the Sword bone's own blade line (the part set's katana line), shortened to the family's length
-            Vector2 farBase = d.pivot[(int)B.Sword] + d.bladeBaseLocal;
-            Vector2 farDir = (d.bladeTipLocal - d.bladeBaseLocal).normalized;
-            foreach (var p in Blade(rig, "Far", B.Sword, farBase, farDir, 16, true, look)) rig.AddWeaponPart(p);
+            // far blade: along the Sword bone's own blade line (the part set's katana line), shortened to the family's length.
+            // AddFamilyPart's points are in the weapon frame: x along the katana from the grip pivot, turned onto the bone by the bind angle.
+            Vector2 farBase = KMath.Rot(d.bladeBaseLocal, -d.bladeBindAngle);
+            Vector2 farDir = KMath.Rot((d.bladeTipLocal - d.bladeBaseLocal).normalized, -d.bladeBindAngle);
+            Blade(rig, "Far", B.Sword, farBase, farDir, look);
 
-            // near blade: straight out of the near fist along the hand's own axis (bind angle 0), a fist-width past the grip point
-            Vector2 nearBase = d.pivot[(int)B.HandN] + d.fistLocal + Vector2.right * 0.05f;
-            foreach (var p in Blade(rig, "Near", B.HandN, nearBase, Vector2.right, 28 * 4 + 1, false, look)) rig.AddWeaponPart(p);
+            // near blade: straight out of the near fist along the hand's own axis, a fist-width past the grip point
+            // (HandN-local points: the near hand's rotation is the blade's, see Fighter.NearBladeBaseLocal)
+            Blade(rig, "Near", B.HandN, d.fistLocal + Vector2.right * 0.05f, Vector2.right, look);
         }
 
-        public void Detach(FighterRig rig)
-        {
-            rig.ClearWeaponParts();
-            rig.HideBaseSword(false);
-        }
+        public void Detach(FighterRig rig) => rig.ClearFamilyParts();
 
-        static List<PartDef> Blade(FighterRig rig, string side, B bone, Vector2 origin, Vector2 dir, int order, bool swordLayer, Look look)
+        static void Blade(FighterRig rig, string side, B bone, Vector2 origin, Vector2 dir, Look look)
         {
-            var parts = new List<PartDef>();
             Vector2 perp = new(-dir.y, dir.x);
-            Vector2 Pt(float u, float v) => origin + dir * u + perp * v;
             Vector2[] Poly(params float[] uv)
             {
                 var r = new Vector2[uv.Length / 2];
-                for (int i = 0; i < r.Length; i++) r[i] = Pt(uv[i * 2], uv[i * 2 + 1]);
+                for (int i = 0; i < r.Length; i++) r[i] = origin + dir * uv[i * 2] + perp * uv[i * 2 + 1];
                 return r;
             }
             void Add(string name, int sub, Color c, PartRole role, Vector2[] pts, bool rim = false, float glow = 1f)
-            {
-                parts.Add(new PartDef
-                {
-                    name = $"Twin_{side}Blade_{name}", bone = bone, order = order + sub, color = c, role = role, pts = pts,
-                    rim = rim, rimGrow = 0.003f, rimColor = KMath.Hex("#050304"), glow = glow, swordLayer = swordLayer,
-                });
-            }
+                => rig.AddFamilyPart($"Twin_{side}Blade_{name}", pts, c, role, sub, rim, glow, bone);
 
             float L = TwinMoves.BladeLength;
             Color steel = look == Look.Daggers ? KMath.Hex("#8F8C99") : look == Look.Fans ? KMath.Hex("#B9C4C9") : Palette.Steel;
@@ -100,7 +90,6 @@ namespace Kage
                 Add("Wrap", 1, rig.def.scarfBack, PartRole.TrimDeep, Poly(u - 0.014f, 0f, u, -0.011f, u + 0.014f, 0f, u, 0.011f));
             }
             Add("Pommel", 1, metal, PartRole.Metal, Poly(-0.17f, -0.017f, -0.148f, -0.017f, -0.148f, 0.017f, -0.17f, 0.017f));
-            return parts;
         }
     }
 }
