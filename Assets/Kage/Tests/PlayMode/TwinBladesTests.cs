@@ -440,6 +440,10 @@ namespace Kage.Tests
             _game = new GameObject("KAGE");
             var game = _game.AddComponent<KageGame>();
             yield return null;
+            Press(kb.f2Key);                          // the training bag: nothing fights back
+            yield return null;
+            Release(kb.f2Key);
+            yield return null;
             for (int i = 0; i < 20 && game.player.WeaponId != "tsubame"; i++)
             {
                 Press(kb.f8Key);
