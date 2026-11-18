@@ -43,6 +43,13 @@ namespace Kage.Tests
             return f;
         }
 
+        /// <summary>Disposes a fight now, so the next fight of the same test never meets its bodies or hurtboxes.</summary>
+        void Done(HeadlessFight f)
+        {
+            f.Dispose();
+            _fights.Remove(f);
+        }
+
         static CombatEvent FirstKageHit(HeadlessFight f, string move)
         {
             var hits = f.Events(CombatEventType.Hit).Where(e => e.SourceId == "kage" && e.MoveId == move).ToList();
@@ -56,13 +63,16 @@ namespace Kage.Tests
             var f = Duel(kage, foe);
             f.KageInput.Add(1, buttons: "S");
             f.Run(60);
-            return FirstKageHit(f, "iai");
+            var hit = FirstKageHit(f, "iai");
+            Done(f);
+            return hit;
         }
 
-        /// <summary>Frames Kage spends in a move started by <paramref name="buttons"/> on the first frame.</summary>
+        /// <summary>Frames Kage spends in a move started by <paramref name="buttons"/> on the first frame, alone (no hitstop).</summary>
         int FramesInMove(CharacterDef kage, string buttons, string move)
         {
-            var f = Duel(kage);
+            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: kage);
+            _fights.Add(f);
             f.KageInput.Add(1, buttons: buttons);
             int frames = 0;
             for (int i = 0; i < 200; i++)
@@ -71,6 +81,7 @@ namespace Kage.Tests
                 if (f.Kage.state == FState.Attack && f.Kage.move != null && f.Kage.move.id == move) frames++;
                 else if (frames > 0) break;
             }
+            Done(f);
             return frames;
         }
 
@@ -158,7 +169,9 @@ namespace Kage.Tests
         [Test]
         public void Kagetsu_level_8_reaches_further_with_the_blade()
         {
-            var l1 = Duel(KageWith(level: 1)).Kage.BladeReach;
+            var f1 = Duel(KageWith(level: 1));
+            var l1 = f1.Kage.BladeReach;
+            Done(f1);
             var l8 = Duel(KageWith(level: 8)).Kage.BladeReach;
             Assert.AreEqual(1.105f, l8 / l1, 1e-3f);
         }
@@ -170,6 +183,7 @@ namespace Kage.Tests
         {
             var f = Duel(KageWith(moveRate: 0.9f));
             Assert.AreSame(f.Ronin.moves, f.Kage.moves, "Kage at 0.9 and the Ronin at 1 share one katana set");
+            Done(f);
             Assert.AreEqual(60, FramesInMove(KageWith(moveRate: 0.5f), "S", "iai"), "30 frames at half rate");
         }
 
@@ -183,7 +197,9 @@ namespace Kage.Tests
                 f.Run(90);
                 int start = f.Events(CombatEventType.MoveStarted).First(e => e.SourceId == "kage").Frame;
                 hits = f.Events(CombatEventType.Hit).Count(e => e.SourceId == "kage");
-                return FirstKageHit(f, "iai").Frame - start;
+                int offset = FirstKageHit(f, "iai").Frame - start;
+                Done(f);
+                return offset;
             }
             int full = Offset(1f, out int fullHits);
             int half = Offset(0.5f, out int halfHits);
@@ -253,6 +269,7 @@ namespace Kage.Tests
             yield return null;
             Assert.AreEqual("shizuka", game.player.WeaponId);
             Press(kb.leftShiftKey);
+            yield return null;
             Press(kb.f8Key);
             yield return null;
             Release(kb.f8Key);
