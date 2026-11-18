@@ -24,6 +24,7 @@ namespace Kage
             public MeshRenderer main, rim;
             public Transform jiggle;
             public float jAngle, jVel;
+            public bool family;         // drawn by a weapon family (AddFamilyPart), not by the character's part set
         }
 
         readonly List<PartRT> _parts = new();
@@ -146,7 +147,7 @@ namespace Kage
         {
             foreach (var p in _parts)
             {
-                int o = p.def.order + (p.def.swordLayer && swordFront ? 30 * 4 : 0);
+                int o = p.def.order + (p.def.swordLayer && (swordFront || _frontAlways) ? 30 * 4 : 0);
                 p.main.sortingOrder = baseOrder + o * 3 + 2;
                 if (p.rim != null) p.rim.sortingOrder = baseOrder + (o - o % 4) * 3;
             }
@@ -329,7 +330,7 @@ namespace Kage
         {
             foreach (var r in _all) r.enabled = v;
             if (scarf != null) scarf.SetVisible(v);
-            if (v && !SwordVisible) SetSwordVisible(false);
+            if (v) SetSwordVisible(SwordVisible);      // re-apply what the weapon's parts show
         }
 
         /// <summary>False while the katana is broken (SAN-113): every part on the sword bone is hidden.</summary>
@@ -341,9 +342,91 @@ namespace Kage
             foreach (var p in _parts)
             {
                 if (p.def.bone != B.Sword) continue;
-                p.main.enabled = v;
-                if (p.rim != null) p.rim.enabled = v;
+                bool on = v && (p.family || !_baseSwordHidden);
+                p.main.enabled = on;
+                if (p.rim != null) p.rim.enabled = on;
             }
+        }
+
+        // ---- a weapon family's own drawing on the Sword bone (ADR-0006) ----
+        readonly List<PartRT> _familyParts = new();
+        bool _baseSwordHidden;
+        /// <summary>The parts a weapon family drew with <see cref="AddFamilyPart"/>, and whether they replace the part set's own weapon.</summary>
+        bool _frontAlways;
+        /// <summary>A polearm is drawn in front of the body at all times (its shaft passes the body between the hands), not just in sword techniques.</summary>
+        public void SetSwordAlwaysFront(bool always)
+        {
+            if (always == _frontAlways) return;
+            _frontAlways = always;
+            ApplyOrders();
+        }
+
+        public int FamilyPartCount => _familyParts.Count;
+        public bool BaseSwordHidden => _baseSwordHidden;
+
+        /// <summary>
+        /// Hides the character's own drawn weapon (Kage's katana) while a family draws its own with
+        /// <see cref="AddFamilyPart"/>; the fists family hides everything with <see cref="SetSwordVisible"/> instead.
+        /// </summary>
+        public void SetBaseSwordHidden(bool hidden)
+        {
+            _baseSwordHidden = hidden;
+            SetSwordVisible(SwordVisible);
+        }
+
+        /// <summary>
+        /// Adds a weapon part on the Sword bone. <paramref name="axisPts"/> are in the weapon's own frame: x along the
+        /// weapon from the grip pivot (the far hand), y across it (the katana's blade is x 0.08 to 0.80), turned by the
+        /// blade's bind angle onto the bone. Sorted with the sword's layers; hidden with the sword.
+        /// </summary>
+        public void AddFamilyPart(string name, Vector2[] axisPts, Color color, PartRole role, int sub = 0, bool rim = false, float glow = 1f)
+        {
+            var local = new Vector2[axisPts.Length];
+            for (int i = 0; i < local.Length; i++) local[i] = KMath.Rot(axisPts[i], def.bladeBindAngle);
+            var pd = new PartDef { name = name, bone = B.Sword, order = 4 * 4 + sub, color = color, role = role, rim = rim, rimGrow = 0.003f, rimColor = KMath.Hex("#050304"), glow = glow, swordLayer = true };
+            var rt = new PartRT { def = pd, family = true };
+            Transform parent = bones[(int)B.Sword];
+            rt.main = MeshKit.MakeRenderer(name, parent, MeshKit.Poly(local, color, name), MeshKit.Alpha, 0);
+            _all.Add(rt.main);
+            if (rim)
+            {
+                rt.rim = MeshKit.MakeRenderer(name + "_Rim", parent, MeshKit.Poly(MeshKit.Grow(local, pd.rimGrow), pd.rimColor.Value, name + "_Rim"), MeshKit.Alpha, 0);
+                _all.Add(rt.rim);
+            }
+            _parts.Add(rt);
+            _familyParts.Add(rt);
+            if (glow > 1.01f)
+            {
+                _mpb.Clear();
+                _mpb.SetVector("_Color", new Vector4(glow, glow, glow, 1f));
+                rt.main.SetPropertyBlock(_mpb);
+            }
+            ApplyOrders();
+            ApplyTint();
+            rt.main.enabled = SwordVisible;
+            if (rt.rim != null) rt.rim.enabled = SwordVisible;
+        }
+
+        /// <summary>Removes every part added with <see cref="AddFamilyPart"/> and shows the character's own weapon again.</summary>
+        public void ClearFamilyParts()
+        {
+            foreach (var rt in _familyParts)
+            {
+                _parts.Remove(rt);
+                Discard(rt.main);
+                Discard(rt.rim);
+            }
+            _familyParts.Clear();
+            SetBaseSwordHidden(false);
+        }
+
+        void Discard(MeshRenderer r)
+        {
+            if (r == null) return;
+            _all.Remove(r);
+            var mesh = r.GetComponent<MeshFilter>()?.sharedMesh;
+            if (mesh != null) Destroy(mesh);
+            Destroy(r.gameObject);
         }
 
         public Vector2 World(B b, Vector2 local) => bones[(int)b].TransformPoint(local);

@@ -49,6 +49,27 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void The_spear_family_is_registered_with_Mizuchi_a_polearm_grip_and_the_longest_blade()
+        {
+            var spear = WeaponFamilies.Get("spear");
+            Assert.IsNotNull(spear);
+            Assert.AreEqual("mizuchi", spear.referenceWeapon);
+            Assert.AreEqual(GripPose.Polearm, spear.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, spear.rageArt);
+            Assert.IsNotNull(spear.visual);
+            Assert.Greater(spear.bladeLength, 1.5f * WeaponFamilies.Get("katana").bladeLength, "the spear's line is far longer than the katana's");
+        }
+
+        [Test]
+        public void The_polearm_holds_its_hands_further_apart_than_the_katana()
+        {
+            Assert.Less(Pose.PolearmSpacing, 3f * Pose.GripSpacing, "a forearm or more behind the lead hand, against a fist's width");
+            Assert.Less(Pose.PolearmPommel, Pose.PolearmSpacing, "it slides back towards the butt");
+            var p = new Pose();
+            Assert.AreEqual(Pose.GripSpacing, p.gripSpacing, "a pose grips like the katana unless the fighter says otherwise");
+        }
+
+        [Test]
         public void A_family_that_is_not_built_yet_is_not_registered()
         {
             Assert.IsNull(WeaponFamilies.Get("twin"));
@@ -57,7 +78,7 @@ namespace Kage.Tests
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "kagetsu", "shizuka", "shinsen", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "kagetsu", "mizuchi", "shizuka", "shinsen", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----
@@ -89,6 +110,22 @@ namespace Kage.Tests
         public void Shizuka_is_measured_against_Kagetsu()
         {
             AssertCombat("shizuka", 1, 64.0 / 60, 68.0 / 64, 62.0 / 58);
+        }
+
+        [Test]
+        public void Mizuchi_at_level_1_is_x1_and_gains_the_JS_amounts_per_level()
+        {
+            AssertCombat("mizuchi", 1, 1, 1, 1);
+            AssertCombat("mizuchi", 8, 1.56, 1.175, 1.105);
+            AssertCombat("mizuchi", 3, 1.16, 1.05, 1.03);
+        }
+
+        [TestCase("sentinel_spear")]
+        [TestCase("temple_staff")]
+        [TestCase("vanguard_yari")]
+        public void The_spear_foes_weapons_are_measured_against_Mizuchi(string weapon)
+        {
+            AssertCombat(weapon, 1, 1, 1, 1);     // JS stats [52, 60, 96], the same as Mizuchi
         }
 
         [Test]
