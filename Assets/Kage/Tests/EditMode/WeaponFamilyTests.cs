@@ -97,13 +97,13 @@ namespace Kage.Tests
         [Test]
         public void A_family_that_is_not_built_yet_is_not_registered()
         {
-            Assert.IsNull(WeaponFamilies.Get("chain"));
+            Assert.IsNull(WeaponFamilies.Get("tachi"));
         }
 
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "mizuchi", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "mizuchi", "yamigama", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----
@@ -151,6 +151,20 @@ namespace Kage.Tests
         public void The_spear_foes_weapons_are_measured_against_Mizuchi(string weapon)
         {
             AssertCombat(weapon, 1, 1, 1, 1);     // JS stats [52, 60, 96], the same as Mizuchi
+        }
+
+        [Test]
+        public void The_chain_sickle_family_is_registered_and_its_weapons_are_measured_against_Yamigama()
+        {
+            var fam = WeaponFamilies.Get("chain");
+            Assert.IsNotNull(fam);
+            Assert.AreEqual("yamigama", fam.referenceWeapon);
+            Assert.AreEqual(GripPose.OneHand, fam.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, fam.rageArt);
+            Assert.IsInstanceOf<IWeaponVisual>(fam.visual);
+            AssertCombat("yamigama", 1, 1, 1, 1);
+            AssertCombat("yamigama", 8, 1.56, 1.175, 1.105);
+            AssertCombat("chain_hook", 1, 1, 1, 1);      // JS base Yamigama: the Chainthrower's weapon is x1 against it
         }
 
         [Test]

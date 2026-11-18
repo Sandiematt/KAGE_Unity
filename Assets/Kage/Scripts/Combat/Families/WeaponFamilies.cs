@@ -19,6 +19,7 @@ namespace Kage
             Add(FistsMoves.Family);
             Add(TwinMoves.Family);
             Add(SpearMoves.Family);
+            Add(ChainMoves.Family);
         }
 
         static void Add(WeaponFamilyDef f)
