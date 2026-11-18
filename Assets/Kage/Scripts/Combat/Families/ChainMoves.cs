@@ -108,10 +108,10 @@ namespace Kage
             // on a downed foe: the sickle driven down
             m.groundHook = new MoveDef("chain.groundHook", "Ground Hook", 22)
                 .Key(5, P().Hip(0f, -0.1f, 0f).Chest(8f).LegN(80f, -110f).LegF(60f, -100f).HandF(0.14f, 1.55f).Blade(100f).HandN(0.2f, 1.5f, 10f))
-                .Key(9, P().Hip(0.05f, -0.34f, 0f).Chest(-34f).Head(18f).FootN(0.26f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandF(0.46f, 0.55f).Blade(-68f).HandN(0.2f, 0.8f, 10f), Ease.InCubic)
-                .Key(14, P().Hip(0.05f, -0.36f, 0f).Chest(-34f).Head(18f).FootN(0.26f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandF(0.46f, 0.52f).Blade(-68f).HandN(0.2f, 0.8f, 10f))
+                .Key(9, P().Hip(0.05f, -0.34f, 0f).Chest(-34f).Head(18f).FootN(0.26f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandF(0.5f, 0.7f).Blade(-60f).HandN(0.2f, 0.8f, 10f), Ease.InCubic)
+                .Key(14, P().Hip(0.05f, -0.36f, 0f).Chest(-34f).Head(18f).FootN(0.26f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandF(0.5f, 0.68f).Blade(-60f).HandN(0.2f, 0.8f, 10f))
                 .Key(22, Stance(), Ease.InOutQuad)
-                .Extend(5, 0f).Extend(9, 0.2f, Ease.OutExpo).Extend(16, 0f)
+                .Extend(5, 0f).Extend(9, 0.12f, Ease.OutExpo).Extend(16, 0f)
                 .Hit(8, 13, Blade, 4, HitLevel.Mid, new Vector2(0.3f, 0.6f), stun: 16, hitstop: 5, shake: 0.12f, otg: true, radius: 0.07f)
                 .Fx(7, 13, FxKind.TrailBlade).Fx(10, 10, FxKind.Dust).Sword();
 
@@ -288,7 +288,7 @@ namespace Kage
             switch (b)
             {
                 case Btn.P:
-                    if (dy < 0) return oppDown && dist < 1.1f ? groundHook : crouchJab;
+                    if (dy < 0) return oppDown && dist < 1.4f ? groundHook : crouchJab;
                     if (fwd > 0) return dist < 0.85f && opp != null && opp.CanBeThrown ? throwGrab : pull;
                     return jab;
                 case Btn.K:

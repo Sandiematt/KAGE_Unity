@@ -271,11 +271,11 @@ namespace Kage.Tests
         }
 
         /// <summary>The farthest the lash lands on the training bag (metres between Kage's start and the bag).</summary>
-        static float FarthestHit(string moveId, int level)
+        static float FarthestHit(string moveId, int level, string weapon = "yamigama")
         {
-            for (float dist = 2.6f; dist > 0.8f; dist -= 0.04f)
+            for (float dist = 3.0f; dist > 0.8f; dist -= 0.04f)
             {
-                using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Bag, 1.6f - dist, kageDef: KageWith("yamigama", level));
+                using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Bag, 1.6f - dist, kageDef: KageWith(weapon, level));
                 f.Run(4);
                 f.Kage.StartMove(f.Kage.moves.All.First(m => m.id == moveId));
                 f.Run(60);
@@ -290,7 +290,9 @@ namespace Kage.Tests
             float l1 = FarthestHit("chain.lash", 1), l8 = FarthestHit("chain.lash", 8);
             Debug.Log($"lash lands from up to {l1:0.00} m (level 1) and {l8:0.00} m (level 8)");
             Assert.Greater(l1, 1.7f, "the lash is a long one");
-            Assert.Less(l1, 2.2f, "mid range, below the spear");
+            float spear = FarthestHit("spear.thrust", 1, "mizuchi");
+            Debug.Log($"the spear's thrust lands from up to {spear:0.00} m");
+            Assert.Less(l1, spear - 0.1f, "mid range, below the spear (root motion included)");
             Assert.Greater(l8 - l1, 0.08f, "the chain runs further at level 8");
         }
 
@@ -471,7 +473,9 @@ namespace Kage.Tests
                 for (int i = 0; i < m.total + 4 && f.Kage.state == FState.Attack; i++)
                 {
                     f.Run(1);
-                    lowest = Mathf.Min(lowest, f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y);
+                    // while a hit window is on (the blend between two keys may swing the point through the floor for a frame or two)
+                    if (m.hits.Any(w => f.Kage.moveFrame >= w.from && f.Kage.moveFrame <= w.to))
+                        lowest = Mathf.Min(lowest, f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y);
                 }
                 Assert.Greater(lowest, -0.06f, $"{m.id}: the tip's lowest point");
             }

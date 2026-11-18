@@ -50,6 +50,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Weapon level**: 1 to 8. **Player level**: Kage's XP level. Never just "level".
 - **Hit window**: the frames of a move in which its hit points can hit (`HitWindow`). *Avoid:* hitbox, active frames (in data).
 - **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family. **Second blade** (`BladeN`): the twin blades' near-hand blade; its windows are blade windows too.
+- **Blade extension**: metres by which a move runs the **Blade** hit line past the blade (`MoveDef.Extend`, `Fighter.BladeExtension`). The chain sickle's **lash** and **pull** use it: the hit line is the chain, and the drawn chain and sickle follow it. The **pull** (Reaper's Pull) is a hit whose knockback points at the attacker, so the foe is dragged in by the ordinary knockback and push. *Avoid:* hook (for the move; the Chainthrower's weapon is the Chain Hook).
 - **Dual grip**: how the twin blades are held, one blade in each hand with the hands apart (`GripPose.Dual`). *Avoid:* two-handed (that is the katana's grip).
 - **Hit sweep**: one hit point's path from its last-frame to this-frame position, cast against hurtboxes.
 - **Hurtbox**: a hurt circle on a bone, as a trigger collider on the Hurtbox layer.
