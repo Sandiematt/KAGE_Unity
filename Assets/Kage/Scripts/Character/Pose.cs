@@ -20,6 +20,14 @@ namespace Kage
         public float swAbs;
         /// <summary>Two-handed grip: the near hand closes on the katana's handle behind the far hand (SAN-113).</summary>
         public bool grip;
+        /// <summary>
+        /// Dual wield (twin blades): a second blade sits in the near hand. Resolving then turns that hand so the blade
+        /// points along <see cref="BladeN"/>'s direction, or, with none authored, a fixed spread from the far blade.
+        /// </summary>
+        public bool dual;
+        /// <summary>The near blade's direction in root space (set by <see cref="BladeN"/>; every resolved pose has one).</summary>
+        public bool hasSwNAbs;
+        public float swNAbs;
         bool _resolved;
 
         // ----- builder API used by the pose library -----
@@ -61,6 +69,26 @@ namespace Kage
         public Pose Sword(float rel) { a[(int)B.Sword] = rel; hasSwAbs = false; return this; }
         /// <summary>Blade direction in root space, degrees (0 = pointing forward, 90 = up).</summary>
         public Pose Blade(float worldDeg) { hasSwAbs = true; swAbs = worldDeg; return this; }
+        /// <summary>Marks the pose as dual wield: the near hand holds a second blade.</summary>
+        public Pose Dual() { dual = true; return this; }
+        /// <summary>Second (near hand) blade direction in root space, degrees (0 = forward, 90 = up). Dual wield only.</summary>
+        public Pose BladeN(float worldDeg) { dual = true; hasSwNAbs = true; swNAbs = worldDeg; return this; }
+
+        /// <summary>The near blade trails the far one by this much when a dual pose gives no direction of its own.</summary>
+        public const float NearBladeSpread = -24f;
+
+        /// <summary>
+        /// A held-grip pose (both hands on one handle) for a dual wielder: the near hand lets go and takes its own
+        /// blade at <paramref name="offset"/> from the far hand (root space).
+        /// </summary>
+        public void SplitHands(Vector2 offset)
+        {
+            if (!grip || !ik[(int)Limb.ArmN] || !ik[(int)Limb.ArmF]) return;
+            target[(int)Limb.ArmN] = target[(int)Limb.ArmF] + offset;
+            grip = false;
+            hasSwNAbs = false;
+            _resolved = false;
+        }
 
         public Pose Clone()
         {
@@ -80,6 +108,9 @@ namespace Kage
             hasSwAbs = o.hasSwAbs;
             swAbs = o.swAbs;
             grip = o.grip;
+            dual = o.dual;
+            hasSwNAbs = o.hasSwNAbs;
+            swNAbs = o.swNAbs;
             _resolved = o._resolved;
         }
 
@@ -95,6 +126,7 @@ namespace Kage
             for (int l = 0; l < 4; l++) if (ik[l]) target[l] = c + KMath.Rot(target[l] - c, deg);
             footAbs[0] += deg; footAbs[1] += deg;
             swAbs += deg;
+            swNAbs += deg;
             _resolved = false;
         }
 
@@ -103,6 +135,7 @@ namespace Kage
         {
             for (int i = 0; i < a.Length; i++) a[i] = KMath.Wrap(a[i]);
             swAbs = KMath.Wrap(swAbs);
+            swNAbs = KMath.Wrap(swNAbs);
             footAbs[0] = KMath.Wrap(footAbs[0]);
             footAbs[1] = KMath.Wrap(footAbs[1]);
         }
@@ -143,6 +176,16 @@ namespace Kage
             Limb2(d, Limb.ArmN, B.ArmNU, B.ArmNL, B.HandN, R[(int)B.Chest], shN, -1f);
             if (grip && ik[(int)Limb.ArmN])
                 a[(int)B.HandN] = KMath.Wrap(handN - (R[(int)B.Chest] + a[(int)B.ArmNU] + a[(int)B.ArmNL]));
+
+            // the near blade points where it is told to (dual wield), else wherever the hand points
+            float rArmN = R[(int)B.Chest] + a[(int)B.ArmNU] + a[(int)B.ArmNL];
+            if (dual)
+            {
+                float far = hasSwAbs ? swAbs : rHandF + a[(int)B.Sword] + d.bladeBindAngle;
+                a[(int)B.HandN] = KMath.Wrap((hasSwNAbs ? swNAbs : far + NearBladeSpread) - rArmN);
+            }
+            swNAbs = KMath.Wrap(rArmN + a[(int)B.HandN]);
+            hasSwNAbs = true;
             _resolved = true;
         }
 
@@ -230,6 +273,9 @@ namespace Kage
             }
             output.hasSwAbs = p.hasSwAbs && q.hasSwAbs;
             output.swAbs = Mathf.LerpUnclamped(p.swAbs, q.swAbs, t);
+            output.dual = p.dual || q.dual;
+            output.hasSwNAbs = p.hasSwNAbs && q.hasSwNAbs;
+            output.swNAbs = Mathf.LerpUnclamped(p.swNAbs, q.swNAbs, t);
             // both gripping: the output re-grips on its own blended sword; else the near wrist blends between the
             // resolved goals (a gripping pose's goal is where its grip put the hand), so letting go and re-gripping is smooth
             output.grip = (p.grip && q.grip) || (t >= 1f && q.grip) || (t <= 0f && p.grip);

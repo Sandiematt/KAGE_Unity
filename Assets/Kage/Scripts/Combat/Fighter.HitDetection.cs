@@ -26,6 +26,9 @@ namespace Kage
                 case HitPoint.Blade:
                     for (int i = 1; i <= 5; i++) into.Add(rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, BladeTipLocal, i / 5f)));
                     break;
+                case HitPoint.BladeN:
+                    for (int i = 1; i <= 5; i++) into.Add(rig.World(B.HandN, Vector2.Lerp(NearBladeBaseLocal, NearBladeTipLocal, i / 5f)));
+                    break;
             }
         }
 

@@ -24,6 +24,7 @@ namespace Kage
             public MeshRenderer main, rim;
             public Transform jiggle;
             public float jAngle, jVel;
+            public bool weapon;       // added at runtime by a weapon family's visual (AddWeaponPart)
         }
 
         readonly List<PartRT> _parts = new();
@@ -329,7 +330,7 @@ namespace Kage
         {
             foreach (var r in _all) r.enabled = v;
             if (scarf != null) scarf.SetVisible(v);
-            if (v && !SwordVisible) SetSwordVisible(false);
+            if (v) SetSwordVisible(SwordVisible);
         }
 
         /// <summary>False while the katana is broken (SAN-113): every part on the sword bone is hidden.</summary>
@@ -340,10 +341,69 @@ namespace Kage
             SwordVisible = v;
             foreach (var p in _parts)
             {
-                if (p.def.bone != B.Sword) continue;
-                p.main.enabled = v;
-                if (p.rim != null) p.rim.enabled = v;
+                if (p.def.bone != B.Sword && !p.weapon) continue;
+                bool show = v && (p.weapon || !_baseSwordHidden);   // a family's own weapon parts show with the sword; the part set's katana only while it isn't replaced
+                p.main.enabled = show;
+                if (p.rim != null) p.rim.enabled = show;
             }
+        }
+
+        // ---- a weapon family's own drawing (SAN-77): parts added to the bones at runtime ----
+        readonly List<PartRT> _weaponParts = new();
+        bool _baseSwordHidden;
+
+        /// <summary>The runtime weapon parts' renderers (twin blades), for tests.</summary>
+        public IEnumerable<MeshRenderer> WeaponRenderers { get { foreach (var p in _weaponParts) yield return p.main; } }
+
+        /// <summary>True while the part set's own katana is replaced by a family's weapon parts.</summary>
+        public bool BaseSwordHidden => _baseSwordHidden;
+
+        /// <summary>Replaces (true) or restores (false) the part set's own sword drawing; the family adds its own parts with <see cref="AddWeaponPart"/>.</summary>
+        public void HideBaseSword(bool hide)
+        {
+            _baseSwordHidden = hide;
+            SetSwordVisible(SwordVisible);
+        }
+
+        /// <summary>Adds a plain polygon part (bind-space points) on <see cref="PartDef.bone"/> at runtime. Removed by <see cref="ClearWeaponParts"/>.</summary>
+        public void AddWeaponPart(PartDef p)
+        {
+            var rt = new PartRT { def = p, weapon = true };
+            Transform parent = bones[(int)p.bone];
+            Vector2 pivot = def.pivot[(int)p.bone];
+            var local = new Vector2[p.pts.Length];
+            for (int k = 0; k < local.Length; k++) local[k] = p.pts[k] - pivot;
+            rt.main = MeshKit.MakeRenderer(p.name, parent, MeshKit.Poly(local, p.color, p.name), MeshKit.Alpha, 0);
+            if (p.rim)
+            {
+                var rimMesh = MeshKit.Poly(MeshKit.Grow(local, p.rimGrow), p.rimColor ?? def.rimColor, p.name + "_Rim");
+                rt.rim = MeshKit.MakeRenderer(p.name + "_Rim", parent, rimMesh, MeshKit.Alpha, 0);
+                _all.Add(rt.rim);
+            }
+            _all.Add(rt.main);
+            _parts.Add(rt);
+            _weaponParts.Add(rt);
+            ApplyOrders();
+            ApplyTint();
+            SetSwordVisible(SwordVisible);
+        }
+
+        /// <summary>Removes every part added by <see cref="AddWeaponPart"/>.</summary>
+        public void ClearWeaponParts()
+        {
+            foreach (var rt in _weaponParts)
+            {
+                _parts.Remove(rt);
+                foreach (var r in new[] { rt.main, rt.rim })
+                {
+                    if (r == null) continue;
+                    _all.Remove(r);
+                    var mf = r.GetComponent<MeshFilter>();
+                    if (mf != null && mf.sharedMesh != null) Destroy(mf.sharedMesh);
+                    Destroy(r.gameObject);
+                }
+            }
+            _weaponParts.Clear();
         }
 
         public Vector2 World(B b, Vector2 local) => bones[(int)b].TransformPoint(local);

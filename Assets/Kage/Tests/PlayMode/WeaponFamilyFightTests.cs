@@ -276,7 +276,8 @@ namespace Kage.Tests
             Release(kb.leftShiftKey);
             yield return null;
             Assert.AreEqual(2, game.player.WeaponLevel);
-            for (int i = 0; i < 3; i++) game.CycleWeapon();
+            var cycle = WeaponFamilies.PlayableWeapons();
+            for (int i = 0; i < cycle.Length && game.player.WeaponId != "fists"; i++) game.CycleWeapon();
             Assert.AreEqual("fists", game.player.WeaponId, "the cycle wraps to bare hands");
             Assert.AreEqual("fists", game.player.Family.id);
         }

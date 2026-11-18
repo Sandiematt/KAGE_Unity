@@ -17,6 +17,7 @@ namespace Kage
         {
             Add(KatanaMoves.Family);
             Add(FistsMoves.Family);
+            Add(TwinMoves.Family);
         }
 
         static void Add(WeaponFamilyDef f)
