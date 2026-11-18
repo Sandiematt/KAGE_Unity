@@ -304,7 +304,7 @@ namespace Kage.Tests
         /// The family's farthest hit point in front of the body over every hit window of every move of its set, when the
         /// window is on (metres from the fighter's position, root motion not counted).
         /// </summary>
-        static float Reach(string familyId, out string longestMove)
+        public static float Reach(string familyId, out string longestMove)
         {
             var fam = WeaponFamilies.Get(familyId);
             using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f, kageDef: KageWith(fam.referenceWeapon));
@@ -319,7 +319,7 @@ namespace Kage.Tests
             return best;
         }
 
-        static float MoveReach(HeadlessFight f, MoveDef m)
+        public static float MoveReach(HeadlessFight f, MoveDef m)
         {
             var k = f.Kage;
             k.ResetForRound(0f, 1f);

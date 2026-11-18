@@ -124,7 +124,7 @@ namespace Kage
             float spacing = polearm ? Pose.PolearmSpacing : heavy ? Pose.HeavySpacing : Pose.GripSpacing;
             float pommel = polearm ? Pose.PolearmPommel : heavy ? Pose.HeavyPommel : Pose.GripPommel;
             if (p.gripSpacing != spacing || p.gripPommel != pommel) { p.gripSpacing = spacing; p.gripPommel = pommel; p.MarkDirty(); }
-            if (polearm && p.ik[(int)Limb.ArmF])
+            if ((polearm || (Family != null && Family.keepPointOffFloor)) && p.ik[(int)Limb.ArmF])
             {
                 const float floor = 0.05f;
                 p.Resolve(def);       // bakes the arm angles; the shaft's drawn direction is their sum

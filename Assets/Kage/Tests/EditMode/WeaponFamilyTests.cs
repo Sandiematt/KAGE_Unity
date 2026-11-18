@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace Kage.Tests
@@ -124,7 +126,81 @@ namespace Kage.Tests
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "iwakudaki", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "iwakudaki", "shizuka", "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+        }
+
+        // ---- the heavy tachi (SAN-81) ----
+
+        [Test]
+        public void The_tachi_family_is_registered_with_Raiko_no_Tachi_a_heavy_two_handed_grip_and_its_own_drawing()
+        {
+            var tachi = WeaponFamilies.Get("tachi");
+            Assert.IsNotNull(tachi);
+            Assert.AreEqual("raiko_no_tachi", tachi.referenceWeapon);
+            Assert.AreEqual(GripPose.HeavyTwoHand, tachi.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, tachi.rageArt);
+            Assert.IsNotNull(tachi.visual);
+            Assert.IsInstanceOf<TachiMoves>(new MoveSets().Get("tachi"));
+        }
+
+        static readonly string[] Registered = { "katana", "fists", "twin", "spear", "cleaver", "tachi" };
+
+        [Test]
+        public void The_tachi_has_the_longest_blade_of_every_registered_family()
+        {
+            float tachi = WeaponFamilies.Get("tachi").bladeLength;
+            int compared = 0;
+            foreach (var id in Registered)
+            {
+                if (id == "tachi") continue;
+                Assert.Greater(tachi, WeaponFamilies.Get(id).bladeLength, $"the tachi's blade is longer than the {id} family's");
+                compared++;
+            }
+            Assert.GreaterOrEqual(compared, 5);
+        }
+
+        /// <summary>The posture multipliers of every window of a family's own moves (the shared body moves have none).</summary>
+        static List<float> PostureMuls(string familyId, bool bladeOnly)
+        {
+            var list = new List<float>();
+            foreach (var m in new MoveSets().Get(familyId).All.Distinct())
+                foreach (var w in m.hits)
+                    if (!bladeOnly || w.points.Contains(HitPoint.Blade)) list.Add(w.postureMul);
+            return list;
+        }
+
+        [Test]
+        public void The_tachi_has_the_highest_posture_multiplier_of_every_registered_family()
+        {
+            float tachiMax = PostureMuls("tachi", false).Max(), tachiBladeMean = PostureMuls("tachi", true).Average();
+            Assert.GreaterOrEqual(tachiMax, 2.2f);
+            foreach (var id in Registered)
+            {
+                if (id == "tachi") continue;
+                var all = PostureMuls(id, false);
+                Assert.Greater(tachiMax, all.Max(), $"the tachi's top window beats the {id} family's");
+                var blade = PostureMuls(id, true);
+                if (blade.Count > 0) Assert.Greater(tachiBladeMean, blade.Average(), $"the tachi's blade windows average more than the {id} family's");
+            }
+        }
+
+        [Test]
+        public void Every_tachi_blade_window_is_heavy_and_carries_posture_damage()
+        {
+            foreach (var m in ((TachiMoves)new MoveSets().Get("tachi")).All.Distinct().Where(m => m.id.StartsWith("tachi.")))
+                foreach (var w in m.hits.Where(w => w.points.Contains(HitPoint.Blade)))
+                {
+                    Assert.IsTrue(w.sword, m.id);
+                    Assert.GreaterOrEqual(w.postureMul, 1.6f, m.id);
+                    if (m != ((TachiMoves)new MoveSets().Get("tachi")).groundStab) Assert.IsTrue(w.heavy || w.knockdown, m.id + " is a heavy blow");
+                }
+        }
+
+        [Test]
+        public void Raiko_no_Tachi_is_x1_at_level_1_and_is_fixed_at_level_1()
+        {
+            AssertCombat("raiko_no_tachi", 1, 1, 1, 1);
+            Assert.AreEqual(1, Kage.Rules.GameRules.MaxLevel(Kage.Rules.GearKind.Weapons, "raiko_no_tachi"), "boss weapons never level up");
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----
