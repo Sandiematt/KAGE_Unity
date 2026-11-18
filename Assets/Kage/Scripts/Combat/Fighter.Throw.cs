@@ -15,7 +15,7 @@ namespace Kage
             float f = _moveTime;
             if (Passed(m.grabFrame))
             {
-                bool ok = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < 0.95f && opponent.CanBeThrown;
+                bool ok = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < m.grabRange && opponent.CanBeThrown;
                 if (!ok)
                 {
                     move = m.whiff;     // the whiff carries on from the same move time
@@ -30,7 +30,7 @@ namespace Kage
             {
                 float u = (f - m.grabFrame) / (float)(m.releaseFrame - m.grabFrame);
                 float e = KMath.Apply(Ease.InOutQuad, u);
-                Vector2 p = Pos + new Vector2(facing * Mathf.Lerp(0.62f, -0.78f, e), Mathf.Sin(e * Mathf.PI) * 1.3f + 0.02f);
+                Vector2 p = Pos + new Vector2(facing * Mathf.Lerp(m.carryFrom, m.carryTo, e), Mathf.Sin(e * Mathf.PI) * m.carryHeight + 0.02f);
                 _victim.rb.MovePosition(p);
                 _victim._thrownSpin = e * 200f;
             }
@@ -51,7 +51,7 @@ namespace Kage
                 attacker = this,
                 w = new HitWindow { dmg = throwDmg, level = HitLevel.Unblockable, knockdown = true, heavy = true, hitstop = 8, shake = 0.35f },
                 dmg = DamageCalc.For(this, v, throwDmg, false, false),     // a body move: the weapon doesn't count
-                kb = new Vector2(-facing * 2.4f, -3f),
+                kb = move != null ? new Vector2(facing * move.throwKb.x, move.throwKb.y) : new Vector2(-facing * 2.4f, -3f),
                 zone = HitZone.Body,
                 contact = v.Pos + Vector2.up * 0.4f,
                 moveId = move != null ? move.id : "throw", window = -1,
