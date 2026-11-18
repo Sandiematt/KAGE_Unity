@@ -35,7 +35,7 @@ namespace Kage
             _entries.Add(("Tumble", PoseLib.Tumble()));
             _entries.Add(("Lie", PoseLib.Lie()));
             _entries.Add(("Thrown 120", PoseLib.Thrown(120f)));
-            var m = MoveSet.Build();
+            var m = KatanaMoves.Build();
             var all = new[]
             {
                 m.jab, m.cross, m.uppercut, m.crouchPunch, m.lunge, m.kick1, m.kick2, m.axeKick, m.sweep, m.pushKick,
@@ -71,7 +71,7 @@ namespace Kage
         }
 
         /// <summary>Strobe view: one technique sampled at 12 evenly spaced frames, to judge how
-        /// smoothly it rotates. id is a MoveSet field name ("roll", "backflip", …), "flip" for the
+        /// smoothly it rotates. id is a KatanaMoves field name ("roll", "backflip", …), "flip" for the
         /// jump somersault or "tumble" for a launched body.</summary>
         public void ShowStrobe(string id)
         {
@@ -104,9 +104,9 @@ namespace Kage
             }
             else
             {
-                var field = typeof(MoveSet).GetField(id);
+                var field = typeof(KatanaMoves).GetField(id);
                 if (field == null) return;
-                var mv = (MoveDef)field.GetValue(MoveSet.Build());
+                var mv = (MoveDef)field.GetValue(KatanaMoves.Build());
                 for (int i = 0; i < PerPage; i++)
                 {
                     float f = mv.total * i / (float)(PerPage - 1);

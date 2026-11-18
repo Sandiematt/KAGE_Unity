@@ -6,6 +6,27 @@ namespace Kage
     /// <summary>Input buffer, move selection, starting a move and per-frame move playback.</summary>
     public partial class Fighter
     {
+        // ---- fractional move playback (ADR-0006) ----
+        // The move time advances by the playback rate each frame; moveFrame is its whole part. The whole frames
+        // "passed" this frame are (_movePrev, moveFrame]; with none passed (rate below 1) the current frame still counts
+        // as touched, so windows and root motion stay on for as long as the move sits in them. At rate 1 exactly one
+        // frame passes each frame and playback is the authored one.
+        float _moveTime;
+        int _movePrev, _moveTicks;
+
+        /// <summary>The move's time in (fractional) frames.</summary>
+        public float MoveTime => _moveTime;
+
+        /// <summary>A one-frame trigger at <paramref name="frame"/> fires on the frame that passes it: once, never skipped.</summary>
+        bool Passed(int frame) => frame > _movePrev && frame <= moveFrame;
+
+        /// <summary>True when a whole frame touched this frame lies in <paramref name="from"/>..<paramref name="to"/>.</summary>
+        bool Touches(int from, int to)
+        {
+            int lo = moveFrame > _movePrev ? _movePrev + 1 : moveFrame;
+            return lo <= to && moveFrame >= from;
+        }
+
         void Buffer(Btn b, FrameInput inp)
         {
             _buffer = b;
@@ -42,6 +63,9 @@ namespace Kage
             SetState(FState.Attack);
             move = m;
             moveFrame = 0;
+            _moveTime = 0f;
+            _movePrev = 0;
+            _moveTicks = 0;
             moveHit = false;
             _hitLog.Clear();
             _sweepPrev.Clear();
@@ -56,7 +80,11 @@ namespace Kage
         {
             var m = move;
             if (m == null) { SetState(FState.Idle); return; }
-            moveFrame++;
+            float rate = PlaybackRate;
+            _movePrev = moveFrame;
+            _moveTicks++;
+            _moveTime += rate;
+            moveFrame = Mathf.FloorToInt(_moveTime + 1e-4f);
             int f = moveFrame;
 
             // chains / cancels
@@ -78,10 +106,10 @@ namespace Kage
             bool driven = false;
             foreach (var e in m.motions)
             {
-                if (f < e.from || f > e.to) continue;
+                if (!Touches(e.from, e.to)) continue;
                 var v = rb.linearVelocity;
-                v.x = e.vel.x * facing;
-                if (e.setY && f == e.from) v.y = e.vel.y;
+                v.x = e.vel.x * facing * rate;                 // the same distance over the scaled frames
+                if (e.setY && Passed(e.from)) v.y = e.vel.y;   // a jump impulse: unscaled, so the arc is the authored one
                 rb.linearVelocity = v;
                 driven = true;
             }
@@ -94,29 +122,31 @@ namespace Kage
                 switch (e.kind)
                 {
                     case FxKind.AfterImage:
-                        if (f >= e.from && f <= e.to && (f - e.from) % 2 == 0) Vfx.I?.Ghost(rig, fxMain, 0.28f);
+                        for (int k = _movePrev + 1; k <= f; k++)
+                            if (k >= e.from && k <= e.to && (k - e.from) % 2 == 0) Vfx.I?.Ghost(rig, fxMain, 0.28f);
                         break;
-                    case FxKind.Dust: if (f == e.from) Vfx.I?.Dust(Pos, 0.9f, -facing); break;
-                    case FxKind.Shockwave: if (f == e.from) { Vfx.I?.Shockwave(Pos + new Vector2(facing * 0.45f, 0.02f), 1.2f, fxMain); GameFeel.Shake(0.18f); } break;
-                    case FxKind.Glint: if (f == e.from) Vfx.I?.Glint(rig.World(B.Sword, def.bladeTipLocal * 0.6f), fxCore); break;
-                    case FxKind.SlashLine: if (f == e.from) Vfx.I?.SlashLine(Pos + Vector2.up * 1.05f - Vector2.right * facing * 1.2f, Pos + Vector2.up * 1.05f + Vector2.right * facing * 0.6f, fxMain, fxCore); break;
-                    case FxKind.ChargeDark: if (f >= e.from && f <= e.to) Vfx.I?.ChargeDark(rig.World(B.HandF, Vector2.zero), fxMain, fxDark); break;
+                    case FxKind.Dust: if (Passed(e.from)) Vfx.I?.Dust(Pos, 0.9f, -facing); break;
+                    case FxKind.Shockwave: if (Passed(e.from)) { Vfx.I?.Shockwave(Pos + new Vector2(facing * 0.45f, 0.02f), 1.2f, fxMain); GameFeel.Shake(0.18f); } break;
+                    case FxKind.Glint: if (Passed(e.from)) Vfx.I?.Glint(rig.World(B.Sword, def.bladeTipLocal * 0.6f), fxCore); break;
+                    case FxKind.SlashLine: if (Passed(e.from)) Vfx.I?.SlashLine(Pos + Vector2.up * 1.05f - Vector2.right * facing * 1.2f, Pos + Vector2.up * 1.05f + Vector2.right * facing * 0.6f, fxMain, fxCore); break;
+                    case FxKind.ChargeDark: if (Touches(e.from, e.to)) Vfx.I?.ChargeDark(rig.World(B.HandF, Vector2.zero), fxMain, fxDark); break;
                 }
             }
 
             // hit windows: pose the rig at this exact logic frame before testing
             bool active = false;
-            foreach (var w in m.hits) if (f >= w.from && f <= w.to) active = true;
+            foreach (var w in m.hits) if (Touches(w.from, w.to)) active = true;
             if (active)
             {
-                m.Evaluate(def, f, _start, _display);
+                m.Evaluate(def, _moveTime, _start, _display);
+                if (!GripHeld) _display.grip = false;
                 rig.Apply(_display);
                 foreach (var w in m.hits)
-                    if (f >= w.from && f <= w.to) WindowActive(w);
+                    if (Touches(w.from, w.to)) WindowActive(w);
             }
 
-            if (f == m.projectileFrame) { if (IsKunaiThrow(m)) ThrowKunai(); else SpawnCrescent(); }
-            if (m.isThrow) ThrowUpdate(f);
+            if (m.projectileFrame >= 0 && Passed(m.projectileFrame)) { if (IsKunaiThrow(m)) ThrowKunai(); else SpawnCrescent(); }
+            if (m.isThrow) ThrowUpdate();
 
             if (m.airborne && m.endsOnLanding && f > 4 && Grounded) { Landed(); return; }
             if (f >= m.total)

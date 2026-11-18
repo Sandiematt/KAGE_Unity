@@ -114,12 +114,13 @@ namespace Kage
                 Vfx.I?.SlashLine(p + Vector2.up * 0.6f, q - Vector2.up * 0.3f, fxMain, fxCore);
                 Vfx.I?.HitBurst(opponent.Pos + Vector2.up * 1.0f, (q - p).normalized, 1.0f, true, fxMain, fxCore, fxDark);
                 float before = opponent.health;
-                opponent.health = Mathf.Max(1f, opponent.health - 4f);
+                int cut = DamageCalc.For(this, opponent, UltCut.dmg, false, true);
+                opponent.health = Mathf.Max(1f, opponent.health - cut);
                 opponent.LastDamageTaken = before - opponent.health;
                 // a cut publishes a Hit like any window; the onHit callback never saw cuts, so it still doesn't
                 PublishHit(opponent, new HitInfo
                 {
-                    attacker = this, w = UltCut, dmg = 4, zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
+                    attacker = this, w = UltCut, dmg = cut, zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
                     moveId = ThousandShadows, window = -1,
                 }, HitResult.Hit);
                 opponent.rig.Flash(Color.white, 0.9f);
@@ -151,7 +152,7 @@ namespace Kage
                 {
                     attacker = this,
                     w = new HitWindow { dmg = 14, level = HitLevel.Unblockable, knockdown = true, heavy = true, hitstop = 14, shake = 0.6f, sword = true, stun = 30 },
-                    dmg = 14, kb = new Vector2(-facing * 2.0f, 6f), zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
+                    dmg = DamageCalc.For(this, opponent, 14, false, true), kb = new Vector2(-facing * 2.0f, 6f), zone = HitZone.Body, contact = opponent.Pos + Vector2.up * 1.0f,
                     moveId = ThousandShadows, window = -1,
                 };
                 opponent.state = FState.Idle;

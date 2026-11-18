@@ -107,7 +107,7 @@ namespace Kage
                 var w = Def.hit;
                 var info = new HitInfo
                 {
-                    attacker = Owner, w = w, dmg = w.dmg, kb = new Vector2(w.kb.x * away, w.kb.y), zone = best.Zone, contact = pos,
+                    attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, false), kb = new Vector2(w.kb.x * away, w.kb.y), zone = best.Zone, contact = pos,
                     moveId = Def.id, window = -1,
                 };
                 var outcome = ExternalHit.Deliver(Owner, t, info, out _);

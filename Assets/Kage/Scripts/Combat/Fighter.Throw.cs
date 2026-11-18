@@ -9,18 +9,16 @@ namespace Kage
         // =====================================================================================
         //  THROWS
         // =====================================================================================
-        void ThrowUpdate(int f)
+        void ThrowUpdate()
         {
             var m = move;
-            if (f == m.grabFrame)
+            float f = _moveTime;
+            if (Passed(m.grabFrame))
             {
                 bool ok = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < 0.95f && opponent.CanBeThrown;
                 if (!ok)
                 {
-                    var keep = f;
-                    var whiff = m.whiff;
-                    move = whiff;
-                    moveFrame = keep;
+                    move = m.whiff;     // the whiff carries on from the same move time
                     return;
                 }
                 _victim = opponent;
@@ -36,7 +34,7 @@ namespace Kage
                 _victim.rb.MovePosition(p);
                 _victim._thrownSpin = e * 200f;
             }
-            if (f == m.releaseFrame) ReleaseVictim(true);
+            if (Passed(m.releaseFrame)) ReleaseVictim(true);
         }
 
         void ReleaseVictim(bool slam)
@@ -47,11 +45,12 @@ namespace Kage
             v._thrower = null;
             v.rb.bodyType = RigidbodyType2D.Dynamic;
             if (!slam) { v.SetState(FState.Idle); return; }
+            int throwDmg = move != null ? move.throwDmg : 12;
             var info = new HitInfo
             {
                 attacker = this,
-                w = new HitWindow { dmg = move != null ? move.throwDmg : 12, level = HitLevel.Unblockable, knockdown = true, heavy = true, hitstop = 8, shake = 0.35f },
-                dmg = move != null ? move.throwDmg : 12,
+                w = new HitWindow { dmg = throwDmg, level = HitLevel.Unblockable, knockdown = true, heavy = true, hitstop = 8, shake = 0.35f },
+                dmg = DamageCalc.For(this, v, throwDmg, false, false),     // a body move: the weapon doesn't count
                 kb = new Vector2(-facing * 2.4f, -3f),
                 zone = HitZone.Body,
                 contact = v.Pos + Vector2.up * 0.4f,

@@ -16,7 +16,7 @@ namespace Kage
         /// <summary>Shatters the katana (a guarded breaksWeapon hit, or the dev hotkey).</summary>
         public void BreakSword()
         {
-            if (SwordBroken) return;
+            if (SwordBroken || !HasBlade) return;
             SwordBroken = true;
             Vector2 mid = rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, def.bladeTipLocal, 0.4f));
             Vfx.I?.BlockBurst(mid, new Vector2(-facing, 0.3f));
@@ -30,6 +30,7 @@ namespace Kage
         {
             SwordBroken = false;
             rig.SetSwordVisible(true);
+            Family?.visual?.Attach(rig, WeaponId);     // the family's own drawing (bare hands hide the sword again)
         }
 
         /// <summary>The start of a fight (not a round): the full kunai count and the sword back.</summary>
@@ -39,11 +40,15 @@ namespace Kage
             RestoreSword();
         }
 
-        /// <summary>The move to play for a selected one: with the sword broken the Pommel Strike becomes the far-fist cross, and sword moves are out.</summary>
+        /// <summary>
+        /// The move to play for a selected one. Bare-handed (sword broken, or the fists family) the set's stand-in
+        /// plays instead (the Pommel Strike becomes the far-fist cross), and blade moves are out.
+        /// </summary>
         MoveDef Armed(MoveDef m)
         {
-            if (m == null || !SwordBroken) return m;
-            if (m == moves.cross) return moves.crossFist;
+            if (m == null || !BareHanded) return m;
+            var bare = moves.BareHanded(m);
+            if (bare != null) return bare;
             if (m.swordFront || (m.projectileFrame >= 0 && !IsKunaiThrow(m))) return null;
             foreach (var w in m.hits) if (w.sword) return null;
             return m;
@@ -51,10 +56,10 @@ namespace Kage
 
         readonly Pose _unarmed = new();
 
-        /// <summary>With the sword broken a held stance shows both fists up instead of the two-handed grip.</summary>
+        /// <summary>Bare-handed (sword broken, or the fists family) a held stance shows both fists up instead of the two-handed grip.</summary>
         Pose Unarmed(Pose p)
         {
-            if (!SwordBroken) return p;
+            if (!BareHanded) return p;
             _unarmed.CopyFrom(p);
             if (p.hip.y < -0.2f) _unarmed.HandN(0.26f, 1.06f, 10f).HandF(0.18f, 0.96f, 10f);
             else FistGuard(_unarmed);

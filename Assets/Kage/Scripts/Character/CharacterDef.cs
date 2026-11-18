@@ -67,10 +67,15 @@ namespace Kage
         public string armor;
 
         // ---- fighting ----
-        /// <summary>Weapon family id (ADR-0006): "katana", "twin", "spear", "chain", "cleaver", "fists", "tachi".</summary>
+        /// <summary>
+        /// Weapon family id (ADR-0006): "katana", "twin", "spear", "chain", "cleaver", "fists", "tachi". The weapon
+        /// decides: this is used when <see cref="weaponId"/> is null or its family isn't registered yet.
+        /// </summary>
         public string family = "katana";
         /// <summary>JS weapon id for stats and drawing; null = the family's reference weapon.</summary>
         public string weaponId;
+        /// <summary>Weapon level 1..8 (the player's upgrade; foes fight at 1). Scales damage, move rate and reach (ADR-0006).</summary>
+        public int weaponLevel = 1;
         /// <summary>"regular", "agile", "defensive", "ranged", "heavy", "boss"; null for the player.</summary>
         public string aiProfile;
         /// <summary>Ability ids this character may use, in slot order (ADR-0008).</summary>

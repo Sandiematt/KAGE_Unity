@@ -79,7 +79,18 @@ namespace Kage.Rules
         public static WeaponMultipliers WeaponMul(string id, int level)
         {
             var w = JsTables.Weapon(id) ?? JsTables.Weapon("fists");
-            var reference = (w.Base != null ? JsTables.Weapon(w.Base) : null) ?? w;
+            return WeaponMul(id, level, w.Base ?? w.Id);
+        }
+
+        /// <summary>
+        /// Combat multipliers of a weapon at a level measured against <paramref name="referenceId"/> at level 1 (capped
+        /// like the JS rule). Unity's weapon families use it to measure a family's reference weapon against itself
+        /// (ADR-0006: Raikō no Tachi). An unknown weapon reads as bare hands, an unknown reference as the weapon itself.
+        /// </summary>
+        public static WeaponMultipliers WeaponMul(string id, int level, string referenceId)
+        {
+            var w = JsTables.Weapon(id) ?? JsTables.Weapon("fists");
+            var reference = (referenceId != null ? JsTables.Weapon(referenceId) : null) ?? w;
             var refStats = StatsOf(reference);
             var r = WeaponRaw(w, level);
             return new WeaponMultipliers

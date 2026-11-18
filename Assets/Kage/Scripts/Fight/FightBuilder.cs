@@ -23,7 +23,6 @@ namespace Kage
 
         public FightContext Context { get; }
         public FightLoop Loop { get; }
-        public MoveSet Moves { get; }
 
         public FightBuilder(Transform root, int seed, bool manualClock)
         {
@@ -37,7 +36,6 @@ namespace Kage
                 Physics2D.simulationMode = SimulationMode2D.Script;
             }
             Loop.Bind(Context);
-            Moves = MoveSet.Build();
         }
 
         /// <summary>
@@ -55,7 +53,8 @@ namespace Kage
         /// <summary>
         /// Spawns a fighter from character data under the root, in tick order: its part set draws it, and
         /// its mass, body scale, health (JS health × healthMul × the health scale), multipliers and flags are
-        /// set. Ids get "#n" from the second copy on. Place it with <see cref="Fighter.ResetForRound"/>
+        /// set, and its weapon (<see cref="CharacterDef.weaponId"/> at <see cref="CharacterDef.weaponLevel"/>) picks
+        /// its family's move set, grip and blade (ADR-0006). Ids get "#n" from the second copy on. Place it with <see cref="Fighter.ResetForRound"/>
         /// (or use the overload that does).
         /// </summary>
         public Fighter Spawn(CharacterDef def, int team, IInputSource input)
@@ -68,7 +67,7 @@ namespace Kage
             var go = new GameObject(def.displayName);
             go.transform.SetParent(_root, false);
             var f = go.AddComponent<Fighter>();
-            f.Setup(def, rigDef, MovesFor(def), team == 0 ? PlayerSortOrder : FoeSortOrder);
+            f.Setup(def, rigDef, team == 0 ? PlayerSortOrder : FoeSortOrder);
             if (def.bodyScale != 1f) go.transform.localScale = new Vector3(def.bodyScale, def.bodyScale, 1f);
             f.input = input;
             f.team = team;
@@ -77,6 +76,7 @@ namespace Kage
             f.CharacterId = def.id;
             f.FighterId = copies == 0 ? def.id : def.id + "#" + (copies + 1);
             f.ctx = Context;
+            f.EquipWeapon(def.weaponId, def.weaponLevel);
             Context.Fighters.Add(f);
             if (Context.Clock.Manual) Headless(go);
             return f;
@@ -89,9 +89,6 @@ namespace Kage
             f.ResetForRound(x, facing);
             return f;
         }
-
-        /// <summary>The move set of the character's weapon family. Every character uses Kage's katana set until the families land (ADR-0006, SAN-70).</summary>
-        MoveSet MovesFor(CharacterDef def) => Moves;
 
         /// <summary>The training bag, registered as a prop.</summary>
         public PunchingBag AddBag(Transform parent, Vector2 anchor)

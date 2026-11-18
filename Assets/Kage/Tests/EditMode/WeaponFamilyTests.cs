@@ -1,0 +1,128 @@
+using NUnit.Framework;
+
+namespace Kage.Tests
+{
+    // The weapon family contract (ADR-0006): which family a JS weapon fights with, the combat multipliers of a weapon
+    // at a level measured against its family's reference weapon, and the one damage formula. Expected values are
+    // worked out from the JS weapon table ([damage, speed, reach] at level 1) and the JS growth rule.
+    public class WeaponFamilyTests
+    {
+        // ---- which family a weapon belongs to ----
+
+        [TestCase("kagetsu", "katana")]
+        [TestCase("shizuka", "katana")]
+        [TestCase("mugen_no_ha", "katana")]
+        [TestCase("cutter_blade", "katana")]
+        [TestCase("fists", "fists")]
+        [TestCase("iron_fists", "fists")]
+        [TestCase("tsubame", "twin")]
+        [TestCase("mist_fans", "twin")]
+        [TestCase("mizuchi", "spear")]
+        [TestCase("temple_staff", "spear")]
+        [TestCase("sentinel_spear", "spear")]
+        [TestCase("yamigama", "chain")]
+        [TestCase("chain_hook", "chain")]
+        [TestCase("onikiri", "cleaver")]
+        [TestCase("raider_cleaver", "cleaver")]
+        [TestCase("iwakudaki", "cleaver")]
+        [TestCase("raiko_no_tachi", "tachi")]
+        [TestCase("raikon_tachi", "tachi")]
+        public void A_weapon_fights_with_the_family_of_its_JS_base(string weapon, string family)
+        {
+            Assert.AreEqual(family, WeaponFamilies.FamilyIdOf(weapon));
+        }
+
+        [Test]
+        public void Katana_and_fists_are_registered_with_their_reference_weapon_grip_blade_and_rage_art()
+        {
+            var katana = WeaponFamilies.Get("katana");
+            Assert.AreEqual("kagetsu", katana.referenceWeapon);
+            Assert.AreEqual(GripPose.TwoHand, katana.grip);
+            Assert.Greater(katana.bladeLength, 0.6f);
+            Assert.AreEqual("crimsonMoon", katana.rageArt);
+
+            var fists = WeaponFamilies.Get("fists");
+            Assert.AreEqual("fists", fists.referenceWeapon);
+            Assert.AreEqual(GripPose.Fists, fists.grip);
+            Assert.AreEqual(0f, fists.bladeLength);
+            Assert.AreEqual(Fighter.ThousandShadows, fists.rageArt);
+        }
+
+        [Test]
+        public void A_family_that_is_not_built_yet_is_not_registered()
+        {
+            Assert.IsNull(WeaponFamilies.Get("twin"));
+        }
+
+        [Test]
+        public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
+        {
+            CollectionAssert.AreEqual(new[] { "fists", "kagetsu", "shizuka", "shinsen", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+        }
+
+        // ---- combat multipliers (WeaponStats.Combat) ----
+
+        static void AssertCombat(string id, int level, double dmg, double speed, double reach)
+        {
+            var c = WeaponStats.Combat(id, level);
+            Assert.AreEqual(dmg, c.dmg, 1e-5, id + " damage at level " + level);
+            Assert.AreEqual(speed, c.speed, 1e-5, id + " speed at level " + level);
+            Assert.AreEqual(reach, c.reach, 1e-5, id + " reach at level " + level);
+        }
+
+        [Test]
+        public void Kagetsu_at_level_1_is_exactly_x1_on_everything()
+        {
+            var c = WeaponStats.Combat("kagetsu", 1);
+            Assert.AreEqual(1f, c.dmg);
+            Assert.AreEqual(1f, c.speed);
+            Assert.AreEqual(1f, c.reach);
+        }
+
+        [Test]
+        public void Kagetsu_at_level_8_gains_the_JS_amounts()
+        {
+            AssertCombat("kagetsu", 8, 1.56, 1.175, 1.105);
+        }
+
+        [Test]
+        public void Shizuka_is_measured_against_Kagetsu()
+        {
+            AssertCombat("shizuka", 1, 64.0 / 60, 68.0 / 64, 62.0 / 58);
+        }
+
+        [Test]
+        public void Speed_and_reach_are_capped()
+        {
+            AssertCombat("shinsen", 1, 150.0 / 60, 1.25, 1.2);
+        }
+
+        [Test]
+        public void Raiko_no_Tachi_is_measured_against_itself()
+        {
+            AssertCombat("raiko_no_tachi", 1, 1, 1, 1);
+        }
+
+        [Test]
+        public void Raikons_own_tachi_keeps_its_JS_multiplier()
+        {
+            AssertCombat("raikon_tachi", 1, 64.0 / 82, 40.0 / 38, 60.0 / 54);
+        }
+
+        // ---- the damage formula (DamageCalc) ----
+
+        [TestCase(9, 1f, 1f, false, 0f, 9)]
+        [TestCase(9, 1f, 1f, true, 0f, 14)]       // today's crit: RoundToInt(13.5)
+        [TestCase(5, 1f, 1f, true, 0f, 8)]        // RoundToInt(7.5)
+        [TestCase(9, 1f, 1.56f, false, 0f, 14)]   // Kagetsu level 8: 14.04
+        [TestCase(12, 0.9f, 1f, false, 0f, 11)]   // a Footman's damage multiplier: 10.8
+        [TestCase(10, 1f, 1f, false, 0.14f, 9)]   // an Ironclad's defence: 8.6
+        [TestCase(12, 1f, 1f, true, 0.03f, 17)]   // Kage's starter defence on a crit: 17.46
+        [TestCase(1, 1f, 1f, false, 0.5f, 1)]     // never below 1
+        public void Damage_is_window_times_character_times_weapon_times_crit_less_defence_rounded_once(
+            int window, float damageMul, float weaponDmg, bool crit, float defense, int expected)
+        {
+            Assert.AreEqual(expected, DamageCalc.Damage(window, damageMul, weaponDmg, crit, defense));
+        }
+    }
+}

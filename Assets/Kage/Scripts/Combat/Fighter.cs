@@ -67,7 +67,10 @@ namespace Kage
         public CharacterFlags Flags;
         /// <summary>Locomotion speed multiplier (walk, run, dash, jump distance). Not the move rate.</summary>
         public float SpeedMul = 1f;
-        /// <summary>Kept for the damage formula, move playback and the posture bar (SAN-70, SAN-86); not applied yet.</summary>
+        /// <summary>
+        /// Damage dealt and damage reduction (<see cref="DamageCalc"/>), attack playback rate (× the weapon's speed,
+        /// <see cref="PlaybackRate"/>), and the posture bar size (SAN-86, not applied yet).
+        /// </summary>
         public float DamageMul = 1f, Defense, MoveRate = 1f, PostureMax = 100f;
         /// <summary>Extra multiplier on knockback received, on top of mass.</summary>
         public float KnockbackTaken = 1f;
@@ -121,12 +124,13 @@ namespace Kage
         // =====================================================================================
         /// <summary>
         /// Builds this fighter from character data (ADR-0005): <paramref name="d"/> is the rig its part set drew.
-        /// Health is jsHealth × healthMul × the health scale. Body scale is the caller's (FightBuilder.Spawn).
+        /// Health is jsHealth × healthMul × the health scale. Body scale is the caller's (FightBuilder.Spawn), and so
+        /// is the weapon (<see cref="EquipWeapon"/>), which sets the move set.
         /// </summary>
-        public void Setup(CharacterDef c, RigDef d, MoveSet set, int sortBase)
+        public void Setup(CharacterDef c, RigDef d, int sortBase)
         {
             Character = c;
-            Setup(c.displayName, d, set, sortBase, c.colors.main, c.colors.core, c.colors.dark);
+            Setup(c.displayName, d, sortBase, c.colors.main, c.colors.core, c.colors.dark);
             Mass = c.mass;
             isPlayer = c.IsPlayer;
             Flags = c.flags;
@@ -139,12 +143,11 @@ namespace Kage
             maxHealth = health = c.MaxHealth();
         }
 
-        void Setup(string displayName, RigDef d, MoveSet set, int sortBase, Color main, Color core, Color dark)
+        void Setup(string displayName, RigDef d, int sortBase, Color main, Color core, Color dark)
         {
             InitPoses();
             fighterName = displayName;
             def = d;
-            moves = set;
             fxMain = main; fxCore = core; fxDark = dark;
             gameObject.layer = KageGame.LayerFighter;
 

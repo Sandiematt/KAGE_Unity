@@ -1,19 +1,34 @@
+using System.Collections.Generic;
 using UnityEngine;
 using static Kage.PoseLib;
 
 namespace Kage
 {
     /// <summary>
-    /// Kage's moveset. The unarmed techniques follow the reference recording frame by frame
-    /// (jab/cross chain, roundhouse, switch kick, sweep, flying kick, forward roll, backflip,
-    /// over-the-shoulder throw, ground strike, knockdown and kip-up). The katana and shadow
-    /// techniques extend that kit to fit Kage's design.
+    /// The katana family (ADR-0006): Kage's moveset, unchanged. The unarmed techniques follow the reference
+    /// recording frame by frame (jab/cross chain, roundhouse, switch kick, sweep, flying kick, forward roll,
+    /// backflip, over-the-shoulder throw, ground strike, knockdown and kip-up). The katana and shadow
+    /// techniques extend that kit to fit Kage's design. Kagetsu, Shizuka and every katana foe fight with it.
     /// </summary>
-    public class MoveSet
+    public sealed class KatanaMoves : MoveSet
     {
         public MoveDef jab, cross, crossFist, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
-        public MoveDef throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront;
-        public MoveDef iai, risingMoon, cleave, shadowStep, lowReap, counterStance, counterSlash, crescent;
+        public MoveDef airKick, airPunch, airSlash, groundPound;
+        public MoveDef iai, risingMoon, cleave, shadowStep, lowReap, counterStance, crescent;
+
+        /// <summary>Metres from guard to tip of Kage's drawn katana (KageModel's blade base (0.08, 0) to tip (0.80, 0.03)).</summary>
+        public const float BladeLength = 0.7206f;
+
+        public static readonly WeaponFamilyDef Family = new()
+        {
+            id = WeaponFamilies.Katana,
+            referenceWeapon = "kagetsu",
+            build = _ => Build(),
+            grip = GripPose.TwoHand,
+            bladeLength = BladeLength,
+            rageArt = "crimsonMoon",
+            visual = new KatanaVisual(),
+        };
 
         static readonly HitPoint[] Fist = { HitPoint.Fist };
         static readonly HitPoint[] Hilt = { HitPoint.Hilt };
@@ -25,9 +40,9 @@ namespace Kage
 
         static Pose P() => new Pose();
 
-        public static MoveSet Build()
+        public static KatanaMoves Build()
         {
-            var m = new MoveSet();
+            var m = new KatanaMoves();
 
             // ===================== FISTS =====================
             m.jab = new MoveDef("jab", "Jab", 20)
@@ -305,7 +320,7 @@ namespace Kage
         }
 
         /// <summary>Picks a technique from button + direction (relative to facing) + context.</summary>
-        public MoveDef Select(Btn b, int fwd, int dy, bool air, Fighter self)
+        public override MoveDef Select(Btn b, int fwd, int dy, bool air, Fighter self)
         {
             Fighter opp = self.opponent;
             float dist = opp != null ? Mathf.Abs(opp.transform.position.x - self.transform.position.x) : 99f;
@@ -335,5 +350,15 @@ namespace Kage
             }
             return null;
         }
+
+        /// <summary>Bare-handed (sword broken, or the fists family) the Pommel Strike becomes the far-fist cross.</summary>
+        public override MoveDef BareHanded(MoveDef m) => m == cross ? crossFist : null;
+
+        public override IEnumerable<MoveDef> All => new[]
+        {
+            jab, cross, crossFist, uppercut, crouchPunch, lunge, kick1, kick2, axeKick, sweep, pushKick,
+            throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront,
+            iai, risingMoon, cleave, shadowStep, lowReap, counterStance, counterSlash, crescent,
+        };
     }
 }

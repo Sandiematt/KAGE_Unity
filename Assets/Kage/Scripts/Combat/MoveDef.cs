@@ -27,6 +27,8 @@ namespace Kage
         public bool breaksWeapon;
         public int hitstop = 5;
         public float shake = 0.12f;
+        /// <summary>Multiplies the posture this window adds (ADR-0006; posture itself is SAN-86). Raikō no Tachi is the highest.</summary>
+        public float postureMul = 1f;
     }
 
     public class MotionEvt { public int from, to; public Vector2 vel; public bool setY; }
@@ -34,7 +36,8 @@ namespace Kage
 
     /// <summary>
     /// A data-driven technique: pose keyframes (60 fps frames), hit windows, root motion,
-    /// VFX cues and cancel/chain rules. Built with a small fluent API in <see cref="KageMoves"/>.
+    /// VFX cues and cancel/chain rules. Built with a small fluent API in a family's move set
+    /// (<see cref="KatanaMoves"/>). Played at the fighter's playback rate (ADR-0006): frames here are authored frames.
     /// </summary>
     public class MoveDef
     {
@@ -56,6 +59,8 @@ namespace Kage
         public int counterFrom = -1, counterTo = -1;
         public int gravityOffFrom = -1, gravityOffTo = -1;
         public int spinFrom, spinTo; public float spinDeg;
+        /// <summary>Armour frames (ADR-0006): light hits (windows without <c>heavy</c>) don't flinch the fighter during them. Applied by the armour check (SAN-80).</summary>
+        public int armorFrom = -1, armorTo = -1;
 
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
@@ -67,12 +72,13 @@ namespace Kage
 
         public MoveDef Hit(int from, int to, HitPoint[] pts, int dmg, HitLevel lvl, Vector2 kb, int stun = 16, int hitstop = 5,
             float shake = 0.12f, bool knockdown = false, bool launch = false, bool otg = false, bool heavy = false, float radius = 0.09f,
-            bool breaksWeapon = false)
+            bool breaksWeapon = false, float postureMul = 1f)
         {
             hits.Add(new HitWindow
             {
                 from = from, to = to, points = pts, dmg = dmg, level = lvl, kb = kb, stun = stun, hitstop = hitstop,
                 shake = shake, knockdown = knockdown, launch = launch, otg = otg, heavy = heavy, radius = radius, breaksWeapon = breaksWeapon,
+                postureMul = postureMul,
                 sword = System.Array.IndexOf(pts, HitPoint.Blade) >= 0
             });
             return this;
@@ -92,6 +98,8 @@ namespace Kage
 
         public MoveDef Invuln(int from, int to) { invulnFrom = from; invulnTo = to; return this; }
         public MoveDef NoPush(int from, int to) { noPushFrom = from; noPushTo = to; return this; }
+        /// <summary>Armour frames: light hits don't flinch the fighter from <paramref name="from"/> to <paramref name="to"/> (SAN-80 applies it).</summary>
+        public MoveDef Armour(int from, int to) { armorFrom = from; armorTo = to; return this; }
         public MoveDef Cancel(int from) { cancelFrom = from; return this; }
         /// <summary>After a confirmed hit, jumping cancels the move's recovery from this frame (chase a launch).</summary>
         public MoveDef JumpCancel(int from) { jumpCancelFrom = from; return this; }
@@ -127,5 +135,6 @@ namespace Kage
 
         public bool Invulnerable(int f) => f >= invulnFrom && f <= invulnTo;
         public bool PassThrough(int f) => f >= noPushFrom && f <= noPushTo;
+        public bool Armoured(int f) => f >= armorFrom && f <= armorTo;
     }
 }
