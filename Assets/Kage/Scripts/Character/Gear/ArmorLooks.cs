@@ -109,6 +109,22 @@ namespace Kage
             KageModel.Recolour(d, C("#2B242A"), pale ? Color.Lerp(t.coat, t.coatLo, 0.45f) : Color.Lerp(t.coat, Color.white, 0.12f));
             KageModel.Recolour(d, C("#0C090B"), t.coatLo.Mul(0.7f));
 
+            // his hair's crimson strokes take the armour's rim tone (the JS armours also restyle the hair; only the colour is carried here)
+            var hair = d.parts.Find(p => p.soft == SoftKind.Hair);
+            if (hair != null)
+            {
+                for (int i = 0; i < hair.polys.Count; i++)
+                {
+                    var (pts, c) = hair.polys[i];
+                    Color.RGBToHSV(c, out float h, out float s, out float v);
+                    if ((h < 0.04f || h > 0.96f) && s > 0.35f && v > 0.35f)
+                    {
+                        var n = t.rim * Mathf.Min(1.1f, v / Mathf.Max(0.01f, rimFrom.maxColorComponent));
+                        hair.polys[i] = (pts, new Color(Mathf.Min(1f, n.r), Mathf.Min(1f, n.g), Mathf.Min(1f, n.b), c.a));
+                    }
+                }
+            }
+
             // the scarf: its wrap, fold and knot and the two tails
             foreach (var p in d.parts)
             {

@@ -132,6 +132,8 @@ namespace Kage.Tests
                 Assert.AreNotEqual(Coat(bare), Coat(d), $"{id} coat");
                 Assert.AreNotEqual(bare.scarfColor, d.scarfColor, $"{id} scarf");
                 Assert.AreNotEqual(bare.rimColor, d.rimColor, $"{id} rim");
+                Assert.AreNotEqual(string.Join(",", bare.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col)),
+                                   string.Join(",", d.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col)), $"{id} hair strokes");
             }
             foreach (var id in TrophyDrawn)
             {
