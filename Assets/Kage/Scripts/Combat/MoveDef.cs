@@ -55,6 +55,14 @@ namespace Kage
         public int noPushFrom = -1, noPushTo = -1;
         public bool swordFront, airborne, endsOnLanding, normalizeAtEnd;
         public bool isThrow; public int grabFrame, releaseFrame; public MoveDef whiff; public int throwDmg;
+        /// <summary>
+        /// Throw tuning (SAN-80); the defaults are the shoulder throw's. The grab needs the foe within <c>grabRange</c> metres at
+        /// <c>grabFrame</c>; the victim is carried from <c>carryFrom</c> to <c>carryTo</c> metres in front of the thrower (negative =
+        /// behind) on an arc <c>carryHeight</c> high; the release launches it with <c>throwKb</c> (x forward of the thrower,
+        /// the impulse of a mass-1 victim, SAN-68).
+        /// </summary>
+        public float grabRange = 0.95f, carryFrom = 0.62f, carryTo = -0.78f, carryHeight = 1.3f;
+        public Vector2 throwKb = new Vector2(-2.4f, -3f);
         public int meterCost;
         public int projectileFrame = -1;
         public int counterFrom = -1, counterTo = -1;

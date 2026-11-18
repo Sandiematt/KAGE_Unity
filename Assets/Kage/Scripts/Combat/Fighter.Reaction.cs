@@ -33,6 +33,9 @@ namespace Kage
         /// <summary>Declared by SAN-65; implemented by SAN-92 (Fighter.PerfectDodge.cs).</summary>
         partial void PreHitCheck(ref DefenceCheck c);
 
+        /// <summary>Defence step 7 (ADR-0004): sets <paramref name="resistsFlinch"/> when armour takes this hit's flinch. Declared and implemented by SAN-80 (Fighter.Armour.cs).</summary>
+        partial void ArmourCheck(in HitInfo info, ref bool resistsFlinch);
+
         public bool Overlap(Vector2 p, float r, HitWindow w, out HitZone zone, out Vector2 contact)
         {
             zone = HitZone.Body;
@@ -111,9 +114,13 @@ namespace Kage
             health = Mathf.Max(0f, health - info.dmg);
             meter = Mathf.Min(100f, meter + 3f + info.dmg * 0.3f);
             rig.Flash(Color.white, 0.95f, 14f);
-            if (_victim != null) ReleaseVictim(false);
+
+            // armour (ADR-0004 step 7): the damage lands, the flinch doesn't, and a held victim stays held (Fighter.Armour.cs)
+            bool resists = health > 0f && ResistsFlinch(info);
+            if (_victim != null && !resists) ReleaseVictim(false);
 
             if (health <= 0f) { KnockOut(info); return HitResult.Hit; }
+            if (resists) { rig.Squash(0.03f); return HitResult.Hit; }
 
             if (state == FState.Launched || !Grounded || w.launch || w.knockdown) Launch(info);
             else

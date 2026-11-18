@@ -105,10 +105,10 @@ namespace Kage.Tests
             var f = Duel(KageWith("fists"));
             Assert.AreEqual("fists", f.Kage.Family.id);
             Assert.IsFalse(f.Kage.rig.SwordVisible, "no katana drawn");
-            f.KageInput.Add(1, buttons: "P").Add(7).Add(1, buttons: "P").Add(40).Add(1, buttons: "S").Add(40).Add(1, dy: -1, buttons: "S");
-            f.Run(150);
+            f.KageInput.Add(1, buttons: "P").Add(7).Add(1, buttons: "P").Add(10).Add(1, buttons: "P").Add(60).Add(1, dy: -1, buttons: "P");     // the uppercut has floored the foe: down + punch is the ground strike
+            f.Run(200);
             var started = f.Events(CombatEventType.MoveStarted).Where(e => e.SourceId == "kage").Select(e => e.MoveId).ToList();
-            CollectionAssert.AreEqual(new[] { "jab", "crossFist", "uppercut", "crouchPunch" }, started);
+            CollectionAssert.AreEqual(new[] { "jab", "crossFist", "uppercut", "groundPound" }, started);
         }
 
         [Test]

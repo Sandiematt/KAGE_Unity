@@ -402,7 +402,7 @@ namespace Kage.Tests
         static readonly float[] Distances = { 0.45f, 0.8f, 1.15f, 1.5f, 1.85f, 2.2f };
 
         /// <summary>Starts <paramref name="m"/> against the training bag from several distances (and the dev arena's high bag and a low-hung one); true when it hits.</summary>
-        static bool LandsOnBag(MoveDef m, string weapon, out string where)
+        public static bool LandsOnBag(MoveDef m, string weapon, out string where)
         {
             foreach (var anchor in new[] { HighBag, LowBag })
                 foreach (float dist in Distances)
