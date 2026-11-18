@@ -17,6 +17,7 @@ namespace Kage
             {
                 case HitPoint.Fist: into.Add(rig.World(B.HandN, def.fistLocal)); break;
                 case HitPoint.Hilt: into.Add(rig.World(B.HandF, def.hiltLocal)); break;
+                case HitPoint.FistF: into.Add(rig.World(B.HandF, def.BindLocal(B.Sword))); break;
                 case HitPoint.FootN: into.Add(rig.World(B.FootN, def.footTipLocal)); into.Add(rig.World(B.FootN, def.heelLocal)); break;
                 case HitPoint.FootF: into.Add(rig.World(B.FootF, def.footTipLocal)); into.Add(rig.World(B.FootF, def.heelLocal)); break;
                 case HitPoint.ShinN: into.Add(rig.World(B.LegNL, new Vector2(0f, -0.1f))); break;

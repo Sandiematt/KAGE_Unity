@@ -22,6 +22,7 @@ namespace Kage
                     Knock(new Vector2(KnockVelocity(new Vector2(info.kb.x * 0.55f + Mathf.Sign(info.kb.x) * 0.8f, 0f)).x, rb.linearVelocity.y));
                     health = Mathf.Max(1f, health - (w.sword ? Mathf.Ceil(info.dmg * 0.15f) : 0f));
                     rig.Flash(new Color(0.85f, 0.9f, 1f), 0.35f);
+                    if (w.breaksWeapon) BreakSword();
                     return true;
                 }
             }

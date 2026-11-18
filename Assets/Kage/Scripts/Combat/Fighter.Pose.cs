@@ -39,7 +39,7 @@ namespace Kage
         public void PoseOutput(float alpha, float dt, float time)
         {
             if (rig == null || def == null || rig.def == null || _stance == null) return;
-            if (state == FState.KO) { rig.Secondary(dt, Vector2.zero); return; }
+            if (state == FState.KO || FallingPhysically) { rig.Secondary(dt, Vector2.zero); return; }
             float sf = stateFrame + alpha;
             switch (state)
             {
@@ -47,7 +47,7 @@ namespace Kage
                     move?.Evaluate(def, moveFrame + alpha, _start, _display);
                     break;
                 case FState.Idle:
-                    _target.CopyFrom(_stance);
+                    _target.CopyFrom(Unarmed(_stance));
                     float br = Mathf.Sin(time * 2.4f + (isPlayer ? 0f : 1.3f));
                     _target.hip.y += br * 0.007f;
                     _target.a[(int)B.Chest] += br * 1.2f;
@@ -58,18 +58,18 @@ namespace Kage
                 case FState.Walk:
                 case FState.Run:
                     GaitPose(alpha);
-                    BlendTo(_target, sf, state == FState.Run ? 6f : 4f);
+                    BlendTo(Unarmed(_target), sf, state == FState.Run ? 6f : 4f);
                     break;
                 case FState.Dash:
                     BlendTo(_dashAir ? _airDash : (_dashDir > 0 ? _dashF : _dashB), sf, 3f);
                     break;
                 case FState.Skid: BlendTo(_skid, sf, 4f); break;
-                case FState.Crouch: BlendTo(_guardHeld ? _crouchBlock : _crouch, sf, 5f); break;
+                case FState.Crouch: BlendTo(Unarmed(_guardHeld ? _crouchBlock : _crouch), sf, 5f); break;
                 case FState.Land:
                     Pose.Blend(def, _land, _landDeep, _landHard, _target);
                     BlendTo(_target, sf, 2.5f);
                     break;
-                case FState.Blockstun: BlendTo(_crouchHeld ? _crouchBlock : _block, sf, 2f); break;
+                case FState.Blockstun: BlendTo(Unarmed(_crouchHeld ? _crouchBlock : _block), sf, 2f); break;
                 case FState.Hitstun:
                     if (_stun > 6) BlendTo(_hurt ?? _hurtBody, sf, 3f);
                     else { Pose.Blend(def, _hurt ?? _hurtBody, _stance, 1f - _stun / 6f, _display); }
@@ -103,6 +103,7 @@ namespace Kage
                     else _display.CopyFrom(_ref);
                     break;
             }
+            if (SwordBroken) _display.grip = false;     // no handle to hold
             rig.Apply(_display);
             rig.Secondary(dt, rb.linearVelocity);
             if (!Headless) UpdateTrails();

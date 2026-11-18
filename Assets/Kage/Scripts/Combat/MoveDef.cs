@@ -5,7 +5,7 @@ namespace Kage
 {
     public enum Btn { None, P, K, S, X }
     public enum HitLevel { High, Mid, Low, Overhead, Unblockable }
-    public enum HitPoint { Fist, Hilt, FootN, FootF, ShinN, ShinF, KneeN, Blade }
+    public enum HitPoint { Fist, Hilt, FootN, FootF, ShinN, ShinF, KneeN, Blade, FistF }
     public enum FxKind { TrailBlade, TrailFist, TrailFootN, TrailFootF, Dust, AfterImage, ChargeDark, Shockwave, Glint, SlashLine }
 
     public class PoseKey
@@ -23,6 +23,8 @@ namespace Kage
         public Vector2 kb;                 // x is away from the attacker
         public int stun = 16;
         public bool knockdown, launch, otg, heavy, sword;
+        /// <summary>A guarded hit from this window shatters the defender's sword (heavy enemy and boss attacks, SAN-113).</summary>
+        public bool breaksWeapon;
         public int hitstop = 5;
         public float shake = 0.12f;
     }
@@ -64,12 +66,13 @@ namespace Kage
         }
 
         public MoveDef Hit(int from, int to, HitPoint[] pts, int dmg, HitLevel lvl, Vector2 kb, int stun = 16, int hitstop = 5,
-            float shake = 0.12f, bool knockdown = false, bool launch = false, bool otg = false, bool heavy = false, float radius = 0.09f)
+            float shake = 0.12f, bool knockdown = false, bool launch = false, bool otg = false, bool heavy = false, float radius = 0.09f,
+            bool breaksWeapon = false)
         {
             hits.Add(new HitWindow
             {
                 from = from, to = to, points = pts, dmg = dmg, level = lvl, kb = kb, stun = stun, hitstop = hitstop,
-                shake = shake, knockdown = knockdown, launch = launch, otg = otg, heavy = heavy, radius = radius,
+                shake = shake, knockdown = knockdown, launch = launch, otg = otg, heavy = heavy, radius = radius, breaksWeapon = breaksWeapon,
                 sword = System.Array.IndexOf(pts, HitPoint.Blade) >= 0
             });
             return this;

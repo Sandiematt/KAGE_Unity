@@ -18,6 +18,8 @@ namespace Kage
         public readonly float[] footAbs = new float[2];
         public bool hasSwAbs;
         public float swAbs;
+        /// <summary>Two-handed grip: the near hand closes on the katana's handle behind the far hand (SAN-113).</summary>
+        public bool grip;
         bool _resolved;
 
         // ----- builder API used by the pose library -----
@@ -29,7 +31,7 @@ namespace Kage
         public Pose Coat(float n, float f) { a[(int)B.CoatN] = n; a[(int)B.CoatF] = f; return this; }
 
         public Pose ArmN(float upper, float lower, float hand = 0f)
-        { a[(int)B.ArmNU] = upper; a[(int)B.ArmNL] = lower; a[(int)B.HandN] = hand; ik[(int)Limb.ArmN] = false; return this; }
+        { a[(int)B.ArmNU] = upper; a[(int)B.ArmNL] = lower; a[(int)B.HandN] = hand; ik[(int)Limb.ArmN] = false; grip = false; return this; }
         public Pose ArmF(float upper, float lower, float hand = 0f)
         { a[(int)B.ArmFU] = upper; a[(int)B.ArmFL] = lower; a[(int)B.HandF] = hand; ik[(int)Limb.ArmF] = false; return this; }
         public Pose LegN(float upper, float lower, float foot = 0f)
@@ -39,7 +41,13 @@ namespace Kage
 
         /// <summary>IK: near (fist) wrist goal in root space.</summary>
         public Pose HandN(float x, float y, float handAngle = 0f)
-        { ik[(int)Limb.ArmN] = true; target[(int)Limb.ArmN] = new Vector2(x, y); a[(int)B.HandN] = handAngle; return this; }
+        { ik[(int)Limb.ArmN] = true; target[(int)Limb.ArmN] = new Vector2(x, y); a[(int)B.HandN] = handAngle; grip = false; return this; }
+        /// <summary>
+        /// Two-handed grip: the near wrist goal and hand angle come from the far hand and the blade, so the near
+        /// fist closes on the handle behind the far fist wherever the swing takes the sword. A later
+        /// <see cref="HandN"/> or <see cref="ArmN"/> lets go again.
+        /// </summary>
+        public Pose Grip() { ik[(int)Limb.ArmN] = true; grip = true; return this; }
         /// <summary>IK: far (katana) wrist goal in root space.</summary>
         public Pose HandF(float x, float y, float handAngle = 0f)
         { ik[(int)Limb.ArmF] = true; target[(int)Limb.ArmF] = new Vector2(x, y); a[(int)B.HandF] = handAngle; return this; }
@@ -71,6 +79,7 @@ namespace Kage
             System.Array.Copy(o.footAbs, footAbs, 2);
             hasSwAbs = o.hasSwAbs;
             swAbs = o.swAbs;
+            grip = o.grip;
             _resolved = o._resolved;
         }
 
@@ -116,7 +125,6 @@ namespace Kage
             Vector2 hipN = hips + KMath.Rot(d.BindLocal(B.LegNU), R[(int)B.Hips]);
             Vector2 hipF = hips + KMath.Rot(d.BindLocal(B.LegFU), R[(int)B.Hips]);
 
-            Limb2(d, Limb.ArmN, B.ArmNU, B.ArmNL, B.HandN, R[(int)B.Chest], shN, -1f);
             Limb2(d, Limb.ArmF, B.ArmFU, B.ArmFL, B.HandF, R[(int)B.Chest], shF, -1f);
             Limb2(d, Limb.LegN, B.LegNU, B.LegNL, B.FootN, R[(int)B.Hips], hipN, 1f);
             Limb2(d, Limb.LegF, B.LegFU, B.LegFL, B.FootF, R[(int)B.Hips], hipF, 1f);
@@ -126,12 +134,43 @@ namespace Kage
             if (hasFootAbs[0]) a[(int)B.FootN] = KMath.Wrap(footAbs[0] - rLegNL);
             if (hasFootAbs[1]) a[(int)B.FootF] = KMath.Wrap(footAbs[1] - rLegFL);
 
-            if (hasSwAbs)
-            {
-                float rHandF = R[(int)B.Chest] + a[(int)B.ArmFU] + a[(int)B.ArmFL] + a[(int)B.HandF];
-                a[(int)B.Sword] = KMath.Wrap(swAbs - d.bladeBindAngle - rHandF);
-            }
+            float rArmFU = R[(int)B.Chest] + a[(int)B.ArmFU], rArmFL = rArmFU + a[(int)B.ArmFL];
+            float rHandF = rArmFL + a[(int)B.HandF];
+            if (hasSwAbs) a[(int)B.Sword] = KMath.Wrap(swAbs - d.bladeBindAngle - rHandF);
+
+            if (grip && ik[(int)Limb.ArmN]) target[(int)Limb.ArmN] = GripWrist(d, shF, rArmFU, rArmFL, rHandF, shN);
+            Limb2(d, Limb.ArmN, B.ArmNU, B.ArmNL, B.HandN, R[(int)B.Chest], shN, -1f);
+            if (grip && ik[(int)Limb.ArmN])
+                a[(int)B.HandN] = KMath.Wrap(rHandF - (R[(int)B.Chest] + a[(int)B.ArmNU] + a[(int)B.ArmNL]));
             _resolved = true;
+        }
+
+        /// <summary>Where the near hand rests on the handle behind the far fist (sword-axis offset, metres).</summary>
+        public const float GripSpacing = -0.1f, GripPommel = -0.155f;
+
+        /// <summary>
+        /// The near wrist goal for the two-handed grip: the near fist on the handle a fist behind the far hand,
+        /// with the hand turned like the far hand. When the near shoulder can't reach that far the fist slides
+        /// back along the handle towards the pommel.
+        /// </summary>
+        Vector2 GripWrist(RigDef d, Vector2 shF, float rArmFU, float rArmFL, float rHandF, Vector2 shN)
+        {
+            Vector2 elbow = shF + KMath.Rot(d.BindLocal(B.ArmFL), rArmFU);
+            Vector2 wristF = elbow + KMath.Rot(d.BindLocal(B.HandF), rArmFL);
+            Vector2 pivot = wristF + KMath.Rot(d.BindLocal(B.Sword), rHandF);
+            Vector2 axis = KMath.Dir(rHandF + a[(int)B.Sword] + d.bladeBindAngle);
+            Vector2 fistToWrist = -KMath.Rot(d.fistLocal, rHandF);
+            float reach = (d.BindLocal(B.ArmNL).magnitude + d.BindLocal(B.HandN).magnitude) * 0.995f;
+            Vector2 w = pivot + axis * GripSpacing + fistToWrist;
+            if ((w - shN).sqrMagnitude > reach * reach)
+            {
+                Vector2 back = pivot + axis * GripPommel + fistToWrist;
+                // slide towards the pommel as far as the arm needs (the closest point of the handle to the shoulder)
+                Vector2 seg = back - w;
+                float t = Mathf.Clamp01(Vector2.Dot(shN - w, seg) / Mathf.Max(1e-6f, seg.sqrMagnitude));
+                w += seg * t;
+            }
+            return w;
         }
 
         void Limb2(RigDef d, Limb limb, B upper, B lower, B end, float parentR, Vector2 root, float bend)
@@ -173,6 +212,9 @@ namespace Kage
             }
             output.hasSwAbs = p.hasSwAbs && q.hasSwAbs;
             output.swAbs = Mathf.LerpUnclamped(p.swAbs, q.swAbs, t);
+            // both gripping: the output re-grips on its own blended sword; else the near wrist blends between the
+            // resolved goals (a gripping pose's goal is where its grip put the hand), so letting go and re-gripping is smooth
+            output.grip = p.grip && q.grip;
             output._resolved = false;
         }
     }

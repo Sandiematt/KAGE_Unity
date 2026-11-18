@@ -329,6 +329,21 @@ namespace Kage
         {
             foreach (var r in _all) r.enabled = v;
             if (scarf != null) scarf.SetVisible(v);
+            if (v && !SwordVisible) SetSwordVisible(false);
+        }
+
+        /// <summary>False while the katana is broken (SAN-113): every part on the sword bone is hidden.</summary>
+        public bool SwordVisible { get; private set; } = true;
+
+        public void SetSwordVisible(bool v)
+        {
+            SwordVisible = v;
+            foreach (var p in _parts)
+            {
+                if (p.def.bone != B.Sword) continue;
+                p.main.enabled = v;
+                if (p.rim != null) p.rim.enabled = v;
+            }
         }
 
         public Vector2 World(B b, Vector2 local) => bones[(int)b].TransformPoint(local);

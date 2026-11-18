@@ -24,6 +24,8 @@ namespace Kage
             if (_buffer == Btn.X && dy < 0 && TrySpecialDown()) return true;
             var m = moves.Select(_buffer, f, dy, !Grounded, this);
             if (m == null) return false;
+            m = Armed(m);
+            if (m == null) { ConsumeBuffer(); return false; }    // a sword move with the sword broken: the press does nothing
             if (m.meterCost > 0 && meter < m.meterCost) { ConsumeBuffer(); KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO SHADOW", new Color(0.7f, 0.7f, 0.7f), 0.7f); return false; }
             ConsumeBuffer();
             StartMove(m);
@@ -58,7 +60,7 @@ namespace Kage
             int f = moveFrame;
 
             // chains / cancels
-            if (_bufferAge <= 10 && _buffer != Btn.None && f >= m.cancelFrom && m.chain.TryGetValue(_buffer, out var next))
+            if (_bufferAge <= 10 && _buffer != Btn.None && f >= m.cancelFrom && m.chain.TryGetValue(_buffer, out var next) && (next = Armed(next)) != null)
             {
                 ConsumeBuffer();
                 StartMove(next);

@@ -11,12 +11,13 @@ namespace Kage
     /// </summary>
     public class MoveSet
     {
-        public MoveDef jab, cross, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
+        public MoveDef jab, cross, crossFist, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
         public MoveDef throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront;
         public MoveDef iai, risingMoon, cleave, shadowStep, lowReap, counterStance, counterSlash, crescent;
 
         static readonly HitPoint[] Fist = { HitPoint.Fist };
         static readonly HitPoint[] Hilt = { HitPoint.Hilt };
+        static readonly HitPoint[] FistF = { HitPoint.FistF };
         static readonly HitPoint[] FootN = { HitPoint.FootN, HitPoint.ShinN };
         static readonly HitPoint[] FootF = { HitPoint.FootF, HitPoint.ShinF };
         static readonly HitPoint[] FootTip = { HitPoint.FootN };
@@ -39,8 +40,8 @@ namespace Kage
 
             m.cross = new MoveDef("cross", "Pommel Strike", 24)
                 .Key(5, Stance().Chest(-4f).HandF(0.02f, 1.0f).Blade(170f))
-                .Key(9, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).HandN(0.12f, 1.08f, 10f).HandF(0.56f, 1.16f).Blade(178f), Ease.OutExpo)
-                .Key(13, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).HandN(0.12f, 1.08f, 10f).HandF(0.55f, 1.16f).Blade(178f))
+                .Key(9, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).Grip().HandF(0.56f, 1.16f).Blade(178f), Ease.OutExpo)
+                .Key(13, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).Grip().HandF(0.55f, 1.16f).Blade(178f))
                 .Key(24, Stance(), Ease.InOutQuad)
                 .Hit(8, 11, Hilt, 5, HitLevel.High, new Vector2(1.4f, 0f), stun: 16, hitstop: 5, shake: 0.08f)
                 .Sword().Cancel(11);
@@ -54,8 +55,18 @@ namespace Kage
                 .Move(2, 9, 1.8f).JumpCancel(15)
                 .Fx(8, 14, FxKind.TrailFist);
 
+            // sword broken (SAN-113): the second punch is the far fist, with the Pommel Strike's timing
+            m.crossFist = new MoveDef("crossFist", "Rear Cross", 24)
+                .Key(5, FistGuard(Stance().Chest(-4f)).HandF(0.08f, 1.16f, 10f))
+                .Key(9, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).HandN(0.14f, 1.12f, 10f).HandF(0.6f, 1.2f))
+                .Key(13, P().Hip(0.09f, -0.09f, -8f).Chest(-26f).Head(14f).Feet(0.33f, -0.2f).HandN(0.14f, 1.12f, 10f).HandF(0.59f, 1.2f))
+                .Key(24, FistGuard(Stance()), Ease.InOutQuad)
+                .Hit(8, 11, FistF, 5, HitLevel.High, new Vector2(1.4f, 0f), stun: 16, hitstop: 5, shake: 0.08f)
+                .Fx(7, 12, FxKind.TrailFist).Cancel(11);
+
             m.jab.chain[Btn.P] = m.cross;
             m.cross.chain[Btn.P] = m.uppercut;
+            m.crossFist.chain[Btn.P] = m.uppercut;
 
             m.crouchPunch = new MoveDef("crouchPunch", "Low Jab", 18)
                 .Key(4, Crouch().HandN(0.15f, 0.9f))
@@ -157,9 +168,9 @@ namespace Kage
                 .Fx(6, 12, FxKind.TrailFist).Air();
 
             m.airSlash = new MoveDef("airSlash", "Crescent Spin", 30)
-                .Key(3, P().Hip(0f, 0f, 0f).Chest(-10f).LegN(90f, -120f).LegF(80f, -110f).HandN(0.1f, 1.1f).HandF(0.45f, 1.15f).Blade(10f))
-                .Key(18, P().Hip(0f, 0f, 0f).Chest(-12f).LegN(92f, -122f).LegF(82f, -112f).HandN(0.1f, 1.1f).HandF(0.46f, 1.15f).Blade(10f), Ease.Linear)
-                .Key(30, P().Hip(0f, 0f, 0f).Chest(5f).LegN(40f, -60f).LegF(20f, -50f).HandN(0.2f, 1.15f).HandF(0.35f, 1.0f).Blade(-30f))
+                .Key(3, P().Hip(0f, 0f, 0f).Chest(-10f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.45f, 1.15f).Blade(10f))
+                .Key(18, P().Hip(0f, 0f, 0f).Chest(-12f).LegN(92f, -122f).LegF(82f, -112f).Grip().HandF(0.46f, 1.15f).Blade(10f), Ease.Linear)
+                .Key(30, P().Hip(0f, 0f, 0f).Chest(5f).LegN(40f, -60f).LegF(20f, -50f).Grip().HandF(0.35f, 1.0f).Blade(-30f))
                 .Spin(2, 19, -360f)
                 .Hit(4, 9, Blade, 5, HitLevel.Overhead, new Vector2(1.2f, 1.0f), stun: 16, hitstop: 4, shake: 0.08f, radius: 0.07f)
                 .Hit(11, 16, Blade, 5, HitLevel.Overhead, new Vector2(1.8f, 2.5f), stun: 20, hitstop: 6, shake: 0.15f, knockdown: true, radius: 0.07f)
@@ -214,28 +225,28 @@ namespace Kage
 
             // ===================== KATANA =====================
             m.iai = new MoveDef("iai", "Iai Draw", 30)
-                .Key(6, P().Hip(-0.03f, -0.11f, -4f).Chest(4f).Head(4f).Feet(0.22f, -0.26f).HandN(0.16f, 1.16f).HandF(-0.04f, 0.84f).Blade(-158f))
-                .Key(9, P().Hip(0.08f, -0.11f, -10f).Chest(-16f).Head(10f).Feet(0.32f, -0.22f).HandN(0.08f, 1.12f).HandF(0.42f, 1.08f).Blade(8f), Ease.OutExpo)
-                .Key(12, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).HandN(0.06f, 1.1f).HandF(0.36f, 1.26f).Blade(62f))
-                .Key(18, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).HandN(0.06f, 1.1f).HandF(0.36f, 1.26f).Blade(70f))
+                .Key(6, P().Hip(-0.03f, -0.11f, -4f).Chest(4f).Head(4f).Feet(0.22f, -0.26f).Grip().HandF(-0.04f, 0.84f).Blade(-158f))
+                .Key(9, P().Hip(0.08f, -0.11f, -10f).Chest(-16f).Head(10f).Feet(0.32f, -0.22f).Grip().HandF(0.42f, 1.08f).Blade(8f), Ease.OutExpo)
+                .Key(12, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).Grip().HandF(0.36f, 1.26f).Blade(62f))
+                .Key(18, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).Grip().HandF(0.36f, 1.26f).Blade(70f))
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Hit(8, 12, Blade, 9, HitLevel.Mid, new Vector2(1.8f, 0.3f), stun: 18, hitstop: 6, shake: 0.12f, radius: 0.07f)
                 .Fx(6, 14, FxKind.TrailBlade).Sword().Cancel(12);
 
             m.risingMoon = new MoveDef("risingMoon", "Rising Moon", 32)
-                .Key(5, P().Hip(0.04f, -0.26f, -6f).Chest(-26f).Head(14f).Feet(0.3f, -0.22f).HandN(0.12f, 1.0f).HandF(0.3f, 0.58f).Blade(-55f))
-                .Key(9, P().Hip(0.12f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.36f, 0.13f).FootF(-0.15f, 0.15f, -20f).HandN(0f, 1.2f).HandF(0.36f, 1.42f).Blade(96f), Ease.OutQuad)
-                .Key(13, P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f).HandN(0f, 1.2f).HandF(0.26f, 1.52f).Blade(110f))
+                .Key(5, P().Hip(0.04f, -0.26f, -6f).Chest(-26f).Head(14f).Feet(0.3f, -0.22f).Grip().HandF(0.3f, 0.58f).Blade(-55f))
+                .Key(9, P().Hip(0.12f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.36f, 0.13f).FootF(-0.15f, 0.15f, -20f).Grip().HandF(0.36f, 1.42f).Blade(96f), Ease.OutQuad)
+                .Key(13, P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f).Grip().HandF(0.26f, 1.52f).Blade(110f))
                 .Key(32, Stance(), Ease.InOutQuad)
                 .Hit(5, 10, Blade, 8, HitLevel.Mid, new Vector2(0.4f, 7.2f), stun: 30, hitstop: 7, shake: 0.2f, launch: true, heavy: true, radius: 0.09f)
                 .Move(1, 7, 2.4f).JumpCancel(14)
                 .Fx(4, 13, FxKind.TrailBlade).Sword().Cancel(12);
 
             m.cleave = new MoveDef("cleave", "Kage Cleave", 46)
-                .Key(6, P().Hip(0f, -0.22f, 0f).Chest(8f).Head(-6f).Feet(0.24f, -0.26f).HandN(0.1f, 1.1f).HandF(-0.08f, 1.45f).Blade(128f))
-                .Key(14, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).HandN(0f, 1.4f).HandF(0.02f, 1.78f).Blade(98f))
-                .Key(20, P().Hip(0f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).HandN(0.2f, 1.1f).HandF(0.52f, 1.02f).Blade(-48f), Ease.InCubic)
-                .Key(26, P().Hip(0.04f, -0.32f, -6f).Chest(-34f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandN(0.25f, 0.8f).HandF(0.52f, 0.5f).Blade(-28f))
+                .Key(6, Jodan(P().Hip(0f, -0.22f, 0f).Chest(8f).Head(-6f).Feet(0.24f, -0.26f)))
+                .Key(14, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).Grip().HandF(0.02f, 1.78f).Blade(98f))
+                .Key(20, P().Hip(0f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).Grip().HandF(0.52f, 1.02f).Blade(-48f), Ease.InCubic)
+                .Key(26, P().Hip(0.04f, -0.32f, -6f).Chest(-34f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.24f, 0.15f, -25f).Grip().HandF(0.52f, 0.5f).Blade(-28f))
                 .Key(46, Stance(), Ease.InOutQuad)
                 .Move(7, 7, 2.6f, 5.0f, true)
                 .Hit(18, 25, Blade, 12, HitLevel.Overhead, new Vector2(1.4f, -3.0f), stun: 30, hitstop: 10, shake: 0.42f, knockdown: true, heavy: true, radius: 0.08f)
@@ -247,10 +258,10 @@ namespace Kage
             m.kick1.chain[Btn.S] = m.iai;
 
             m.shadowStep = new MoveDef("shadowStep", "Shadow Step", 34)
-                .Key(4, P().Hip(0f, -0.2f, -10f).Chest(-30f).Head(18f).Feet(0.26f, -0.26f).HandN(0.15f, 0.95f).HandF(-0.02f, 0.78f).Blade(-170f))
-                .Key(8, P().Hip(0.12f, -0.2f, -18f).Chest(-38f).Head(22f).Feet(0.4f, -0.3f).HandN(-0.1f, 0.95f).HandF(0.55f, 1.0f).Blade(0f), Ease.OutExpo)
-                .Key(14, P().Hip(0.1f, -0.22f, -16f).Chest(-34f).Head(20f).Feet(0.38f, -0.3f).HandN(-0.12f, 0.95f).HandF(0.5f, 1.04f).Blade(8f))
-                .Key(22, P().Hip(0.06f, -0.18f, -12f).Chest(-26f).Head(14f).Feet(0.34f, -0.28f).HandN(0f, 1.0f).HandF(0.42f, 0.98f).Blade(-150f))
+                .Key(4, P().Hip(0f, -0.2f, -10f).Chest(-30f).Head(18f).Feet(0.26f, -0.26f).Grip().HandF(-0.02f, 0.78f).Blade(-170f))
+                .Key(8, P().Hip(0.12f, -0.2f, -18f).Chest(-38f).Head(22f).Feet(0.4f, -0.3f).Grip().HandF(0.55f, 1.0f).Blade(0f), Ease.OutExpo)
+                .Key(14, P().Hip(0.1f, -0.22f, -16f).Chest(-34f).Head(20f).Feet(0.38f, -0.3f).Grip().HandF(0.5f, 1.04f).Blade(8f))
+                .Key(22, P().Hip(0.06f, -0.18f, -12f).Chest(-26f).Head(14f).Feet(0.34f, -0.28f).Grip().HandF(0.42f, 0.98f).Blade(-150f))
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Move(5, 13, 10.5f).Move(14, 16, 1.0f)
                 .Hit(6, 13, Blade, 10, HitLevel.Mid, new Vector2(0.6f, 0.6f), stun: 26, hitstop: 8, shake: 0.25f, heavy: true, radius: 0.09f)
@@ -258,33 +269,33 @@ namespace Kage
                 .Fx(5, 14, FxKind.AfterImage).Fx(6, 14, FxKind.TrailBlade).Fx(9, 9, FxKind.SlashLine).Fx(5, 5, FxKind.Dust).Sword();
 
             m.lowReap = new MoveDef("lowReap", "Low Reap", 32)
-                .Key(6, P().Hip(-0.03f, -0.4f, 0f).Chest(-28f).Head(16f).FootN(0.24f, 0.13f).FootF(-0.28f, 0.15f, -30f).HandN(0.08f, 0.75f).HandF(-0.12f, 0.45f).Blade(-178f))
-                .Key(10, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).HandN(0f, 0.75f).HandF(0.42f, 0.36f).Blade(-6f), Ease.OutExpo)
-                .Key(14, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).HandN(0f, 0.75f).HandF(0.42f, 0.36f).Blade(4f))
+                .Key(6, P().Hip(-0.03f, -0.4f, 0f).Chest(-28f).Head(16f).FootN(0.24f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(-0.12f, 0.45f).Blade(-178f))
+                .Key(10, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.42f, 0.36f).Blade(-6f), Ease.OutExpo)
+                .Key(14, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.42f, 0.36f).Blade(4f))
                 .Key(32, Stance(), Ease.InOutQuad)
                 .Hit(9, 13, Blade, 9, HitLevel.Low, new Vector2(0.5f, 3.0f), stun: 20, hitstop: 6, shake: 0.15f, knockdown: true, otg: true, radius: 0.08f)
                 .Fx(7, 14, FxKind.TrailBlade).Fx(10, 10, FxKind.Dust).Sword();
 
             m.counterStance = new MoveDef("counterStance", "Mirror Guard", 34)
-                .Key(5, P().Hip(-0.04f, -0.14f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).HandN(0.32f, 1.22f).HandF(0.08f, 1.18f).Blade(-8f))
-                .Key(26, P().Hip(-0.04f, -0.15f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).HandN(0.32f, 1.21f).HandF(0.08f, 1.17f).Blade(-8f))
+                .Key(5, P().Hip(-0.04f, -0.14f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).Grip().HandF(0.08f, 1.18f).Blade(-8f))
+                .Key(26, P().Hip(-0.04f, -0.15f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).Grip().HandF(0.08f, 1.17f).Blade(-8f))
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Fx(4, 4, FxKind.Glint).Sword();
             m.counterStance.counterFrom = 4;
             m.counterStance.counterTo = 24;
 
             m.counterSlash = new MoveDef("counterSlash", "Kage Counter", 30)
-                .Key(3, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).HandN(-0.08f, 0.96f).HandF(0.55f, 1.0f).Blade(2f), Ease.OutExpo)
-                .Key(10, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).HandN(-0.08f, 0.96f).HandF(0.55f, 1.0f).Blade(6f))
+                .Key(3, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).Grip().HandF(0.55f, 1.0f).Blade(2f), Ease.OutExpo)
+                .Key(10, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).Grip().HandF(0.55f, 1.0f).Blade(6f))
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Hit(1, 6, Blade, 12, HitLevel.Unblockable, new Vector2(1.6f, 4.5f), stun: 30, hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: 0.12f)
                 .Invuln(0, 12).Fx(0, 8, FxKind.TrailBlade).Fx(2, 2, FxKind.SlashLine).Sword();
 
             // ===================== SHADOW ART =====================
             m.crescent = new MoveDef("crescent", "Crimson Crescent", 34)
-                .Key(9, P().Hip(-0.06f, -0.14f, -2f).Chest(10f).Head(-6f).Feet(0.22f, -0.28f).HandN(0.25f, 1.2f).HandF(-0.18f, 1.32f).Blade(150f))
-                .Key(13, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).HandN(0f, 1.05f).HandF(0.56f, 1.02f).Blade(-12f), Ease.OutExpo)
-                .Key(18, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).HandN(0f, 1.05f).HandF(0.55f, 1.0f).Blade(-14f))
+                .Key(9, P().Hip(-0.06f, -0.14f, -2f).Chest(10f).Head(-6f).Feet(0.22f, -0.28f).Grip().HandF(-0.18f, 1.32f).Blade(150f))
+                .Key(13, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).Grip().HandF(0.56f, 1.02f).Blade(-12f), Ease.OutExpo)
+                .Key(18, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).Grip().HandF(0.55f, 1.0f).Blade(-14f))
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Fx(1, 12, FxKind.ChargeDark).Fx(10, 15, FxKind.TrailBlade).Sword();
             m.crescent.projectileFrame = 12;
