@@ -111,11 +111,11 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Coins, gems, XP**: JS currencies and experience.
 - **Rating**: S, A, B or C at the end of a fight, from the JS formula (health left, time, max combo, parries, flawless).
 - **Rewards**: coins, gems and reward items for a stage: base coins by chapter and stage kind, first-clear gems, half coins on a repeat clear.
-- **Gear**: helmets and armour. **Loadout**: the equipped weapon, helmet and armour with their levels. **Starter gear**: Kagetsu, Shiro Maki (shown as Crimson Scarf), Tachibana Yoroi (shown as Shinobi Garb). **Helmet visual**: the drawing of an equipped helmet, layered on Kage's head by his part set (`HelmetVisuals`); a helmet with no drawing leaves his head as it is. Use the JS ids in code and data, the JS display names in UI.
+- **Gear**: helmets and armour. **Loadout**: the equipped weapon, helmet and armour with their levels, read from the save by `KageCharacter.Def(save)` whenever a fight starts (campaign and dev arena). **Starter gear**: Kagetsu, Shiro Maki (shown as Crimson Scarf), Tachibana Yoroi (shown as Shinobi Garb). **Helmet visual**: the drawing of an equipped helmet, layered on Kage's head by his part set (`HelmetVisuals`); a helmet with no drawing leaves his head as it is. Use the JS ids in code and data, the JS display names in UI.
 - **Tier**: an item's rarity (starter, common, rare, epic, trophy, boss). Shop weapons climb tiers with weapon level.
 - **Exclusive / locked item**: never sold; unlocked by a stage reward. **Lock hint**: the text that says how.
 - **Armory**: the screen to buy, upgrade and equip. *Avoid:* shop (for the screen), store, inventory.
-- **Perks**: the small bonuses gear gives (dash, speed, ammo, stun resistance, rage gain, kunai).
+- **Perks**: the small bonuses gear gives, eight in the JS data: dash, speed, ammo, stun resistance, rage gain, kunai damage, damage, block rage. Summed on Kage's character data as `GearPerks`; applied by the fighter (`Fighter.Gear.cs`). **Hooked perk**: one whose mechanic isn't built yet (block rage); it has a named hook and waits for the owning ticket.
 - **Save**: the JS save schema as JSON (ADR-0009). **Fresh save**: a new save with starter gear at level 1.
 - **Dev mode**: a save flag, on by default for now: every stage unlocked, every item owned, plenty of coins. Turning it off replaces the save with a fresh one. *Avoid:* debug mode, cheat mode, unlock-all.
 
