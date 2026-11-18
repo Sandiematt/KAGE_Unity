@@ -503,6 +503,31 @@ namespace Kage.Tests
             Assert.AreEqual(-1, set.hack.armorFrom, "the quick hack has none");
         }
 
+        static HitInfo Incoming(Fighter attacker, bool heavy) => new()
+        {
+            attacker = attacker,
+            w = new HitWindow { dmg = 6, level = HitLevel.Mid, kb = new Vector2(3f, 0f), stun = 16, heavy = heavy },
+            dmg = 6, kb = new Vector2(-3f, 0f), zone = HitZone.Body, contact = new Vector2(-0.3f, 1f), moveId = "test.hit", window = -1,
+        };
+
+        [Test]
+        public void A_light_hit_in_the_overhead_wind_up_does_not_flinch_Kage_but_a_heavy_one_does()
+        {
+            var f = Duel();
+            var set = (CleaverMoves)f.Kage.moves;
+            f.Run(4);
+            f.Kage.StartMove(set.overhead);
+            f.RunUntil(() => f.Kage.moveFrame >= 14, 60);
+            Assert.IsTrue(f.Kage.MoveArmoured, "armoured in the wind-up");
+            float before = f.Kage.health;
+            f.Kage.ReceiveHit(Incoming(f.Ronin, heavy: false));
+            Assert.Less(f.Kage.health, before, "the damage still lands");
+            Assert.AreEqual(FState.Attack, f.Kage.state, "no flinch from a light hit");
+            Assert.AreSame(set.overhead, f.Kage.move);
+            f.Kage.ReceiveHit(Incoming(f.Ronin, heavy: true));
+            Assert.AreNotEqual(FState.Attack, f.Kage.state, "a heavy hit still breaks the swing");
+        }
+
         // ---- weapon levels scale it like any weapon ----
 
         CombatEvent OverheadHit(int level)
