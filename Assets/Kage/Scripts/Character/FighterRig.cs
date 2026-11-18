@@ -341,7 +341,7 @@ namespace Kage
             SwordVisible = v;
             foreach (var p in _parts)
             {
-                if (p.def.bone != B.Sword) continue;
+                if (p.def.bone != B.Sword && !p.family) continue;       // family parts on another bone (the second blade on HandN) show and hide with the sword
                 bool on = v && (p.family || !_baseSwordHidden);
                 p.main.enabled = on;
                 if (p.rim != null) p.rim.enabled = on;
@@ -378,14 +378,17 @@ namespace Kage
         /// Adds a weapon part on the Sword bone. <paramref name="axisPts"/> are in the weapon's own frame: x along the
         /// weapon from the grip pivot (the far hand), y across it (the katana's blade is x 0.08 to 0.80), turned by the
         /// blade's bind angle onto the bone. Sorted with the sword's layers; hidden with the sword.
+        /// With <paramref name="bone"/> = <see cref="B.HandN"/> (the second blade of the twin family) the points are
+        /// HandN-local metres with no turn (the near hand's own axis is the blade's) and the part is drawn just above the near fist.
         /// </summary>
-        public void AddFamilyPart(string name, Vector2[] axisPts, Color color, PartRole role, int sub = 0, bool rim = false, float glow = 1f)
+        public void AddFamilyPart(string name, Vector2[] axisPts, Color color, PartRole role, int sub = 0, bool rim = false, float glow = 1f, B bone = B.Sword)
         {
             var local = new Vector2[axisPts.Length];
-            for (int i = 0; i < local.Length; i++) local[i] = KMath.Rot(axisPts[i], def.bladeBindAngle);
-            var pd = new PartDef { name = name, bone = B.Sword, order = 4 * 4 + sub, color = color, role = role, rim = rim, rimGrow = 0.003f, rimColor = KMath.Hex("#050304"), glow = glow, swordLayer = true };
+            bool onSword = bone == B.Sword;
+            for (int i = 0; i < local.Length; i++) local[i] = onSword ? KMath.Rot(axisPts[i], def.bladeBindAngle) : axisPts[i];
+            var pd = new PartDef { name = name, bone = bone, order = onSword ? 4 * 4 + sub : 28 * 4 + 1 + sub, color = color, role = role, rim = rim, rimGrow = 0.003f, rimColor = KMath.Hex("#050304"), glow = glow, swordLayer = onSword };
             var rt = new PartRT { def = pd, family = true };
-            Transform parent = bones[(int)B.Sword];
+            Transform parent = bones[(int)bone];
             rt.main = MeshKit.MakeRenderer(name, parent, MeshKit.Poly(local, color, name), MeshKit.Alpha, 0);
             _all.Add(rt.main);
             if (rim)
