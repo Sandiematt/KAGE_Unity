@@ -4,7 +4,7 @@
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 4 MoveStarted kage>- throw#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 20 MoveStarted ronin>- airKick#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-27 Hit ronin>kage airKick#0 dmg=8 pos=0 crit=0 lvl=Overhead zone=Head i=0 n=-
+27 Hit ronin>kage airKick#0 dmg=8 pos=2.4 crit=0 lvl=Overhead zone=Head i=0 n=-
 97 MoveStarted kage>- getUp#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 111 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]

@@ -4,17 +4,17 @@
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 0 MoveStarted kage>- crescent#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 1 MoveStarted ronin>- shadowStep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-9 Hit ronin>kage shadowStep#0 dmg=10 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+9 Hit ronin>kage shadowStep#0 dmg=10 pos=3 crit=0 lvl=Mid zone=Body i=0 n=-
 45 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-51 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+51 Hit ronin>kage jab#0 dmg=4 pos=1.2 crit=0 lvl=High zone=Body i=0 n=-
 58 MoveStarted ronin>- kick1#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-67 Hit ronin>kage kick1#0 dmg=6 pos=0 crit=0 lvl=High zone=Head i=0 n=-
+67 Hit ronin>kage kick1#0 dmg=6 pos=1.8 crit=0 lvl=High zone=Head i=0 n=-
 77 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-85 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+85 Hit ronin>kage iai#0 dmg=9 pos=2.7 crit=0 lvl=Mid zone=Body i=0 n=-
 95 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-100 Hit ronin>kage risingMoon#0 dmg=12 pos=0 crit=1 lvl=Mid zone=Legs i=0 n=-
+100 Hit ronin>kage risingMoon#0 dmg=12 pos=3.6 crit=1 lvl=Mid zone=Legs i=0 n=-
 117 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-137 Hit ronin>kage cleave#0 dmg=12 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+137 Hit ronin>kage cleave#0 dmg=12 pos=3.6 crit=0 lvl=Overhead zone=Legs i=0 n=-
 [frames]
 0 kage -1.57000 0.02000 Attack crescent:0 hp=100 ronin 0.37000 0.02000 Idle - hp=100
 1 kage -1.57000 0.02000 Attack crescent:1 hp=100 ronin 0.37000 0.02000 Attack shadowStep:0 hp=100

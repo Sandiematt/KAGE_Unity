@@ -3,7 +3,7 @@
 [events]
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 0 MoveStarted kage>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-10 Blocked kage>ronin sweep#0 dmg=0 pos=0 crit=0 lvl=Low zone=Body i=0 n=-
+10 Blocked kage>ronin sweep#0 dmg=0 pos=9 crit=0 lvl=Low zone=Body i=0 n=-
 36 MoveStarted ronin>- throw#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 66 Hit ronin>kage throw#-1 dmg=12 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
 [frames]

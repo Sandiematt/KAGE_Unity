@@ -6,7 +6,7 @@
 2 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 8 MoveStarted kage>- counterSlash#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 8 Countered ronin>kage jab#0 dmg=0 pos=0 crit=0 lvl=High zone=Head i=0 n=-
-19 Hit kage>ronin counterSlash#0 dmg=12 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
+19 Hit kage>ronin counterSlash#0 dmg=12 pos=3.6 crit=0 lvl=Unblockable zone=Body i=0 n=-
 98 MoveStarted ronin>- getUpFront#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]
 0 kage -0.38000 0.02000 Attack counterStance:0 hp=100 ronin 0.38000 0.02000 Idle - hp=100

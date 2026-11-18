@@ -4,12 +4,12 @@
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 1 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 10 MoveStarted kage>- airKick#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-25 Hit kage>ronin airKick#0 dmg=8 pos=0 crit=0 lvl=Overhead zone=Head i=0 n=-
+25 Hit kage>ronin airKick#0 dmg=8 pos=2.4 crit=0 lvl=Overhead zone=Head i=0 n=-
 59 MoveStarted ronin>- getUp#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 91 MoveStarted ronin>- jab#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-97 Hit ronin>kage jab#0 dmg=4 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+97 Hit ronin>kage jab#0 dmg=4 pos=1.2 crit=0 lvl=High zone=Body i=0 n=-
 104 MoveStarted ronin>- cross#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-112 Hit ronin>kage cross#0 dmg=5 pos=0 crit=0 lvl=High zone=Body i=0 n=-
+112 Hit ronin>kage cross#0 dmg=5 pos=1.5 crit=0 lvl=High zone=Body i=0 n=-
 [frames]
 0 kage -0.32667 0.15210 Air - hp=100 ronin 0.37000 0.02000 Idle - hp=100
 1 kage -0.29222 0.27629 Air - hp=100 ronin 0.38167 0.02000 Attack sweep:0 hp=100
