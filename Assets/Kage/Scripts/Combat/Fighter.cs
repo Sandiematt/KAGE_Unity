@@ -114,7 +114,7 @@ namespace Kage
         Fighter _thrower, _victim;
         float _thrownSpin;
         bool _hidden;
-        MotionTrail _trailBlade, _trailFist, _trailFootN, _trailFootF;
+        MotionTrail _trailBlade, _trailBladeN, _trailFist, _trailFootN, _trailFootF;
         Ragdoll2D _ragdoll;
         public int comboCount;
         public System.Action<Fighter, Fighter, HitInfo, HitResult> onHit;
@@ -170,6 +170,7 @@ namespace Kage
             BuildHurtboxes();
 
             _trailBlade = new MotionTrail("TrailBlade", transform.parent, 0.12f, main, core, sortBase + 900, true);
+            _trailBladeN = new MotionTrail("TrailBladeN", transform.parent, 0.12f, main, core, sortBase + 900, true);
             _trailFist = new MotionTrail("TrailFist", transform.parent, 0.09f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
             _trailFootN = new MotionTrail("TrailFootN", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
             _trailFootF = new MotionTrail("TrailFootF", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
@@ -338,7 +339,7 @@ namespace Kage
 
         void OnDestroy()
         {
-            _trailBlade?.Dispose(); _trailFist?.Dispose(); _trailFootN?.Dispose(); _trailFootF?.Dispose();
+            _trailBlade?.Dispose(); _trailBladeN?.Dispose(); _trailFist?.Dispose(); _trailFootN?.Dispose(); _trailFootF?.Dispose();
         }
     }
 }

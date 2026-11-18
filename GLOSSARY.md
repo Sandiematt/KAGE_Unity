@@ -48,7 +48,8 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Polearm grip**: how the spear and staff family holds its weapon: both hands on the shaft, the rear hand a forearm behind the lead hand (`GripPose.Polearm`, `Pose.PolearmSpacing`), against the katana's fist-width grip. The **lead hand** is the one that leads on the shaft (the far hand bone); the **rear hand** is the near hand.
 - **Weapon level**: 1 to 8. **Player level**: Kage's XP level. Never just "level".
 - **Hit window**: the frames of a move in which its hit points can hit (`HitWindow`). *Avoid:* hitbox, active frames (in data).
-- **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family.
+- **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family. **Second blade** (`BladeN`): the twin blades' near-hand blade; its windows are blade windows too.
+- **Dual grip**: how the twin blades are held, one blade in each hand with the hands apart (`GripPose.Dual`). *Avoid:* two-handed (that is the katana's grip).
 - **Hit sweep**: one hit point's path from its last-frame to this-frame position, cast against hurtboxes.
 - **Hurtbox**: a hurt circle on a bone, as a trigger collider on the Hurtbox layer.
 - **Push collider**: the body that keeps fighters apart. **Pass-through frames**: frames of a move where push colliders let fighters pass.
