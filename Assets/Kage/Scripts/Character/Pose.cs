@@ -20,6 +20,8 @@ namespace Kage
         public float swAbs;
         /// <summary>Two-handed grip: the near hand closes on the katana's handle behind the far hand (SAN-113).</summary>
         public bool grip;
+        /// <summary>Where the near hand sits on the handle (sword-axis metres behind the far hand) and how far back it can slide (SAN-78: a polearm holds its hands further apart).</summary>
+        public float gripSpacing = GripSpacing, gripPommel = GripPommel;
         bool _resolved;
 
         // ----- builder API used by the pose library -----
@@ -80,6 +82,8 @@ namespace Kage
             hasSwAbs = o.hasSwAbs;
             swAbs = o.swAbs;
             grip = o.grip;
+            gripSpacing = o.gripSpacing;
+            gripPommel = o.gripPommel;
             _resolved = o._resolved;
         }
 
@@ -148,6 +152,8 @@ namespace Kage
 
         /// <summary>Where the near hand rests on the handle behind the far fist (sword-axis offset, metres).</summary>
         public const float GripSpacing = -0.1f, GripPommel = -0.155f;
+        /// <summary>The polearm grip (SAN-78): the near hand a forearm behind the far hand on the shaft, sliding back to the butt.</summary>
+        public const float PolearmSpacing = -0.4f, PolearmPommel = -0.62f;
 
         /// <summary>
         /// The near wrist goal for the two-handed grip: the near fist on the handle a fist behind the far hand,
@@ -164,7 +170,7 @@ namespace Kage
             Vector2 axis = KMath.Dir(rHandF + a[(int)B.Sword] + d.bladeBindAngle);
             Vector2 fistToWrist = -KMath.Rot(d.fistLocal, rHandF);
             float reach = (d.BindLocal(B.ArmNL).magnitude + d.BindLocal(B.HandN).magnitude) * 0.995f;
-            Vector2 fist = pivot + axis * GripSpacing;
+            Vector2 fist = pivot + axis * gripSpacing;
             float near = Mathf.Abs(d.BindLocal(B.ArmNL).magnitude - d.BindLocal(B.HandN).magnitude) * 1.1f;
             float dist = (fist + fistToWrist - shN).magnitude;
             if (dist < near)
@@ -178,7 +184,7 @@ namespace Kage
             if (dist <= reach) return fist + fistToWrist;
 
             // slide towards the pommel: the point of the handle closest to the shoulder
-            Vector2 back = pivot + axis * GripPommel;
+            Vector2 back = pivot + axis * gripPommel;
             Vector2 seg = back - fist;
             float t = Mathf.Clamp01(Vector2.Dot(shN - fist, seg) / Mathf.Max(1e-6f, seg.sqrMagnitude));
             fist += seg * t;
@@ -233,6 +239,8 @@ namespace Kage
             // both gripping: the output re-grips on its own blended sword; else the near wrist blends between the
             // resolved goals (a gripping pose's goal is where its grip put the hand), so letting go and re-gripping is smooth
             output.grip = (p.grip && q.grip) || (t >= 1f && q.grip) || (t <= 0f && p.grip);
+            output.gripSpacing = Mathf.LerpUnclamped(p.gripSpacing, q.gripSpacing, t);
+            output.gripPommel = Mathf.LerpUnclamped(p.gripPommel, q.gripPommel, t);
             output._resolved = false;
         }
     }
