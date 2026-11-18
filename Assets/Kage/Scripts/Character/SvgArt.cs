@@ -181,6 +181,24 @@ namespace Kage
             }
         }
 
+        /// <summary>Polygons (even-odd) filled with one colour, as triangles: for fills drawn in a trace's colours.</summary>
+        public static SvgPiece Tessellate(IList<Vector2[]> polygons, Color color)
+        {
+            var contours = new BezierContour[polygons.Count];
+            for (int i = 0; i < contours.Length; i++) contours[i] = Polygon(polygons[i]);
+            var shape = new Shape { Contours = contours, Fill = new SolidFill { Color = color, Mode = FillMode.OddEven } };
+            var opts = new VectorUtils.TessellationOptions { StepDistance = 10000f, MaxCordDeviation = 0.5f, MaxTanAngleDeviation = 1.5f, SamplingStepSize = 0.1f };
+            var v = new List<Vector2>();
+            var t = new List<int>();
+            foreach (var g in VectorUtils.TessellateScene(new Scene { Root = new SceneNode { Shapes = new List<Shape> { shape } } }, opts))
+            {
+                int b = v.Count;
+                foreach (var p in g.Vertices) v.Add(g.WorldTransform.MultiplyPoint(p));
+                foreach (var i in g.Indices) t.Add(b + i);
+            }
+            return new SvgPiece { color = color, layer = -1, vertices = v.ToArray(), triangles = t.ToArray() };
+        }
+
         void Emit(List<VectorUtils.Geometry> geoms, int li, List<SvgPiece> result)
         {
             foreach (var g in geoms)

@@ -42,6 +42,25 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void TheBakedCutIsUpToDateWithTheSvgAndTheRegions()
+        {
+            var bake = Resources.Load<TextAsset>(RaikonModel.BakeResource);
+            Assert.IsNotNull(bake, "no bake: Kage > Bake Raikon Art");
+            Assert.AreEqual(RaikonModel.InputHash(), System.BitConverter.ToUInt64(bake.bytes, 0),
+                "the SVG, the regions or the cutting code changed since the bake: Kage > Bake Raikon Art");
+            Rig();
+            Assert.IsTrue(RaikonModel.BuiltFromBake, "every piece came from the bake (no cutting at spawn)");
+        }
+
+        [Test]
+        public void TheSvgInResourcesIsTheOwnersFileByteForByte()
+        {
+            var original = System.IO.File.ReadAllText(System.IO.Path.Combine(Application.dataPath, "..", "Tools", "raikon_art", "original", "Raikon.svg"));
+            var copy = Resources.Load<TextAsset>(RaikonModel.SvgResource).text;
+            Assert.AreEqual(original.Replace("\r\n", "\n"), copy.Replace("\r\n", "\n"));
+        }
+
+        [Test]
         public void RaikonIsInTheCatalogWithHisJsBuildScale()
         {
             var def = CharacterCatalog.Get("raikon");

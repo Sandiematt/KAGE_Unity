@@ -17,11 +17,17 @@ namespace Kage
         // ---- drawn joints (SVG px) ----
         static readonly Vector2 ShoulderN = new(545, 410), ElbowN = new(548, 528), WristN = new(542, 628);
         static readonly Vector2 ElbowFist = new(392, 578), WristFist = new(358, 628);          // the painted far (fist) arm
-        static readonly Vector2 Grip = new(540, 656), BladeTip = new(22, 1003);                 // tachi: grip in the hand, tip
+        static readonly Vector2 Grip = new(545, 665), BladeTip = new(105, 1005);                // tachi: grip in the hand, tip
         static readonly Vector2 HipN = new(505, 800), KneeN = new(518, 1000), AnkleN = new(520, 1118);
 
         // ---- palette of the trace ----
         static readonly Color Ink = new Color32(1, 0, 0, 255);
+
+        /// <summary>The baked cut (<see cref="Bake"/>): every piece the part set needs, so a spawn doesn't cut the SVG.</summary>
+        public const string BakeResource = "Art/Raikon/RaikonCut";
+
+        /// <summary>Bump when the cutting code changes what a cut produces: the bake then counts as stale.</summary>
+        const int CutVersion = 1;
 
         static SvgArt _art;
         static Dictionary<string, List<SvgPiece>> _cuts;
@@ -32,29 +38,131 @@ namespace Kage
             get
             {
                 if (_art != null) return _art;
-                var ta = Resources.Load<TextAsset>(SvgResource);
-                if (ta == null) throw new InvalidOperationException("Raikon's SVG is missing: Resources/" + SvgResource + ".bytes");
-                _art = SvgArt.Parse(ta.text);
+                _art = SvgArt.Parse(SvgText());
                 _art.backgroundLayer = 0;        // #010000: the canvas and the figure's ink
                 return _art;
             }
         }
 
-        static List<SvgPiece> Cut(string region, float cell)
+        static string SvgText()
         {
-            _cuts ??= new Dictionary<string, List<SvgPiece>>();
-            string key = region + "@" + cell;
-            if (_cuts.TryGetValue(key, out var pieces)) return pieces;
+            var ta = Resources.Load<TextAsset>(SvgResource);
+            if (ta == null) throw new InvalidOperationException("Raikon's SVG is missing: Resources/" + SvgResource + ".bytes");
+            return ta.text;
+        }
+
+        static List<SvgPiece> Cut(string region, float cell) => Cached("cut:" + region + "@" + cell, () =>
+        {
             float[][] polys = null;
             foreach (var r in RaikonRegions.Parts) if (r.name == region) { polys = r.polygons; break; }
             if (polys == null) throw new ArgumentException("no Raikon region " + region);
             var list = new List<Vector2[]>();
             foreach (var xy in polys) list.Add(Pts(xy));
-            var art = Art;
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-            var cut = _cuts[key] = art.Cut(list, cell);
-            Debug.Log($"[SAN-71 timing] {key}: {sw.ElapsedMilliseconds} ms");
-            return cut;
+            return Art.Cut(list, cell);
+        });
+
+        static List<SvgPiece> Cached(string key, Func<List<SvgPiece>> make)
+        {
+            if (_cuts == null)
+            {
+                _cuts = new Dictionary<string, List<SvgPiece>>();
+                LoadBake();
+            }
+            if (_cuts.TryGetValue(key, out var pieces)) return pieces;
+            if (_baked) { Debug.LogWarning($"Raikon's baked cut has no '{key}': cutting the SVG now (re-bake: Kage > Bake Raikon Art)"); _baked = false; }
+            return _cuts[key] = make();
+        }
+
+        static bool _baked;
+
+        /// <summary>True when the last build came entirely from the bake.</summary>
+        public static bool BuiltFromBake => _baked;
+
+        /// <summary>A hash of everything a cut depends on: the SVG, the generated regions and the cutting code's version.</summary>
+        public static ulong InputHash()
+        {
+            ulong h = 1469598103934665603UL;
+            void Mix(ulong v) { h ^= v; h *= 1099511628211UL; }
+            foreach (char c in SvgText()) if (c != '\r') Mix(c);      // the same on a CRLF checkout
+            foreach (var (name, polygons) in RaikonRegions.Parts)
+            {
+                foreach (char c in name) Mix(c);
+                foreach (var p in polygons) foreach (var f in p) Mix((ulong)BitConverter.SingleToInt32Bits(f));
+            }
+            foreach (var (name, layer, polygon) in RaikonRegions.Fills)
+            {
+                foreach (char c in name) Mix(c);
+                Mix((ulong)layer);
+                foreach (var f in polygon) Mix((ulong)BitConverter.SingleToInt32Bits(f));
+            }
+            Mix(CutVersion);
+            return h;
+        }
+
+        static void LoadBake()
+        {
+            _baked = false;
+            var ta = Resources.Load<TextAsset>(BakeResource);
+            if (ta == null) return;
+            using var r = new System.IO.BinaryReader(new System.IO.MemoryStream(ta.bytes));
+            if (r.ReadUInt64() != InputHash())
+            {
+                Debug.LogWarning("Raikon's baked cut is stale (the SVG or the regions changed): cutting the SVG instead. Re-bake: Kage > Bake Raikon Art");
+                return;
+            }
+            int keys = r.ReadInt32();
+            for (int k = 0; k < keys; k++)
+            {
+                string key = r.ReadString();
+                int n = r.ReadInt32();
+                var list = new List<SvgPiece>(n);
+                for (int i = 0; i < n; i++)
+                {
+                    var p = new SvgPiece { layer = r.ReadInt32() };
+                    p.color = new Color32(r.ReadByte(), r.ReadByte(), r.ReadByte(), r.ReadByte());
+                    p.vertices = new Vector2[r.ReadInt32()];
+                    for (int v = 0; v < p.vertices.Length; v++) p.vertices[v] = new Vector2(r.ReadSingle(), r.ReadSingle());
+                    p.triangles = new int[r.ReadInt32()];
+                    for (int t = 0; t < p.triangles.Length; t++) p.triangles[t] = r.ReadUInt16();
+                    list.Add(p);
+                }
+                _cuts[key] = list;
+            }
+            _baked = true;
+        }
+
+        /// <summary>
+        /// Cuts everything from the SVG (ignoring any bake) and returns the bake's bytes: written by the Editor to
+        /// Resources/<see cref="BakeResource"/>.bytes (Kage > Bake Raikon Art).
+        /// </summary>
+        public static byte[] Bake()
+        {
+            _cuts = new Dictionary<string, List<SvgPiece>>();
+            _baked = false;
+            Build();
+            using var ms = new System.IO.MemoryStream();
+            using (var w = new System.IO.BinaryWriter(ms))
+            {
+                w.Write(InputHash());
+                w.Write(_cuts.Count);
+                foreach (var kv in _cuts)
+                {
+                    w.Write(kv.Key);
+                    w.Write(kv.Value.Count);
+                    foreach (var p in kv.Value)
+                    {
+                        if (p.vertices.Length > ushort.MaxValue) throw new InvalidOperationException($"{kv.Key}: a piece has too many vertices to bake");
+                        w.Write(p.layer);
+                        Color32 c = p.color;
+                        w.Write(c.r); w.Write(c.g); w.Write(c.b); w.Write(c.a);
+                        w.Write(p.vertices.Length);
+                        foreach (var v in p.vertices) { w.Write(v.x); w.Write(v.y); }
+                        w.Write(p.triangles.Length);
+                        foreach (var t in p.triangles) w.Write((ushort)t);
+                    }
+                }
+            }
+            return ms.ToArray();
         }
 
         static Vector2[] Pts(float[] xy)
@@ -139,14 +247,15 @@ namespace Kage
             // trunk
             Fill(d, "HipsFill", "HipsFill", B.Hips, 8, 0, trunk);
             Fill(d, "TorsoFill", "TorsoFill", B.Chest, 10, 0, trunk);
-            Cutout(d, "Torso", "Torso", B.Chest, 11, 0, trunk);
+            Cutout(d, "Torso", "Torso", B.Chest, 11, 0, trunk, cell: 64f);
 
             // near leg (the painted one, with the buckle)
             Fill(d, "ThighN", "ThighN", B.LegNU, 13, 0, legNU);
             Cutout(d, "ShinN", "ShinN", B.LegNL, 14, 0, legNL);
             Cutout(d, "BootN", "BootN", B.FootN, 15, 0, footN);
 
-            Cutout(d, "Skirt", "Skirt", B.Hips, 16, 0, trunk);
+            Fill(d, "Skirt_UnderTachi", "SkirtUnderBlade", B.Hips, 16, 0, trunk, outline: false);
+            Cutout(d, "Skirt", "Skirt", B.Hips, 16, 1, trunk, cell: 64f);
             Cutout(d, "Rope", "Rope", B.Chest, 18, 0, trunk);
 
             // head
@@ -160,7 +269,7 @@ namespace Kage
                 new[] { 570, 400, 640, 430, 690, 460f },
                 new[] { 480, 330, 430, 315, 395, 300f }),
                 feel: new ChainFeel { stiffRoot = 0.5f, stiffTip = 0.16f, drag = 2.5f, gravity = 1.5f, breeze = 0.5f });
-            Cutout(d, "Hat", "Hat", B.Head, 24, 0, trunk);
+            Cutout(d, "Hat", "Hat", B.Head, 24, 0, trunk, cell: 64f);
             var tassel = new ChainFeel { stiffRoot = 0.18f, stiffTip = 0.03f, drag = 1.6f, gravity = 9f, breeze = 0.5f };
             Cutout(d, "Tassel1", "Tassel1", B.Head, 24, 1, trunk, cell: 16f, soft: Chains(trunk, new[] { 293, 246, 294, 290, 296, 345f }), feel: tassel);
             Cutout(d, "Tassel2", "Tassel2", B.Head, 24, 1, trunk, cell: 16f, soft: Chains(trunk, new[] { 365, 240, 367, 290, 369, 345f }), feel: tassel);
@@ -191,11 +300,20 @@ namespace Kage
                         float cell = 0f, List<Vector2[]> soft = null, ChainFeel feel = default, bool far = false,
                         bool swordLayer = false, float glow = 1f, PartRole role = PartRole.Body)
         {
-            // one indexed mesh in bind space, the colours painted in the trace's order
+            d.parts.Add(new PartDef
+            {
+                name = name, bone = bone, order = order * 4 + sub, role = role, mesh = Mesh(name, Cut(region, cell), map, far), rim = false, glow = glow,
+                swordLayer = swordLayer, soft = soft != null ? SoftKind.Chain : SoftKind.None, chains = soft, chainFeel = feel,
+            });
+        }
+
+        /// <summary>One indexed mesh in bind space, the pieces painted in order.</summary>
+        static Mesh Mesh(string name, List<SvgPiece> pieces, Func<Vector2, Vector2> map, bool far)
+        {
             var verts = new List<Vector3>();
             var cols = new List<Color>();
             var tris = new List<int>();
-            foreach (var piece in Cut(region, cell))
+            foreach (var piece in pieces)
             {
                 Color col = MeshKit.L(far ? Far(piece.color) : piece.color);
                 int b = verts.Count;
@@ -207,36 +325,34 @@ namespace Kage
             mesh.SetColors(cols);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateBounds();
-            d.parts.Add(new PartDef
-            {
-                name = name, bone = bone, order = order * 4 + sub, role = role, mesh = mesh, rim = false, glow = glow,
-                swordLayer = swordLayer, soft = soft != null ? SoftKind.Chain : SoftKind.None, chains = soft, chainFeel = feel,
-            });
+            return mesh;
         }
 
-        /// <summary>A flat fill in the painting's colours (outlined in its ink): what the painting hides behind a moving part.</summary>
+        /// <summary>
+        /// A fill in the painting's colours: a flat underlay (outlined in its ink) for what the painting hides behind a
+        /// moving part, or a patch painted back where the painting's tachi covers the skirt.
+        /// </summary>
         static void Fill(RigDef d, string name, string region, B bone, int order, int sub, Func<Vector2, Vector2> map,
-                         bool far = false, bool swordLayer = false)
+                         bool far = false, bool swordLayer = false, bool outline = true)
         {
-            foreach (var f in RaikonRegions.Fills)
+            var pieces = Cached("fill:" + region + (outline ? ":outlined" : ""), () =>
             {
-                if (f.name != region) continue;
-                var pts = Map(Pts(f.polygon), map);
-                Color col = Art.Layers[f.layer];
-                if (far) col = Far(col);
-                var polys = new List<(Vector2[] pts, Color col)> { (MeshKit.Grow(pts, 0.004f), Ink), (pts, col) };
-                d.parts.Add(new PartDef { name = name, bone = bone, order = order * 4 + sub, role = PartRole.Body, polys = polys, rim = false, swordLayer = swordLayer });
-                return;
-            }
-            throw new ArgumentException("no Raikon fill " + region);
+                var list = new List<SvgPiece>();
+                foreach (var f in RaikonRegions.Fills)
+                {
+                    if (f.name != region) continue;
+                    var pts = Pts(f.polygon);
+                    if (outline) list.Add(SvgArt.Tessellate(new[] { Grow(pts, 2f) }, Ink));
+                    list.Add(SvgArt.Tessellate(new[] { pts }, Art.Layers[f.layer]));
+                }
+                if (list.Count == 0) throw new ArgumentException("no Raikon fill " + region);
+                return list;
+            });
+            d.parts.Add(new PartDef { name = name, bone = bone, order = order * 4 + sub, role = PartRole.Body, mesh = Mesh(name, pieces, map, far), rim = false, swordLayer = swordLayer });
         }
 
-        static Vector2[] Map(Vector2[] pts, Func<Vector2, Vector2> map)
-        {
-            var r = new Vector2[pts.Length];
-            for (int i = 0; i < r.Length; i++) r[i] = map(pts[i]);
-            return r;
-        }
+        /// <summary>A polygon grown outward by <paramref name="px"/> (SVG px, which has y down).</summary>
+        static Vector2[] Grow(Vector2[] pts, float px) => MeshKit.Grow(pts, px);
 
         /// <summary>The far limbs: one step darker along the trace's palette (the reds stay red, a little deeper).</summary>
         static Color Far(Color c)

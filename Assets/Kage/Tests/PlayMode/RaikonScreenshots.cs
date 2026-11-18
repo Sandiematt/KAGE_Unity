@@ -99,8 +99,9 @@ namespace Kage.Tests
             using (var f = Fight())
             {
                 f.Kage.ResetForRound(0f, -1f);
-                f.KageInput.Add(60);
-                f.Run(60);
+                f.Run(2);
+                f.KageInput.Add(40);
+                f.Run(40);
                 idle = Render(new Vector2(f.Kage.Pos.x, 1.42f), w, h, 1.5f);
             }
 
