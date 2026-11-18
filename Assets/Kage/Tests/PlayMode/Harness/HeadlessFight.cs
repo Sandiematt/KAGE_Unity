@@ -34,7 +34,8 @@ namespace Kage.Tests
 
         /// <param name="foeDef">Who the foe is (default the Ronin's catalog entry), for example the heavy test dummy.</param>
         /// <param name="kageDef">Kage's character data (default his catalog entry), for example with a helmet equipped.</param>
-        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, CharacterDef foeDef = null, CharacterDef kageDef = null)
+        /// <param name="bagAnchor">Where the training bag hangs from (default the dev arena's), for example low enough that the bag reaches the floor.</param>
+        public HeadlessFight(int seed, Foe foe, float kageX = KageX, float roninX = 0.6f, float kageMeter = 0f, CharacterDef foeDef = null, CharacterDef kageDef = null, Vector2? bagAnchor = null)
         {
             Root = new GameObject("HeadlessFight");
             var b = new FightBuilder(Root.transform, seed, manualClock: true);
@@ -43,14 +44,16 @@ namespace Kage.Tests
             Kage = b.Spawn(kageDef ?? CharacterCatalog.Get(KageCharacter.Id), 0, KageInput);
             if (foe == Foe.Bag)
             {
-                Bag = b.AddBag(Root.transform, BagAnchor);
+                Bag = b.AddBag(Root.transform, bagAnchor ?? BagAnchor);
             }
             else if (foe != Foe.None)
             {
                 Ai = new AIInputSource();
                 IInputSource input = Ai;
                 if (foe == Foe.Scripted) { RoninInput = new ScriptedInput { fallback = Ai }; input = RoninInput; }
-                Ronin = b.Spawn(foeDef ?? CharacterCatalog.Get(global::Kage.Ronin.Id), 1, input);
+                var def = foeDef ?? CharacterCatalog.Get(global::Kage.Ronin.Id);
+                Ai.Configure(def);   // a scripted foe's fallback AI takes the character's knobs too
+                Ronin = b.Spawn(def, 1, input);
             }
             Ctx = b.Build();
             Loop = b.Loop;

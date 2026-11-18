@@ -49,15 +49,82 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void Twin_blades_are_registered_with_Tsubame_as_reference_a_dual_grip_and_short_blades()
+        {
+            var twin = WeaponFamilies.Get("twin");
+            Assert.AreEqual("tsubame", twin.referenceWeapon);
+            Assert.AreEqual(GripPose.Dual, twin.grip);
+            Assert.Greater(twin.bladeLength, 0f);
+            Assert.Less(twin.bladeLength, WeaponFamilies.Get("katana").bladeLength);
+            Assert.AreEqual(Fighter.ThousandShadows, twin.rageArt);
+            Assert.IsNotNull(twin.visual);
+        }
+
+        [Test]
+        public void Tsubame_at_level_1_is_x1_and_level_8_gains_the_JS_amounts()
+        {
+            AssertCombat("tsubame", 1, 1, 1, 1);
+            AssertCombat("tsubame", 8, 1.56, 1.175, 1.105);
+        }
+
+        [Test]
+        public void Foe_twin_weapons_are_measured_against_Tsubame()
+        {
+            AssertCombat("shadow_daggers", 1, 1, 1, 1);   // the same JS stats as Tsubame
+        }
+
+        [Test]
+        public void The_spear_family_is_registered_with_Mizuchi_a_polearm_grip_and_the_longest_blade()
+        {
+            var spear = WeaponFamilies.Get("spear");
+            Assert.IsNotNull(spear);
+            Assert.AreEqual("mizuchi", spear.referenceWeapon);
+            Assert.AreEqual(GripPose.Polearm, spear.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, spear.rageArt);
+            Assert.IsNotNull(spear.visual);
+            Assert.Greater(spear.bladeLength, 1.5f * WeaponFamilies.Get("katana").bladeLength, "the spear's line is far longer than the katana's");
+        }
+
+        [Test]
+        public void The_cleaver_family_is_registered_with_Onikiri_a_heavy_two_handed_grip_and_a_blade_shorter_than_the_spears()
+        {
+            var cleaver = WeaponFamilies.Get("cleaver");
+            Assert.IsNotNull(cleaver);
+            Assert.AreEqual("onikiri", cleaver.referenceWeapon);
+            Assert.AreEqual(GripPose.HeavyTwoHand, cleaver.grip);
+            Assert.AreEqual(Fighter.ThousandShadows, cleaver.rageArt);
+            Assert.IsNotNull(cleaver.visual);
+            Assert.Greater(cleaver.bladeLength, WeaponFamilies.Get("katana").bladeLength, "a cleaver is longer than the katana's blade");
+            Assert.Less(cleaver.bladeLength, WeaponFamilies.Get("spear").bladeLength, "the spear keeps the longest line");
+        }
+
+        [Test]
+        public void The_heavy_grip_holds_the_hands_further_apart_than_the_katana_and_closer_than_the_polearm()
+        {
+            Assert.Less(Pose.HeavySpacing, Pose.GripSpacing);
+            Assert.Greater(Pose.HeavySpacing, Pose.PolearmSpacing);
+            Assert.Less(Pose.HeavyPommel, Pose.HeavySpacing, "it slides back towards the pommel");
+        }
+
+        [Test]
+        public void The_polearm_holds_its_hands_further_apart_than_the_katana()
+        {
+            Assert.Less(Pose.PolearmSpacing, 3f * Pose.GripSpacing, "a forearm or more behind the lead hand, against a fist's width");
+            Assert.Less(Pose.PolearmPommel, Pose.PolearmSpacing, "it slides back towards the butt");
+            var p = new Pose();
+            Assert.AreEqual(Pose.GripSpacing, p.gripSpacing, "a pose grips like the katana unless the fighter says otherwise");
+        }
+
+        [Test]
         public void A_family_that_is_not_built_yet_is_not_registered()
         {
-            Assert.IsNull(WeaponFamilies.Get("twin"));
+            Assert.IsNull(WeaponFamilies.Get("chain"));
         }
 
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "kagetsu", "shizuka", "shinsen", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "iwakudaki", "shizuka", "shinsen", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- combat multipliers (WeaponStats.Combat) ----
@@ -89,6 +156,37 @@ namespace Kage.Tests
         public void Shizuka_is_measured_against_Kagetsu()
         {
             AssertCombat("shizuka", 1, 64.0 / 60, 68.0 / 64, 62.0 / 58);
+        }
+
+        [Test]
+        public void Mizuchi_at_level_1_is_x1_and_gains_the_JS_amounts_per_level()
+        {
+            AssertCombat("mizuchi", 1, 1, 1, 1);
+            AssertCombat("mizuchi", 8, 1.56, 1.175, 1.105);
+            AssertCombat("mizuchi", 3, 1.16, 1.05, 1.03);
+        }
+
+        [Test]
+        public void Onikiri_at_level_1_is_x1_and_gains_the_JS_amounts_per_level()
+        {
+            AssertCombat("onikiri", 1, 1, 1, 1);
+            AssertCombat("onikiri", 8, 1.56, 1.175, 1.105);
+            AssertCombat("onikiri", 3, 1.16, 1.05, 1.03);
+        }
+
+        [TestCase("raider_cleaver")]
+        [TestCase("tyrant_cleaver")]
+        public void The_cleaver_foes_weapons_are_measured_against_Onikiri(string weapon)
+        {
+            AssertCombat(weapon, 1, 1, 1, 1);     // JS stats [82, 38, 54], the same as Onikiri
+        }
+
+        [TestCase("sentinel_spear")]
+        [TestCase("temple_staff")]
+        [TestCase("vanguard_yari")]
+        public void The_spear_foes_weapons_are_measured_against_Mizuchi(string weapon)
+        {
+            AssertCombat(weapon, 1, 1, 1, 1);     // JS stats [52, 60, 96], the same as Mizuchi
         }
 
         [Test]

@@ -103,7 +103,7 @@ namespace Kage
                     else _display.CopyFrom(_ref);
                     break;
             }
-            if (!GripHeld) _display.grip = false;     // no handle to hold, or the family holds it one-handed
+            ApplyGrip(_display);     // no handle to hold, or the family holds it one-handed; a polearm's wide grip
             rig.Apply(_display);
             rig.Secondary(dt, rb.linearVelocity);
             if (!Headless) UpdateTrails();
@@ -174,7 +174,7 @@ namespace Kage
 
         void UpdateTrails()
         {
-            bool blade = false, fist = false, footN = false, footF = false;
+            bool blade = false, bladeN = false, fist = false, footN = false, footF = false;
             if (state == FState.Attack && move != null)
             {
                 foreach (var e in move.fx)
@@ -183,13 +183,15 @@ namespace Kage
                     switch (e.kind)
                     {
                         case FxKind.TrailBlade: blade = true; break;
+                        case FxKind.TrailBladeN: bladeN = true; break;
                         case FxKind.TrailFist: fist = true; break;
                         case FxKind.TrailFootN: footN = true; break;
                         case FxKind.TrailFootF: footF = true; break;
                     }
                 }
             }
-            _trailBlade.Tick(blade, rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, def.bladeTipLocal, 0.38f)), rig.World(B.Sword, def.bladeTipLocal * 1.04f));
+            _trailBlade.Tick(blade, rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, BladeTipLocal, 0.38f)), rig.World(B.Sword, BladeTipLocal * 1.04f));
+            _trailBladeN.Tick(bladeN, rig.World(B.HandN, Vector2.Lerp(NearBladeBaseLocal, NearBladeTipLocal, 0.38f)), rig.World(B.HandN, NearBladeTipLocal + Vector2.right * 0.02f));
             Vector2 fistC = rig.World(B.HandN, def.fistLocal);
             _trailFist.Tick(fist, fistC + Vector2.up * 0.03f, fistC - Vector2.up * 0.03f);
             _trailFootN.Tick(footN, rig.World(B.FootN, def.footTipLocal), rig.World(B.LegNL, new Vector2(0f, -0.12f)));

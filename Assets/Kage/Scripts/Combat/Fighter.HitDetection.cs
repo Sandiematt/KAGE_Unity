@@ -24,7 +24,15 @@ namespace Kage
                 case HitPoint.ShinF: into.Add(rig.World(B.LegFL, new Vector2(0f, -0.1f))); break;
                 case HitPoint.KneeN: into.Add(rig.World(B.LegNL, Vector2.zero)); break;
                 case HitPoint.Blade:
-                    for (int i = 1; i <= 5; i++) into.Add(rig.World(B.Sword, Vector2.Lerp(def.bladeBaseLocal, BladeTipLocal, i / 5f)));
+                {
+                    // five points along a katana (one every 14 cm); a longer blade gets one about every 18 cm so a shaft has no gaps
+                    Vector2 b0 = BladeBaseLocal, b1 = BladeTipLocal;
+                    int n = Mathf.Max(5, Mathf.CeilToInt((b1 - b0).magnitude / 0.18f));
+                    for (int i = 1; i <= n; i++) into.Add(rig.World(B.Sword, Vector2.Lerp(b0, b1, i / (float)n)));
+                }
+                    break;
+                case HitPoint.BladeN:
+                    for (int i = 1; i <= 5; i++) into.Add(rig.World(B.HandN, Vector2.Lerp(NearBladeBaseLocal, NearBladeTipLocal, i / 5f)));
                     break;
             }
         }

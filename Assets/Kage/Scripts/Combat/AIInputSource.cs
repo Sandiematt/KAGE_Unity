@@ -13,6 +13,11 @@ namespace Kage
     {
         public float level = 0.6f;     // 0 easy … 1 hard
         public bool passive;           // training: just stands and guards sometimes
+        /// <summary>How often a chosen attack is actually thrown (<see cref="CharacterDef.attackRate"/>): 1 is the profile as is, 0.3 holds back seven times in ten.</summary>
+        public float attackRate = 1f;
+
+        /// <summary>Takes the character's AI knobs (ADR-0005): <see cref="CharacterDef.attackRate"/>. Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.</summary>
+        public void Configure(CharacterDef def) { if (def != null) attackRate = def.attackRate; }
 
         struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; }
         readonly Queue<Step> _plan = new();
@@ -80,7 +85,7 @@ namespace Kage
             }
 
             // continue combos on confirmed hits
-            if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && R() < Mathf.Lerp(0.25f, 0.85f, level))
+            if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && R() < Mathf.Lerp(0.25f, 0.85f, level) * attackRate)
             {
                 var keys = new List<Btn>(self.move.chain.Keys);
                 Btn b = keys[N(keys.Count)];
@@ -91,7 +96,7 @@ namespace Kage
             if (_curLeft <= 0)
             {
                 if (_plan.Count > 0) { _cur = _plan.Dequeue(); _curLeft = _cur.frames; }
-                else if (--_think <= 0 && !self.Busy) { Decide(self, opp, dist); _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level)) + N(6); }
+                else if (--_think <= 0 && !self.Busy) { Decide(self, opp, dist); Restrain(dist); _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level)) + N(6); }
             }
             if (_curLeft > 0)
             {
@@ -120,9 +125,23 @@ namespace Kage
             _plan.Enqueue(new Step { frames = frames, fwd = fwd, dy = dy, btn = b, tap = tap, tapDir = tapDir });
         }
 
+        /// <summary>
+        /// A character with an attack rate under 1 throws only that share of the attacks <see cref="Decide"/> picked: the rest
+        /// of the plan becomes a short approach (when far) or a pause.
+        /// </summary>
+        void Restrain(float dist)
+        {
+            if (attackRate >= 1f || _plan.Count == 0) return;
+            bool attacks = false;
+            foreach (var st in _plan) if (st.btn != Btn.None) { attacks = true; break; }
+            if (!attacks || R() < attackRate) return;
+            _plan.Clear();
+            Enqueue(dist > 1.25f ? 10 + N(12) : 30 + N(30), dist > 1.25f ? 1 : 0, 0, Btn.None);
+        }
+
         void Punish(float dist)
         {
-            if (R() > level) return;
+            if (R() > level * attackRate) return;
             if (dist < 0.85f) Enqueue(2, 0, 0, Btn.P);
             else if (dist < 1.3f) Enqueue(2, 0, 0, Btn.S);
         }
@@ -138,7 +157,7 @@ namespace Kage
                 Enqueue(18 + N(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
                 return;
             }
-            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f) { Enqueue(2, 0, 0, Btn.X); return; }
+            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f && self.moves.Select(Btn.X, 0, 0, false, self)?.projectileFrame >= 0) { Enqueue(2, 0, 0, Btn.X); return; }     // the ranged Special (a family whose Special is a melee move, like the fists, never throws it at range)
             if (dist > 2.2f)
             {
                 if (r < 0.62f) Enqueue(14 + N(16), 1, 0, Btn.None);

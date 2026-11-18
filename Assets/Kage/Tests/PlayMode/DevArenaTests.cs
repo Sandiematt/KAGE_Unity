@@ -42,5 +42,43 @@ namespace Kage.Tests
             Assert.Greater(ctx.Clock.Frame, frame, "the loop steps on FixedUpdate");
             Assert.IsTrue(game.player.Grounded);
         }
+
+        [UnityTest]
+        public IEnumerator TheDuelCanBeAgainstTheOrderFootman()
+        {
+            KageGame.NextFoeId = "order_footman";     // what F5 sets before it reloads the arena
+            _game = new GameObject("KAGE");
+            var game = _game.AddComponent<KageGame>();
+            yield return null;
+
+            Assert.AreEqual("order_footman", game.enemy.FighterId);
+            Assert.AreEqual("order_footman", game.foeId);
+            Assert.AreSame(game.enemy, game.player.opponent);
+            Assert.AreEqual(0.9f, game.enemy.PlaybackRate, 1e-3);
+            Assert.AreEqual(1, game.enemy.team);
+            Assert.IsNull(KageGame.NextFoeId, "the choice is used once");
+            for (int i = 0; i < 30; i++) yield return new WaitForFixedUpdate();
+            Assert.IsTrue(game.enemy.Grounded);
+        }
+
+        [Test]
+        public void TheFoeHotkeyCyclesThroughTheCharactersKageCanDuel()
+        {
+            var ids = KageGame.DevFoeIds();
+            CollectionAssert.Contains(ids, "ronin");
+            CollectionAssert.Contains(ids, "order_footman");
+            CollectionAssert.Contains(ids, "hollow_shade");
+            CollectionAssert.Contains(ids, "hollow_tutorial");
+            CollectionAssert.DoesNotContain(ids, "kage", "the player");
+            CollectionAssert.DoesNotContain(ids, "test_heavy", "a test dummy");
+            Assert.AreEqual("ronin", ids[0], "the Ronin is the default sparring partner");
+
+            string id = ids[0];
+            var seen = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < ids.Count; i++) { seen.Add(id); id = KageGame.NextFoe(id); }
+            CollectionAssert.AreEquivalent(ids, seen);
+            Assert.AreEqual(ids[0], id, "it wraps round");
+            Assert.AreEqual(ids[0], KageGame.NextFoe("nobody"), "an unknown id starts again");
+        }
     }
 }

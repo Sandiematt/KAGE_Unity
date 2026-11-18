@@ -114,3 +114,12 @@ partial void ResolveClashes(List<HitSweep> sweeps);        // declared by SAN-65
 - Player and AI use the same Guard input, so the AI obeys the same rules (spec: "enemies are driven through the same input interface").
 - Kunai can't be thrown while Rage is full, as in the JS game.
 - Hook declarations land before their implementations. A ticket that finds a hook missing adds it in the file this ADR names.
+
+## Notes from the implementation (SAN-80: the armour check)
+
+- `Fighter.Armour.cs` implements `ArmourCheck`; the partial declaration is in `Fighter.Reaction.cs` beside `PreHitCheck` (SAN-86 had not landed, so SAN-80 declared it: SAN-86 must not declare it again). `Fighter.ReceiveHit` asks once, after the damage and the guard check: `bool resists = health > 0f && ResistsFlinch(info)`. A hit that takes the last health is never resisted, so armour never stops a KO.
+- When a hit is resisted, the damage and the meter gain land and the result is `HitResult.Hit` (the attacker gets its hitstop, combo count and the `Hit` event as for any hit), but the fighter doesn't change state, takes no knockback, and its move carries on. A held throw victim stays held (the normal `ReleaseVictim(false)` on a hit is skipped). Heavy hits release it.
+- The rule as built: `ArmourCheck` sets `resistsFlinch` when the window is **not** `heavy` and `MoveArmoured` (the fighter is in `FState.Attack` and its move's `Armoured(moveFrame)`). "Heavy" is the window's flag and nothing else: a light-flag window with `knockdown` or `launch` (a leg sweep) doesn't knock an armoured fighter down. A fighter in any other state, or outside the armour frames, flinches as before. The frames are inclusive and read the whole move frame, so a playback rate above or below 1 changes nothing about which frames are armoured.
+- Extending it (SAN-102, SAN-98): add a line to `ArmourCheck`, e.g. `if (light && Has(CharacterFlags.Armour)) resistsFlinch = true;` for the boss-wide flag, and for frontal armour a test of `info.kb.x` against `facing`. `ResistsFlinch` is the single entry point and `ReceiveHit` needs no change.
+- Throws (grabs) are not hits, so armour never stops a grab. The spear's Raised Guard (`Armour(5, 24)`) is honoured from now on.
+- Tests: `ArmourTests` (the check at the `ReceiveHit` seam with a plain armoured move) and the swing, grip and guard in `FistsFamilyFightTests`.

@@ -28,6 +28,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Team**: 0 is Kage's side, 1 is the foes. Hits never land on your own team.
 - **Archetype**: the JS AI role of a foe: regular, agile, defensive, ranged, heavy, boss.
 - **AI profile**: the data that drives the AI for an archetype: preferred range, aggression, guard and parry rate, move weights, reaction frames, combo length.
+- **Attack rate**: a character's share (0..1) of the attacks its AI has chosen that it actually throws (`CharacterDef.attackRate`). The tutorial Hollow's is 0.3. *Avoid:* aggression (that is the JS profile's `aggr`, a different number).
 - **Engagement / engaged foe**: in a group fight, at most two foes are engaged (allowed to attack). The rest **circle** and wait. *Avoid:* aggro.
 - **Health scale**: the one shared multiplier from JS health to Unity health (about 0.431). **JS health**: a character's raw health in the JS data, before the scale. *Avoid:* HP multiplier, difficulty scaling.
 - **Damage multiplier**: a character's or weapon's multiplier on Unity window damage.
@@ -37,6 +38,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Gameplay skeleton**: the 20 bones every character shares (`B` enum). Hurt circles, hit points and push colliders belong to it. **Part set**: the drawn parts placed on it for one character. **Soft parts**: parts moved by springs or cloth (Kage's scarf, hair and coat; Raikon's cape, ponytail, tassels and fur mantle, which hang on **spring chains**, `SoftChains`).
 - **Colour trace**: an SVG with one compound shape per colour, like the owner's Raikon SVG. **Region**: the area of the trace that one part is cut from (`RaikonRegions`, written by `Tools/raikon_art/regions.py`). **Fill**: a shape in the trace's colours drawn behind a moving part where the painting shows nothing (the torso behind the arms). **Bake**: the cut stored in Resources so a spawn doesn't cut the SVG (`Kage > Bake Raikon Art`). *Avoid:* sprite sheet, slicing.
 - **Flags**: Armour, NoGrab, FrontalArmour, CanRageArt, CanThrowKunai.
+- **Opponent kit**: the small shared helpers every new foe's part set is drawn with (`OpponentKit`: Kage's skeleton alone, shapes, adders, depth slots; `OrderPalette` for the Order soldiers), so a foe is character data plus a part set (ADR-0005). *Avoid:* art pipeline (as a type name), sprite sheet (nothing is a sprite).
 
 ## Moves and hits
 
@@ -44,9 +46,12 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Move set**: every move a fighter can do with one weapon family.
 - **Weapon family** (or **family**): katana, twin blades (`twin`), spear/staff (`spear`), chain sickle (`chain`), cleaver, fists, and the heavy tachi (`tachi`). The equipped weapon picks the family.
 - **Weapon**: an item in the JS weapon table (Kagetsu, Tsubame, ...). **Reference weapon**: the weapon a family's multipliers are measured against.
+- **Polearm grip**: how the spear and staff family holds its weapon: both hands on the shaft, the rear hand a forearm behind the lead hand (`GripPose.Polearm`, `Pose.PolearmSpacing`), against the katana's fist-width grip. The **lead hand** is the one that leads on the shaft (the far hand bone); the **rear hand** is the near hand.
+- **Heavy grip**: how the cleaver family holds its weapon: both hands on a long handle, the rear hand a hand's width behind the lead hand (`GripPose.HeavyTwoHand`, `Pose.HeavySpacing`). Wider than the katana's fist-width grip, shorter than the polearm grip.
 - **Weapon level**: 1 to 8. **Player level**: Kage's XP level. Never just "level".
 - **Hit window**: the frames of a move in which its hit points can hit (`HitWindow`). *Avoid:* hitbox, active frames (in data).
-- **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family.
+- **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family. **Second blade** (`BladeN`): the twin blades' near-hand blade; its windows are blade windows too.
+- **Dual grip**: how the twin blades are held, one blade in each hand with the hands apart (`GripPose.Dual`). *Avoid:* two-handed (that is the katana's grip).
 - **Hit sweep**: one hit point's path from its last-frame to this-frame position, cast against hurtboxes.
 - **Hurtbox**: a hurt circle on a bone, as a trigger collider on the Hurtbox layer.
 - **Push collider**: the body that keeps fighters apart. **Pass-through frames**: frames of a move where push colliders let fighters pass.
@@ -56,8 +61,9 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Chip damage**: the health a blade takes off through a guard.
 - **Knockback, launch, juggle, knockdown, OTG (a hit on a downed fighter), kip-up, ragdoll**: as in today's code.
 - **Hitstun / blockstun / stagger**: the helpless frames after a hit, after a guarded hit, and after being parried or countered. *Avoid:* stun (on its own), daze.
-- **Throw**: a grab, carry and release into a physics launch. **No-grab**: throws fail on this character.
+- **Throw**: a grab, carry and release into a physics launch. The light one is the shoulder throw (Punch + forward); the **heavy grapple** is the fists family's Iron Grip (Weapon + forward): longer reach, overhead carry, armoured until the release. **No-grab**: throws fail on this character.
 - **Armour**: the fighter takes damage and posture but doesn't flinch. From a flag (light hits) or a move's armour frames. **Frontal armour**: the same, only for hits from the front. *Avoid:* super armour, hyper armour, poise.
+- **Armour frames**: the frames of a move (`MoveDef.armorFrom..armorTo`) in which the fighter has armour: light hits land their damage and don't flinch it, and a held victim stays held. Heavy hits still flinch. The check is `Fighter.Armour.cs`.
 - **Counter window**: frames of a move that catch an incoming hit and answer it (Mirror Guard, Kuroe's Censure, Shiden's Hold the Line, Raikon's Redline Counter). Not a parry.
 
 ## Defence

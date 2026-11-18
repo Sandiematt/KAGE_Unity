@@ -5,8 +5,9 @@ namespace Kage
 {
     public enum Btn { None, P, K, S, X }
     public enum HitLevel { High, Mid, Low, Overhead, Unblockable }
-    public enum HitPoint { Fist, Hilt, FootN, FootF, ShinN, ShinF, KneeN, Blade, FistF }
-    public enum FxKind { TrailBlade, TrailFist, TrailFootN, TrailFootF, Dust, AfterImage, ChargeDark, Shockwave, Glint, SlashLine }
+    /// <summary><c>BladeN</c> is the second blade of the twin family, held in the near hand (clash-eligible like <c>Blade</c>).</summary>
+    public enum HitPoint { Fist, Hilt, FootN, FootF, ShinN, ShinF, KneeN, Blade, FistF, BladeN }
+    public enum FxKind { TrailBlade, TrailFist, TrailFootN, TrailFootF, Dust, AfterImage, ChargeDark, Shockwave, Glint, SlashLine, TrailBladeN }
 
     public class PoseKey
     {
@@ -54,6 +55,14 @@ namespace Kage
         public int noPushFrom = -1, noPushTo = -1;
         public bool swordFront, airborne, endsOnLanding, normalizeAtEnd;
         public bool isThrow; public int grabFrame, releaseFrame; public MoveDef whiff; public int throwDmg;
+        /// <summary>
+        /// Throw tuning (SAN-80); the defaults are the shoulder throw's. The grab needs the foe within <c>grabRange</c> metres at
+        /// <c>grabFrame</c>; the victim is carried from <c>carryFrom</c> to <c>carryTo</c> metres in front of the thrower (negative =
+        /// behind) on an arc <c>carryHeight</c> high; the release launches it with <c>throwKb</c> (x forward of the thrower,
+        /// the impulse of a mass-1 victim, SAN-68).
+        /// </summary>
+        public float grabRange = 0.95f, carryFrom = 0.62f, carryTo = -0.78f, carryHeight = 1.3f;
+        public Vector2 throwKb = new Vector2(-2.4f, -3f);
         public int meterCost;
         public int projectileFrame = -1;
         public int counterFrom = -1, counterTo = -1;
@@ -79,7 +88,7 @@ namespace Kage
                 from = from, to = to, points = pts, dmg = dmg, level = lvl, kb = kb, stun = stun, hitstop = hitstop,
                 shake = shake, knockdown = knockdown, launch = launch, otg = otg, heavy = heavy, radius = radius, breaksWeapon = breaksWeapon,
                 postureMul = postureMul,
-                sword = System.Array.IndexOf(pts, HitPoint.Blade) >= 0
+                sword = System.Array.IndexOf(pts, HitPoint.Blade) >= 0 || System.Array.IndexOf(pts, HitPoint.BladeN) >= 0
             });
             return this;
         }

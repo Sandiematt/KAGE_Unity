@@ -175,9 +175,7 @@ namespace Kage
         public static RigDef Build()
         {
             // the shared skeleton, hurt circles and hit points: Kage's (art never moves a gameplay joint)
-            var d = KageModel.Build(KageModel.Look.Kage);
-            d.name = "RAIKON";
-            d.parts.Clear();
+            var d = KageModel.Skeleton("RAIKON");
             d.scarf = false;
             d.softCoat = false;
             d.coatTail = false;
