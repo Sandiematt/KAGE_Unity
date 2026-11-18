@@ -197,6 +197,8 @@ namespace Kage
         public const float GripSpacing = -0.1f, GripPommel = -0.155f;
         /// <summary>The polearm grip (SAN-78): the near hand a forearm behind the far hand on the shaft, sliding back to the butt.</summary>
         public const float PolearmSpacing = -0.4f, PolearmPommel = -0.62f;
+        /// <summary>The heavy two-handed grip (SAN-79): the near hand a hand's width behind the far hand on a long cleaver handle.</summary>
+        public const float HeavySpacing = -0.24f, HeavyPommel = -0.42f;
 
         /// <summary>
         /// The near wrist goal for the two-handed grip: the near fist on the handle a fist behind the far hand,

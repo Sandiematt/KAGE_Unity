@@ -103,7 +103,8 @@ namespace Kage
 
         /// <summary>
         /// Final touches on a posed hand grip: no handle to hold or a family that holds the weapon one-handed lets go;
-        /// a polearm holds its hands wide apart (<see cref="Pose.PolearmSpacing"/>) and its point never dips below the
+        /// a polearm holds its hands wide apart (<see cref="Pose.PolearmSpacing"/>), the heavy cleaver grip a hand apart
+        /// (<see cref="Pose.HeavySpacing"/>), and a polearm's point never dips below the
         /// floor (a low guard or a sweep tilts the shaft up instead of driving it into the ground).
         /// </summary>
         void ApplyGrip(Pose p)
@@ -119,7 +120,9 @@ namespace Kage
                 return;
             }
             bool polearm = Family != null && Family.grip == GripPose.Polearm;
-            float spacing = polearm ? Pose.PolearmSpacing : Pose.GripSpacing, pommel = polearm ? Pose.PolearmPommel : Pose.GripPommel;
+            bool heavy = Family != null && Family.grip == GripPose.HeavyTwoHand;
+            float spacing = polearm ? Pose.PolearmSpacing : heavy ? Pose.HeavySpacing : Pose.GripSpacing;
+            float pommel = polearm ? Pose.PolearmPommel : heavy ? Pose.HeavyPommel : Pose.GripPommel;
             if (p.gripSpacing != spacing || p.gripPommel != pommel) { p.gripSpacing = spacing; p.gripPommel = pommel; p.MarkDirty(); }
             if (polearm && p.ik[(int)Limb.ArmF])
             {
