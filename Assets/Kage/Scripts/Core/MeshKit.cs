@@ -183,6 +183,19 @@ namespace Kage
             return m;
         }
 
+        /// <summary>A copy of a mesh moved by <paramref name="by"/> (a part's bind-space mesh made relative to its bone).</summary>
+        public static Mesh Shifted(Mesh src, Vector2 by, string name)
+        {
+            var v = src.vertices;
+            for (int i = 0; i < v.Length; i++) v[i] += (Vector3)by;
+            var m = new Mesh { name = name, indexFormat = src.indexFormat };
+            m.SetVertices(v);
+            m.SetColors(src.colors);
+            m.SetTriangles(src.triangles, 0);
+            m.RecalculateBounds();
+            return m;
+        }
+
         /// <summary>Polygon with a vertical colour gradient (bottom → top) in mesh space.</summary>
         public static Mesh PolyGradient(IList<Vector2> pts, Color bottom, Color top, string name = "polyGrad")
         {
