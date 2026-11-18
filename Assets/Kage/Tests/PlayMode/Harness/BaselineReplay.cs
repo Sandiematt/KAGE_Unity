@@ -22,7 +22,8 @@ namespace Kage.Tests
         public static string PathOf(string scenario) => Path.Combine(Folder, scenario + ".txt");
         /// <summary>
         /// The replay recorded before SAN-65 (hits resolved inside the attacker's tick by point tests).
-        /// The legacy switch must still produce it exactly; it is never re-recorded.
+        /// The legacy switch must still produce it exactly. It is re-recorded only when a deliberate mechanic change
+        /// outside hit resolution moves it: SAN-86 (Guard button and posture; see ADR-0004's SAN-86 notes).
         /// </summary>
         public static string LegacyPathOf(string scenario) => Path.Combine(Folder, "Legacy", scenario + ".txt");
         public static bool Recording => Environment.GetEnvironmentVariable("KAGE_RECORD_BASELINES") == "1";

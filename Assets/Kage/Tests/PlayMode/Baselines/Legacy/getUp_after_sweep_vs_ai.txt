@@ -3,15 +3,15 @@
 [events]
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
 4 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-14 Hit ronin>kage sweep#0 dmg=6 pos=0 crit=0 lvl=Low zone=Legs i=0 n=-
+14 Hit ronin>kage sweep#0 dmg=6 pos=1.8 crit=0 lvl=Low zone=Legs i=0 n=-
 85 MoveStarted kage>- getUp#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 92 MoveStarted ronin>- sweep#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 126 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-134 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+134 Hit ronin>kage iai#0 dmg=9 pos=2.7 crit=0 lvl=Mid zone=Body i=0 n=-
 144 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-149 Hit ronin>kage risingMoon#0 dmg=8 pos=0 crit=0 lvl=Mid zone=Legs i=0 n=-
+149 Hit ronin>kage risingMoon#0 dmg=8 pos=2.4 crit=0 lvl=Mid zone=Legs i=0 n=-
 163 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-183 Hit ronin>kage cleave#0 dmg=12 pos=0 crit=0 lvl=Overhead zone=Legs i=0 n=-
+183 Hit ronin>kage cleave#0 dmg=12 pos=3.6 crit=0 lvl=Overhead zone=Legs i=0 n=-
 [frames]
 0 kage -0.40000 0.02000 Idle - hp=100 ronin 0.40000 0.02000 Idle - hp=100
 1 kage -0.40000 0.02000 Idle - hp=100 ronin 0.40000 0.02000 Idle - hp=100

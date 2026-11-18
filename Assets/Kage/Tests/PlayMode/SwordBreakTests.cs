@@ -39,10 +39,10 @@ namespace Kage.Tests
             w = new HitWindow { dmg = 10, level = HitLevel.Mid, kb = new Vector2(1.5f, 0f), heavy = true, breaksWeapon = breaksWeapon },
         };
 
-        /// <summary>Kage holds back (guard) for a few frames, then takes the hit.</summary>
+        /// <summary>Kage holds Guard for a few frames, then takes the hit.</summary>
         static HitResult GuardedHit(HeadlessFight f, bool breaksWeapon)
         {
-            f.KageInput.Add(20, fwd: -1);
+            f.KageInput.Add(20, buttons: "G");
             f.Run(6);
             return f.Kage.ReceiveHit(Heavy(f, breaksWeapon));
         }

@@ -24,7 +24,7 @@ namespace Kage.Tests
         HeadlessFight Duel(bool guard = false, float meter = 0f)
         {
             var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, HeadlessFight.KageX, 0.6f, meter);
-            f.RoninInput.Add(1200, fwd: guard ? -1 : 0);
+            f.RoninInput.Add(1200, buttons: guard ? "G" : "");
             _fights.Add(f);
             return f;
         }

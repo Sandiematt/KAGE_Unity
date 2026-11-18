@@ -475,6 +475,8 @@ namespace Kage
             // prop hits: the event names the prop, and there is no target fighter
             if (e.Target == null && e.TargetId != null && e.Type is CombatEventType.Hit or CombatEventType.Blocked or CombatEventType.Countered)
                 OnPropHit(e);
+            if (e.Type == CombatEventType.GuardBroken && e.Target != null)
+                Hud.Float(e.Target.Pos + Vector2.up * 2.0f, "GUARD BREAK!", KMath.Hex("#FF7A4B"), 1.1f);
         }
 
         void OnPropHit(CombatEvent e)

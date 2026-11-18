@@ -6,9 +6,9 @@
 34 Hit kage>ronin throw#-1 dmg=12 pos=0 crit=0 lvl=Unblockable zone=Body i=0 n=-
 71 MoveStarted ronin>- getUpFront#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 99 MoveStarted ronin>- iai#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-107 Hit ronin>kage iai#0 dmg=9 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+107 Hit ronin>kage iai#0 dmg=9 pos=2.7 crit=0 lvl=Mid zone=Body i=0 n=-
 117 MoveStarted ronin>- risingMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
-122 Hit ronin>kage risingMoon#0 dmg=8 pos=0 crit=0 lvl=Mid zone=Legs i=0 n=-
+122 Hit ronin>kage risingMoon#0 dmg=8 pos=2.4 crit=0 lvl=Mid zone=Legs i=0 n=-
 136 MoveStarted ronin>- cleave#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]
 0 kage -0.38000 0.02000 Idle - hp=100 ronin 0.38000 0.02000 Idle - hp=100

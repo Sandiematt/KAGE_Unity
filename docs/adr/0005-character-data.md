@@ -202,6 +202,12 @@ These numbers are the values after every JS module has loaded (later JS modules 
 - **Defaults change nothing.** Every perk value is 0 or 1 on a fighter with no perks: `ScaleStun` returns its input, `DamageCalc`'s `extraMul` is 1f (an exact float multiply), the dash invulnerability and cool-down code take their old branch, so Kage in the starter loadout and every foe fight exactly as before (the baseline replay holds).
 - **Tests.** `GearLoadoutTests` (EditMode: starter loadout equals the catalog entry; health, defence, the 0.5 cap, level damage, perks summed, every JS perk id known, against values worked by hand from the JS data and `Kage.Rules`), `GearInCombatTests` (PlayMode harness: health and defence on the fighter, upgraded armour lowers the damage taken, a level 8 weapon and the damage perk raise damage dealt, rage, stun resist, ammo and kunai, speed and dash perks, the hooks), `GearLoadoutFlowTests` (the campaign tableau and stage, picking a weapon at the loadout screen, the dev arena), review image `Screenshots/review/SAN-84/kage_from_save_loadouts.png` (`GearLoadoutScreenshots`: three saves, Kage drawn and labelled with what the rules give). `ScriptedInput.Add` gained `dash:` for the tests.
 
+## Notes from the implementation (SAN-86, posture)
+
+- `postureMax` is applied: `Fighter.PostureMax` is the posture bar (`Fighter.Posture`, Fighter.Posture.cs). The default is now 60 (was a placeholder 100): with the guard factor of 1.5 about two blocked strings break a regular guard, the JS game's pace. Kage, the Ronin, the Footman and the Hollows use the default; `Raikon.Def()` sets 100 (a boss's bar is larger; SAN-107 tunes it, and each sub-boss ticket sets its own). Tests can change `Fighter.PostureMax` at run time.
+- The other posture numbers are not character data: they are in `Resources/Tuning/guard.json` (ADR-0004, SAN-86 notes).
+- SAN-84's two guard hooks are wired: `TryGuard` adds `meter += BlockRageGain(damage)` (so a block now builds Rage, damage × 0.4 × the Rage perk × (1 + blockRage), as in the JS game; this is not 0 without a perk), and the guard-break's helpless time is `ScaleStun(breakFrames, BreakStunResist)` (unchanged with no stunRes perk). Tests: `GuardPostureTests.A_block_builds_Rage_and_the_blockRage_perk_multiplies_it`, `The_stunRes_perk_shortens_the_guard_break`.
+
 ## Consequences
 
 - Every opponent is one character file, one part-set file and two catalog lines, so opponent tickets don't collide.
