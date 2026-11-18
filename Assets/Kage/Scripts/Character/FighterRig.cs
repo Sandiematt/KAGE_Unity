@@ -39,6 +39,7 @@ namespace Kage
         Vector2 _prevHips;
         readonly List<HairField> _hair = new();
         readonly CoatCloth[] _cloths = new CoatCloth[2];
+        readonly List<SoftChains> _chains = new();
         public bool autoSecondary;          // gallery / preview rigs animate themselves
         public float groundY;
         float _vis = 1f;                    // visual facing, tweened through 0 for a paper-flip turn
@@ -77,14 +78,16 @@ namespace Kage
                 var rt = new PartRT { def = p };
                 Transform parent = bones[(int)p.bone];
                 Vector2 pivot = d.pivot[(int)p.bone];
-                if (p.polys != null)
+                if (p.polys != null || p.mesh != null)
                 {
-                    var multi = MeshKit.PolyMulti(p.polys, pivot, p.name);
+                    var multi = p.polys != null ? MeshKit.PolyMulti(p.polys, pivot, p.name) : MeshKit.Shifted(p.mesh, -pivot, p.name);
                     rt.main = MeshKit.MakeRenderer(p.name, parent, multi, MeshKit.Alpha, 0);
                     _all.Add(rt.main);
                     _parts.Add(rt);
                     if (p.soft == SoftKind.Hair) _hair.Add(new HairField(multi, d.hairCentre - pivot));
                     else if (p.soft == SoftKind.Coat) Cloth(d, p.clothLayer).Bind(multi);
+                    else if (p.soft == SoftKind.Chain) _chains.Add(new SoftChains(multi, parent, Relative(p.chains, pivot), p.chainFeel));
+                    if (p.glow > 1.01f) Glow(rt.main, p.glow);
                     continue;
                 }
                 if (p.jigglePivot.HasValue)
@@ -110,12 +113,7 @@ namespace Kage
                 }
                 _all.Add(rt.main);
                 _parts.Add(rt);
-                if (p.glow > 1.01f)
-                {
-                    _mpb.Clear();
-                    _mpb.SetVector("_Color", new Vector4(p.glow, p.glow, p.glow, 1f));
-                    rt.main.SetPropertyBlock(_mpb);
-                }
+                if (p.glow > 1.01f) Glow(rt.main, p.glow);
             }
             ApplyOrders();
 
@@ -127,6 +125,25 @@ namespace Kage
                 scarf.Init(this, d);
             }
             _prevHips = Bone(B.Hips).position;
+        }
+
+        void Glow(MeshRenderer r, float g)
+        {
+            _mpb.Clear();
+            _mpb.SetVector("_Color", new Vector4(g, g, g, 1f));
+            r.SetPropertyBlock(_mpb);
+        }
+
+        static List<Vector2[]> Relative(List<Vector2[]> chains, Vector2 pivot)
+        {
+            var r = new List<Vector2[]>();
+            foreach (var c in chains)
+            {
+                var l = new Vector2[c.Length];
+                for (int i = 0; i < l.Length; i++) l[i] = c[i] - pivot;
+                r.Add(l);
+            }
+            return r;
         }
 
         public void SetBaseOrder(int order)
@@ -199,6 +216,7 @@ namespace Kage
         {
             foreach (var c in _cloths) c?.Reset();
             foreach (var h in _hair) h.Reset();
+            foreach (var c in _chains) c.Reset();
             _prevHips = Bone(B.Hips).position;
         }
 
@@ -257,6 +275,12 @@ namespace Kage
             foreach (var c in _cloths)
             {
                 if (c == null) continue;
+                c.groundY = groundY;
+                c.Tick(dt, facing, hv);
+            }
+            // --- spring chains (Raikon's cape, ponytail, tassels, fur) ---
+            foreach (var c in _chains)
+            {
                 c.groundY = groundY;
                 c.Tick(dt, facing, hv);
             }

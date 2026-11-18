@@ -18,7 +18,17 @@ namespace Kage
     public enum Limb { ArmN, ArmF, LegN, LegF }
 
     public enum PartRole { Body, Trim, TrimDeep, Metal, Eye, Hair, Boot, Detail }
-    public enum SoftKind { None, Hair, Coat }
+    public enum SoftKind { None, Hair, Coat, Chain }
+
+    /// <summary>How a <see cref="SoftKind.Chain"/> part moves (<see cref="SoftChains"/>): Raikon's cape, ponytail, tassels and fur (SAN-71).</summary>
+    public struct ChainFeel
+    {
+        public float stiffRoot, stiffTip;   // pull back to the drawn shape per substep, at the root and at the tip (0..1)
+        public float drag;                  // air drag: how much the part trails the body's motion and the breeze
+        public float gravity;               // m/s^2 pulling the free end down
+        public float breeze;                // m/s of ambient wind blowing behind the fighter
+        public static ChainFeel Default => new() { stiffRoot = 0.3f, stiffTip = 0.06f, drag = 2f, gravity = 5f, breeze = 0.8f };
+    }
 
     public class PartDef
     {
@@ -39,6 +49,8 @@ namespace Kage
         public List<(Vector2[] pts, Color col)> polys;   // many polygons painted in order into one mesh (SVG groups)
         public SoftKind soft;          // deformed every frame by HairField / CoatCloth
         public int clothLayer;         // coat: 0 = front flap cloth, 1 = tail cloth (side + back panels)
+        public List<Vector2[]> chains; // SoftKind.Chain: spring chains (bind space, root first) the mesh is bound to
+        public ChainFeel chainFeel;
     }
 
     /// <summary>An extra scarf tail (armour visuals, SAN-85): a short strip on the scarf's knot that streams like the two main tails.</summary>
