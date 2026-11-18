@@ -52,7 +52,7 @@ namespace Kage.Tests
             foreach (var n in Soft) Assert.Greater(moved[n], 0.01f, n + " should sway (bone-local units)");
             foreach (var n in new[] { "Torso", "Skirt", "Hat" }) Assert.AreEqual(0f, Moved(rest[n], Part(f.Kage, n)), 1e-6f, n + " is rigid");
             // soft, not loose: nothing flies off its root
-            foreach (var n in Soft) Assert.Less(moved[n], 0.35f, n + " stays attached");
+            foreach (var n in Soft) Assert.Less(moved[n], 1.0f, n + " stays attached");   // Raikon swings the heavy tachi (SAN-81): its Broad Cut whips the soft parts about twice as far as a katana draw (ponytail 0.81 against 0.57, cape 0.52 against 0.24)
         }
 
         [Test]
