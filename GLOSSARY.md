@@ -51,6 +51,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Weapon level**: 1 to 8. **Player level**: Kage's XP level. Never just "level".
 - **Hit window**: the frames of a move in which its hit points can hit (`HitWindow`). *Avoid:* hitbox, active frames (in data).
 - **Hit point**: a point on the skeleton that hits during a window: Fist, Hilt, Foot, Shin, Knee, Blade. **Blade** means the weapon's line for every family. **Second blade** (`BladeN`): the twin blades' near-hand blade; its windows are blade windows too.
+- **Blade extension**: metres by which a move runs the **Blade** hit line past the blade (`MoveDef.Extend`, `Fighter.BladeExtension`). The chain sickle's **lash** and **pull** use it: the hit line is the chain, and the drawn chain and sickle follow it. The **pull** (Reaper's Pull) is a hit whose knockback points at the attacker, so the foe is dragged in by the ordinary knockback and push. *Avoid:* hook (for the move; the Chainthrower's weapon is the Chain Hook).
 - **Dual grip**: how the twin blades are held, one blade in each hand with the hands apart (`GripPose.Dual`). *Avoid:* two-handed (that is the katana's grip).
 - **Hit sweep**: one hit point's path from its last-frame to this-frame position, cast against hurtboxes.
 - **Hurtbox**: a hurt circle on a bone, as a trigger collider on the Hurtbox layer.
@@ -63,6 +64,8 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Hitstun / blockstun / stagger**: the helpless frames after a hit, after a guarded hit, and after being parried or countered. *Avoid:* stun (on its own), daze.
 - **Throw**: a grab, carry and release into a physics launch. The light one is the shoulder throw (Punch + forward); the **heavy grapple** is the fists family's Iron Grip (Weapon + forward): longer reach, overhead carry, armoured until the release. **No-grab**: throws fail on this character.
 - **Armour**: the fighter takes damage and posture but doesn't flinch. From a flag (light hits) or a move's armour frames. **Frontal armour**: the same, only for hits from the front. *Avoid:* super armour, hyper armour, poise.
+- **Blade length** (`WeaponFamilyDef.bladeLength`): metres from the guard to the tip of the cutting blade; the tachi's is the longest. *Not* **total reach**, the distance from the body to the farthest hit point of a move (the spear's is the longest, 2.25 m).
+- **Posture multiplier** (`HitWindow.postureMul`): how much more posture damage a window does than a plain hit; the tachi's windows are the highest (up to ×3.0).
 - **Armour frames**: the frames of a move (`MoveDef.armorFrom..armorTo`) in which the fighter has armour: light hits land their damage and don't flinch it, and a held victim stays held. Heavy hits still flinch. The check is `Fighter.Armour.cs`.
 - **Counter window**: frames of a move that catch an incoming hit and answer it (Mirror Guard, Kuroe's Censure, Shiden's Hold the Line, Raikon's Redline Counter). Not a parry.
 
