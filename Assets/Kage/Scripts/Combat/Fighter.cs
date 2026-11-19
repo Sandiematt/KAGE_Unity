@@ -265,6 +265,7 @@ namespace Kage
             _inp = default;
             if (!Ready || state == FState.KO) return;
             if (controlEnabled && input != null) _inp = input.Poll(this);
+            HoldBackIfWaiting(ref _inp);     // only engaged foes attack (SAN-83, Fighter.Targets.cs)
         }
 
         /// <summary>Fight loop phase 3: one frame of the state machine, root motion and move playback.</summary>

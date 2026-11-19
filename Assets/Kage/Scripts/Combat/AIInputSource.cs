@@ -9,6 +9,8 @@ namespace Kage
     /// jump-in, roll, retreat; reads the player's active move to guard high/low with the Guard input (ADR-0004: walking
     /// backward doesn't guard); punishes after
     /// blocking; extends combos on hit; mashes to kip-up.
+    /// In a group fight a foe the engagement manager hasn't engaged waits its turn instead (SAN-83, <see cref="WaitTurn"/>):
+    /// it keeps <see cref="EngagementTuning.waitDistance"/> from its target and circles, guards as usual, and never attacks.
     /// </summary>
     public class AIInputSource : IInputSource
     {
@@ -24,7 +26,7 @@ namespace Kage
         readonly Queue<Step> _plan = new();
         Step _cur;
         int _curLeft, _think, _guardFrames;
-        bool _guardLow;
+        bool _guardLow, _waited;
         FightRandom _rng;
 
         /// <summary>Every AI choice rolls on the fight's "ai/&lt;FighterId&gt;" stream (ADR-0002).</summary>
@@ -41,9 +43,10 @@ namespace Kage
             if (opp == null) return o;
             float face = self.facing;
             float dist = Mathf.Abs(opp.Pos.x - self.Pos.x);
+            bool waiting = self.ctx != null && !self.ctx.Engagement.MayAttack(self);   // not engaged: no attacks (SAN-83)
 
-            // knocked down: mash for a quick kip-up
-            if (self.state == FState.Down) { if (R() < 0.08f * level) o.p = true; return o; }
+            // knocked down: mash for a quick kip-up (a waiting foe gets up in its own time: a mashed button would attack)
+            if (self.state == FState.Down) { if (!waiting && R() < 0.08f * level) o.p = true; return o; }
             if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; return o; }
 
             // react to the opponent's technique: guard high/low
@@ -67,10 +70,12 @@ namespace Kage
                 _guardFrames--;
                 o.guard = true;                 // the same Guard input the player has; Down makes it a low guard
                 o.dy = _guardLow ? -1 : 0;
-                if (_guardFrames == 0 && self.state == FState.Blockstun) Punish(dist);
+                if (_guardFrames == 0 && self.state == FState.Blockstun && !waiting) Punish(dist);
                 return o;
             }
             if (passive) return o;
+            if (waiting) return WaitTurn(self, opp, dist, o);
+            if (_waited) { _waited = false; _plan.Clear(); _curLeft = 0; _think = 0; }   // just engaged: decide afresh
 
             // chase a launch: jump-cancel the launcher and follow with an air attack
             if (self.IsAttacking && self.moveHit && self.move.jumpCancelFrom >= 0 && self.moveFrame >= self.move.jumpCancelFrom - 2 && _plan.Count == 0)
@@ -114,6 +119,43 @@ namespace Kage
                 }
             }
             return o;
+        }
+
+        /// <summary>
+        /// A waiting foe's turn (the JS AIController.waitTurn): too near its target, it backs away; too far, it walks in;
+        /// at its distance it circles (a walking step in or out, <see cref="EngagementTuning.circleChance"/>) or holds.
+        /// Movement only: it never presses an attack button.
+        /// </summary>
+        FrameInput WaitTurn(Fighter self, Fighter opp, float dist, FrameInput o)
+        {
+            if (!_waited) { _waited = true; _plan.Clear(); _curLeft = 0; }
+            if (_curLeft <= 0)
+            {
+                if (_plan.Count > 0) { _cur = _plan.Dequeue(); _curLeft = _cur.frames; }
+                else if (!self.Busy) PlanWait(self, opp, dist);
+            }
+            if (_curLeft > 0)
+            {
+                _curLeft--;
+                o.dx = (int)(_cur.fwd * self.facing);
+            }
+            return o;
+        }
+
+        void PlanWait(Fighter self, Fighter opp, float dist)
+        {
+            var t = Tuning.Get<EngagementTuning>();
+            float away = -Mathf.Sign(opp.Pos.x - self.Pos.x);
+            bool wallBehind = self.AtWall && Mathf.Sign(self.Pos.x) == away;
+            if (dist < t.waitDistance - t.retreatInside && !wallBehind) Enqueue(t.stepFrames, -1, 0, Btn.None);
+            else if (dist > t.waitDistance + t.approachBeyond) Enqueue(t.stepFrames, 1, 0, Btn.None);
+            else if (R() < t.circleChance)
+            {
+                int dir = R() < 0.5f ? 1 : -1;
+                if (dir < 0 && wallBehind) dir = 1;
+                Enqueue(_rng.Range(t.circleStepMin, t.circleStepMax + 1), dir, 0, Btn.None);
+            }
+            else Enqueue(_rng.Range(t.holdMin, t.holdMax + 1), 0, 0, Btn.None);
         }
 
         static void Press(ref FrameInput o, Btn b)

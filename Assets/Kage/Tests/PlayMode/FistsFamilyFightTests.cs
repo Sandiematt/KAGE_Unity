@@ -280,6 +280,9 @@ namespace Kage.Tests
             r.healthLost = hp - v.health;
             f.RunUntil(() => v.state == FState.Down || v.state == FState.KO, 200);
             r.landed = v.Pos;
+            // done with it: a fight left alive keeps its bodies (and push colliders) where the next one is built
+            f.Dispose();
+            _fights.Remove(f);
             return r;
         }
 

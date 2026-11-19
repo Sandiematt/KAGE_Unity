@@ -212,7 +212,8 @@ namespace Kage
         {
             _pts.Clear();
             foreach (var hp in w.points) HitPoints(hp, _pts);
-            TryTarget(opponent, w);
+            if (Targets.Count > 1) foreach (var t in Targets) TryTarget(t, w);     // a group fight: any foe in reach (SAN-83)
+            else TryTarget(opponent, w);
             TryTarget(extraTarget, w);
         }
 

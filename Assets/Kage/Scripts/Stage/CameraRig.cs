@@ -7,6 +7,9 @@ namespace Kage
     /// Fighting-game camera: frames both fighters (zooms out with distance), keeps the floor low
     /// in frame, clamps to the stage, and adds trauma shake, zoom punch and parallax layers.
     /// Runs on unscaled time so it stays smooth through hit-stop and slow motion.
+    /// <para>It frames either <see cref="targets"/> (the duel) or, after <see cref="Frame"/>, a group fight (SAN-83): the
+    /// focus fighter (Kage) and the foes engaged on him (<see cref="EngagementManager"/>), each frame, zooming out up to
+    /// <see cref="groupMaxSize"/>. Waiting foes are not framed. The override fields win over both (rage arts, SAN-82).</para>
     /// </summary>
     [DefaultExecutionOrder(200)]
     public class CameraRig : MonoBehaviour
@@ -15,6 +18,8 @@ namespace Kage
         public readonly List<Transform> targets = new();
         public float minSize = 2.25f, maxSize = 3.6f, stageHalf = 9.4f;
         public Vector2 overrideCenter; public float overrideSize; public bool useOverride;
+        /// <summary>The widest framing in a group fight (SAN-83): two engaged foes on either side of Kage need more room than a duel.</summary>
+        public float groupMaxSize = 4.2f;
         float _size = 2.3f;
         Vector2 _pos = new(0f, 1.4f);
 
@@ -38,17 +43,24 @@ namespace Kage
             if (useOverride) { center = overrideCenter; size = overrideSize; return; }
             float minX = float.MaxValue, maxX = float.MinValue, maxY = 0f;
             int n = 0;
-            foreach (var t in targets)
+            void Include(Transform t)
             {
-                if (t == null || !t.gameObject.activeInHierarchy) continue;
+                if (t == null || !t.gameObject.activeInHierarchy) return;
                 Vector3 p = t.position;
                 minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x); maxY = Mathf.Max(maxY, p.y);
                 n++;
             }
+            bool group = _focus != null && _fight != null;
+            if (group)
+            {
+                Include(Hips(_focus));
+                foreach (var e in _fight.Engagement.Engaged) if (e.opponent == _focus) Include(Hips(e));
+            }
+            else foreach (var t in targets) Include(t);
             if (n == 0) { center = new Vector2(0f, 1.4f); size = minSize; return; }
             float spread = maxX - minX;
             float aspect = Mathf.Max(0.5f, cam.aspect);
-            size = Mathf.Clamp((spread + 2.8f) / (2f * aspect), minSize, maxSize);
+            size = Mathf.Clamp((spread + 2.8f) / (2f * aspect), minSize, group ? Mathf.Max(maxSize, groupMaxSize) : maxSize);
             float cx = (minX + maxX) * 0.5f;
             float cy = size * 0.64f + Mathf.Max(0f, maxY - 1.6f) * 0.35f;
             float half = size * aspect;
@@ -56,11 +68,28 @@ namespace Kage
             center = new Vector2(cx, cy);
         }
 
+        // ---- group fights (SAN-83) ----
+        FightContext _fight;
+        Fighter _focus;
+
+        /// <summary>Frames a group fight: <paramref name="focus"/> and the foes engaged on it. Null, null goes back to <see cref="targets"/>.</summary>
+        public void Frame(FightContext fight, Fighter focus) { _fight = fight; _focus = focus; }
+
+        static Transform Hips(Fighter f) => f != null && f.rig != null ? f.rig.Bone(B.Hips) : null;
+
+        /// <summary>The focus fighter of a group fight (<see cref="Frame"/>), or null.</summary>
+        public Fighter Focus => _focus;
+
         void LateUpdate()
         {
             if (cam == null) return;
+            Follow(Time.unscaledDeltaTime);
+        }
+
+        /// <summary>One step of the follow: eases position and size towards the framing over <paramref name="dt"/> seconds.</summary>
+        public void Follow(float dt)
+        {
             Compute(out var c, out var s);
-            float dt = Time.unscaledDeltaTime;
             _pos = KMath.Damp(_pos, c, 6f, dt);
             _size = KMath.Damp(_size, s, 4f, dt);
             Apply();

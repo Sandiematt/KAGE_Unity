@@ -13,6 +13,9 @@ namespace Kage
     /// (<see cref="FightClock.Advances"/>) skips its input and tick, so it records no sweeps either.</item>
     /// <item>Push settle: a fighter the last physics step pushed gets its own horizontal speed back
     /// (SAN-68, Fighter.SettlePush). Under the legacy switch the old manual push runs here instead.</item>
+    /// <item>Targets (SAN-83): each fighter refreshes its target list and picks its current target
+    /// (<see cref="Fighter.PickTarget"/>); then the engagement manager decides which foes may attack
+    /// (<see cref="EngagementManager.Update"/>).</item>
     /// <item>Input: poll every fighter's input source, in fighter order.</item>
     /// <item>Fighter tick: state machine, root motion, move playback; each active hit point records a
     /// <see cref="HitSweep"/> in <c>ctx.Sweeps</c>.</item>
@@ -70,6 +73,8 @@ namespace Kage
                             if (Live(fs[i]) && Live(fs[j])) Pushbox(fs[i], fs[j]);
                 }
                 else foreach (var f in fs) if (Live(f)) f.SettlePush();
+                foreach (var f in fs) if (Live(f)) f.PickTarget();
+                ctx.Engagement.Update(fs);
                 foreach (var f in fs) if (Live(f) && clock.Advances(f)) f.PollInput();
                 ctx.Sweeps.Clear();
                 foreach (var f in fs) if (Live(f) && clock.Advances(f)) f.Tick();

@@ -9,7 +9,10 @@ namespace Kage
     /// Dev arena entry point (ADR-0001). Builds everything at runtime from code — camera, post-processing, stage,
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
-    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F5 next opponent · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
+    /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F5 next opponent · F6 group fight (Kage vs 4 Footmen) and back
+    /// · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
+    /// The group fight (SAN-83) plays like the duel's rounds: Kage wins a round when every foe is down. Two foes at most are
+    /// engaged (<see cref="EngagementManager"/>); the camera frames Kage and the engaged foes (<see cref="CameraRig.Frame"/>).
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class KageGame : MonoBehaviour
@@ -24,6 +27,22 @@ namespace Kage
         public string foeId = Ronin.Id;
         /// <summary>F5 sets this and reloads the arena; the new arena takes it once.</summary>
         public static string NextFoeId;
+        [Tooltip("Group fight (F6, SAN-83): Kage against this many copies of the group foe. 0 or 1 = the duel.")]
+        public int groupSize;
+        [Tooltip("The group fight's foe (character id).")]
+        public string groupFoeId = OrderFootman.Id;
+        /// <summary>The group fight's size (F6): Kage against four Footmen.</summary>
+        public const int GroupFightSize = 4;
+        /// <summary>F6 sets this and reloads the arena; the new arena takes it once (0 = back to the duel).</summary>
+        public static int? NextGroupSize;
+        /// <summary>Where the group starts, Kage at 0: the nearest two (one each side) are engaged, the others wait.</summary>
+        static readonly float[] GroupStart = { 1.3f, -2.4f, 2.8f, -3.8f };
+        /// <summary>Every foe: the duel's one, or the group (<see cref="enemy"/> is the first).</summary>
+        public readonly System.Collections.Generic.List<Fighter> foes = new();
+        readonly System.Collections.Generic.List<AIInputSource> _ais = new();
+        readonly System.Collections.Generic.List<Transform> _foeShadows = new();
+        /// <summary>True in the group fight.</summary>
+        public bool Group => foes.Count > 1;
         /// <summary>
         /// Where the arena reads Kage's loadout from: the equipped weapon, helmet and armour and their levels (SAN-84). Null = the
         /// save file on disk (<see cref="SaveStore"/>), so the arena shows what the campaign would fight with. Tests set it.
@@ -86,18 +105,28 @@ namespace Kage
             player = fight.Spawn(KageCharacter.Def(SaveSource != null ? SaveSource() : SaveStore.AtPersistentDataPath().Load()), 0, new PlayerInputSource());
             _ai = new AIInputSource();
             if (NextFoeId != null) { foeId = NextFoeId; NextFoeId = null; }
-            var foeDef = CharacterCatalog.Get(foeId) ?? CharacterCatalog.Get(Ronin.Id);
-            foeId = foeDef.id;
+            if (NextGroupSize.HasValue) { groupSize = NextGroupSize.Value; NextGroupSize = null; }
+            var foeDef = (groupSize > 1 ? CharacterCatalog.Get(groupFoeId) : CharacterCatalog.Get(foeId)) ?? CharacterCatalog.Get(Ronin.Id);
+            if (groupSize > 1) groupFoeId = foeDef.id; else foeId = foeDef.id;
             enemy = fight.Spawn(foeDef, 1, _ai);
+            foes.Add(enemy);
+            _ais.Add(_ai);
+            for (int i = 1; i < groupSize; i++)
+            {
+                var ai = new AIInputSource();
+                _ais.Add(ai);
+                foes.Add(fight.Spawn(foeDef, 1, ai));
+            }
             player.onHit += OnFighterHit;
-            enemy.onHit += OnFighterHit;
             player.onKO += OnKO;
-            enemy.onKO += OnKO;
+            foreach (var f in foes) { f.onHit += OnFighterHit; f.onKO += OnKO; }
+            for (int i = 1; i < foes.Count; i++) foes[i].SetSortBase(FightBuilder.FoeSortOrder - 400 * i);     // each foe its own depth
             Hud.Bind(player);
-            Hud.SetNames("KAGE  影", foeDef.displayName.ToUpperInvariant());
+            Hud.SetNames("KAGE  影", foeDef.displayName.ToUpperInvariant() + (Group ? "  ×" + foes.Count : ""));
 
             _shadowP = MakeShadow("KageShadow", Palette.Trim);
-            _shadowE = MakeShadow("FoeShadow", foeDef.colors.main);
+            foreach (var _ in foes) _foeShadows.Add(MakeShadow("FoeShadow", foeDef.colors.main));
+            _shadowE = _foeShadows[0];
 
             bag = fight.AddBag(stage.transform, new Vector2(1.6f, 2.65f));
             Fight = fight.Build();
@@ -178,15 +207,16 @@ namespace Kage
         {
             mode = m;
             bool training = m == Mode.Training;
-            enemy.gameObject.SetActive(!training);
-            _shadowE.gameObject.SetActive(!training);
+            foreach (var f in foes) f.gameObject.SetActive(!training);
+            foreach (var s in _foeShadows) s.gameObject.SetActive(!training);
             bag.gameObject.SetActive(training);
             player.opponent = training ? null : enemy;
             player.extraTarget = training ? bag : null;
-            player.roundsWon = enemy.roundsWon = 0; player.ResetForFight(); enemy.ResetForFight();
+            player.roundsWon = enemy.roundsWon = 0; player.ResetForFight();
+            foreach (var f in foes) f.ResetForFight();
             _round = 1;
-            Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train  ·  F5 foe");
-            _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
+            Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : ModeText());
+            foreach (var ai in _ais) ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
             if (training)
             {
                 bag.ResetBag();
@@ -196,10 +226,12 @@ namespace Kage
                 _phase = Phase.Fight;
                 Hud.Announce("TRAINING", Palette.TrimBright, 1.4f);
                 Cam.targets.Remove(enemy.rig.Bone(B.Hips));
+                Cam.Frame(null, null);
             }
             else
             {
                 if (!Cam.targets.Contains(enemy.rig.Bone(B.Hips))) Cam.targets.Add(enemy.rig.Bone(B.Hips));
+                if (Group) Cam.Frame(Fight, player);     // Kage and the engaged foes (SAN-83)
                 StartRound();
             }
             Cam.Snap();
@@ -210,8 +242,20 @@ namespace Kage
             _koHandled = false;
             _firstStrike = false;
             _roundWinner = null;
-            player.ResetForRound(-1.25f, 1f);
-            enemy.ResetForRound(1.25f, -1f);
+            if (Group)
+            {
+                player.ResetForRound(0f, 1f);
+                for (int i = 0; i < foes.Count; i++)
+                {
+                    float x = i < GroupStart.Length ? GroupStart[i] : (i % 2 == 0 ? 1f : -1f) * (2.6f + 1.2f * (i / 2));
+                    foes[i].ResetForRound(x, x > 0f ? -1f : 1f);
+                }
+            }
+            else
+            {
+                player.ResetForRound(-1.25f, 1f);
+                enemy.ResetForRound(1.25f, -1f);
+            }
             player.meter = Mathf.Min(player.meter, 100f);
             _phase = Phase.Intro;
             _phaseT = 0f;
@@ -261,7 +305,7 @@ namespace Kage
                         {
                             Hud.Announce("DUEL!", Palette.TrimBright, 0.9f);
                             player.BeginFight();
-                            enemy.BeginFight();
+                            foreach (var f in foes) f.BeginFight();
                             _phase = Phase.Fight;
                             _phaseT = 0f;
                         }
@@ -296,10 +340,11 @@ namespace Kage
             if (mode == Mode.Duel) Hud.SetTraining("");
 
             // combo counters end when the victim recovers
-            ResetComboIfRecovered(player, enemy);
-            ResetComboIfRecovered(enemy, player);
+            ResetComboIfRecovered(player, Group ? player.opponent : enemy);
+            foreach (var f in foes) ResetComboIfRecovered(f, player);
 
-            Hud.Tick(player, mode == Mode.Duel ? enemy : null, _timer, _round, mode == Mode.Duel);
+            // the right-hand bar: the foe, or in a group fight Kage's current target
+            Hud.Tick(player, mode == Mode.Duel ? (Group && player.opponent != null ? player.opponent : enemy) : null, _timer, _round, mode == Mode.Duel);
             UpdatePost();
             UpdateShadows();
         }
@@ -328,14 +373,14 @@ namespace Kage
                 s.localScale = new Vector3(k, k, 1f);
             }
             Place(_shadowP, player);
-            Place(_shadowE, enemy);
+            for (int i = 0; i < foes.Count; i++) Place(_foeShadows[i], foes[i]);
         }
 
         void UpdatePost()
         {
             if (_ca != null) _ca.intensity.Override(Mathf.Clamp01(GameFeel.aberration));
             if (_vig != null) _vig.intensity.Override(0.34f + (player != null && player.state == FState.Ultimate ? 0.22f : 0f));
-            if (player != null && enemy != null && mode == Mode.Duel)
+            if (player != null && enemy != null && mode == Mode.Duel && !Group)
             {
                 bool pFront = player.IsAttacking || !enemy.IsAttacking;
                 player.SetSortBase(pFront ? 1500 : 1000);
@@ -352,16 +397,18 @@ namespace Kage
             if (kb.f3Key.wasPressedThisFrame)
             {
                 aiLevel = (aiLevel + 1) % 3;
-                _ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
-                Hud.SetMode("DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train  ·  F5 foe");
+                foreach (var ai in _ais) ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
+                Hud.SetMode(ModeText());
                 Hud.Banner("AI  " + AiNames[aiLevel], Color.white, 1.2f);
             }
             if (kb.f4Key.wasPressedThisFrame)
             {
                 _ai.passive = !_ai.passive;
+                foreach (var ai in _ais) ai.passive = _ai.passive;
                 Hud.Banner(_ai.passive ? "AI PASSIVE (practice)" : "AI ACTIVE", Color.white, 1.2f);
             }
             if (kb.f5Key.wasPressedThisFrame) ReloadWithFoe(NextFoe(foeId));      // dev: next opponent (SAN-69)
+            if (kb.f6Key.wasPressedThisFrame) ReloadWithGroup(Group ? 0 : GroupFightSize);      // dev: Kage vs 4 Footmen and back (SAN-83)
             if (kb.pKey.wasPressedThisFrame) GameFeel.paused = !GameFeel.paused;
             if (kb.f7Key.wasPressedThisFrame)       // dev: break (or restore) the player's sword (SAN-113)
             {
@@ -383,7 +430,12 @@ namespace Kage
             if (kb.rKey.wasPressedThisFrame)
             {
                 if (mode == Mode.Training) { bag.ResetBag(); player.ResetForRound(-0.4f, 1f); player.BeginFight(); }
-                else { player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; enemy.meter = 0f; player.ResetForFight(); enemy.ResetForFight(); _round = 1; StartRound(); }
+                else
+                {
+                    player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; player.ResetForFight();
+                    foreach (var f in foes) { f.meter = 0f; f.ResetForFight(); }
+                    _round = 1; StartRound();
+                }
             }
         }
 
@@ -412,6 +464,20 @@ namespace Kage
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             if (string.IsNullOrEmpty(scene.path)) { Hud?.Banner("no scene to reload", Color.white, 1.2f); return; }
             NextFoeId = id;
+            Reload(scene);
+        }
+
+        /// <summary>Dev (F6): restarts the arena as the group fight (<paramref name="size"/> foes), or back to the duel (0).</summary>
+        void ReloadWithGroup(int size)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (string.IsNullOrEmpty(scene.path)) { Hud?.Banner("no scene to reload", Color.white, 1.2f); return; }
+            NextGroupSize = size;
+            Reload(scene);
+        }
+
+        static void Reload(UnityEngine.SceneManagement.Scene scene)
+        {
 #if UNITY_EDITOR
             UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(scene.path, new UnityEngine.SceneManagement.LoadSceneParameters(UnityEngine.SceneManagement.LoadSceneMode.Single));
 #else
@@ -448,7 +514,7 @@ namespace Kage
             bool show = Gallery.page < 0;
             if (show) Gallery.Show(page); else Gallery.Hide();
             player.gameObject.SetActive(!show);
-            if (mode == Mode.Duel) enemy.gameObject.SetActive(!show);
+            if (mode == Mode.Duel) foreach (var f in foes) f.gameObject.SetActive(!show);
             if (player.rig.scarf != null) player.rig.scarf.gameObject.SetActive(!show);
             GameFeel.paused = false;
         }
@@ -489,11 +555,14 @@ namespace Kage
         void OnKO(Fighter loser)
         {
             if (_koHandled || mode != Mode.Duel) return;
+            if (Group && loser != player) foreach (var f in foes) if (f.state != FState.KO) return;     // the round goes on while a foe stands
             _koHandled = true;
             var winner = loser == player ? enemy : player;
             winner.roundsWon++;
             winner.controlEnabled = false;
             loser.controlEnabled = false;
+            foreach (var f in foes) f.controlEnabled = false;
+            if (Group && loser == player) foreach (var f in foes) if (f.state != FState.KO) { winner = f; break; }   // a foe still standing takes the bow
             _roundWinner = winner;
             _phase = Phase.RoundOver;
             _phaseT = 0f;
@@ -505,11 +574,27 @@ namespace Kage
             _phase = Phase.RoundOver;
             _phaseT = 0f;
             player.controlEnabled = enemy.controlEnabled = false;
+            if (Group)
+            {
+                // the group's health against Kage's, as shares of the maximum
+                float hp = 0f, max = 0f;
+                foreach (var f in foes) { f.controlEnabled = false; hp += f.health; max += f.maxHealth; }
+                float kage = player.health / player.maxHealth, them = hp / Mathf.Max(1f, max);
+                if (Mathf.Abs(kage - them) < 0.005f) { Hud.Announce("DRAW", Color.white, 1.8f); _roundWinner = null; return; }
+                _roundWinner = kage > them ? player : enemy;
+                if (_roundWinner == player) player.roundsWon++; else enemy.roundsWon++;
+                Hud.Announce("TIME", Color.white, 1.8f);
+                return;
+            }
             if (Mathf.Abs(player.health - enemy.health) < 0.5f) { Hud.Announce("DRAW", Color.white, 1.8f); _roundWinner = null; return; }
             _roundWinner = player.health > enemy.health ? player : enemy;
             _roundWinner.roundsWon++;
             Hud.Announce("TIME", Color.white, 1.8f);
         }
+
+        string ModeText() => Group
+            ? $"GROUP FIGHT  ·  {foes.Count} × {enemy.Character.displayName.ToUpperInvariant()}  ·  AI {AiNames[aiLevel]}  ·  F2 to train  ·  F6 duel"
+            : "DUEL  ·  AI " + AiNames[aiLevel] + "  ·  F2 to train  ·  F5 foe  ·  F6 group";
 
         void OnDestroy()
         {

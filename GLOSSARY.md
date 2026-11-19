@@ -21,6 +21,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Character**: an entry in character data (`CharacterDef`): stats, look, family, AI profile, flags. Kage is a character.
 - **Character data**: the shape in ADR-0005.
 - **Opponent**: the fighter on the other side. `Fighter.opponent` is the **current target**.
+- **Target list**: every active fighter of another team that a fighter can fight (`Fighter.Targets`, fighter order). With one foe it has one entry. **Current target**: the one picked from it every frame by the **nearest-in-front rule**: the nearest by horizontal distance, a fighter behind counting `behindPenalty` (1.5 m) farther and the current target `stickiness` (0.25 m) nearer, knocked-out fighters only when nobody else stands (`Fighter.PickTarget`, SAN-83). Move selection, the AI and facing read it, so Kage turns only for a foe behind that is clearly nearer, or when nobody is in front. *Avoid:* lock-on, focus (except the camera's focus fighter).
 - **Foe**: an enemy-side fighter. **Regular foe**: a rank-and-file unit (Footman, Runner, Shieldbearer, Chainthrower, Ironclad, Shade, Flicker, tutorial Hollow). *Avoid:* mob, minion, grunt, enemy unit (in prose).
 - **Sub-boss**: one of the four Act I stretch bosses: Kuroe, Garan, Hisame, Shiden. *Avoid:* mini-boss, mid-boss.
 - **Boss**: Raikon, the Act I boss. "Boss fights" in rules text means both sub-boss and boss stages (the boss format).
@@ -29,7 +30,9 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Archetype**: the JS AI role of a foe: regular, agile, defensive, ranged, heavy, boss.
 - **AI profile**: the data that drives the AI for an archetype: preferred range, aggression, guard and parry rate, move weights, reaction frames, combo length.
 - **Attack rate**: a character's share (0..1) of the attacks its AI has chosen that it actually throws (`CharacterDef.attackRate`). The tutorial Hollow's is 0.3. *Avoid:* aggression (that is the JS profile's `aggr`, a different number).
-- **Engagement / engaged foe**: in a group fight, at most two foes are engaged (allowed to attack). The rest **circle** and wait. *Avoid:* aggro.
+- **Engagement / engaged foe**: in a group fight, at most two foes are engaged (allowed to attack; `maxAttackers`). The rest are **waiting foes**: they keep the **wait distance** (3.1 m, the JS ring) from Kage and **circle** (step in and out) until a place frees. A knocked-out engaged foe's place goes to the nearest waiting foe. The `EngagementManager` decides (`ctx.Engagement`); numbers in `engagement.json` (SAN-83). *Avoid:* aggro, attack token.
+- **Attacking** (for the engagement limit): in an attack move (`Fighter.InAttackMove`): a move with a hit window, a throw, a projectile or a counter window; not a roll, backflip, dash or getting up. **Committed**: attacking, or with an attack button still buffered; an engaged foe keeps its place while committed.
+- **Group fight**: the dev arena's Kage against four Footmen (F6), and any fight with more than one foe. *Avoid:* mob fight, horde.
 - **Health scale**: the one shared multiplier from JS health to Unity health (about 0.431). **JS health**: a character's raw health in the JS data, before the scale. *Avoid:* HP multiplier, difficulty scaling.
 - **Damage multiplier**: a character's or weapon's multiplier on Unity window damage.
 - **Speed multiplier**: how fast a character moves around (walk, run, dash). **Move rate**: how fast its attacks play. They are different things.
@@ -103,7 +106,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Title card**: the plain card that opens a stage in place of story scenes.
 - **Tutorial prompt**: a Prologue prompt at a road position, showing the bound key (`KeyBindings.Label`), that waits until the action is done.
 - **Key bindings**: the one table of fight controls, action to keyboard keys and gamepad buttons (`KeyBindings`, ADR-0004). *Avoid:* key map, controls config.
-- **Dev arena**: `KageGame`'s duel and training dojo, for trying fighters and weapons in the Editor. **Campaign flow**: title → campaign map → pre-fight loadout → stage → results → map.
+- **Dev arena**: `KageGame`'s duel, group fight (F6) and training dojo, for trying fighters and weapons in the Editor. **Campaign flow**: title → campaign map → pre-fight loadout → stage → results → map.
 
 ## Economy and save
 
