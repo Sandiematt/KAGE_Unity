@@ -9,7 +9,7 @@ namespace Kage.Tests
 {
     /// <summary>
     /// The review sheets for the Order Shieldbearer (SAN-98): Kage and the Shieldbearer side by side in idle, walk, attack and hit, a close-up
-    /// of the Shieldbearer and his head, and a line-up of every Order and Hollow foe so far. Written to Screenshots/review/SAN-101/. Needs a
+    /// of the Shieldbearer and his head, and a line-up of every Order and Hollow foe so far. Written to Screenshots/review/SAN-98/. Needs a
     /// GPU: it skips itself under -nographics. Run with <c>-testFilter OrderShieldbearerScreenshots</c> and no -nographics.
     /// </summary>
     [Category("Screenshots")]
