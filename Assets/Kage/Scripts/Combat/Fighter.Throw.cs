@@ -12,8 +12,8 @@ namespace Kage
         void ThrowUpdate()
         {
             var m = move;
-            float f = _moveTime;
-            if (Passed(m.grabFrame))
+            if (m.grabTo > m.grabFrame) { if (!ReachUpdate(m)) return; }     // a grab window (the clinch, SAN-104)
+            else if (Passed(m.grabFrame))
             {
                 bool inReach = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < m.grabRange && opponent.CanBeThrown;
                 bool noGrab = inReach && opponent.Has(CharacterFlags.NoGrab);     // every throw fails on a no-grab character, the heavy grapple too (SAN-102)
@@ -28,15 +28,45 @@ namespace Kage
                 KageGame.I?.Audio?.Play(SfxKind.Grab, 0.8f);
             }
             if (_victim == null) return;
-            if (f > m.grabFrame && f < m.releaseFrame)
+            float f = _moveTime;
+            int caught = Mathf.Max(m.grabFrame, m.grabTo);       // the carry starts where the grab took (its window's end for the clinch)
+            if (f > caught && f < m.releaseFrame)
             {
-                float u = (f - m.grabFrame) / (float)(m.releaseFrame - m.grabFrame);
+                float u = (f - caught) / (float)(m.releaseFrame - caught);
                 float e = KMath.Apply(Ease.InOutQuad, u);
                 Vector2 p = Pos + new Vector2(facing * Mathf.Lerp(m.carryFrom, m.carryTo, e), Mathf.Sin(e * Mathf.PI) * m.carryHeight + 0.02f);
                 _victim.rb.MovePosition(p);
                 _victim._thrownSpin = e * 200f;
             }
             if (Passed(m.releaseFrame)) ReleaseVictim(true);
+        }
+
+        /// <summary>
+        /// A grab window (<see cref="MoveDef.grabTo"/>, SAN-104): on every frame of it the grab takes the foe if it is in reach and can be
+        /// thrown, and the move jumps to the window's end so the carry is the authored one; a no-grab foe in reach, or the window passing
+        /// with nobody taken, turns it into the whiff. False when the move became its whiff (nothing more this frame).
+        /// </summary>
+        bool ReachUpdate(MoveDef m)
+        {
+            if (_victim != null || !Touches(m.grabFrame, m.grabTo)) return true;
+            bool inReach = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < m.grabRange && opponent.CanBeThrown;
+            bool noGrab = inReach && opponent.Has(CharacterFlags.NoGrab);
+            if (inReach && !noGrab)
+            {
+                _victim = opponent;
+                opponent.BeginThrown(this);
+                KageGame.I?.Audio?.Play(SfxKind.Grab, 0.8f);
+                _moveTime = m.grabTo;
+                _movePrev = moveFrame = m.grabTo;
+                return true;
+            }
+            if (noGrab || moveFrame >= m.grabTo)
+            {
+                if (noGrab) KageGame.I?.Hud?.Float(opponent.Pos + Vector2.up * 2.0f, "NO GRAB", new Color(0.8f, 0.8f, 0.85f), 0.8f);
+                move = m.whiff;
+                return false;
+            }
+            return true;
         }
 
         void ReleaseVictim(bool slam)

@@ -161,11 +161,12 @@ namespace Kage
         Mesh _mesh;
         Color _c;
         float _life, _t;
-        readonly MaterialPropertyBlock _mpb = new();
+        MaterialPropertyBlock _mpb;      // made in Init: Unity forbids creating one in a MonoBehaviour's field initializer (SAN-104 found it)
 
         public void Init(float width, float seconds, Color c)
         {
             _life = seconds; _c = c;
+            _mpb = new MaterialPropertyBlock();
             _mesh = new Mesh { name = "HazardMark" };
             float h = 0.07f, hw = width * 0.5f;
             _mesh.vertices = new[] { new Vector3(-hw, 0f), new Vector3(hw, 0f), new Vector3(hw, h), new Vector3(-hw, h) };

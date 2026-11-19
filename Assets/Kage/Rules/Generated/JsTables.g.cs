@@ -1833,6 +1833,577 @@ namespace Kage.Rules
             }
         };
 
+        public static readonly JsMove[] Moves = new JsMove[]
+        {
+            new JsMove
+            {
+                Id = "p1",
+                Kind = "punch",
+                T = new double[] { 0.06, 0.06, 0.14 },
+                Dmg = 5,
+                Box = new double[] { 18, -160, 88, 40 }
+            },
+            new JsMove
+            {
+                Id = "grab",
+                Kind = "grab",
+                T = new double[] { 0.06, 0.08, 0.3 },
+                Dmg = 0,
+                Box = new double[] { 14, -170, 64, 120 }
+            }
+        };
+
+        public static readonly JsProjectile[] Projectiles = new JsProjectile[]
+        {
+            new JsProjectile
+            {
+                Id = "kunai",
+                Speed = 1250,
+                R = 10,
+                Dmg = 6,
+                Hs = 0.22,
+                Kb = 140,
+                Life = 1.2,
+                Grav = 120,
+                Imp = 0
+            },
+            new JsProjectile
+            {
+                Id = "orb",
+                Speed = 520,
+                R = 16,
+                Dmg = 9,
+                Hs = 0.32,
+                Kb = 220,
+                Life = 2.6,
+                Grav = 0,
+                Imp = 1
+            },
+            new JsProjectile
+            {
+                Id = "bigorb",
+                Speed = 380,
+                R = 26,
+                Dmg = 14,
+                Hs = 0.45,
+                Kb = 380,
+                Life = 3.2,
+                Grav = 0,
+                Imp = 2,
+                Kd = true
+            },
+            new JsProjectile
+            {
+                Id = "crescent",
+                Speed = 980,
+                R = 70,
+                Dmg = 24,
+                Hs = 0.6,
+                Kb = 520,
+                Up = -300,
+                Life = 1.1,
+                Grav = 0,
+                Imp = 3,
+                Kd = true
+            },
+            new JsProjectile
+            {
+                Id = "shock",
+                Speed = 760,
+                R = 34,
+                Dmg = 13,
+                Hs = 0.5,
+                Kb = 260,
+                Up = -420,
+                Life = 0.75,
+                Grav = 0,
+                Imp = 2,
+                Kd = true,
+                Ground = true
+            },
+            new JsProjectile
+            {
+                Id = "bigshock",
+                Speed = 900,
+                R = 44,
+                Dmg = 22,
+                Hs = 0.6,
+                Kb = 420,
+                Up = -520,
+                Life = 0.9,
+                Grav = 0,
+                Imp = 3,
+                Kd = true,
+                Unb = true,
+                Ground = true
+            },
+            new JsProjectile
+            {
+                Id = "hook",
+                Speed = 1150,
+                R = 16,
+                Dmg = 8,
+                Hs = 0.5,
+                Kb = 0,
+                Life = 0.8,
+                Grav = 0,
+                Imp = 1
+            },
+            new JsProjectile
+            {
+                Id = "thunderwave",
+                Speed = 640,
+                R = 30,
+                Dmg = 15,
+                Hs = 0.5,
+                Kb = 320,
+                Up = -380,
+                Life = 1.7,
+                Grav = 0,
+                Imp = 2,
+                Kd = true,
+                Unb = true,
+                Ground = true
+            },
+            new JsProjectile
+            {
+                Id = "smoke",
+                Speed = 520,
+                R = 14,
+                Dmg = 4,
+                Hs = 0.2,
+                Kb = 60,
+                Life = 1.6,
+                Grav = 1500,
+                Imp = 0
+            },
+            new JsProjectile
+            {
+                Id = "tkspear",
+                Speed = 1700,
+                R = 30,
+                Dmg = 24,
+                Hs = 0.6,
+                Kb = 560,
+                Up = -340,
+                Life = 1.6,
+                Grav = 0,
+                Imp = 3,
+                Kd = true,
+                Unb = true
+            },
+            new JsProjectile
+            {
+                Id = "tkpulse",
+                Speed = 900,
+                R = 34,
+                Dmg = 16,
+                Hs = 0.5,
+                Kb = 320,
+                Up = -420,
+                Life = 2.1,
+                Grav = 0,
+                Imp = 2,
+                Kd = true,
+                Unb = true,
+                Ground = true
+            }
+        };
+
+        public static readonly JsAiRole[] AiRoles = new JsAiRole[]
+        {
+            new JsAiRole
+            {
+                Id = "regular",
+                Hp = 0.82,
+                Dmg = 0.82,
+                Aggr = 0.78,
+                Guard = 0.72,
+                Parry = 0.4,
+                React = 1.32,
+                Punish = 0.62,
+                Idle = 1.3,
+                Windup = 1.2,
+                Recovery = 1.22
+            },
+            new JsAiRole
+            {
+                Id = "sub",
+                Hp = 1.05,
+                Dmg = 1.02,
+                Aggr = 1.05,
+                Guard = 1.08,
+                Parry = 1.12,
+                React = 0.93,
+                Punish = 1.08,
+                Idle = 0.94,
+                Windup = 0.98,
+                Recovery = 0.95
+            },
+            new JsAiRole
+            {
+                Id = "boss",
+                Hp = 1.22,
+                Dmg = 1.12,
+                Aggr = 1.15,
+                Guard = 1.2,
+                Parry = 1.3,
+                React = 0.82,
+                Punish = 1.2,
+                Idle = 0.8,
+                Windup = 0.93,
+                Recovery = 0.85
+            }
+        };
+
+        public static readonly JsDifficulty[] Difficulties = new JsDifficulty[]
+        {
+            new JsDifficulty
+            {
+                Id = "easy",
+                Hp = 0.7,
+                Dmg = 0.6,
+                BossHp = 0.75,
+                BossDmg = 0.65,
+                Windup = 1.35,
+                Recovery = 1.3
+            },
+            new JsDifficulty
+            {
+                Id = "normal",
+                Hp = 1,
+                Dmg = 1,
+                BossHp = 1,
+                BossDmg = 1,
+                Windup = 1,
+                Recovery = 1
+            },
+            new JsDifficulty
+            {
+                Id = "hard",
+                Hp = 1.3,
+                Dmg = 1.25,
+                BossHp = 1.25,
+                BossDmg = 1.2,
+                Windup = 0.85,
+                Recovery = 0.8
+            },
+            new JsDifficulty
+            {
+                Id = "impossible",
+                Hp = 1.6,
+                Dmg = 1.5,
+                BossHp = 1.5,
+                BossDmg = 1.4,
+                Windup = 0.72,
+                Recovery = 0.65
+            }
+        };
+
+        public static readonly JsFightStyle[] FightStyles = new JsFightStyle[]
+        {
+            new JsFightStyle
+            {
+                Id = "kuroe",
+                Art = "B\u014djutsu \u00b7 Kukishin-ry\u016b",
+                Strings = new JsStyleString[]
+                {
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "move:s1" },
+                        Range = new double[] { 165, 320 },
+                        W = 3
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon" },
+                        Range = new double[] { 150, 300 },
+                        W = 2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon", "weapon" },
+                        Range = new double[] { 120, 270 },
+                        W = 1.2,
+                        Tell = 0.28
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "back", "wait:0.14", "move:s1" },
+                        Range = new double[] { 0, 165 },
+                        W = 3
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagUp", "back" },
+                        Range = new double[] { 0, 150 },
+                        W = 1.4
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:down" },
+                        Range = new double[] { 0, 250 },
+                        W = 4,
+                        Tell = 0.2,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:up" },
+                        Range = new double[] { 0, 270 },
+                        W = 6,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "dash", "weapon" },
+                        Range = new double[] { 320, 470 },
+                        W = 1
+                    }
+                }
+            },
+            new JsFightStyle
+            {
+                Id = "garan",
+                Art = "Karate \u00b7 Sum\u014d",
+                Strings = new JsStyleString[]
+                {
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "punch", "punch", "w:up" },
+                        Range = new double[] { 0, 140 },
+                        W = 2.5
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon" },
+                        Range = new double[] { 0, 210 },
+                        W = 2,
+                        Tell = 0.3
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "heavy" },
+                        Range = new double[] { 60, 180 },
+                        W = 1.2,
+                        Tell = 0.35
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "grab" },
+                        Range = new double[] { 0, 115 },
+                        W = 5,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:down" },
+                        Range = new double[] { 0, 190 },
+                        W = 2,
+                        Tell = 0.3,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:fwd", "punch" },
+                        Range = new double[] { 140, 300 },
+                        W = 2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagDown" },
+                        Range = new double[] { 120, 260 },
+                        W = 1
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:up" },
+                        Range = new double[] { 0, 170 },
+                        W = 6,
+                        When = true
+                    }
+                }
+            },
+            new JsFightStyle
+            {
+                Id = "hisame",
+                Art = "Tessenjutsu",
+                Strings = new JsStyleString[]
+                {
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon" },
+                        Range = new double[] { 0, 150 },
+                        W = 2.5
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon", "weapon" },
+                        Range = new double[] { 0, 140 },
+                        W = 1.5
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagDown", "w:diagUp" },
+                        Range = new double[] { 0, 160 },
+                        W = 1.5
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "dash", "weapon" },
+                        Range = new double[] { 190, 400 },
+                        W = 2.5,
+                        Tell = 0.24
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon", "weapon", "weapon", "weapon" },
+                        Range = new double[] { 0, 140 },
+                        W = 3,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "grab" },
+                        Range = new double[] { 0, 100 },
+                        W = 2,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:up" },
+                        Range = new double[] { 0, 160 },
+                        W = 6,
+                        When = true
+                    }
+                }
+            },
+            new JsFightStyle
+            {
+                Id = "shiden",
+                Art = "S\u014djutsu \u00b7 H\u014dz\u014din-ry\u016b",
+                Strings = new JsStyleString[]
+                {
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon", "weapon" },
+                        Range = new double[] { 130, 300 },
+                        W = 3,
+                        Tell = 0.2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "weapon", "back" },
+                        Range = new double[] { 120, 290 },
+                        W = 2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "weapon", "wait:0.24", "weapon", "weapon" },
+                        Range = new double[] { 130, 290 },
+                        W = 2.5
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:fwd" },
+                        Range = new double[] { 200, 360 },
+                        W = 2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "dash", "weapon" },
+                        Range = new double[] { 320, 500 },
+                        W = 1.5,
+                        Tell = 0.25
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "back", "wait:0.12", "weapon", "weapon" },
+                        Range = new double[] { 0, 140 },
+                        W = 2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagDown" },
+                        Range = new double[] { 100, 260 },
+                        W = 1.2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:down" },
+                        Range = new double[] { 0, 260 },
+                        W = 4,
+                        Tell = 0.2,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:up" },
+                        Range = new double[] { 0, 280 },
+                        W = 6,
+                        When = true
+                    }
+                }
+            },
+            new JsFightStyle
+            {
+                Id = "raikon",
+                Art = "Jigen-ry\u016b",
+                Strings = new JsStyleString[]
+                {
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:down" },
+                        Range = new double[] { 0, 205 },
+                        W = 2.2,
+                        Tell = 0.24
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagDown" },
+                        Range = new double[] { 0, 205 },
+                        W = 1.6,
+                        Tell = 0.2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "fwd", "w:fwd" },
+                        Range = new double[] { 150, 300 },
+                        W = 1.2,
+                        Tell = 0.18
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "ab:taiAtari" },
+                        Range = new double[] { 0, 175 },
+                        W = 3,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "ab:ichiNoTachi" },
+                        Range = new double[] { 230, 560 },
+                        W = 3,
+                        When = true
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "w:diagDown", "w:diagUp" },
+                        Range = new double[] { 0, 200 },
+                        W = 1.4,
+                        Tell = 0.2
+                    },
+                    new JsStyleString
+                    {
+                        Seq = new string[] { "ab:raijinDaiko" },
+                        Range = new double[] { 0, 300 },
+                        W = 3,
+                        When = true
+                    }
+                }
+            }
+        };
+
         public static readonly JsAiProfile[] AiProfiles = new JsAiProfile[]
         {
             new JsAiProfile
