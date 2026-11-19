@@ -143,9 +143,12 @@ namespace Kage
         /// <summary>The floor's left and right limit: the arena of the encounter in play, else the road from its left end to the next gate.</summary>
         public Vector2 FloorLimits => _enc >= 0 ? new Vector2((float)Data.ArenaLeft(_enc), (float)Data.Encounters[_enc].Gate) : new Vector2(0f, WalkLimit);
 
-        /// <summary>What the camera may show: the arena in an encounter, else the whole road.</summary>
-        public float CameraLeft => _enc >= 0 ? (float)Data.ArenaLeft(_enc) : 0f;
-        public float CameraRight => _enc >= 0 ? (float)Data.Encounters[_enc].Gate : Length;
+        /// <summary>The camera may show this much past the floor's ends, so Kage at a wall is in view with room to spare.</summary>
+        public const float CameraMargin = 0.6f;
+
+        /// <summary>What the camera may show: the arena in an encounter (the gate span), else the whole road, plus <see cref="CameraMargin"/>.</summary>
+        public float CameraLeft => (_enc >= 0 ? (float)Data.ArenaLeft(_enc) : 0f) - CameraMargin;
+        public float CameraRight => (_enc >= 0 ? (float)Data.Encounters[_enc].Gate : Length) + CameraMargin;
 
         /// <summary>One line for the current HUD: <c>ROAD 43%  ·  ENCOUNTER 1/2  ·  WAVE 2/3  ·  3 FOES</c>.</summary>
         public string HudText
@@ -245,34 +248,56 @@ namespace Kage
             _waveNumber++;
             float arenaL = (float)Data.ArenaLeft(_enc), gate = (float)Data.Encounters[_enc].Gate;
             float kx = _kage.Pos.x;
+            _placed.Clear();
             for (int j = 0; j < ids.Length; j++)
             {
                 bool ahead = j % 2 == 0;
                 int row = j / 2;
                 float x = ahead ? gate - Px(50) - row * Px(90) : arenaL + Px(50) + row * Px(90);
                 if (Mathf.Abs(x - kx) < Px(260)) x = Mathf.Clamp(kx + (ahead ? 1f : -1f) * Px(320), arenaL + Px(30), gate - Px(30));
+                // The JS game lets foes that land on the same spot overlap and pushes them apart afterwards. Two bodies starting
+                // inside each other are separated in an order that depends on the physics engine's internals, which would make a
+                // wave differ from run to run, so each is placed a row (90 px) further into the arena instead.
+                for (int tries = 0; tries < 4 && Crowded(x); tries++)
+                    x = Mathf.Clamp(x + (ahead ? -1f : 1f) * Px(90), arenaL + Px(30), gate - Px(30));
+                _placed.Add(x);
                 SpawnFoe(ids[j], x, kx > x ? 1f : -1f);
             }
             _waveLive = true;
             _ctx.Events.Publish(CombatEvent.WaveStarted(_ctx.Clock.Frame, _waveNumber, EncounterId(_enc)));
         }
 
+        readonly List<float> _placed = new();
+
+        bool Crowded(float x)
+        {
+            foreach (var p in _placed) if (Mathf.Abs(p - x) < Px(60)) return true;
+            return false;
+        }
+
         static float Px(float px) => (float)JsUnits.PxToMetres(px);
 
         void SpawnFoe(string requestedId, float x, float facing)
         {
-            var def = CharacterCatalog.Get(requestedId);
-            if (def == null)
-            {
-                if (_warned.Add(requestedId))
-                    Debug.LogWarning($"[KAGE] stretch {Data.Id}: foe '{requestedId}' is not built yet; the Order Footman stands in for it (StretchSession.FallbackFoeId).");
-                def = CharacterCatalog.Get(FallbackFoeId);
-            }
+            var def = ResolveFoe(requestedId, out bool fellBack);
+            if (fellBack && _warned.Add(requestedId))
+                Debug.LogWarning($"[KAGE] stretch {Data.Id}: foe '{requestedId}' is not built yet; the Order Footman stands in for it (StretchSession.FallbackFoeId).");
             var f = _builder.Spawn(def, 1, _foeInput(def));
             f.ResetForRound(x, facing);
             f.BeginFight();
             _foes.Add(new Foe { fighter = f });
             _spawned.Add(new SpawnRecord(_ctx.Clock.Frame, _enc, _wave, f.FighterId, requestedId, def.id));
+        }
+
+        /// <summary>
+        /// The character for a foe id on a road: the catalog's entry, or, when the id has no character yet, the Order Footman
+        /// (<see cref="FallbackFoeId"/>) with <paramref name="fellBack"/> set. The one place the fallback lives (SAN-109 removes it).
+        /// </summary>
+        public static CharacterDef ResolveFoe(string requestedId, out bool fellBack)
+        {
+            var def = CharacterCatalog.Get(requestedId);
+            fellBack = def == null;
+            return def ?? CharacterCatalog.Get(FallbackFoeId);
         }
 
         int LiveFoes()
