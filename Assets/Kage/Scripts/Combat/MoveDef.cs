@@ -102,6 +102,21 @@ namespace Kage
         /// <summary>Frames of stagger when the move's root motion runs the fighter into the wall it faces (the charge); 0 = none.</summary>
         public int wallStagger;
 
+        // ---- more boss-move hooks (SAN-105, Hisame; Fighter.MoveHooks.cs). Off by default too. ----
+        /// <summary>
+        /// A vault over the current target (Hisame's Kocho): from <see cref="vaultFrom"/> to <see cref="vaultTo"/> the fighter arcs
+        /// <see cref="vaultHeight"/> metres high to land <see cref="vaultPast"/> metres past the target, facing it. With less than
+        /// <see cref="vaultRoom"/> metres between the target and the wall at its back, it comes down that far on its own side instead.
+        /// It stays <see cref="vaultMargin"/> metres inside the stage. -1: no vault.
+        /// </summary>
+        public int vaultFrom = -1, vaultTo = -1;
+        public float vaultPast, vaultHeight, vaultRoom, vaultMargin;
+        /// <summary>What the move throws on <see cref="projectileFrame"/> (Smoke Bomb), from <see cref="projectileFrom"/> (metres ahead, up). Null: the kunai or the Crescent.</summary>
+        public ProjectileDef projectile;
+        public Vector2 projectileFrom;
+        /// <summary>Effect cues (ADR-0007) the move plays on a frame where the fighter stands (Kocho's glint).</summary>
+        public readonly List<(int frame, string cue)> cues = new();
+
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
         public MoveDef Key(int frame, Pose p, Ease e = Ease.OutQuad)
@@ -165,6 +180,16 @@ namespace Kage
         public MoveDef Cancel(int from) { cancelFrom = from; return this; }
         /// <summary>Lays <paramref name="def"/> down on <paramref name="frame"/>, <paramref name="ahead"/> metres in front of the fighter (SAN-104).</summary>
         public MoveDef Hazard(int frame, HazardDef def, float ahead) { hazardFrame = frame; hazard = def; hazardAhead = ahead; return this; }
+        /// <summary>Vaults over the current target from <paramref name="from"/> to <paramref name="to"/> (SAN-105; see <see cref="vaultFrom"/>).</summary>
+        public MoveDef Vault(int from, int to, float past, float height, float room, float margin)
+        {
+            vaultFrom = from; vaultTo = to; vaultPast = past; vaultHeight = height; vaultRoom = room; vaultMargin = margin;
+            return this;
+        }
+        /// <summary>Throws <paramref name="def"/> on <paramref name="frame"/> from <paramref name="from"/> (metres ahead, up) (SAN-105).</summary>
+        public MoveDef Throw(int frame, ProjectileDef def, Vector2 from) { projectileFrame = frame; projectile = def; projectileFrom = from; return this; }
+        /// <summary>Plays effect cue <paramref name="id"/> on <paramref name="frame"/> (SAN-105).</summary>
+        public MoveDef Cue(int frame, string id) { cues.Add((frame, id)); return this; }
         /// <summary>After a confirmed hit, jumping cancels the move's recovery from this frame (chase a launch).</summary>
         public MoveDef JumpCancel(int from) { jumpCancelFrom = from; return this; }
         public MoveDef Sword() { swordFront = true; return this; }

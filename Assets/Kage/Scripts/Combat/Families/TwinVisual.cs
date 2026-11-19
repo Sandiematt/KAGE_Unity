@@ -60,16 +60,34 @@ namespace Kage
 
             if (look == Look.Fans)
             {
-                // an open fan: ribs spreading from the pivot, the paper wedge between them
-                var arc = new List<float> { -0.03f, 0f };
-                for (int a = -48; a <= 48; a += 12)
+                // Hisame's war fan (SAN-105, the JS SUB_WEAPON_ART.mist_fans): rain-dark paper in alternating pleats on a wedge from a
+                // third of the way out, a rain-blue edge, pale rain streaks, and black lacquered guard sticks along both sides
+                const float A0 = -26f, A1 = 14f, Inner = 0.3f;
+                const int Pleats = 7;
+                Vector2 At(float deg, float r) => new(r * Mathf.Cos(deg * Mathf.Deg2Rad), r * Mathf.Sin(deg * Mathf.Deg2Rad));
+                float[] Wedge(float a, float b, float r0, float r1)
                 {
-                    float r = a == -48 || a == 48 ? L * 0.9f : L;
-                    arc.Add(r * Mathf.Cos(a * Mathf.Deg2Rad)); arc.Add(r * Mathf.Sin(a * Mathf.Deg2Rad));
+                    var xy = new List<float>();
+                    void P2(Vector2 v) { xy.Add(v.x); xy.Add(v.y); }
+                    P2(At(a, r0));
+                    for (int k = 0; k <= 3; k++) P2(At(Mathf.Lerp(a, b, k / 3f), r1));
+                    P2(At(b, r0));
+                    return xy.ToArray();
                 }
-                Add("Fan", 0, steel, PartRole.Metal, Poly(arc.ToArray()), true);
-                for (int a = -36; a <= 36; a += 24)
-                    Add("Rib", 1, dark, PartRole.Metal, Poly(-0.03f, 0f, L * Mathf.Cos(a * Mathf.Deg2Rad), L * Mathf.Sin(a * Mathf.Deg2Rad), L * Mathf.Cos(a * Mathf.Deg2Rad), L * Mathf.Sin(a * Mathf.Deg2Rad) + 0.006f));
+                Add("Fan", 0, KMath.Hex("#253447"), PartRole.Metal, Poly(Wedge(A0, A1, L * Inner, L)), true);
+                for (int i = 1; i < Pleats; i += 2)
+                    Add("Pleat" + i, 1, KMath.Hex("#1A2532"), PartRole.Metal, Poly(Wedge(Mathf.Lerp(A0, A1, (float)i / Pleats), Mathf.Lerp(A0, A1, (i + 1f) / Pleats), L * Inner, L)));
+                Add("Edge", 1, KMath.Hex("#7FB8FF"), PartRole.Trim, Poly(Wedge(A0, A1, L * 0.93f, L)), false, 1.4f);
+                foreach (var (r0, r1, a) in new[] { (0.5f, 0.7f, -17f), (0.62f, 0.86f, -7f), (0.45f, 0.62f, 3f), (0.72f, 0.9f, -21f) })
+                {
+                    Vector2 p = At(a, L * r0), q = At(a + 3f, L * r1);
+                    Add("Rain", 2, KMath.Hex("#6E8FAE"), PartRole.Trim, Poly(p.x, p.y, q.x, q.y, q.x, q.y + 0.004f, p.x, p.y + 0.004f), false);
+                }
+                foreach (float a in new[] { A0, A1 })
+                {
+                    Vector2 e = At(a, L), n = new Vector2(-Mathf.Sin(a * Mathf.Deg2Rad), Mathf.Cos(a * Mathf.Deg2Rad)) * 0.008f;
+                    Add("Stick", 2, KMath.Hex("#060607"), PartRole.Metal, Poly(-n.x, -n.y, e.x - n.x, e.y - n.y, e.x + n.x, e.y + n.y, n.x, n.y), true);
+                }
             }
             else
             {
