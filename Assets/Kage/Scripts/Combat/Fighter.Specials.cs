@@ -27,6 +27,31 @@ namespace Kage
             KageGame.I?.Audio?.Play(SfxKind.Counter, 1f);
         }
 
+        /// <summary>A counter stance's catch (<see cref="MoveDef.counterFrontOnly"/>): a melee blow from an attacker in front of this fighter.</summary>
+        bool CounterCatches(in HitInfo info) =>
+            info.origin == HitOrigin.Melee && info.attacker != null && Mathf.Sign(info.attacker.Pos.x - Pos.x) == facing;
+
+        /// <summary>
+        /// A counter stance caught a blow (<see cref="MoveDef.counterAnswer"/>, Kuroe's Censure; the JS Combat.applyHit counter stance): the
+        /// blow is turned aside as by a parry (the attacker reels and loses posture by its role), and the answer plays where this fighter stands.
+        /// </summary>
+        void TriggerCounterAnswer(in HitInfo info, MoveDef answer)
+        {
+            var attacker = info.attacker;
+            if (attacker != null)
+            {
+                SetFacing(Mathf.Sign(attacker.Pos.x - Pos.x), true);
+                attacker.GetParried(this, info);
+            }
+            Vfx.I?.Glint(info.contact, fxCore);
+            GameFeel.Hitstop(8);
+            GameFeel.Shake(0.2f);
+            rig.Flash(fxMain, 0.4f, 10f);
+            StartMove(answer);
+            KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.3f, "COUNTERED", fxMain, 1f);
+            KageGame.I?.Audio?.Play(SfxKind.Counter, 0.9f);
+        }
+
         /// <summary>The Crimson Crescent as data for the generic projectile (SAN-75): the numbers it always had.</summary>
         public static readonly ProjectileDef CrescentProjectile = new()
         {

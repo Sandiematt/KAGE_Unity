@@ -74,6 +74,14 @@ namespace Kage
         public readonly List<ExtKey> extension = new();
         public int projectileFrame = -1;
         public int counterFrom = -1, counterTo = -1;
+        /// <summary>
+        /// What a hit caught in the counter window starts (ADR-0008). Null: the Mirror Guard's answer, a teleport behind the attacker and the
+        /// family's <see cref="MoveSet.counterSlash"/>. Set (a boss's counter stance: Kuroe's Censure): the blow is turned aside like a parry
+        /// (the attacker reels and loses posture by its role, <see cref="ParryTuning"/>) and this move plays where the fighter stands.
+        /// </summary>
+        public MoveDef counterAnswer;
+        /// <summary>The counter window catches only a melee blow from the front (the JS counter stance); a projectile, a hazard or a blow from behind lands as usual.</summary>
+        public bool counterFrontOnly;
         public int gravityOffFrom = -1, gravityOffTo = -1;
         public int spinFrom, spinTo; public float spinDeg;
         /// <summary>Armour frames (ADR-0006): light hits (windows without <c>heavy</c>) don't flinch the fighter during them. Applied by the armour check (SAN-80).</summary>
