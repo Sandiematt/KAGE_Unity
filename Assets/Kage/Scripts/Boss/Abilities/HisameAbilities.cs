@@ -22,8 +22,9 @@ namespace Kage
     /// from <see cref="JsTables.BossAbility"/>; Lightning Cut's variant (wind-up, damage, reach, dash); the twin blades' first cut that ends
     /// Kocho (<see cref="JsTables.Move"/> <c>tw1</c>); the smoke projectile (<see cref="JsTables.Projectile"/>); the tells scaled by the JS
     /// <c>ai.p.windup</c> for a sub-boss on Normal (<see cref="GaranAbilities.Windup"/>). What the JS writes only in its ability code is a
-    /// named constant below with its file. Damage is the JS damage × <see cref="GaranAbilities.UnityPerJsDamage"/>; posture is
-    /// <c>postureMul = gb / (JS damage × 1.3)</c>.
+    /// named constant below with its file. Damage is the JS damage × <see cref="GaranAbilities.UnityPerJsDamage"/>. Posture is
+    /// not Garan's conversion: a JS <c>gb</c> takes the same share of Kage's posture as of the JS guard (out of 100), so Lightning Cut's gb 70
+    /// leaves a full guard standing, as the JS tip ("block it") needs (see <see cref="PostureMul"/>).
     /// </para>
     /// </summary>
     public static class HisameAbilities
@@ -49,7 +50,7 @@ namespace Kage
         const double ChasedPx = 280, ChasedSpeedPx = 120;                 // 41-styles/hisame.js hisameChased: within 280 px, coming faster than 120 px/s
         const double SmokeThrowTime = 0.5, SmokeReleaseAt = 0.18;         // 40-ai.js smokeBomb: a 0.5 s throw, the bomb leaves at 0.18 s
         const double SmokeVyPx = 520, SmokeVxMinPx = 380, SmokeVxMaxPx = 560;   // 30-combat.js WeaponSystem.spawn('smoke'): vy -520, vx rand(380, 560)
-        const double GuardLeanPerDmg = 1.3;         // 30-combat.js: a blow without gb leans dmg x 1.3 on a guard
+        const double JsGuardMax = 100;              // 20-fighter.js: the guard (posture) is 100, and gb comes off it
 
         /// <summary>
         /// How far ahead of her the fans' tips are as they cut through (the far hand 0.62 m ahead in the pose, plus a fan): the cut's hit
@@ -66,7 +67,13 @@ namespace Kage
         static int Frames(double seconds) => Mathf.RoundToInt((float)(seconds * 60.0));
         static float Metres(double px) => (float)JsUnits.PxToMetres(px);
         static int Dmg(double js) => Mathf.Max(1, Mathf.RoundToInt((float)js * GaranAbilities.UnityPerJsDamage));
-        static float PostureMul(double gb, double jsDmg) => (float)(gb / (jsDmg * GuardLeanPerDmg));
+        /// <summary>
+        /// The JS <c>gb</c> as a <see cref="HitWindow.postureMul"/>: the blow takes the same share of Kage's posture as of the JS guard (gb out of
+        /// 100), so a guard that holds in the JS holds here. A guarded hit adds damage × <see cref="GuardTuning.blockPostureFactor"/> × postureMul
+        /// of Kage's <see cref="CharacterDef.postureMax"/> (the default, 60).
+        /// </summary>
+        static float PostureMul(double gb, int unityDmg) =>
+            (float)(gb / JsGuardMax * new CharacterDef().postureMax / (unityDmg * Tuning.Get<GuardTuning>().blockPostureFactor));
 
         static AbilityDef Def(string id, MoveDef move)
         {
@@ -134,7 +141,7 @@ namespace Kage
                 .Key(total, Rest(), Ease.InOutQuad)
                 .Move(tell, tell + dash - 1, Metres(js.Dash))          // 900 px/s for 0.16 s: straight through him
                 .Hit(cut - 1, cut + 3, Fans, Dmg(jsDmg), HitLevel.Mid, new Vector2(Metres(SwingKbPx), Metres(SwingUpPx)), stun: Frames(SwingStun),
-                    hitstop: 10, shake: 0.25f, heavy: true, radius: Mathf.Max(0.08f, Metres(js.Reach * scale) - ThroughReach), postureMul: PostureMul(SwingGb, jsDmg))
+                    hitstop: 10, shake: 0.25f, heavy: true, radius: Mathf.Max(0.08f, Metres(js.Reach * scale) - ThroughReach), postureMul: PostureMul(SwingGb, Dmg(jsDmg)))
                 .Armour(0, tell - 1)                                   // the JS super armour, off at the release
                 .NoPush(tell, tell + dash + 2)
                 .Fx(tell, tell + dash, FxKind.AfterImage).Fx(tell, tell, FxKind.Dust).Fx(cut - 1, cut + 4, FxKind.TrailBlade)

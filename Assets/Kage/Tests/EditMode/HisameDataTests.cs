@@ -165,7 +165,7 @@ namespace Kage.Tests
             Assert.IsTrue(cut.from <= 37 && cut.to >= 37, "the cut is live 0.06 s into the dash");
             Assert.AreEqual(69, m.total, "the wind-up + the JS 0.6 s");
             Assert.AreEqual(7, cut.dmg, "15 x the variant's 0.6 = 9 JS, x 0.8");
-            Assert.AreEqual(70.0 / (9 * 1.3), cut.postureMul, 1e-3, "JS gb 70");
+            Assert.AreEqual(0.7f * 60f, cut.dmg * 1.5f * cut.postureMul, 1e-3, "JS gb 70 of the JS guard's 100: 70% of Kage's 60 posture on a guard");
             Assert.AreNotEqual(HitLevel.Unblockable, cut.level, "the JS cut can be blocked");
             Assert.IsFalse(cut.knockdown);
             Assert.IsTrue(m.Armoured(0) && m.Armoured(32), "armoured through the tell (JS super armour)");
