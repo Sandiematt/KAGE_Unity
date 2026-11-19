@@ -27,6 +27,8 @@ namespace Kage.Tests
         /// </summary>
         public static string LegacyPathOf(string scenario) => Path.Combine(Folder, "Legacy", scenario + ".txt");
         public static bool Recording => Environment.GetEnvironmentVariable("KAGE_RECORD_BASELINES") == "1";
+        /// <summary>KAGE_RECORD_LEGACY=1 also rewrites the legacy-switch baselines (Baselines/Legacy), when a deliberate mechanic change outside hit resolution moves them (SAN-82: the rage art).</summary>
+        public static bool RecordingLegacy => Environment.GetEnvironmentVariable("KAGE_RECORD_LEGACY") == "1";
 
         public static string Format(string scenario, int seed, IEnumerable<string> events, IEnumerable<string> frames)
         {
@@ -39,6 +41,12 @@ namespace Kage.Tests
             sb.Append(FramesHeader).Append('\n');
             foreach (var l in frames) sb.Append(l).Append('\n');
             return sb.ToString();
+        }
+
+        public static void WriteLegacy(string scenario, string text)
+        {
+            Directory.CreateDirectory(Path.Combine(Folder, "Legacy"));
+            File.WriteAllText(LegacyPathOf(scenario), text, new UTF8Encoding(false));
         }
 
         public static void Write(string scenario, string text)

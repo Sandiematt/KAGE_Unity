@@ -59,7 +59,7 @@ namespace Kage
         {
             if (!Grounded) return false;
             ConsumeBuffer();
-            if (Has(CharacterFlags.CanRageArt) && meter >= 100f) { StartUltimate(); return true; }
+            if (Has(CharacterFlags.CanRageArt) && meter >= 100f) { StartRageArt(); return true; }
             if (StartKunaiThrow()) return true;
             if (Has(CharacterFlags.CanThrowKunai)) KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.1f, "NO KUNAI", new Color(0.7f, 0.7f, 0.7f), 0.7f);
             return true;
@@ -72,21 +72,28 @@ namespace Kage
         static readonly float[] UltSides = { 1f, -1f, 1f, -1f, 1f };
         static readonly float[] UltHeights = { 0f, 0.55f, 0f, 0.8f, 0.2f };
 
-        void StartUltimate()
+        /// <summary>
+        /// Starts Thousand Shadows (every family but the katana's, SAN-82), or, for a katana-family fighter with nobody to cut, spends the
+        /// press the same way and announces <paramref name="art"/>: the generic start of the rage art as it always was.
+        /// </summary>
+        void StartUltimate(string art = ThousandShadows)
         {
             meter = 0f;
             SetState(FState.Ultimate);
+            _artId = art;
+            _cmActive = false;
             _ultFrame = 0;
             rb.linearVelocity = Vector2.zero;
             GameFeel.SlowMo(0.5f, 0.35f);
             GameFeel.Punch(0.18f);
-            ctx?.Events.Publish(CombatEvent.RageArt(ctx.Clock.Frame, this, ThousandShadows));
-            KageGame.I?.Hud?.Banner("THOUSAND SHADOWS", fxMain, 1.4f);
+            ctx?.Events.Publish(CombatEvent.RageArt(ctx.Clock.Frame, this, art));
+            KageGame.I?.Hud?.Banner(art == CrimsonMoon ? "CRIMSON MOON" : "THOUSAND SHADOWS", fxMain, 1.4f);
             KageGame.I?.Audio?.Play(SfxKind.Ultimate, 1f);
         }
 
         void UltimateUpdate()
         {
+            if (_cmActive) { CrimsonMoonUpdate(); return; }
             _ultFrame++;
             int f = _ultFrame;
             if (opponent == null) { SetState(FState.Idle); return; }

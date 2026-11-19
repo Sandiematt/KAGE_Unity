@@ -145,7 +145,8 @@ namespace Kage.Tests
         [Test]
         public void ThousandShadowsPublishesRageArtThenItsCuts()
         {
-            var f = Fight(61, Foe.Scripted, kageX: -0.6f, roninX: 0.6f, meter: 100f);
+            // Thousand Shadows is every family's rage art but the katana's (SAN-82): a Kage with bare hands plays it
+            var f = _fight = new HeadlessFight(61, Foe.Scripted, -0.6f, 0.6f, 100f, kageDef: SpearFamilyFightTests.KageWith("fists"));
             f.RoninInput.Add(400);
             f.KageInput.Add(1, dy: -1, buttons: "X");
             f.Run(140);

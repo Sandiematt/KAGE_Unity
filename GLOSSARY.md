@@ -88,6 +88,9 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 
 - **Rage**: the existing 100-point meter, shown as the Rage bar (怒). *Avoid:* shadow meter, super meter, meter (in UI text).
 - **Rage art**: the full-Rage move: **Crimson Moon** (紅月) for the katana family, **Thousand Shadows** for every other family. Triggered by Special + Down with full Rage. *Avoid:* ultimate (old code name `FState.Ultimate`), super, special (for this).
+- **Crimson Moon** (紅月): the katana family's rage art (`WeaponFamilyDef.rageArt` = `crimsonMoon`; Kagetsu and Shizuka). The **freeze** (the world held at scale 0 with Kage exempt, from the start until the finisher), a **cut-in band** with the name and kanji, the camera closing in through the camera's own override, three **crescent cuts** (frames 33, 44, 56, 7 each), the step back and sheathing, and the **giant crescent** finisher (frame 83, 15, knockdown, hit-stop and slow motion). Unblockable and unparryable; binds only the target it started on (`Fighter.RageArtFrame`, `CrimsonMoonTuning`). *Avoid:* moon art, ultimate.
+- **Thousand Shadows**: every other family's rage art: Kage vanishes, five cuts and a finisher on the foe. The old Kage-only move, unchanged by SAN-82; it has no freeze or cut-in band.
+- **Cut-in band**: the slanted band that slides across the HUD at the start of a rage art with its name, kanji and a caption (`Hud.CutIn`, cue `VFX_Kage_RageCutIn`).
 - **Special**: the Special button. A plain Special is the family's Special move (Crescent for the katana). *Avoid:* using "special" for rage arts or for abilities.
 - **Crescent**: the katana's 35-Rage projectile move.
 - **Kunai**: the thrown knife on Special + Down when Rage isn't full, with a per-fight count.

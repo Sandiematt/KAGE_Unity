@@ -1,8 +1,8 @@
-# KAGE baseline replay: thousandShadows_vs_bag
+# KAGE baseline replay: crimsonMoon_vs_bag
 # seed 61. Frame lines: frame, then per fighter: id x y state move:moveFrame hp; then the bag: x y rotation.
 [events]
 0 FightStarted ->- -#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=61 n=-
-4 RageArt kage>- thousandShadows#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
+4 RageArt kage>- crimsonMoon#-1 dmg=0 pos=0 crit=0 lvl=Mid zone=Body i=0 n=-
 [frames]
 0 kage 0.95000 0.02000 Idle - hp=100 bag 1.60000 2.11450 0.00000
 1 kage 0.95000 0.02000 Idle - hp=100 bag 1.60000 2.11060 0.00000

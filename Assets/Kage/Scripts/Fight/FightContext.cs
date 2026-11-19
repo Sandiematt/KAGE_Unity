@@ -29,6 +29,12 @@ namespace Kage
         /// apart by the old manual push, and knockback ignores mass.
         /// </summary>
         public readonly bool LegacyHits;
+        /// <summary>
+        /// The camera and the HUD the fight is shown with, for what a rage art needs from the screen (SAN-82: the camera's override and the
+        /// cut-in band). Null in the headless harness and wherever nothing is shown; the art then only changes the fight.
+        /// </summary>
+        public CameraRig Camera;
+        public Hud Hud;
 
         public FightContext(int seed, bool manualClock)
         {
