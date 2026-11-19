@@ -186,6 +186,44 @@ so input, move selection, the AI and facing all read this frame's `opponent` and
 - Not slowed (as noted above for particles): the cut-in band and the effects run on rendered time.
 
 
+## Notes from the implementation (SAN-89: stretch session, road, floor bounds)
+
+**The late tick exists now.** `FightContext.Sessions` is a list of `IFightSession` (`void LateTick()`); `FightLoop.Step` calls each one after the projectile and hazard phase and before the push and world-scale phases, so a foe spawned in the late tick gets its push collider and world scale in the same frame and takes part from the next. `StretchSession` is the first one; SAN-102's `FightSession` is the second (it can implement the same interface, or own a stretch).
+
+**Floor bounds.** `ctx.Bounds` (`StageBounds`: `Left`, `Right`, `Set`, `Changed`) replaces the fighter's `StageHalf = 7.6` constant. `Fighter.ClampStage`, `AtWall`, the Crimson Moon and counter teleports and the rage-art camera all read it; the default is still ±7.6, so the duel, the group fight and the baseline replay are unchanged. `Fighter.WallSide` (-1 left, +1 right, 0) says which wall a fighter is at. **Known gap:** `AIInputSource` still works out "wall behind" and "cornered" from `Mathf.Sign(self.Pos.x)`, which is only right in the arena (centred on 0); on a road a foe at the left wall of an arena may back into it. `Fighter.WallSide` is there to replace those four expressions the next time that file is touched.
+
+**The session** (`Stage/StretchSession.cs`, from the JS `StretchSession`). State: `Walking`, `Encounter`, `Cleared`, `Failed`. Each late tick, in order:
+
+| When | What |
+|---|---|
+| Kage is knocked out | `Failed`, publishes `StageFailed` (Name = stage id) |
+| Walking, Kage's x >= the next uncleared encounter's trigger (`X`) | the encounter starts: bounds become the arena (`gate` less 1500 px to the gate), `GateChanged(i, true)`, the first wave comes `FirstWaveDelay` (21 frames) later |
+| Walking, every encounter cleared and Kage within 60 px of the end | `Cleared`, publishes `StageCleared` |
+| A wave is on and no foe of it stands | publishes `WaveCleared`; the last wave of the encounter ends it (bounds back to the road up to the next gate, `GateChanged(i, false)`), else the next wave comes `BetweenWaves` (48 frames) later |
+| A fallen foe has lain `CorpseFrames` (132) frames | `Dismiss()`, removed from `ctx.Fighters`, destroyed (the JS foe fades after 2.2 s) |
+
+A wave spawns as in the JS `spawnWave`: foes alternate ahead (near the gate, 50 px in, 90 px per row) and behind (the arena's left edge), and one that would stand within 260 px of Kage stands 320 px from him instead. The JS game lets foes that land on the same spot overlap and pushes them apart; here they are placed a row further in (`Crowded`), because two bodies that start inside each other are separated in an order the physics engine decides, and a wave then differs from run to run. **Differences from the JS game:** the gate opens at the last wave's fall (the JS game waits for its 0.8 s timer too), and the pause between waves counts from a wave's fall rather than from its arrival.
+
+**Waves are ordinary fighters** spawned into the context with `FightBuilder.Spawn` on team 1 (AI at `foeLevel`, default 0.5; `CharacterDef.FromJs` gives the right profile), so the loop picks targets and engagement for them (SAN-83) and the two-attackers-at-most rule holds with no wiring (`StretchSessionTests.No_more_than_two_foes_attack_on_any_frame...`). `FightBuilder` now numbers ids per builder, not by who is still in the fight (`order_footman#7` is never reused after a foe is removed).
+
+**With no foe standing Kage turns to where he walks** (`Fighter.turnToWalk`, set by the session; the JS stretch does the same): in neutral with no target, or only a knocked-out one, a held direction turns him instead of walking him backwards, and he does not turn back to a fallen foe. With a foe standing, nothing changes.
+
+**Camera.** `CameraRig.SetBounds(ICameraBounds)` (the session implements it) limits what the camera shows: the whole road, or on a shut gate the arena, each with `CameraMargin` (0.6 m) past the ends so Kage at a wall is in view. When the limits are narrower than the view (a 13 m arena at the widest group framing) the view is centred on them. `CameraRig.lookAhead` (2 m) shifts the view down Kage's facing while he has nobody to fight. `Frame(ctx, focus)` still frames Kage and the engaged foes; the override still wins (`StretchCameraTests`).
+
+**The road** (`Stage/StretchRoad.cs`): a ground collider the length of the road and two wall colliders that follow `ctx.Bounds`, built from `StretchData` (`BuildPhysics` alone is the headless floor). `Build` adds the night road's scenery from `MeshKit`: sky, moon, two mountain ridges, a torii line and a pine line at their own parallax speeds, lanterns and fence posts on the road, a gate (two posts and a barrier of red light, shown while it is shut, `Bind(session)`) at each encounter, and foreground grass. No imported assets.
+
+**HUD.** `StretchSession.Progress` (0..1), `EncounterNumber` / `EncounterCount`, `WaveNumber` / `WaveCount` (in the encounter), `StretchWave` / `TotalWaves`, `FoesLeft`, `GateClosed`, `State` and `HudText` (`ROAD 40%  ·  GATE 1/2  ·  WAVE 1/2  ·  2 FOES`). The dev arena puts `HudText` on the HUD's mode line. SAN-108 builds the real strip from the same properties.
+
+**The dev arena** (`KageGame.Stretch.cs`): F10 reloads the arena as the test stretch of Footmen (`dev.footmen`: a pair then three, a pair then four) and F10 again goes back to the duel; Shift+F10 loads the next road (the test stretch, the Prologue walk, Act I's four stretches); R restarts the road. Stretch mode builds the road instead of the arena and spawns no foe of its own. `KageGame` itself only gains the `partial` keyword, one enum value and five short hooks in `Awake`, `Update` and `HandleHotkeys`.
+
+**For SAN-102 (`FightSession`).** A stretch ends its stage with events, not a result: it publishes `StageCleared` or `StageFailed` and keeps `State`. The host (the dev arena, later `StageWorld`) reads them; to rate a stretch it builds `new FightStatsRecorder(ctx.Events, kage, stretch: true)`, which ends the fight on those events (and on Kage's knock-out) instead of on the first foe to fall, and calls `Result()`. `FlowController.FinishStage` is not wired to a stretch yet (SAN-109 does it with the Act I stages). A boss phase's "extra waves" flag (JS `secondWave`) can spawn foes into the context the same way (`StretchSession.SpawnFoe` is the model).
+
+**For SAN-109.** Every foe id resolves through `StretchSession.ResolveFoe`: the catalog's character, or the Order Footman (`FallbackFoeId`) with a warning logged once per id. Runner, Shieldbearer, Chainthrower, Ironclad, Flicker and Husk take the fallback until their characters are registered; delete the fallback (and the warning) when all exist (`StretchSessionTests.Every_foe_id_the_JS_stretches_name_resolves...` lists them).
+
+**Determinism.** A stretch is deterministic under the fight loop: the session reads only the frame that has just run and rolls no random numbers. The harness test compares the events and the per-frame positions of two 1500-frame runs (the walk, the gate, the first two waves; ten runs in a row matched when it was written). A whole 4500-frame run is not compared: with four or five bodies in contact the physics step's order differs between fights of one session (the SAN-115 flake), and a long run differs in the last digits sooner or later.
+
+**Files.** New: `StretchData` (Kage.Rules), `StretchSession`, `StretchRoad`, `StageBounds`, `IFightSession`, `Fighter.Dismiss`, `KageGame.Stretch`. Changed: `FightContext` (`Bounds`, `Sessions`), `FightLoop` (late tick), `FightBuilder` (id counting), `CombatEvents` (wave and stage factories), `FightStatsRecorder` (`stretch`), `Fighter.Locomotion` (bounds, `WallSide`, `turnToWalk`), `Fighter.RageArt` and `Fighter.Specials` (bounds), `CameraRig` (`SetBounds`, `ClampX`, `lookAhead`), `KageGame`. Tests: `StretchDataTests` (EditMode), `StretchSessionTests`, `StretchCameraTests`, `StretchDevArenaTests`, the `StretchFight` harness, the review sheet `StretchScreenshots` (Screenshots/review/SAN-89).
+
 ## Consequences
 
 - Tests can build any fight and replay it exactly.

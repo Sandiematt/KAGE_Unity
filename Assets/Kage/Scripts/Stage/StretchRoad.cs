@@ -166,7 +166,7 @@ namespace Kage
             cam.AddParallax(tori, 0.3f, 0.1f);
             var pines = Group(scenery, "PineLine");
             int seed = 3;
-            for (float u = -8f; u < len * 0.5f + 10f; u += 3.1f) { Pine(pines, new Vector2(u + Hash(seed) * 1.4f, 0f), 3.4f + Hash(seed + 1) * 2.4f, KMath.Hex("#12060A"), -2500, seed); seed += 2; }
+            for (float u = -8f; u < len * 0.5f + 10f; u += 3.1f) { Pine(pines, new Vector2(u + Hash(seed) * 1.4f, 0f), 1.9f + Hash(seed + 1) * 1.5f, KMath.Hex("#12060A"), -2500, seed); seed += 2; }
             cam.AddParallax(pines, 0.5f, 0.2f);
 
             // the ground the fighters stand on

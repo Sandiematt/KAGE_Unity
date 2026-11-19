@@ -105,7 +105,13 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Chapter**: `prologue` or `act1` (JS chapter ids). *Avoid:* level, world.
 - **Stage**: one entry on the campaign map, with a kind: **stretch**, **sub-boss** or **boss**. *Avoid:* level, mission.
 - **Stretch**: a side-scrolling walk along a **road** with encounters. The JS term. *Avoid:* corridor, run.
-- **Encounter**: a point on the road where a **gate** closes and waves arrive. It is cleared when its last wave is cleared.
+- **Road**: the floor of a stretch, in metres from its left end (the JS pixels / 115, ADR-0010): its **length**, Kage's **start** and its encounters. Built in code (`StretchRoad`); the data is `StretchData`. The **dev stretch** is the test road of Footmen (`dev.footmen`, F10 in the dev arena).
+- **Stretch session**: the fight session that plays a road (`StretchSession`): it closes gates, brings waves, publishes the wave and stage events and reports progress for the HUD. It runs in the fight loop's late tick (`IFightSession`). *Avoid:* level manager.
+- **Encounter**: a point on the road where a **gate** closes and waves arrive. It starts when Kage reaches its trigger (`X`) and is cleared when its last wave is cleared.
+- **Gate**: the right end of an encounter's **arena**. Closed from the encounter's start until it is cleared; Kage cannot pass it, and it is also the right end of the walk while the road's next encounter is still ahead. *Avoid:* door, barrier (in prose).
+- **Arena** (of an encounter): the floor between the gate and 1500 px (13 m) to its left. While the gate is closed the **floor bounds** (`ctx.Bounds`, `StageBounds`) and the camera's limits (`ICameraBounds`) are this span; the camera shows `CameraMargin` (0.6 m) past it.
+- **Floor bounds**: the left and right limit every fighter clamps to: ±7.6 m in the arena, the road or the encounter's arena in a stretch.
+- **Fallback foe**: the Order Footman, standing in for a foe id on a road that has no character yet (`StretchSession.ResolveFoe`, logged once as a warning). SAN-109 removes it.
 - **Wave**: one group of 2–4 foes within an encounter. The next wave comes when the previous one is cleared. *Avoid:* squad (except when quoting the spec's "JS squads", meaning all the foes of a stretch), spawn group.
 - **Phase**: a part of a boss fight that starts when health falls to its threshold, and swaps abilities, profile, multipliers and flags. Sub-bosses have two, Raikon three.
 - **Boss bar**: the HUD bar for a boss: art card, name, title, health, phase marks.
@@ -113,7 +119,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Title card**: the plain card that opens a stage in place of story scenes.
 - **Tutorial prompt**: a Prologue prompt at a road position, showing the bound key (`KeyBindings.Label`), that waits until the action is done.
 - **Key bindings**: the one table of fight controls, action to keyboard keys and gamepad buttons (`KeyBindings`, ADR-0004). *Avoid:* key map, controls config.
-- **Dev arena**: `KageGame`'s duel, group fight (F6) and training dojo, for trying fighters and weapons in the Editor. **Campaign flow**: title → campaign map → pre-fight loadout → stage → results → map.
+- **Dev arena**: `KageGame`'s duel, group fight (F6), stretch (F10) and training dojo, for trying fighters and weapons in the Editor. **Campaign flow**: title → campaign map → pre-fight loadout → stage → results → map.
 
 ## Economy and save
 

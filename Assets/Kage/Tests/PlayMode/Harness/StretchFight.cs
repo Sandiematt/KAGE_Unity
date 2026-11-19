@@ -53,14 +53,15 @@ namespace Kage.Tests
             return d;
         }
 
-        public StretchFight(int seed, StretchData data, CharacterDef kageDef = null, float aiLevel = 0.9f, float foeLevel = 0.6f)
+        /// <param name="rig">With a camera rig the road is drawn too (review sheets); without, it is the floor only.</param>
+        public StretchFight(int seed, StretchData data, CharacterDef kageDef = null, float aiLevel = 0.9f, float foeLevel = 0.6f, CameraRig rig = null)
         {
             Root = new GameObject("StretchFight");
             var b = new FightBuilder(Root.transform, seed, manualClock: true);
             Walker = new RoadWalker(aiLevel);
             Kage = b.Spawn(kageDef ?? StrongKage(), 0, Walker);
             Ctx = b.Build();
-            Road = StretchRoad.BuildPhysics(Root.transform, data, Ctx.Bounds);
+            Road = rig != null ? StretchRoad.Build(Root.transform, data, Ctx.Bounds, rig) : StretchRoad.BuildPhysics(Root.transform, data, Ctx.Bounds);
             Loop = b.Loop;
             Log = new CombatEventLog(Ctx.Events);
             Session = new StretchSession(Ctx, b, data, Kage, foeInput: _ => new AIInputSource { level = foeLevel });

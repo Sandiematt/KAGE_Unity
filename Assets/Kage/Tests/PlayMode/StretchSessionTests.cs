@@ -307,6 +307,22 @@ namespace Kage.Tests
             StringAssert.Contains("STRETCH CLEARED", f.Session.HudText);
         }
 
+        [Test]
+        public void The_rating_recorder_reads_a_stretch_by_its_stage_events_not_by_the_first_foe_to_fall()
+        {
+            var f = Fight();
+            using var rec = new FightStatsRecorder(f.Ctx.Events, f.Kage, stretch: true);
+            rec.MarkFightStart(0);
+            Assert.IsTrue(f.RunUntil(() => f.Session.Cleared || f.Session.Failed, RunLimit));
+            var r = rec.Result();
+            Assert.IsTrue(r.win, "StageCleared is the win");
+            Assert.Greater(r.time, 30.0, "the whole road, not the first foe's fall");
+            int clearedAt = f.Events(CombatEventType.StageCleared).Single().Frame;
+            Assert.AreEqual(clearedAt / 60.0, r.time, 1e-6);
+            Assert.Greater(r.maxCombo, 0);
+            Assert.Greater(r.hpLeft, 0.0);
+        }
+
         // ---------------- foes that are not built yet ----------------
 
         [Test]

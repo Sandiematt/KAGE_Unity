@@ -134,3 +134,9 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 
 - `Parried` is published by the attacker's `PublishHit` like every hit result, with Source = the attacker, Target = the fighter who parried, Damage 0, Crit false (a crit rolled for the parried blow is dropped) and Posture = the posture the attacker lost to the parry (`Fighter.LastParryPosture` on the parrier; 0 for a parried projectile). When that posture fills the attacker's bar, `GuardBroken` (Source = the parrier) follows on the same frame.
 - `FightStatsRecorder` counts `Parried` events whose Target is the player; a foe's parry of Kage isn't counted. No other class keeps a parry count for the rating (`Fighter.ParriesMade` is the fighter's own tally, for tests and the HUD).
+
+## Notes from the implementation (SAN-89)
+
+- `WaveStarted`, `WaveCleared`, `StageCleared` and `StageFailed` have factories (`CombatEvent.WaveStarted(frame, wave, encounterId)`, ...). `StretchSession` publishes them from the fight loop's late tick, on the frame it sees the fact. **`Index` is the wave's number in the whole stretch (1-based, counting across encounters), `Name` the encounter id `{stageId}.e{n}`** (n is 1-based, for example `dev.footmen.e1`). `WaveCleared` follows the `KnockedOut` event of the wave's last foe by at least a frame; `StageCleared` and `StageFailed` carry `Name` = the stage id, with no actor and no target. A stretch publishes exactly one of the two, once.
+- There is no event for a gate: it follows the encounter (`StretchSession.GateChanged` is for the road's drawing, not a combat event). The first `WaveStarted` of an encounter comes 21 frames after its gate shut.
+- `FightStatsRecorder(events, player, stretch: true)` reads a stretch: a foe's `KnockedOut` does not end the fight (by default the first `KnockedOut` does), `StageCleared` ends it as a win and `StageFailed` as a loss. A duel's recorder is unchanged.
