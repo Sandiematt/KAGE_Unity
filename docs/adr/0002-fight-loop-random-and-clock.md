@@ -136,6 +136,46 @@ A slowed jump reaches the same height and lasts 1/s as long (within 6 cm: the ph
 
 **Files.** `FightClock` (the counter), `FightLoop.Step` (skip, restore, scale), `Fighter.WorldTime.cs` (new partial: the body), two reads in `Fighter.Pose.cs`, `Projectile.Tick`, `Hazard.Tick`. Nothing changes at scale 1: the baseline replay is unchanged.
 
+## Notes from the implementation (SAN-83: multiple targets, two attackers at most, camera framing)
+
+**Two new steps at the start of the frame.** After the push settle and before input, the loop runs
+
+```csharp
+foreach (var f in fs) if (Live(f)) f.PickTarget();   // the target list and the current target
+ctx.Engagement.Update(fs);                            // which foes may attack
+```
+
+so input, move selection, the AI and facing all read this frame's `opponent` and engagement. Both read positions only and roll no random numbers: a fight with one foe gives exactly the same `opponent` the builder wired, and the baseline replay (both copies) is unchanged.
+
+**The target list and the "nearest in front" rule** (`Fighter.Targets.cs`):
+
+- `Fighter.Targets`: every active fighter of another team, in fighter order. With one foe it has one entry, the opponent; against the training bag it is empty (`opponent` null, the bag stays `extraTarget`).
+- `opponent` is the target with the lowest score: horizontal distance, plus `behindPenalty` (1.5 m) for a fighter behind (against `facing`), minus `stickiness` (0.25 m) for the current target. Ties go to fighter order. A knocked-out fighter is a target only when every fighter in the list is out (so with one foe nothing changes).
+- In words: Kage keeps to the nearest foe in front; he turns (in neutral, through the existing `FaceOpponent`) only when nobody is in front or a foe behind is 1.5 m nearer than the nearest in front. After turning, the old front foe is behind and pays the penalty, so he doesn't turn back and forth.
+- The target is held while a throw or the rage art holds it (`Ultimate`, `Thrown`, a held victim): Thousand Shadows and the shoulder throw keep working on the fighter they started on.
+
+**Hits on any foe.** The hit phase already cast every sweep against every hurtbox and skipped the attacker's own team (SAN-65), so a window hits every foe in reach, once per window each. Under the legacy switch `CheckHits` now tries every entry of `Targets` when there is more than one (with one, the opponent as before). Foes never hit each other (`EngagementTests.No_more_than_two_foes_attack_on_any_frame` checks every `Hit` and `Blocked` event of a long fight).
+
+**Engagement** (`EngagementManager`, `ctx.Engagement`, numbers in `Resources/Tuning/engagement.json`, `EngagementTuning`):
+
+- The manager limits **foes**: fighters not on team 0. Kage's side is never limited.
+- **Attacking** means in an attack move: `Fighter.InAttackMove`, an `Attack` state whose move has a hit window, is a throw, throws a projectile or has a counter window. Rolls, backflips, dashes and getting up are not attacks. **Committed** (`Fighter.CommittedToAttack`) is attacking, the rage art, or an attack button still in the input buffer.
+- Each frame: (1) an engaged foe that is knocked out, inactive or without a target leaves; (2) free places go to the waiting foes nearest their targets (the JS rule, `StretchSession.updateEngaged`); (3) the engaged foe farthest from its target gives its place to the nearest waiting foe when that one is `swapMargin` (1.5 m) nearer, only while it isn't committed.
+- A foe that isn't engaged can't attack, whatever drives it: `Fighter.PollInput` drops its attack buttons (P, K, S, X; Guard and movement go through). With rule (3) never taking a place from a committed foe, every foe in an attack move is engaged, so at most `maxAttackers` (2) are ever attacking on one frame. The test counts them every frame of a minute-long fight.
+- When an engaged foe is knocked out, the nearest waiting foe takes its place on the next frame that runs (the KO's hitstop and slow motion pass first).
+
+**Waiting and circling** (`AIInputSource.WaitTurn`, the JS `AIController.waitTurn`): a waiting foe nearer than `waitDistance - retreatInside` (2.5 m) backs away, farther than `waitDistance + approachBeyond` (3.9 m) walks in, each for `stepFrames` (8); between those it circles (a walking step in or out, `circleChance` 0.4, 12 to 24 frames) or holds (13 to 30 frames). It still guards a technique aimed at it, but never punishes, chases, mashes a kip-up or presses an attack. On being engaged it drops its waiting plan and decides afresh. The JS ring (360 px) is 3.1 m at 115 px a metre (ADR-0010). The rolls come from the foe's own `ai/<FighterId>` stream; an engaged foe's AI makes exactly the rolls it made before, so a duel's rolls are unchanged.
+
+**Camera framing** (`CameraRig`): `Frame(ctx, focus)` switches the rig from its `targets` list to the focus fighter (Kage) and the foes engaged on him, read every frame from the engagement manager, zooming out up to `groupMaxSize` (4.2) instead of `maxSize`. Waiting foes are not framed: they stand back at 3.1 m, and the framing of two engaged foes on either side of Kage usually shows them anyway. `Follow(dt)` is one step of the follow (what `LateUpdate` calls with the unscaled time), so a test can run it on a fixed step; the override fields still win (SAN-82). The duel is unchanged: it never calls `Frame`. `EngagementCameraTests` checks through `Camera.WorldToViewportPoint` that Kage's and every engaged foe's body (feet to head, a shoulder's width each side) is inside the viewport on every frame of a minute-long fight (an engaged foe from 30 frames after it was engaged, the follow's easing; shake and zoom punch left out).
+
+**The dev arena.** F6 reloads the arena as the group fight, Kage against four Footmen (`KageGame.GroupFightSize`, `groupFoeId`), and F6 again goes back to the duel; F5 still cycles the duel's foe. Kage starts at 0 with Footmen at 1.3, -2.4, 2.8 and -3.8 m: the nearest two, one on each side, are engaged. Rounds work as in the duel: Kage takes the round when every foe is down, the foes when Kage is; at time-up health shares are compared. Each foe has its own AI (F3 and F4 set all of them) and shadow, and its own depth (sort base 1000, 600, 200, -200), Kage draws in front. The right-hand health bar shows Kage's current target.
+
+**Determinism.** A group fight with the same seed gives the same event log (`EngagementTests.A_group_fight_is_identical_every_run`). Positions agree within the contract's 1e-4 m, not to the last digit: with five bodies touching, the physics step's contact order depends on the broadphase's proxy ids, which a second fight in the same session reuses in a different order, and the last printed digit can differ. Duels (two bodies) still match exactly.
+
+**Files.** `Fighter.Targets.cs` (new: `Targets`, `PickTarget`, `InAttackMove`, `CommittedToAttack`, the input filter), `EngagementManager.cs` and `EngagementTuning.cs` (new), one line each in `Fighter.cs` (`PollInput`) and `FightContext.cs`, two in `FightLoop.Step`, the legacy branch of `Fighter.HitDetection.CheckHits`, `AIInputSource` (the waiting turn), `CameraRig` (`Frame`, `Follow`, `groupMaxSize`), `KageGame` (F6). Tests: `MultiTargetTests`, `EngagementTests`, `EngagementCameraTests`, `DevArenaTests.TheGroupFightIsKageAgainstFourFootmen`, the `GroupFight` harness, the review sheet `MultiTargetScreenshots` (Screenshots/review/SAN-83).
+
+**For SAN-89 (stretch sessions).** Spawn a wave's foes into the same context on team 1; nothing needs wiring, since the loop picks every fighter's targets and the engaged foes each frame. Removing a cleared foe (`SetActive(false)`) takes it out of every target list and frees its place. A stretch with no foe in sight leaves Kage's `opponent` null; the JS game then turns him to where he walks, which the session can do the same way.
+
 ## Consequences
 
 - Tests can build any fight and replay it exactly.
