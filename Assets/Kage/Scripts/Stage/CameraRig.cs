@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace Kage
 {
+    /// <summary>The horizontal limits of the view (SAN-89), set by a stretch session.</summary>
+    public interface ICameraBounds
+    {
+        float CameraLeft { get; }
+        float CameraRight { get; }
+    }
+
     /// <summary>
     /// Fighting-game camera: frames both fighters (zooms out with distance), keeps the floor low
     /// in frame, clamps to the stage, and adds trauma shake, zoom punch and parallax layers.
@@ -20,7 +27,10 @@ namespace Kage
         public Vector2 overrideCenter; public float overrideSize; public bool useOverride;
         /// <summary>The widest framing in a group fight (SAN-83): two engaged foes on either side of Kage need more room than a duel.</summary>
         public float groupMaxSize = 4.2f;
+        /// <summary>How far ahead of Kage (metres, in his facing) the camera looks while he has nobody to fight: the road (SAN-89).</summary>
+        public float lookAhead;
         float _size = 2.3f;
+        float _look;
         Vector2 _pos = new(0f, 1.4f);
 
         struct Layer { public Transform t; public float factor; public float baseX; public float baseY; public float yFactor; }
@@ -33,6 +43,7 @@ namespace Kage
 
         public void Snap()
         {
+            if (_focus != null) _look = _focus.facing * lookAhead;
             Compute(out var c, out var s);
             _pos = c; _size = s;
             Apply();
@@ -62,10 +73,31 @@ namespace Kage
             float aspect = Mathf.Max(0.5f, cam.aspect);
             size = Mathf.Clamp((spread + 2.8f) / (2f * aspect), minSize, group ? Mathf.Max(maxSize, groupMaxSize) : maxSize);
             float cx = (minX + maxX) * 0.5f;
+            if (group && n == 1) cx += _look;          // nobody to fight: look down the road
             float cy = size * 0.64f + Mathf.Max(0f, maxY - 1.6f) * 0.35f;
             float half = size * aspect;
-            cx = Mathf.Clamp(cx, -stageHalf + half, stageHalf - half);
+            cx = ClampX(cx, half);
             center = new Vector2(cx, cy);
+        }
+
+        // ---- bounds (SAN-89) ----
+        ICameraBounds _bounds;
+
+        /// <summary>The camera's horizontal limits: a road's level, or the arena of a locked encounter (<see cref="StretchSession"/>). Null goes back to the stage's ±<see cref="stageHalf"/>.</summary>
+        public void SetBounds(ICameraBounds bounds) => _bounds = bounds;
+
+        /// <summary>Left and right limit of what the camera shows, in world x.</summary>
+        public Vector2 Limits => _bounds != null ? new Vector2(_bounds.CameraLeft, _bounds.CameraRight) : new Vector2(-stageHalf, stageHalf);
+
+        /// <summary>
+        /// Keeps a view centred on <paramref name="cx"/>, <paramref name="half"/> wide each side, inside <see cref="Limits"/>; when the
+        /// limits are narrower than the view it is centred on them.
+        /// </summary>
+        public float ClampX(float cx, float half)
+        {
+            var l = Limits;
+            if (l.y - l.x <= 2f * half) return (l.x + l.y) * 0.5f;
+            return Mathf.Clamp(cx, l.x + half, l.y - half);
         }
 
         // ---- group fights (SAN-83) ----
@@ -89,6 +121,7 @@ namespace Kage
         /// <summary>One step of the follow: eases position and size towards the framing over <paramref name="dt"/> seconds.</summary>
         public void Follow(float dt)
         {
+            if (_focus != null && lookAhead > 0f) _look = KMath.Damp(_look, _focus.facing * lookAhead, 1.6f, dt);
             Compute(out var c, out var s);
             _pos = KMath.Damp(_pos, c, 6f, dt);
             _size = KMath.Damp(_size, s, 4f, dt);

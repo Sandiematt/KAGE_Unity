@@ -93,6 +93,14 @@ namespace Kage
         public static CombatEvent KnockedOut(int frame, Fighter source, Fighter target, string moveId, Vector2 contact, Vector2 impulse) =>
             new(frame, CombatEventType.KnockedOut, source, target, null, null, moveId, contact: contact, knockback: impulse);
 
+        /// <summary>A stretch wave arrived (SAN-89): <paramref name="wave"/> is its number in the whole stretch (1-based), <paramref name="encounterId"/> the encounter's id.</summary>
+        public static CombatEvent WaveStarted(int frame, int wave, string encounterId) =>
+            new(frame, CombatEventType.WaveStarted, null, null, null, null, null, index: wave, name: encounterId);
+
+        /// <summary>The last foe of a stretch wave is down (SAN-89); same fields as <see cref="WaveStarted"/>.</summary>
+        public static CombatEvent WaveCleared(int frame, int wave, string encounterId) =>
+            new(frame, CombatEventType.WaveCleared, null, null, null, null, null, index: wave, name: encounterId);
+
         public static CombatEvent RageArt(int frame, Fighter source, string moveId) =>
             new(frame, CombatEventType.RageArt, source, null, null, null, moveId);
 

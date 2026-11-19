@@ -139,3 +139,9 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 
 - `BossPhaseChanged` is published by `PhaseController` (`CombatEvent.BossPhaseChanged(frame, boss, index, name)`: Target = the boss, Index = the new phase, Name = the JS phase name). Phase 0 is published by the first tick of a fight, and again after a round reset. The boss bar reads it.
 - `StageCleared` and `StageFailed` have factories (`CombatEvent.StageCleared(frame, stageId)`, `StageFailed`; Name = the stage id) and are published by `FightSession` when a match ends and it was given a stage id.
+
+## Notes from the implementation (SAN-89)
+
+- `WaveStarted` and `WaveCleared` have factories (`CombatEvent.WaveStarted(frame, wave, encounterId)`, ...); `StageCleared` and `StageFailed` (SAN-102's factories) are published by `StretchSession` too, as `FightSession` does for a duel. `StretchSession` publishes them from the fight loop's late tick, on the frame it sees the fact. **`Index` is the wave's number in the whole stretch (1-based, counting across encounters), `Name` the encounter id `{stageId}.e{n}`** (n is 1-based, for example `dev.footmen.e1`). `WaveCleared` follows the `KnockedOut` event of the wave's last foe by at least a frame; `StageCleared` and `StageFailed` carry `Name` = the stage id, with no actor and no target. A stretch publishes exactly one of the two, once.
+- There is no event for a gate: it follows the encounter (`StretchSession.GateChanged` is for the road's drawing, not a combat event). The first `WaveStarted` of an encounter comes 21 frames after its gate shut.
+- `FightStatsRecorder(events, player, stretch: true)` reads a stretch: a foe's `KnockedOut` does not end the fight (by default the first `KnockedOut` does), `StageCleared` ends it as a win and `StageFailed` as a loss. A duel's recorder is unchanged.

@@ -19,7 +19,11 @@ namespace Kage
         const float Gravity = 3.2f, RiseGravity = 2.9f, ApexGravity = 2.0f, FallGravity = 4.1f, MaxFall = 14f;
         const float AirAccel = 10f, AirDrag = 1.2f;
         const int DashFrames = 13, BackDashFrames = 15, AirDashFrames = 14, DashCooldown = 16, BackDashInvuln = 6;
-        const float StageHalf = 7.6f;
+        /// <summary>The dev arena's half width: fighters stay within it unless the fight sets other bounds (<see cref="FightContext.Bounds"/>, a stretch's road).</summary>
+        public const float DefaultStageHalf = StageBounds.DefaultHalf;
+        /// <summary>The left and right limit of this fight's floor (SAN-89: a road, and an encounter's arena, move them).</summary>
+        float StageMin => ctx != null ? ctx.Bounds.Left : -DefaultStageHalf;
+        float StageMax => ctx != null ? ctx.Bounds.Right : DefaultStageHalf;
 
         /// <summary>
         /// Jump arcs use asymmetric gravity: a lighter rise, a brief hang at the apex and a heavier fall,
@@ -56,16 +60,34 @@ namespace Kage
         void ClampStage()
         {
             var p = rb.position;
-            if (p.x < -StageHalf || p.x > StageHalf)
+            float lo = StageMin, hi = StageMax;
+            if (p.x < lo || p.x > hi)
             {
-                p.x = Mathf.Clamp(p.x, -StageHalf, StageHalf);
+                p.x = Mathf.Clamp(p.x, lo, hi);
                 rb.position = p;
                 var v = rb.linearVelocity;
-                if ((p.x <= -StageHalf && v.x < 0) || (p.x >= StageHalf && v.x > 0)) rb.linearVelocity = new Vector2(0f, v.y);
+                if ((p.x <= lo && v.x < 0) || (p.x >= hi && v.x > 0)) rb.linearVelocity = new Vector2(0f, v.y);
             }
         }
 
-        public bool AtWall => Mathf.Abs(rb.position.x) >= StageHalf - 0.05f;
+        public bool AtWall => rb.position.x <= StageMin + 0.05f || rb.position.x >= StageMax - 0.05f;
+
+        /// <summary>Which wall this fighter is at: -1 left, +1 right, 0 none. On a road the sign of x says nothing about it.</summary>
+        public int WallSide => rb.position.x <= StageMin + 0.05f ? -1 : rb.position.x >= StageMax - 0.05f ? 1 : 0;
+
+        /// <summary>
+        /// Set on Kage by a stretch session (SAN-89): with no foe standing, he turns to where he walks, as in the JS stretch, instead of
+        /// walking backwards or turning back to a fallen foe. With a foe standing nothing changes.
+        /// </summary>
+        public bool turnToWalk;
+
+        /// <summary>True when the walk-turn rule took over from <see cref="FaceOpponent"/> this frame.</summary>
+        bool TurnToWalk(FrameInput inp)
+        {
+            if (!turnToWalk || (opponent != null && opponent.state != FState.KO)) return false;
+            if (inp.dx != 0 && Mathf.Sign(inp.dx) != facing) SetFacing(Mathf.Sign(inp.dx));
+            return true;
+        }
 
         void FaceOpponent()
         {
@@ -77,7 +99,7 @@ namespace Kage
         // =====================================================================================
         void Neutral(FrameInput inp, int fwd)
         {
-            FaceOpponent();
+            if (!TurnToWalk(inp)) FaceOpponent();
             fwd = inp.dx == 0 ? 0 : (int)Mathf.Sign(inp.dx * facing);
             if (TryBuffered(inp, fwd)) return;
             if (TryAbility(inp)) return;          // an ability slot (SAN-95, Fighter.Abilities.cs)
