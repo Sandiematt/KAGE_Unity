@@ -9,8 +9,8 @@ namespace Kage
     /// <summary>
     /// The pre-fight screen (JS "Pre Fight Screen", wonder.css .pf-*): Kage's loadout on the left, the foe on the right, the weapon
     /// row and the Fight button in the dock. The two fighters themselves are the live stage world behind this screen
-    /// (<see cref="StageWorld"/> in its tableau phase). The helmet and armour are the equipped ones; changing gear belongs to the
-    /// Armory (SAN-90), so there is no Change Gear button yet.
+    /// (<see cref="StageWorld"/> in its tableau phase). The helmet and armour are the equipped ones; Change gear opens the
+    /// Armory (SAN-90).
     /// </summary>
     public sealed class LoadoutScreen : FlowPanel
     {
@@ -69,7 +69,8 @@ namespace Kage
             float cx = 64;
             cx += Cell(cx, 182, "Helm", helm != null ? helm.Name : "-") + 10;
             cx += Cell(cx, 182, "Armor", armor != null ? armor.Name : "-") + 10;
-            Cell(cx, 182, "Mode", "Normal");
+            cx += Cell(cx, 182, "Mode", "Normal") + 10;
+            ChangeGear(cx, 182);
 
             // the foe
             int dl = (int)Mathf.Clamp(ch.Diff + (foe != null && foe.Type == "boss" ? 1 : 0), 0, 4);
@@ -95,6 +96,22 @@ namespace Kage
             UiParts.Chip(chipRow, 580 - w2 - 10 - w1, 0, null, kindChip, false, true);
 
             Dock(save, stage);
+        }
+
+        // JS .pf-gear: a gold-edged button that opens the Armory (a Change gear tile after the Mode cell)
+        void ChangeGear(float x, float y)
+        {
+            var label = Ui.Label(Root, "CHANGE GEAR", UiFont.Title, 14, Ui.Gold, 0, 0, 300, 58, TextAnchor.MiddleLeft, 1.68f);
+            float w = 18f + 20f + 10f + UiParts.Width(label, 1.68f) + 1.68f + 18f;
+            var rt = Ui.Node(Root, "ChangeGear", x, y, w, 58);
+            Ui.Box(rt, 0, 0, w, 58, Ui.PanelA(0.7f)).transform.SetAsFirstSibling();
+            var hl = Ui.Box(rt, 0, 0, w, 58, Color.clear, "Light");
+            Ui.Frame(rt, 0, 0, w, 58, 1, Ui.Gold);
+            // a small breastplate for the icon
+            Ui.Shape(rt, 18, 19, 20, 20, Ui.Poly(20, 20, 0, 0, 30, 14, 50, 0, 70, 14, 100, 0, 100, 60, 70, 100, 30, 100, 0, 60), Ui.Gold, null, null, false, "Icon");
+            label.transform.SetParent(rt, false);
+            label.rectTransform.anchoredPosition = new Vector2(18 + 20 + 10, 0);
+            UiParts.Make(rt, Nav, "gear", () => C.OpenArmory(), f => hl.color = f ? Ui.A(Ui.Gold, 0.16f) : Color.clear);
         }
 
         // the foe's words sit over the bright live scene: a soft shadow keeps them readable

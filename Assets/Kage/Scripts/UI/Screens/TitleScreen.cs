@@ -46,7 +46,7 @@ namespace Kage
             // menu
             Row(0, "play", "影", "Home", true, true, () => C.Continue());
             Row(1, "campaign", "戦", "Campaign", false, true, () => C.OpenCampaign());
-            Row(2, "armory", "鎧", "Armory", false, false, null);
+            Row(2, "armory", "鎧", "Armory", false, true, () => C.OpenArmory());
             Row(3, "settings", "設", "Settings", false, true, () => C.OpenSettings());
 
             ContinueCard(save);
@@ -160,10 +160,16 @@ namespace Kage
             Ui.Box(rt, 0, 0, 176, 184, Ui.Mix(Ui.Sky1, Ui.Panel, 0.9f));
             Ui.Glow(rt, 88, 100, 90, Ui.A(Ui.Acc, 0.45f), 1.2f);
             var blade = Ui.Pic(rt, "ui_w_kagetsu", 8, 30, 160, 94, Ui.A(Color.white, 0.5f));
-            Ui.Frame(rt, 0, 0, 176, 184, 2, Ui.GoldDim);
-            Ui.Label(rt, "ARMORY", UiFont.Title, 17, Ui.A(Ui.Bone, 0.6f), 0, 140, 176, 24, TextAnchor.MiddleCenter, 2f);
-            Ui.Label(rt, "COMING SOON", UiFont.Cond, 12, Ui.Muted, 0, 160, 176, 18, TextAnchor.MiddleCenter, 2.4f);
-            UiParts.Make(rt, Nav, "armory-tile", null, null, false);
+            var edge = Ui.Node(rt, "Edge", 0, 0, 176, 184);
+            Ui.Frame(edge, 0, 0, 176, 184, 2, Ui.GoldDim);
+            var label = Ui.Label(rt, "ARMORY", UiFont.Title, 17, Ui.A(Ui.Bone, 0.6f), 0, 150, 176, 24, TextAnchor.MiddleCenter, 2f);
+            UiParts.Make(rt, Nav, "armory-tile", () => C.OpenArmory(), f =>
+            {
+                rt.anchoredPosition = new Vector2(1000, -(538 - (f ? 3 : 0)));
+                blade.color = Ui.A(Color.white, f ? 0.9f : 0.5f);
+                label.color = Ui.A(Ui.Bone, f ? 1f : 0.6f);
+                foreach (var img in edge.GetComponentsInChildren<Image>()) img.color = f ? Ui.Gold : Ui.GoldDim;
+            });
         }
     }
 }
