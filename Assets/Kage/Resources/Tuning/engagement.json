@@ -1,0 +1,15 @@
+{
+    "maxAttackers": 2,
+    "swapMargin": 1.5,
+    "waitDistance": 3.1,
+    "retreatInside": 0.6,
+    "approachBeyond": 0.8,
+    "stepFrames": 8,
+    "circleChance": 0.4,
+    "circleStepMin": 12,
+    "circleStepMax": 24,
+    "holdMin": 13,
+    "holdMax": 30,
+    "behindPenalty": 1.5,
+    "stickiness": 0.25
+}

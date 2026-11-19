@@ -101,7 +101,8 @@ namespace Kage.Tests
                     }
                 }
             }
-            Assert.Greater(nearest, T.waitDistance - T.retreatInside - 0.6f, "the nearest a waiting foe came to Kage");
+            // Kage is driven back by the guarded hits and the push; the waiting foes step back from him
+            Assert.Greater(nearest, T.waitDistance - T.retreatInside - 0.8f, "the nearest a waiting foe came to Kage");
             Assert.IsTrue(walkedIn.Overlaps(walkedOut), "a waiting foe circled: it walked both in and out");
         }
 
@@ -128,7 +129,7 @@ namespace Kage.Tests
             Assume.That(waitingBefore.Count, Is.GreaterThan(0));
             var nearest = waitingBefore.OrderBy(EngagementManager.Distance).First();   // where they stand as the next frame starts
 
-            f.Run(1);
+            f.Next();     // the KO's hitstop and slow motion pass first: the next frame that runs fills the place
             var now = f.Ctx.Engagement.Engaged;
             CollectionAssert.DoesNotContain(now, defeated);
             Assert.AreEqual(2, now.Count, "the place is filled at once");
@@ -153,8 +154,10 @@ namespace Kage.Tests
             (events, frames) = Once();
             var (events2, frames2) = Once();
             Assert.Greater(events.Count(l => l.Contains(" Hit ") || l.Contains(" Blocked ")), 0, "the fight lands hits");
+            // ADR-0002: identical events; positions within 1e-4 m (with five bodies the physics step's contact order can
+            // differ in the last digit between two fights in one session)
             CollectionAssert.AreEqual(events, events2);
-            CollectionAssert.AreEqual(frames, frames2);
+            Assert.IsNull(BaselineReplay.Compare(BaselineReplay.Format("group", 8383, events, frames), BaselineReplay.Format("group", 8383, events2, frames2)));
         }
     }
 }

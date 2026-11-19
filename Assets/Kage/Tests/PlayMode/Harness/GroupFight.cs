@@ -63,7 +63,7 @@ namespace Kage.Tests
             }
         }
 
-        /// <summary>Runs <paramref name="frames"/> whole frames (frozen frames don't count), calling <paramref name="after"/> after each.</summary>
+        /// <summary>Runs <paramref name="frames"/> loop frames (a frame frozen by hitstop or slow motion counts), calling <paramref name="after"/> after each.</summary>
         public GroupFight Run(int frames, Action after = null)
         {
             for (int i = 0; i < frames; i++)
@@ -71,6 +71,18 @@ namespace Kage.Tests
                 Loop.StepHeadless();
                 _frames.Add(FrameLine());
                 after?.Invoke();
+            }
+            return this;
+        }
+
+        /// <summary>Runs until one frame has actually run (frames frozen by hitstop or slow motion are passed over).</summary>
+        public GroupFight Next()
+        {
+            for (int i = 0; i < 600; i++)
+            {
+                bool ran = Loop.StepHeadless();
+                _frames.Add(FrameLine());
+                if (ran) break;
             }
             return this;
         }

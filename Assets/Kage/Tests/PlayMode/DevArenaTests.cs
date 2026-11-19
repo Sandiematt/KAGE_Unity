@@ -18,6 +18,7 @@ namespace Kage.Tests
         {
             // immediately: the next test may build a headless fight in this same frame
             if (_game != null) Object.DestroyImmediate(_game);
+            KageGame.NextGroupSize = null;
             foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
         }
 
@@ -59,6 +60,29 @@ namespace Kage.Tests
             Assert.IsNull(KageGame.NextFoeId, "the choice is used once");
             for (int i = 0; i < 30; i++) yield return new WaitForFixedUpdate();
             Assert.IsTrue(game.enemy.Grounded);
+        }
+
+        [UnityTest]
+        public IEnumerator TheGroupFightIsKageAgainstFourFootmen()
+        {
+            KageGame.NextGroupSize = KageGame.GroupFightSize;     // what F6 sets before it reloads the arena (SAN-83)
+            _game = new GameObject("KAGE");
+            var game = _game.AddComponent<KageGame>();
+            yield return null;
+
+            Assert.IsNull(KageGame.NextGroupSize, "the choice is used once");
+            Assert.IsTrue(game.Group);
+            Assert.AreEqual(4, game.foes.Count);
+            CollectionAssert.AreEqual(new[] { "order_footman", "order_footman#2", "order_footman#3", "order_footman#4" }, game.foes.ConvertAll(f => f.FighterId));
+            foreach (var f in game.foes) Assert.AreEqual(1, f.team);
+            Assert.AreSame(game.enemy, game.foes[0]);
+            Assert.AreSame(game.player, game.Cam.Focus, "the camera frames Kage and the engaged foes");
+
+            // the loop steps: targets and engagement are picked every frame (in the intro too)
+            for (int i = 0; i < 30; i++) yield return new WaitForFixedUpdate();
+            foreach (var f in game.foes) Assert.IsTrue(f.Grounded, f.FighterId);
+            CollectionAssert.AreEquivalent(game.foes, game.player.Targets);
+            Assert.AreEqual(2, game.Fight.Engagement.Engaged.Count);
         }
 
         [Test]

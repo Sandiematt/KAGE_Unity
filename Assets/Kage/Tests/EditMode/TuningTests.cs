@@ -53,6 +53,19 @@ namespace Kage.Tests
             Assert.AreEqual(12f, file.meterGain, "the JS game's +12 Rage");
         }
 
+        [Test]
+        public void TheShippedEngagementTuningIsTheJsGroupFightNumbers()
+        {
+            // engagement.json (SAN-83): the file and the in-code defaults agree, and they are the JS stretch numbers
+            var file = Tuning.Get<EngagementTuning>();
+            var code = new EngagementTuning();
+            Assert.AreEqual(JsonUtility(code), JsonUtility(file), "engagement.json matches the EngagementTuning defaults");
+            Assert.AreEqual(2, file.maxAttackers, "JS STRETCH.maxEngaged");
+            Assert.AreEqual(360f / 115f, file.waitDistance, 0.05f, "JS waitRing 360 px at 115 px a metre");
+            Assert.Less(file.waitDistance - file.retreatInside, file.waitDistance + file.approachBeyond);
+            Assert.Greater(file.behindPenalty, file.stickiness, "a foe behind needs more than the stickiness to turn Kage");
+        }
+
         static string JsonUtility(object o) => UnityEngine.JsonUtility.ToJson(o);
 
         [Test]
