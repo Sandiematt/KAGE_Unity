@@ -13,6 +13,9 @@ namespace Kage
     /// · F7 break/restore sword · F8 next weapon (Shift: level) · F10 stretch: Kage on a road with gates and waves, and back (Shift: next road; KageGame.Stretch.cs) · R restart · P pause.
     /// The group fight (SAN-83) plays like the duel's rounds: Kage wins a round when every foe is down. Two foes at most are
     /// engaged (<see cref="EngagementManager"/>); the camera frames Kage and the engaged foes (<see cref="CameraRig.Frame"/>).
+    /// The rounds and the clock are <see cref="FightSession"/>'s (SAN-102): a duel is best of three on a 60 s clock; a foe with phases
+    /// (<see cref="CharacterDef.bossId"/>: the test Footman Captain, Raikon) is fought in the boss format, one round with no clock, and shows the
+    /// boss bar (<see cref="Hud.BindBoss"/>).
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public partial class KageGame : MonoBehaviour
@@ -65,12 +68,9 @@ namespace Kage
         public int fixedSeed;
         public FightContext Fight { get; private set; }
 
-        enum Phase { Intro, Fight, RoundOver, MatchOver }
-        Phase _phase;
-        float _phaseT, _timer;
-        int _round;
-        bool _firstStrike, _koHandled;
-        Fighter _roundWinner;
+        /// <summary>The rounds and the clock of this arena fight (SAN-102).</summary>
+        public FightSession Session { get; private set; }
+        bool _firstStrike;
         Transform _shadowP, _shadowE;
         static readonly string[] AiNames = { "EASY", "NORMAL", "HARD" };
 
@@ -140,6 +140,16 @@ namespace Kage
             Fight.Begin();
             Cam.targets.Add(player.rig.Bone(B.Hips));
             Cam.targets.Add(enemy.rig.Bone(B.Hips));
+
+            var format = groupSize > 1 ? FightFormat.Duel : FightFormat.For(foeDef);
+            Session = new FightSession(Fight, format, player, foes);
+            Session.RoundStarting += PlaceFighters;
+            Session.IntroBeat += () => Hud.Announce(Session.Format == FightFormat.Boss ? foeDef.displayName.ToUpperInvariant() : "ROUND " + Session.Round, Color.white, 1.0f);
+            Session.FightBegan += () => Hud.Announce(Session.Format == FightFormat.Boss ? "FIGHT!" : "DUEL!", Palette.TrimBright, 0.9f);
+            Session.RoundEnded += OnRoundEnded;
+            Session.MatchEnded += OnMatchEnded;
+            Hud.SetFormat(format);
+            if (foeDef.bossId != null && groupSize <= 1) Hud.BindBoss(enemy, BossCatalog.Get(foeDef.bossId), Fight.Events);
 
             SetMode(startMode);
         }
@@ -220,7 +230,6 @@ namespace Kage
             player.extraTarget = training ? bag : null;
             player.roundsWon = enemy.roundsWon = 0; player.ResetForFight();
             foreach (var f in foes) f.ResetForFight();
-            _round = 1;
             Hud.SetMode(training ? "TRAINING DOJO  ·  F2 to duel" : ModeText());
             foreach (var ai in _ais) ai.level = aiLevel switch { 0 => 0.3f, 1 => 0.6f, _ => 0.9f };
             if (training)
@@ -229,7 +238,6 @@ namespace Kage
                 player.ResetForRound(-0.4f, 1f);
                 player.BeginFight();
                 player.meter = 100f;
-                _phase = Phase.Fight;
                 Hud.Announce("TRAINING", Palette.TrimBright, 1.4f);
                 Cam.targets.Remove(enemy.rig.Bone(B.Hips));
                 Cam.Frame(null, null);
@@ -238,16 +246,15 @@ namespace Kage
             {
                 if (!Cam.targets.Contains(enemy.rig.Bone(B.Hips))) Cam.targets.Add(enemy.rig.Bone(B.Hips));
                 if (Group) Cam.Frame(Fight, player);     // Kage and the engaged foes (SAN-83)
-                StartRound();
+                Session.Restart();
             }
             Cam.Snap();
         }
 
-        void StartRound()
+        /// <summary>A round is about to begin (<see cref="FightSession.RoundStarting"/>): puts the fighters at their marks and rings the gong.</summary>
+        void PlaceFighters()
         {
-            _koHandled = false;
             _firstStrike = false;
-            _roundWinner = null;
             if (Group)
             {
                 player.ResetForRound(0f, 1f);
@@ -263,10 +270,24 @@ namespace Kage
                 enemy.ResetForRound(1.25f, -1f);
             }
             player.meter = Mathf.Min(player.meter, 100f);
-            _phase = Phase.Intro;
-            _phaseT = 0f;
-            _timer = 60f;
             Audio.Play(SfxKind.Gong, 0.6f);
+        }
+
+        void OnRoundEnded(RoundOutcome o)
+        {
+            switch (o.Reason)
+            {
+                case RoundEnd.KnockOut: Hud.Announce("K.O.", KMath.Hex("#FF4B4B"), 1.8f); break;
+                case RoundEnd.TimeUp: Hud.Announce("TIME", Color.white, 1.8f); break;
+                default: Hud.Announce("DRAW", Color.white, 1.8f); break;
+            }
+        }
+
+        void OnMatchEnded(Fighter winner)
+        {
+            bool kageWon = winner == player;
+            Hud.Announce(kageWon ? "KAGE WINS" : enemy.Character.displayName.ToUpperInvariant() + " WINS", kageWon ? Palette.TrimBright : enemy.fxMain, 3.5f);
+            Hud.Banner(Session.Format == FightFormat.Boss ? "PRESS  R  TO FIGHT AGAIN" : "PRESS  R  TO DUEL AGAIN", Color.white, 30f);
         }
 
         /// <summary>
@@ -300,44 +321,8 @@ namespace Kage
             HandleHotkeys();
             if (mode == Mode.Stretch) { UpdateStretch(); return; }
             float dt = Time.unscaledDeltaTime;
-            _phaseT += dt;
 
-            if (mode == Mode.Duel)
-            {
-                switch (_phase)
-                {
-                    case Phase.Intro:
-                        if (_phaseT > 0.35f && _phaseT - dt <= 0.35f) Hud.Announce("ROUND " + _round, Color.white, 1.0f);
-                        if (_phaseT > 1.45f)
-                        {
-                            Hud.Announce("DUEL!", Palette.TrimBright, 0.9f);
-                            player.BeginFight();
-                            foreach (var f in foes) f.BeginFight();
-                            _phase = Phase.Fight;
-                            _phaseT = 0f;
-                        }
-                        break;
-                    case Phase.Fight:
-                        _timer -= Time.deltaTime;
-                        if (_timer <= 0f) TimeUp();
-                        break;
-                    case Phase.RoundOver:
-                        if (_phaseT > 1.3f && _roundWinner != null && _roundWinner.state != FState.Victory && _roundWinner.Grounded && !_roundWinner.Busy) _roundWinner.Win();
-                        if (_phaseT > 3.6f)
-                        {
-                            if (player.roundsWon >= 2 || enemy.roundsWon >= 2)
-                            {
-                                _phase = Phase.MatchOver;
-                                _phaseT = 0f;
-                                bool kageWon = player.roundsWon >= 2;
-                                Hud.Announce(kageWon ? "KAGE WINS" : enemy.Character.displayName.ToUpperInvariant() + " WINS", kageWon ? Palette.TrimBright : enemy.fxMain, 3.5f);
-                                Hud.Banner("PRESS  R  TO DUEL AGAIN", Color.white, 30f);
-                            }
-                            else { _round++; StartRound(); }
-                        }
-                        break;
-                }
-            }
+            if (mode == Mode.Duel) Session.Update(dt, Time.deltaTime);
             else
             {
                 player.health = player.maxHealth;
@@ -351,7 +336,7 @@ namespace Kage
             foreach (var f in foes) ResetComboIfRecovered(f, player);
 
             // the right-hand bar: the foe, or in a group fight Kage's current target
-            Hud.Tick(player, mode == Mode.Duel ? (Group && player.opponent != null ? player.opponent : enemy) : null, _timer, _round, mode == Mode.Duel);
+            Hud.Tick(player, mode == Mode.Duel ? (Group && player.opponent != null ? player.opponent : enemy) : null, Session.TimeLeft, Session.Round, mode == Mode.Duel && Session.Format.HasClock);
             UpdatePost();
             UpdateShadows();
         }
@@ -440,9 +425,9 @@ namespace Kage
                 if (mode == Mode.Training) { bag.ResetBag(); player.ResetForRound(-0.4f, 1f); player.BeginFight(); }
                 else
                 {
-                    player.roundsWon = enemy.roundsWon = 0; player.meter = 0f; player.ResetForFight();
+                    player.meter = 0f; player.ResetForFight();
                     foreach (var f in foes) { f.meter = 0f; f.ResetForFight(); }
-                    _round = 1; StartRound();
+                    Session.Restart();
                 }
             }
         }
@@ -562,42 +547,8 @@ namespace Kage
 
         void OnKO(Fighter loser)
         {
-            if (_koHandled || mode != Mode.Duel) return;
-            if (Group && loser != player) foreach (var f in foes) if (f.state != FState.KO) return;     // the round goes on while a foe stands
-            _koHandled = true;
-            var winner = loser == player ? enemy : player;
-            winner.roundsWon++;
-            winner.controlEnabled = false;
-            loser.controlEnabled = false;
-            foreach (var f in foes) f.controlEnabled = false;
-            if (Group && loser == player) foreach (var f in foes) if (f.state != FState.KO) { winner = f; break; }   // a foe still standing takes the bow
-            _roundWinner = winner;
-            _phase = Phase.RoundOver;
-            _phaseT = 0f;
-            Hud.Announce("K.O.", KMath.Hex("#FF4B4B"), 1.8f);
-        }
-
-        void TimeUp()
-        {
-            _phase = Phase.RoundOver;
-            _phaseT = 0f;
-            player.controlEnabled = enemy.controlEnabled = false;
-            if (Group)
-            {
-                // the group's health against Kage's, as shares of the maximum
-                float hp = 0f, max = 0f;
-                foreach (var f in foes) { f.controlEnabled = false; hp += f.health; max += f.maxHealth; }
-                float kage = player.health / player.maxHealth, them = hp / Mathf.Max(1f, max);
-                if (Mathf.Abs(kage - them) < 0.005f) { Hud.Announce("DRAW", Color.white, 1.8f); _roundWinner = null; return; }
-                _roundWinner = kage > them ? player : enemy;
-                if (_roundWinner == player) player.roundsWon++; else enemy.roundsWon++;
-                Hud.Announce("TIME", Color.white, 1.8f);
-                return;
-            }
-            if (Mathf.Abs(player.health - enemy.health) < 0.5f) { Hud.Announce("DRAW", Color.white, 1.8f); _roundWinner = null; return; }
-            _roundWinner = player.health > enemy.health ? player : enemy;
-            _roundWinner.roundsWon++;
-            Hud.Announce("TIME", Color.white, 1.8f);
+            if (mode != Mode.Duel) return;
+            Session.OnKnockOut(loser);
         }
 
         string ModeText() => Group

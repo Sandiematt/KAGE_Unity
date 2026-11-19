@@ -21,6 +21,7 @@ namespace Kage
             Add(HollowShade.Def());
             Add(HollowTutorial.Def());
             Add(Raikon.Def());             // the Act I boss (look: SAN-71; fight: SAN-107)
+            Add(FootmanBoss.Def());        // dev only: the two-phase test boss (SAN-102)
 
             // ---- part sets ----
             Add(new KagePartSet());

@@ -15,9 +15,11 @@ namespace Kage
             float f = _moveTime;
             if (Passed(m.grabFrame))
             {
-                bool ok = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < m.grabRange && opponent.CanBeThrown;
-                if (!ok)
+                bool inReach = opponent != null && Mathf.Abs(opponent.Pos.x - Pos.x) < m.grabRange && opponent.CanBeThrown;
+                bool noGrab = inReach && opponent.Has(CharacterFlags.NoGrab);     // every throw fails on a no-grab character, the heavy grapple too (SAN-102)
+                if (!inReach || noGrab)
                 {
+                    if (noGrab) KageGame.I?.Hud?.Float(opponent.Pos + Vector2.up * 2.0f, "NO GRAB", new Color(0.8f, 0.8f, 0.85f), 0.8f);
                     move = m.whiff;     // the whiff carries on from the same move time
                     return;
                 }

@@ -25,8 +25,8 @@ namespace Kage
         public readonly EngagementManager Engagement = new();
         /// <summary>The floor's left and right limit: ±7.6 m unless a stretch session moves it (SAN-89).</summary>
         public readonly StageBounds Bounds = new();
-        /// <summary>Sessions that react to the frame in the late tick: stretch waves, later boss phases and rounds (ADR-0002).</summary>
-        public readonly List<IFightSession> Sessions = new();
+        /// <summary>Things that react to the frame in the late tick (ADR-0002): a stretch's waves, gates and events (SAN-89).</summary>
+        public readonly List<ILateTick> LateTicks = new();
         /// <summary>
         /// The legacy switch (combat.json), read once when the fight is built: hits resolve inside the
         /// attacker's tick with the old distance checks, and no sweeps are recorded; fighters are kept

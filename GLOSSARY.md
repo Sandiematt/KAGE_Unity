@@ -66,8 +66,8 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Chip damage**: the health a blade takes off through a guard (damage × 0.15, rounded up).
 - **Knockback, launch, juggle, knockdown, OTG (a hit on a downed fighter), kip-up, ragdoll**: as in today's code.
 - **Hitstun / blockstun / stagger**: the helpless frames after a hit, after a guarded hit, and after being parried or countered. *Avoid:* stun (on its own), daze.
-- **Throw**: a grab, carry and release into a physics launch. The light one is the shoulder throw (Punch + forward); the **heavy grapple** is the fists family's Iron Grip (Weapon + forward): longer reach, overhead carry, armoured until the release. **No-grab**: throws fail on this character.
-- **Armour**: the fighter takes damage and posture but doesn't flinch. From a flag (light hits) or a move's armour frames. **Frontal armour**: the same, only for hits from the front. *Avoid:* super armour, hyper armour, poise.
+- **Throw**: a grab, carry and release into a physics launch. The light one is the shoulder throw (Punch + forward); the **heavy grapple** is the fists family's Iron Grip (Weapon + forward): longer reach, overhead carry, armoured until the release. **No-grab**: throws fail on this character (the `NoGrab` flag, from the data or a boss phase; the grab fails and the throw plays as its whiff).
+- **Armour**: the fighter takes damage and posture but doesn't flinch. From the `Armour` flag (every frame, light hits) or a move's armour frames. **Frontal armour**: the same, only for hits from the front. *Avoid:* super armour, hyper armour, poise.
 - **Blade length** (`WeaponFamilyDef.bladeLength`): metres from the guard to the tip of the cutting blade; the tachi's is the longest. *Not* **total reach**, the distance from the body to the farthest hit point of a move (the spear's is the longest, 2.25 m).
 - **Posture multiplier** (`HitWindow.postureMul`): how much more posture damage a window does than a plain hit; the tachi's windows are the highest (up to ×3.0).
 - **Armour frames**: the frames of a move (`MoveDef.armorFrom..armorTo`) in which the fighter has armour: light hits land their damage and don't flinch it, and a held victim stays held. Heavy hits still flinch. The check is `Fighter.Armour.cs`.
@@ -106,16 +106,18 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Stage**: one entry on the campaign map, with a kind: **stretch**, **sub-boss** or **boss**. *Avoid:* level, mission.
 - **Stretch**: a side-scrolling walk along a **road** with encounters. The JS term. *Avoid:* corridor, run.
 - **Road**: the floor of a stretch, in metres from its left end (the JS pixels / 115, ADR-0010): its **length**, Kage's **start** and its encounters. Built in code (`StretchRoad`); the data is `StretchData`. The **dev stretch** is the test road of Footmen (`dev.footmen`, F10 in the dev arena).
-- **Stretch session**: the fight session that plays a road (`StretchSession`): it closes gates, brings waves, publishes the wave and stage events and reports progress for the HUD. It runs in the fight loop's late tick (`IFightSession`). *Avoid:* level manager.
+- **Stretch session**: what plays a road (`StretchSession`): it closes gates, brings waves, publishes the wave and stage events and reports progress for the HUD. It runs in the fight loop's late tick (`ILateTick`). *Avoid:* level manager.
 - **Encounter**: a point on the road where a **gate** closes and waves arrive. It starts when Kage reaches its trigger (`X`) and is cleared when its last wave is cleared.
 - **Gate**: the right end of an encounter's **arena**. Closed from the encounter's start until it is cleared; Kage cannot pass it, and it is also the right end of the walk while the road's next encounter is still ahead. *Avoid:* door, barrier (in prose).
 - **Arena** (of an encounter): the floor between the gate and 1500 px (13 m) to its left. While the gate is closed the **floor bounds** (`ctx.Bounds`, `StageBounds`) and the camera's limits (`ICameraBounds`) are this span; the camera shows `CameraMargin` (0.6 m) past it.
 - **Floor bounds**: the left and right limit every fighter clamps to: ±7.6 m in the arena, the road or the encounter's arena in a stretch.
 - **Fallback foe**: the Order Footman, standing in for a foe id on a road that has no character yet (`StretchSession.ResolveFoe`, logged once as a warning). SAN-109 removes it.
 - **Wave**: one group of 2–4 foes within an encounter. The next wave comes when the previous one is cleared. *Avoid:* squad (except when quoting the spec's "JS squads", meaning all the foes of a stretch), spawn group.
-- **Phase**: a part of a boss fight that starts when health falls to its threshold, and swaps abilities, profile, multipliers and flags. Sub-bosses have two, Raikon three.
-- **Boss bar**: the HUD bar for a boss: art card, name, title, health, phase marks.
-- **Fight format**: duel (best of three, clock), boss (one round, no clock), stretch (no rounds, no clock).
+- **Phase**: a part of a boss fight that starts when health falls to its threshold, and swaps abilities, profile, multipliers and flags. Sub-bosses have two, Raikon three. Phases are **absolute**: each one is read against the boss's character data, not the previous phase. Run by `PhaseController`, which publishes `BossPhaseChanged`; phases only go forward until a new round.
+- **Boss data** (`BossDef`): a boss's name, title and list of phases (`PhaseDef`), from the JS table plus Unity tuning, in `BossCatalog`. `CharacterDef.bossId` points at it.
+- **Berserk / second wave / aggressive**: the JS phase flags. Berserk cools abilities down in 0.7 of the time; second wave is the delay in seconds of a second Thunder Swing wave (a hook, `Fighter.SecondWaveDelay`); aggressive makes the AI bolder.
+- **Boss bar**: the HUD bar for a boss: name, title, health, a mark where each phase opens, the phase numerals and the current phase's name (the art card is SAN-108). It follows `BossPhaseChanged`.
+- **Fight format**: duel (best of three, clock), boss (one round, no clock), stretch (no rounds, no clock). **Fight session** (`FightSession`): the rounds, the intro, the clock and the match end of one arena fight, for its format.
 - **Title card**: the plain card that opens a stage in place of story scenes.
 - **Tutorial prompt**: a Prologue prompt at a road position, showing the bound key (`KeyBindings.Label`), that waits until the action is done.
 - **Key bindings**: the one table of fight controls, action to keyboard keys and gamepad buttons (`KeyBindings`, ADR-0004). *Avoid:* key map, controls config.

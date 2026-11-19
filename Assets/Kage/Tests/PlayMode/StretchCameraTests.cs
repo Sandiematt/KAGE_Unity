@@ -135,7 +135,7 @@ namespace Kage.Tests
             rig.overrideCenter = new Vector2(12f, 1.5f);
             rig.overrideSize = 2.2f;
             _fight.Run(30, () => rig.Follow(1f / 60f));
-            for (int i = 0; i < 200; i++) rig.Follow(1f / 60f);
+            for (int i = 0; i < 200; i++) { GameFeel.trauma = GameFeel.punch = 0f; rig.Follow(1f / 60f); }
             Assert.AreEqual(12f, rig.transform.position.x, 0.05f, "a rage art's framing (SAN-82) is not clamped away or replaced");
             Assert.AreEqual(2.2f, rig.cam.orthographicSize, 0.05f);
         }

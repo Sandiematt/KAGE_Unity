@@ -45,7 +45,7 @@ namespace Kage.Tests
             Assert.AreEqual(StretchData.DevFootmenId, game.Stretch.Data.Id);
             Assert.AreEqual(0, game.foes.Count, "no foe of its own: the session brings them");
             CollectionAssert.AreEqual(new[] { game.player }, game.Fight.Fighters);
-            Assert.AreSame(game.Stretch, game.Fight.Sessions.Single());
+            Assert.AreSame(game.Stretch, game.Fight.LateTicks.Single());
             Assert.AreEqual((float)game.Stretch.Data.Start, game.player.Pos.x, 0.05f, "Kage starts at the road's start");
             Assert.IsNull(game.player.extraTarget, "no training bag on the road");
 

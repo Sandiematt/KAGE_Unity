@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Kage
 {
@@ -13,6 +14,15 @@ namespace Kage
     {
         readonly Dictionary<string, int> _abilityReady = new();   // id -> the clock frame it can be used again
         HashSet<string> _abilitiesEnabled;                        // null = every ability of the character
+
+        /// <summary>The boss phase controller (SAN-102, ADR-0008); null unless the character has a <see cref="CharacterDef.bossId"/>.</summary>
+        public PhaseController Phases { get; internal set; }
+
+        /// <summary>Scales every ability's cooldown: 1 normally, <see cref="PhaseController.BerserkCooldownMul"/> in a berserk phase (JS berserk).</summary>
+        public float AbilityCooldownMul = 1f;
+
+        /// <summary>The current phase's <see cref="PhaseDef.secondWave"/>: seconds between Thunder Swing's first and second wave; 0 = no second wave. The hook SAN-107 and SAN-89 read.</summary>
+        public float SecondWaveDelay;
 
         /// <summary>The character's abilities in slot order (slot n is index n - 1); empty for a fighter with none.</summary>
         public IReadOnlyList<string> AbilityIds => (IReadOnlyList<string>)Character?.abilities ?? System.Array.Empty<string>();
@@ -67,7 +77,7 @@ namespace Kage
             m = Armed(m);                                         // a blade ability with the sword broken does nothing
             if (m == null) return false;
             var a = AbilityCatalog.Get(id);
-            if (a != null && a.cooldownFrames > 0 && ctx != null) _abilityReady[id] = ctx.Clock.Frame + a.cooldownFrames;
+            if (a != null && a.cooldownFrames > 0 && ctx != null) _abilityReady[id] = ctx.Clock.Frame + Mathf.RoundToInt(a.cooldownFrames * AbilityCooldownMul);
             StartMove(m);
             return true;
         }

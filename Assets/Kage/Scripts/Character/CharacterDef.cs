@@ -143,6 +143,7 @@ namespace Kage
             };
             if (e.HeavyArmor) c.flags |= CharacterFlags.Armour;
             if (e.NoGrab) c.flags |= CharacterFlags.NoGrab;
+            if (e.Phases != null && e.Phases.Length > 0) c.bossId = e.Id;      // the boss data is the JS phases until the boss's own entry (BossCatalog, SAN-102)
             return c;
         }
     }

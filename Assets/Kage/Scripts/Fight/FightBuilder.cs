@@ -81,6 +81,12 @@ namespace Kage
             f.ctx = Context;
             f.EquipWeapon(def.weaponId, def.weaponLevel);
             Context.Fighters.Add(f);
+            if (def.bossId != null)
+            {
+                var boss = BossCatalog.Get(def.bossId);
+                if (boss == null) throw new System.ArgumentException($"character {def.id}: no boss data '{def.bossId}'");
+                f.Phases = new PhaseController(f, boss);       // ticked by the fight loop (SAN-102)
+            }
             if (Context.Clock.Manual) Headless(go);
             return f;
         }

@@ -16,7 +16,7 @@ namespace Kage
     /// each when the previous is down; the last wave's fall opens the gate; with every encounter cleared and Kage at the end of
     /// the road the stage is cleared. Foes are ordinary fighters on team 1 spawned into the same context, so the two-attackers-at-most
     /// rule (<see cref="EngagementManager"/>) holds with no wiring.
-    /// <para>It runs in the fight loop's late tick (<see cref="IFightSession"/>), so it is deterministic: every decision reads the
+    /// <para>It runs in the fight loop's late tick (<see cref="ILateTick"/>), so it is deterministic: every decision reads the
     /// frame that has just run. It publishes <c>WaveStarted</c>, <c>WaveCleared</c> (Index = the wave's number in the whole stretch,
     /// Name = the encounter id <c>{stage}.e{n}</c>), <c>StageCleared</c> and <c>StageFailed</c> (Kage knocked out; Name = stage id).</para>
     /// <para>The HUD reads <see cref="Progress"/>, <see cref="EncounterNumber"/>, <see cref="WaveNumber"/> and friends, or just
@@ -27,7 +27,7 @@ namespace Kage
     /// (<see cref="FallbackFoeId"/>) and logged once as a warning; <see cref="Spawned"/> records what was asked for and what came.
     /// SAN-109 removes the fallback when every foe exists.</para>
     /// </summary>
-    public sealed class StretchSession : IFightSession, ICameraBounds, IDisposable
+    public sealed class StretchSession : ILateTick, ICameraBounds, IDisposable
     {
         /// <summary>The character that stands in for a foe id that has no character yet.</summary>
         public const string FallbackFoeId = OrderFootman.Id;
@@ -79,7 +79,7 @@ namespace Kage
             _kage = kage;
             _foeInput = foeInput ?? (_ => new AIInputSource { level = foeLevel });
             kage.turnToWalk = true;
-            ctx.Sessions.Add(this);
+            ctx.LateTicks.Add(this);
             ApplyBounds();
         }
 
@@ -95,7 +95,7 @@ namespace Kage
 
         public void Dispose()
         {
-            _ctx.Sessions.Remove(this);
+            _ctx.LateTicks.Remove(this);
             if (_kage != null) _kage.turnToWalk = false;
             _ctx.Bounds.Reset();
         }
