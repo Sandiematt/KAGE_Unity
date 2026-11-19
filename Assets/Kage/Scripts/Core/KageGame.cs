@@ -10,7 +10,7 @@ namespace Kage
     /// VFX, audio, HUD, Kage and the Ronin — then runs rounds (best of 3, 60 s) or the
     /// training dojo with the physics bag.
     /// Hotkeys: Tab move list · F2 duel/training · F3 AI level · F4 AI passive · F5 next opponent · F6 group fight (Kage vs 4 Footmen) and back
-    /// · F7 break/restore sword · F8 next weapon (Shift: level) · R restart · P pause.
+    /// · F7 break/restore sword · F8 next weapon (Shift: level) · F10 stretch: Kage on a road with gates and waves, and back (Shift: next road; KageGame.Stretch.cs) · R restart · P pause.
     /// The group fight (SAN-83) plays like the duel's rounds: Kage wins a round when every foe is down. Two foes at most are
     /// engaged (<see cref="EngagementManager"/>); the camera frames Kage and the engaged foes (<see cref="CameraRig.Frame"/>).
     /// The rounds and the clock are <see cref="FightSession"/>'s (SAN-102): a duel is best of three on a 60 s clock; a foe with phases
@@ -18,12 +18,12 @@ namespace Kage
     /// boss bar (<see cref="Hud.BindBoss"/>).
     /// </summary>
     [DefaultExecutionOrder(-50)]
-    public class KageGame : MonoBehaviour
+    public partial class KageGame : MonoBehaviour
     {
         public static KageGame I;
         public const int LayerFighter = PhysicsLayers.Fighter, LayerRagdoll = PhysicsLayers.Ragdoll, LayerGround = PhysicsLayers.Ground, LayerProp = PhysicsLayers.Prop;
 
-        public enum Mode { Duel, Training }
+        public enum Mode { Duel, Training, Stretch }
         public Mode startMode = Mode.Duel;
         [Range(0, 2)] public int aiLevel = 1;
         [Tooltip("The opponent's character id (ronin, order_footman, ...). F5 cycles it.")]
@@ -83,6 +83,8 @@ namespace Kage
             // the fight: context, loop (60 Hz step), physics rules; fighters are added below
             var fight = new FightBuilder(transform, fixedSeed != 0 ? fixedSeed : System.Environment.TickCount, manualClock: false);
 
+            var stretchData = TakeStretchRequest();     // F10 (SAN-89, KageGame.Stretch.cs): a road instead of the arena
+
             BuildCamera();
             BuildVolume();
 
@@ -95,7 +97,8 @@ namespace Kage
 
             var stage = new GameObject("Stage");
             stage.transform.SetParent(transform, false);
-            ArenaBuilder.Build(stage.transform, Cam);
+            if (stretchData != null) Road = StretchRoad.Build(stage.transform, stretchData, fight.Context.Bounds, Cam);
+            else ArenaBuilder.Build(stage.transform, Cam);
 
             var hudGo = new GameObject("HUD", typeof(RectTransform));
             hudGo.transform.SetParent(transform, false);
@@ -103,6 +106,7 @@ namespace Kage
             Hud.Build(_camera);
 
             player = fight.Spawn(KageCharacter.Def(SaveSource != null ? SaveSource() : SaveStore.AtPersistentDataPath().Load()), 0, new PlayerInputSource());
+            if (stretchData != null) { BuildStretch(fight, stretchData); return; }      // the session brings the foes
             _ai = new AIInputSource();
             if (NextFoeId != null) { foeId = NextFoeId; NextFoeId = null; }
             if (NextGroupSize.HasValue) { groupSize = NextGroupSize.Value; NextGroupSize = null; }
@@ -315,6 +319,7 @@ namespace Kage
             if (ReloadedUnderUs()) return;
             GameFeel.Tick();
             HandleHotkeys();
+            if (mode == Mode.Stretch) { UpdateStretch(); return; }
             float dt = Time.unscaledDeltaTime;
 
             if (mode == Mode.Duel) Session.Update(dt, Time.deltaTime);
@@ -379,6 +384,7 @@ namespace Kage
         {
             var kb = Keyboard.current;
             if (kb == null) return;
+            if (HandleStretchHotkeys(kb)) return;       // F10, and every key in stretch mode (SAN-89)
             if (kb.tabKey.wasPressedThisFrame || kb.f1Key.wasPressedThisFrame) Hud.ToggleMoveList();
             if (kb.f2Key.wasPressedThisFrame) SetMode(mode == Mode.Duel ? Mode.Training : Mode.Duel);
             if (kb.f3Key.wasPressedThisFrame)

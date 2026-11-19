@@ -42,6 +42,12 @@ Many tickets need JS numbers: weapon, helmet and armour stats and prices, enemy 
 - The JS game's Normal-difficulty and role multipliers on foe health (regular ×0.82, sub-boss ×1.05, boss ×1.22) are **not** applied. Pacing is tuned only by `HealthScale` and per-character `healthMul` (SAN-110).
 - Unity's per-window damage values never change. JS `dmg`, `def` and `speed` become `damageMul`, `defense` and `speedMul` in character data (ADR-0005).
 
+## Notes from the implementation (SAN-89)
+
+- Stretch roads are read from the generated tables by `StretchData.FromStage(stageId)` (`Kage.Rules`, pure C#): `Length`, `Start`, and each encounter's `X` (trigger), `Gate` and `Waves`, all converted to **metres with `JsUnits.PxToMetres`** (`act1.stretch1` is 4400 px = 38.26 m long, Kage starts at 1.39 m, its first gate is at 15.2 m). The JS rules `encounterAt`, `stretchLimit` and `isStretchComplete` (reach 60 px) are `EncounterAt`, `Limit` and `IsComplete`; the locked arena is the JS `STRETCH.arena` of 1500 px ending at the gate (`ArenaLeft`). Nothing about a road is typed in Unity except the test stretch `dev.footmen` (`StretchData.DevFootmen()`, not JS data: 3000 px, two encounters of Footmen), which exists so a road can be played with the one foe that is built.
+- Clues, props and tutorial prompts of a stretch stay in the table (`JsStretch.Clues`, `Tutorial`); SAN-89 does not read them (SAN-96 reads the prompts; clues are not built).
+- `PxPerMetre` is still the one place to change if roads feel too long or too short.
+
 ## Consequences
 
 - JS numbers reach Unity by one script, so they can be checked and regenerated, and the rules tests match the JS tests.

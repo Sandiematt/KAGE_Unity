@@ -27,6 +27,8 @@ namespace Kage
     /// counts its telegraph or strikes (SAN-75). Both run in play and on a manual clock alike.</item>
     /// <item>Boss phases (SAN-102): each boss's <see cref="PhaseController"/> opens the phases its health has fallen into and publishes
     /// <see cref="CombatEventType.BossPhaseChanged"/>; the AI sees the new phase on the next frame's poll.</item>
+    /// <item>Late tick (ADR-0002 step 7): each <see cref="ILateTick"/> in <c>ctx.LateTicks</c> reacts to the frame: a stretch
+    /// spawns its next wave, opens a gate, publishes its events (SAN-89). A foe it spawns takes part from the next frame.</item>
     /// <item>Push: each fighter puts its push collider on the Push or PushPassThrough layer for this frame
     /// (SAN-68); the physics step that follows keeps fighters apart. Off under the legacy switch.</item>
     /// <item>World time scale: each slowed body's velocity and gravity are scaled for the physics step that follows
@@ -98,6 +100,7 @@ namespace Kage
                     foreach (var h in _hazardTmp) if (h != null) h.Tick();
                 }
                 foreach (var f in fs) if (Live(f)) f.Phases?.Tick();      // boss phases, after this frame's hits and hazards (SAN-102, ADR-0008)
+                for (int i = 0; i < ctx.LateTicks.Count; i++) ctx.LateTicks[i].LateTick();
                 foreach (var f in fs) if (Live(f)) f.SyncPush();
                 foreach (var f in fs) if (Live(f)) f.ScaleWorldTime(clock.ScaleFor(f));
             }

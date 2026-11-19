@@ -18,13 +18,18 @@ namespace Kage
         readonly CombatEvents _events;
         readonly Fighter _player;
         int _startFrame, _lastFrame, _koFrame = -1, _combo, _lastHitFrame = int.MinValue;
-        bool _won;
+        bool _won, _stretch;
         float _damageTaken;
 
-        public FightStatsRecorder(CombatEvents events, Fighter player)
+        /// <param name="stretch">
+        /// A stretch (SAN-89): foes fall all the time, so a foe's knock-out doesn't end the fight; the stage's own events do
+        /// (<c>StageCleared</c> a win, <c>StageFailed</c> a loss), and so does Kage's knock-out.
+        /// </param>
+        public FightStatsRecorder(CombatEvents events, Fighter player, bool stretch = false)
         {
             _events = events;
             _player = player;
+            _stretch = stretch;
             _events.Published += OnEvent;
         }
 
@@ -57,7 +62,16 @@ namespace Kage
                 case CombatEventType.Parried:
                     if (e.Target == _player) Parries++;
                     break;
+                case CombatEventType.StageCleared:
+                case CombatEventType.StageFailed:
+                    if (_koFrame < 0)
+                    {
+                        _koFrame = e.Frame;
+                        _won = e.Type == CombatEventType.StageCleared;
+                    }
+                    break;
                 case CombatEventType.KnockedOut:
+                    if (_stretch && e.Target != _player) break;
                     if (_koFrame < 0)
                     {
                         _koFrame = e.Frame;
