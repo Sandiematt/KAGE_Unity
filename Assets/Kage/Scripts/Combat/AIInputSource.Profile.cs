@@ -282,6 +282,7 @@ namespace Kage
             {
                 var a = AbilityCatalog.Get(ids[i]);
                 if (a == null || !self.AbilityReady(i + 1) || dist < a.range.x || dist > a.range.y) continue;
+                if (a.when != null && !a.when(self, self.opponent)) continue;
                 _abilityPick.Add(i + 1);
             }
             if (_abilityPick.Count == 0) return false;

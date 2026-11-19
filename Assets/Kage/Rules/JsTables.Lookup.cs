@@ -9,6 +9,11 @@ namespace Kage.Rules
         static Dictionary<string, JsGear> helmetById, armorById;
         static Dictionary<string, JsEnemy> enemyById;
         static Dictionary<string, JsBossAbility> bossAbilityById;
+        static Dictionary<string, JsMove> moveById;
+        static Dictionary<string, JsProjectile> projectileById;
+        static Dictionary<string, JsAiRole> aiRoleById;
+        static Dictionary<string, JsDifficulty> difficultyById;
+        static Dictionary<string, JsFightStyle> fightStyleById;
         static Dictionary<string, JsStage> stageById;
         static Dictionary<string, JsTier> tierById;
         static JsStage[] allStages;
@@ -81,6 +86,41 @@ namespace Kage.Rules
         {
             if (bossAbilityById == null) bossAbilityById = Index(BossAbilities, a => a.Id);
             return Find(bossAbilityById, id);
+        }
+
+        /// <summary>The basic move with this id (the exported ones: <c>p1</c>, <c>grab</c>), or null.</summary>
+        public static JsMove Move(string id)
+        {
+            if (moveById == null) moveById = Index(Moves, m => m.Id);
+            return Find(moveById, id);
+        }
+
+        /// <summary>The projectile with this id (<c>shock</c>, <c>kunai</c>...), or null.</summary>
+        public static JsProjectile Projectile(string id)
+        {
+            if (projectileById == null) projectileById = Index(Projectiles, p => p.Id);
+            return Find(projectileById, id);
+        }
+
+        /// <summary>The foe role with this id (<c>regular</c>, <c>sub</c>, <c>boss</c>), or null.</summary>
+        public static JsAiRole AiRole(string id)
+        {
+            if (aiRoleById == null) aiRoleById = Index(AiRoles, r => r.Id);
+            return Find(aiRoleById, id);
+        }
+
+        /// <summary>The difficulty mode with this id (<c>easy</c>, <c>normal</c>, <c>hard</c>, <c>impossible</c>), or null.</summary>
+        public static JsDifficulty Difficulty(string id)
+        {
+            if (difficultyById == null) difficultyById = Index(Difficulties, d => d.Id);
+            return Find(difficultyById, id);
+        }
+
+        /// <summary>The fighting style of the foe with this id (the exported foes that have one), or null.</summary>
+        public static JsFightStyle FightStyle(string id)
+        {
+            if (fightStyleById == null) fightStyleById = Index(FightStyles, s => s.Id);
+            return Find(fightStyleById, id);
         }
 
         /// <summary>The stage with this id, or null.</summary>

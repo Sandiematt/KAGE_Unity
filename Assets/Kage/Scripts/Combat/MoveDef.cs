@@ -87,6 +87,21 @@ namespace Kage
         /// <summary>Armour frames (ADR-0006): light hits (windows without <c>heavy</c>) don't flinch the fighter during them. Applied by the armour check (SAN-80).</summary>
         public int armorFrom = -1, armorTo = -1;
 
+        // ---- boss-move hooks (SAN-104, Garan; Fighter.MoveHooks.cs). Each is off by default, so no other move changes. ----
+        /// <summary>
+        /// A throw's grab window (the clinch): the grab catches the foe on any frame from <see cref="grabFrame"/> to this one that it is in
+        /// reach, and the carry then runs from this frame. -1: the grab is tried on <see cref="grabFrame"/> only (every other throw).
+        /// </summary>
+        public int grabTo = -1;
+        /// <summary>A hazard (ADR-0007) the move lays down on <see cref="hazardFrame"/>, standing <see cref="hazardAhead"/> metres in front of the fighter's feet (Storm Fist's shock area).</summary>
+        public HazardDef hazard;
+        public int hazardFrame = -1;
+        public float hazardAhead;
+        /// <summary>What plays in place of this move once one of its hit windows lands or is blocked (the charge skids to a stop).</summary>
+        public MoveDef onContact;
+        /// <summary>Frames of stagger when the move's root motion runs the fighter into the wall it faces (the charge); 0 = none.</summary>
+        public int wallStagger;
+
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
         public MoveDef Key(int frame, Pose p, Ease e = Ease.OutQuad)
@@ -148,6 +163,8 @@ namespace Kage
         /// <summary>Armour frames: light hits don't flinch the fighter from <paramref name="from"/> to <paramref name="to"/> (SAN-80 applies it).</summary>
         public MoveDef Armour(int from, int to) { armorFrom = from; armorTo = to; return this; }
         public MoveDef Cancel(int from) { cancelFrom = from; return this; }
+        /// <summary>Lays <paramref name="def"/> down on <paramref name="frame"/>, <paramref name="ahead"/> metres in front of the fighter (SAN-104).</summary>
+        public MoveDef Hazard(int frame, HazardDef def, float ahead) { hazardFrame = frame; hazard = def; hazardAhead = ahead; return this; }
         /// <summary>After a confirmed hit, jumping cancels the move's recovery from this frame (chase a launch).</summary>
         public MoveDef JumpCancel(int from) { jumpCancelFrom = from; return this; }
         public MoveDef Sword() { swordFront = true; return this; }

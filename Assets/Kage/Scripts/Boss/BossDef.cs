@@ -97,6 +97,7 @@ namespace Kage
             _defs = new Dictionary<string, BossDef>();
             // ---- one line per tuned boss ----
             Register(FootmanBoss.Boss());          // the test boss (SAN-102)
+            Register(Garan.Boss());                // Garan: the JS phases with his clinch in both (SAN-104)
         }
 
         /// <summary>Adds or replaces a boss (validated).</summary>
