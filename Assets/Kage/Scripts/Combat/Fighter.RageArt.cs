@@ -139,8 +139,8 @@ namespace Kage
         {
             float d = CmT.standDistance;
             float x = tgt.Pos.x + side * d;
-            if (Mathf.Abs(x) > StageHalf) { side = -side; x = tgt.Pos.x + side * d; }
-            x = Mathf.Clamp(x, -StageHalf, StageHalf);
+            if (x < StageMin || x > StageMax) { side = -side; x = tgt.Pos.x + side * d; }
+            x = Mathf.Clamp(x, StageMin, StageMax);
             rb.position = new Vector2(x, 0.02f);
             transform.position = new Vector3(x, 0.02f, 0f);
             rb.linearVelocity = Vector2.zero;
@@ -269,7 +269,7 @@ namespace Kage
                 cx = tgt != null && tgt.isActiveAndEnabled ? (Pos.x + tgt.Pos.x) * 0.5f : Pos.x;
             }
             float half = size * Mathf.Max(0.5f, camRig.cam.aspect);
-            cx = Mathf.Clamp(cx, -camRig.stageHalf + half, camRig.stageHalf - half);
+            cx = camRig.ClampX(cx, half);
             camRig.overrideSize = size;
             camRig.overrideCenter = new Vector2(cx, size * 0.64f);
         }

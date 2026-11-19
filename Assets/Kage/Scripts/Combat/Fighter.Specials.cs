@@ -17,7 +17,7 @@ namespace Kage
             GameFeel.Hitstop(10);
             GameFeel.Flash(new Color(1f, 1f, 1f, 0.5f), 0.12f);
             float side = -attacker.facing;
-            float x = Mathf.Clamp(attacker.Pos.x + side * 0.75f, -StageHalf, StageHalf);
+            float x = Mathf.Clamp(attacker.Pos.x + side * 0.75f, StageMin, StageMax);
             rb.position = new Vector2(x, 0.02f);
             transform.position = new Vector3(x, 0.02f, 0f);
             SetFacing(Mathf.Sign(attacker.Pos.x - x), true);
@@ -139,7 +139,7 @@ namespace Kage
             }
             if (f == 66)
             {
-                float x = Mathf.Clamp(_ultAnchor.x - opponent.facing * 1.1f, -StageHalf, StageHalf);
+                float x = Mathf.Clamp(_ultAnchor.x - opponent.facing * 1.1f, StageMin, StageMax);
                 rb.simulated = true;
                 rb.position = new Vector2(x, 0.02f);
                 transform.position = new Vector3(x, 0.02f, 0f);

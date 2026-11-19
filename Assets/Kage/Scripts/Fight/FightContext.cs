@@ -23,6 +23,10 @@ namespace Kage
         public readonly MoveSets MoveSets = new();
         /// <summary>Which foes may attack: at most two engaged at once, the rest wait and circle (SAN-83).</summary>
         public readonly EngagementManager Engagement = new();
+        /// <summary>The floor's left and right limit: ±7.6 m unless a stretch session moves it (SAN-89).</summary>
+        public readonly StageBounds Bounds = new();
+        /// <summary>Sessions that react to the frame in the late tick: stretch waves, later boss phases and rounds (ADR-0002).</summary>
+        public readonly List<IFightSession> Sessions = new();
         /// <summary>
         /// The legacy switch (combat.json), read once when the fight is built: hits resolve inside the
         /// attacker's tick with the old distance checks, and no sweeps are recorded; fighters are kept

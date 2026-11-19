@@ -20,6 +20,7 @@ namespace Kage
         public const int PlayerSortOrder = 1500, FoeSortOrder = 1000;
 
         readonly Transform _root;
+        readonly System.Collections.Generic.Dictionary<string, int> _spawned = new();
 
         public FightContext Context { get; }
         public FightLoop Loop { get; }
@@ -72,8 +73,9 @@ namespace Kage
             f.input = input;
             (input as AIInputSource)?.Configure(def);
             f.team = team;
-            int copies = 0;
-            foreach (var o in Context.Fighters) if (o.CharacterId == def.id) copies++;
+            // counted per builder, not by who is still in the fight: a stretch removes fallen foes, and ids must not repeat (SAN-89)
+            _spawned.TryGetValue(def.id, out int copies);
+            _spawned[def.id] = copies + 1;
             f.CharacterId = def.id;
             f.FighterId = copies == 0 ? def.id : def.id + "#" + (copies + 1);
             f.ctx = Context;
