@@ -21,6 +21,7 @@ namespace Kage
             Add(OrderRunner.Def());
             Add(OrderChainthrower.Def());
             Add(HollowShade.Def());
+            Add(HollowFlicker.Def());
             Add(HollowTutorial.Def());
             Add(Raikon.Def());             // the Act I boss (look: SAN-71; fight: SAN-107)
             Add(Kuroe.Def());              // the first Act I sub-boss (SAN-103)
@@ -33,6 +34,7 @@ namespace Kage
             Add(new OrderRunnerPartSet());
             Add(new OrderChainthrowerPartSet());
             Add(new HollowShadePartSet());
+            Add(new HollowFlickerPartSet());
             Add(new HollowTutorialPartSet());
             Add(new RaikonPartSet());
             Add(new KuroePartSet());
