@@ -80,6 +80,53 @@ namespace Kage.Rules
         public bool? Unb, Wave;
     }
 
+    /// <summary>A basic move (JS MOVES): timing [wind-up, active, recovery] in seconds, damage, hit box [x, y, w, h] in pixels (SAN-104).</summary>
+    public sealed class JsMove
+    {
+        public string Id, Kind;
+        public double[] T = new double[0];
+        public double Dmg;
+        public double[] Box;
+    }
+
+    /// <summary>A projectile (JS PROJ): speed px/s, radius px, damage, hitstun s, knockback and lift px/s, life s, gravity; knock-down, unblockable, ground wave (SAN-104).</summary>
+    public sealed class JsProjectile
+    {
+        public string Id;
+        public double Speed, R, Dmg, Hs, Kb, Up, Life, Grav, Imp;
+        public bool Kd, Unb, Ground;
+    }
+
+    /// <summary>A foe role's multipliers on its AI tuning (JS BUDO.roles: regular, sub, boss), e.g. the wind-up of its tells (SAN-104).</summary>
+    public sealed class JsAiRole
+    {
+        public string Id;
+        public double Hp = 1, Dmg = 1, Aggr = 1, Guard = 1, Parry = 1, React = 1, Punish = 1, Idle = 1, Windup = 1, Recovery = 1;
+    }
+
+    /// <summary>A difficulty mode (JS DIFFICULTIES): multipliers on today's tuning; Normal is all 1 (SAN-104 reads its wind-up).</summary>
+    public sealed class JsDifficulty
+    {
+        public string Id;
+        public double Hp = 1, Dmg = 1, BossHp = 1, BossDmg = 1, Windup = 1, Recovery = 1;
+    }
+
+    /// <summary>One string of a fighting style: the moves in order, the distance band in pixels, its weight, its tell in seconds, and whether it plays only in a situation (code).</summary>
+    public sealed class JsStyleString
+    {
+        public string[] Seq = new string[0];
+        public double[] Range = new double[0];
+        public double W, Tell;
+        public bool When;
+    }
+
+    /// <summary>A foe's fighting style (JS FIGHT_STYLES): its school and its strings (SAN-104).</summary>
+    public sealed class JsFightStyle
+    {
+        public string Id, Art;
+        public JsStyleString[] Strings = new JsStyleString[0];
+    }
+
     /// <summary>One AI archetype (JS AI_PROFILES): a design brief for the Unity AI profiles.</summary>
     public sealed class JsAiProfile
     {

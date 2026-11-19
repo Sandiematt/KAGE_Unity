@@ -32,7 +32,10 @@ const CHECK = args.includes('--check');
 const CHAPTERS = ['prologue', 'act1'];
 
 const { loadSim } = require(path.join(JS_DIR, 'tests', 'helpers', 'load-sim.js'));
-const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS'] });
+const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS',
+  'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES'] });
+// The basic moves the sub-boss abilities are measured against or built from (SAN-104): the jab (the damage scale) and the grab (the clinch).
+const MOVE_IDS = ['p1', 'grab'];
 
 /* ---------------- C# literal helpers ---------------- */
 const pascal = (k) => k[0].toUpperCase() + k.slice(1);
@@ -122,6 +125,23 @@ function bossAbilityRow(id, a, v, level) {
     ['Unb', flag(v.unb)], ['Wave', flag(v.wave)],
   ], level);
 }
+// A basic move (MOVES): its timing [wind-up, active, recovery] in seconds, damage and hit box [x, y, w, h] in pixels (SAN-104).
+function moveRow(id, m, level) {
+  return obj('JsMove', [['Id', str(id)], ['Kind', scalar(m.kind)], ['T', numArray(m.t, 'double')], ['Dmg', scalar(m.dmg)], ['Box', m.box ? numArray(m.box, 'double') : undefined]], level);
+}
+// A projectile (PROJ in 30-combat.js): the shockwaves of Storm Break and its reduced versions (SAN-104), kunai, orbs...
+function projRow(id, p, level) {
+  return obj('JsProjectile', [['Id', str(id)], ...pick(p, ['speed', 'r', 'dmg', 'hs', 'kb', 'up', 'life', 'grav', 'imp']),
+    ['Kd', truthy(p.kd)], ['Unb', truthy(p.unb)], ['Ground', truthy(p.ground)]], level);
+}
+// A foe's fighting style (FIGHT_STYLES in 41-styles/*.js): its school and its strings (SAN-104). `When` marks a string the style plays
+// only in a situation (a guarding Kage, an airborne one); the condition itself is code and is described in the ability that uses it.
+function styleRow(id, st, level) {
+  return obj('JsFightStyle', [['Id', str(id)], ['Art', scalar(st.art)],
+    ['Strings', arr('JsStyleString', (st.strings || []).map((x) => obj('JsStyleString', [
+      ['Seq', strArray(x.seq)], ['Range', numArray(x.range, 'double')], ['W', scalar(x.w)], ['Tell', scalar(x.tell)], ['When', truthy(x.when)],
+    ], level + 2)), level + 1)]], level);
+}
 function rewardObj(r, level) {
   if (!r) return undefined;
   const list = (k) => (r[k] && r[k].length ? strArray(r[k]) : undefined);
@@ -209,6 +229,11 @@ member('JsGear', 'Helmets', Object.entries(js.HELMETS).map(([id, g]) => gearRow(
 member('JsGear', 'Armors', Object.entries(js.ARMORS).map(([id, g]) => gearRow(id, g, L + 1)));
 member('JsEnemy', 'Enemies', enemyIds.map((id) => enemyRow(id, js.ENEMIES[id], L + 1)));
 member('JsBossAbility', 'BossAbilities', abilityIds.map((id) => bossAbilityRow(id, js.BOSS_ABILITIES[id], js.RAIKON_VARIANTS[id], L + 1)));
+member('JsMove', 'Moves', MOVE_IDS.map((id) => moveRow(id, js.MOVES[id], L + 1)));
+member('JsProjectile', 'Projectiles', Object.entries(js.PROJ).map(([id, p]) => projRow(id, p, L + 1)));
+member('JsAiRole', 'AiRoles', Object.entries(js.BUDO.roles).map(([id, r]) => obj('JsAiRole', [['Id', str(id)], ...pick(r, ['hp', 'dmg', 'aggr', 'guard', 'parry', 'react', 'punish', 'idle', 'windup', 'recovery'])], L + 1)));
+member('JsDifficulty', 'Difficulties', Object.entries(js.DIFFICULTIES).map(([id, d]) => obj('JsDifficulty', [['Id', str(id)], ...pick(d, ['hp', 'dmg', 'bossHp', 'bossDmg', 'windup', 'recovery'])], L + 1)));
+member('JsFightStyle', 'FightStyles', enemyIds.filter((id) => js.FIGHT_STYLES[id]).map((id) => styleRow(id, js.FIGHT_STYLES[id], L + 1)));
 member('JsAiProfile', 'AiProfiles', Object.entries(js.AI_PROFILES).map(([id, a]) => aiRow(id, a, L + 1)));
 member('JsTutorialStep', 'TutorialSteps', Object.entries(js.TUTORIAL_STEPS).map(([id, t]) => obj('JsTutorialStep', [['Id', str(id)], ['Verb', str(t.verb)], ['Hint', str(t.hint)]], L + 1)));
 member('JsChapter', 'Chapters', chapters.map((ch) => obj('JsChapter', [
