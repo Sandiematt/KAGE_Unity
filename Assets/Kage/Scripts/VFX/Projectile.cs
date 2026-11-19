@@ -173,7 +173,7 @@ namespace Kage
             {
                 // a blade projectile (the Crescent) carries the weapon's damage; a kunai doesn't
                 attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, w.sword, Owner != null ? Owner.ProjectileDamageMul(Def) : 1f), kb = new Vector2(w.kb.x * Dir, w.kb.y), zone = zone, contact = contact,
-                moveId = Def.id, window = -1,
+                moveId = Def.id, window = -1, origin = HitOrigin.Projectile,
             };
             var outcome = ExternalHit.Deliver(Owner, t, info, out var result);
             if (outcome == ExternalHit.Outcome.Missed) return false;
@@ -181,8 +181,8 @@ namespace Kage
             if (outcome == ExternalHit.Outcome.Dodged) return false;      // it flew through a perfect dodge
             HitsLanded++;
             EffectCues.Play(Def.hitCue, contact, new CueArgs { owner = Owner, dir = new Vector2(Dir, 0f), scale = 1f });
-            // a countered (parried) projectile is destroyed; otherwise it is spent after its last target
-            if (result == HitResult.Countered || HitsLanded >= Def.maxHits) { End(_pos); return true; }
+            // a countered or parried projectile is destroyed; otherwise it is spent after its last target
+            if (result == HitResult.Countered || result == HitResult.Parried || HitsLanded >= Def.maxHits) { End(_pos); return true; }
             return false;
         }
 

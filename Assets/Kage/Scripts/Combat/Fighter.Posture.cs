@@ -146,6 +146,7 @@ namespace Kage
             _guardBreakLeft = 0;
             _breakPending = false;
             _breakBy = null;
+            ResetParry();
         }
     }
 }

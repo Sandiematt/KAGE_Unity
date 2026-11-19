@@ -43,7 +43,7 @@ namespace Kage.Tests
         static HitResult GuardedHit(HeadlessFight f, bool breaksWeapon)
         {
             f.KageInput.Add(20, buttons: "G");
-            f.Run(6);
+            f.Run(Tuning.Get<ParryTuning>().windowFrames + 2);     // past the parry window: a block, not a parry
             return f.Kage.ReceiveHit(Heavy(f, breaksWeapon));
         }
 

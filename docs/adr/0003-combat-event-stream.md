@@ -124,3 +124,8 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 - The HUD, rating, tutorial and tests share one definition of what happened.
 - One flat struct carries some fields that a given type doesn't use. The table above and the factory methods say which are set.
 - The baseline replay is a text file of canonical lines, easy to diff in review.
+
+## Notes from the implementation (SAN-91)
+
+- `Parried` is published by the attacker's `PublishHit` like every hit result, with Source = the attacker, Target = the fighter who parried, Damage 0, Crit false (a crit rolled for the parried blow is dropped) and Posture = the posture the attacker lost to the parry (`Fighter.LastParryPosture` on the parrier; 0 for a parried projectile). When that posture fills the attacker's bar, `GuardBroken` (Source = the parrier) follows on the same frame.
+- `FightStatsRecorder` counts `Parried` events whose Target is the player; a foe's parry of Kage isn't counted. No other class keeps a parry count for the rating (`Fighter.ParriesMade` is the fighter's own tally, for tests and the HUD).

@@ -213,3 +213,8 @@ These numbers are the values after every JS module has loaded (later JS modules 
 - Every opponent is one character file, one part-set file and two catalog lines, so opponent tickets don't collide.
 - Kage stays one entry. His health and defence come from the rules and his save, so gear changes him with no special case.
 - "Speed" now means two separate things: `speedMul` (moving around) and `moveRate` (how fast attacks play). The glossary keeps them apart.
+
+## Notes from the implementation (SAN-91)
+
+- **AI knob: `CharacterDef.parryRate`** (0..1, default 0): the share of the attacks the AI guards that it tries to parry. `AIInputSource.Configure(def)` takes it; at 0 nothing changes. SAN-95's profile table should set it from the JS `parry` column. See ADR-0004's SAN-91 notes.
+- **stunRes and the parry.** A parried fighter's stagger goes through `ScaleStun(frames, ParryTuning.stunResistFactor)` (0.5, the `BreakStunResist` curve of the JS `parried`), so `HardStunResist` stays unused by the parry. The factor is data (`parry.json`).
