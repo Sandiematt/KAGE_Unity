@@ -193,3 +193,8 @@ so input, move selection, the AI and facing all read this frame's `opponent` and
 - The fighter's per-frame logic moves from `FixedUpdate` into `Tick`. That is a mechanical change inside `Fighter`, done once by SAN-61.
 - Moving hit resolution after all fighters tick (SAN-65) can change the frame on which a trade or a simultaneous hit resolves. The baseline replay shows any such change.
 - `Crescent` and every new projectile must move on the fight loop, not in `Update` (SAN-75).
+
+## Notes from the implementation (SAN-102: boss phases and FightSession)
+
+- `FightLoop.Step` gains one line after the hits, projectiles and hazards: each fighter's `Phases?.Tick()` (ADR-0008 notes). It reads health, so it needs no ordering with the sweeps beyond "after".
+- Rounds and the round clock are not part of `FightContext` or `FightClock` (the clock counts logic frames). They are `FightSession` (`Scripts/Fight/FightSession.cs`): driven by the owner's rendered-frame time, with the fight's `FightContext` only used to publish `StageCleared` and `StageFailed`. The dev arena owns a session; `StageWorld` can adopt one (its placeholder fight is already one round with no clock, the boss format).

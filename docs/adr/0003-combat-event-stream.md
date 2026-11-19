@@ -134,3 +134,8 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 
 - `Parried` is published by the attacker's `PublishHit` like every hit result, with Source = the attacker, Target = the fighter who parried, Damage 0, Crit false (a crit rolled for the parried blow is dropped) and Posture = the posture the attacker lost to the parry (`Fighter.LastParryPosture` on the parrier; 0 for a parried projectile). When that posture fills the attacker's bar, `GuardBroken` (Source = the parrier) follows on the same frame.
 - `FightStatsRecorder` counts `Parried` events whose Target is the player; a foe's parry of Kage isn't counted. No other class keeps a parry count for the rating (`Fighter.ParriesMade` is the fighter's own tally, for tests and the HUD).
+
+## Notes from the implementation (SAN-102)
+
+- `BossPhaseChanged` is published by `PhaseController` (`CombatEvent.BossPhaseChanged(frame, boss, index, name)`: Target = the boss, Index = the new phase, Name = the JS phase name). Phase 0 is published by the first tick of a fight, and again after a round reset. The boss bar reads it.
+- `StageCleared` and `StageFailed` have factories (`CombatEvent.StageCleared(frame, stageId)`, `StageFailed`; Name = the stage id) and are published by `FightSession` when a match ends and it was given a stage id.

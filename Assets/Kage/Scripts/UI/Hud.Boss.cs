@@ -94,6 +94,7 @@ namespace Kage
     public partial class Hud
     {
         BossBar _boss;
+        bool _hintWas;
         readonly List<GameObject> _rightPanel = new();
 
         /// <summary>The boss bar, null until <see cref="BindBoss"/>.</summary>
@@ -128,7 +129,7 @@ namespace Kage
                 Place(m.rectTransform, anchor, new Vector2((at - 0.5f) * (BossBar.Width - 8f) + 8f, 54), new Vector2(4f, 38f));
             }
 
-            var numerals = MakeText("Numerals", root, 22, TextAnchor.MiddleLeft, Color.white, anchor, new Vector2(-BossBar.Width / 2f + 120f, 118), new Vector2(240, 30), true);
+            var numerals = MakeText("Numerals", root, 28, TextAnchor.MiddleLeft, Color.white, anchor, new Vector2(-BossBar.Width / 2f + 120f, 118), new Vector2(240, 30), true);
             numerals.supportRichText = true;
             var title = MakeText("Title", root, 22, TextAnchor.MiddleRight, KMath.Hex("#E6B0A8"), anchor, new Vector2(BossBar.Width / 2f - 200f, 118), new Vector2(400, 30), false);
             var name = MakeText("Name", root, 40, TextAnchor.MiddleCenter, Color.white, anchor, new Vector2(0, 94), new Vector2(700, 50), true);
@@ -139,6 +140,8 @@ namespace Kage
 
             _boss = new BossBar(this, root, boss, def, events, name, title, numerals, phaseName, hp, trail, marks);
             HideRightPanel();
+            _hintWas = _hint.gameObject.activeSelf;
+            _hint.gameObject.SetActive(false);       // the dev arena's key hint sits where the boss bar's left end is
             return _boss;
         }
 
@@ -150,6 +153,7 @@ namespace Kage
             _boss = null;
             foreach (var g in _rightPanel) if (g != null) g.SetActive(true);
             _rightPanel.Clear();
+            _hint.gameObject.SetActive(_hintWas);
         }
 
         void HideRightPanel()
