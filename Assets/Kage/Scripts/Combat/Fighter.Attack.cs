@@ -87,6 +87,7 @@ namespace Kage
             _moveTime += rate;
             moveFrame = Mathf.FloorToInt(_moveTime + 1e-4f);
             int f = moveFrame;
+            if (BraceStep(m)) return;                             // a rush onto a braced spear sets off the thrust (SAN-106)
 
             // chains / cancels
             if (_bufferAge <= 10 && _buffer != Btn.None && f >= m.cancelFrom && m.chain.TryGetValue(_buffer, out var next) && (next = Armed(next)) != null)

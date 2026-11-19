@@ -107,6 +107,24 @@ namespace Kage
             EffectCues.Play(id, at, new CueArgs { owner = this, dir = new Vector2(facing, 0f), scale = 1f });
         }
 
+        // ---- SAN-106 (Shiden): the brace ----
+        /// <summary>
+        /// A move with a brace (<see cref="MoveDef.braceFrom"/>, Shiden's Braced Spear): while the brace is held, a current target in front
+        /// of the fighter, within the trigger distance and rushing in (<see cref="MoveDef.braceWhen"/>), sets off the answer at once (the
+        /// thrust). True when it did.
+        /// </summary>
+        bool BraceStep(MoveDef m)
+        {
+            if (m.braceAnswer == null || m.braceTo < m.braceFrom || !Touches(m.braceFrom, m.braceTo)) return false;
+            var t = opponent;
+            if (t == null || t.state == FState.KO) return false;
+            float dx = t.Pos.x - Pos.x;
+            if (Mathf.Sign(dx) != facing || Mathf.Abs(dx) >= m.braceTrigger) return false;
+            if (m.braceWhen != null && !m.braceWhen(this, t)) return false;
+            StartMove(m.braceAnswer);
+            return true;
+        }
+
         /// <summary>After root motion: a move with a wall stagger that drove the fighter into the wall it faces staggers it. True when it did.</summary>
         bool RanIntoWall(MoveDef m, bool driven)
         {

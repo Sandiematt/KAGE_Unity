@@ -30,6 +30,8 @@ namespace Kage
         public float shake = 0.12f;
         /// <summary>Multiplies the posture this window adds (ADR-0006; posture itself is SAN-86). Raikō no Tachi is the highest.</summary>
         public float postureMul = 1f;
+        /// <summary>Every hit of this window is a critical, no roll (SAN-106: Shiden's braced thrust, the JS counter-hit critical).</summary>
+        public bool critical;
     }
 
     /// <summary>A key of a move's blade extension curve (<see cref="MoveDef.Extend"/>).</summary>
@@ -117,6 +119,17 @@ namespace Kage
         /// <summary>Effect cues (ADR-0007) the move plays on a frame where the fighter stands (Kocho's glint).</summary>
         public readonly List<(int frame, string cue)> cues = new();
 
+        // ---- the brace (SAN-106, Shiden; Fighter.MoveHooks.cs). Off by default. ----
+        /// <summary>
+        /// A brace (Shiden's Braced Spear): on any frame from <see cref="braceFrom"/> to <see cref="braceTo"/>, a current target in front
+        /// within <see cref="braceTrigger"/> metres for which <see cref="braceWhen"/> holds (rushing in) sets off <see cref="braceAnswer"/>,
+        /// played in place at once. Unlike a counter window it reads the target's approach, not a blow. -1: no brace.
+        /// </summary>
+        public int braceFrom = -1, braceTo = -1;
+        public float braceTrigger;
+        public MoveDef braceAnswer;
+        public System.Func<Fighter, Fighter, bool> braceWhen;
+
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
         public MoveDef Key(int frame, Pose p, Ease e = Ease.OutQuad)
@@ -190,6 +203,12 @@ namespace Kage
         public MoveDef Throw(int frame, ProjectileDef def, Vector2 from) { projectileFrame = frame; projectile = def; projectileFrom = from; return this; }
         /// <summary>Plays effect cue <paramref name="id"/> on <paramref name="frame"/> (SAN-105).</summary>
         public MoveDef Cue(int frame, string id) { cues.Add((frame, id)); return this; }
+        /// <summary>A brace from <paramref name="from"/> to <paramref name="to"/> (SAN-106; see <see cref="braceFrom"/>).</summary>
+        public MoveDef Brace(int from, int to, float trigger, MoveDef answer, System.Func<Fighter, Fighter, bool> when)
+        {
+            braceFrom = from; braceTo = to; braceTrigger = trigger; braceAnswer = answer; braceWhen = when;
+            return this;
+        }
         /// <summary>After a confirmed hit, jumping cancels the move's recovery from this frame (chase a launch).</summary>
         public MoveDef JumpCancel(int from) { jumpCancelFrom = from; return this; }
         public MoveDef Sword() { swordFront = true; return this; }

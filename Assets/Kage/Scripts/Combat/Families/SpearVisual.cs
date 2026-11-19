@@ -6,7 +6,7 @@ namespace Kage
     /// <summary>
     /// Draws the spear family's weapon on the Sword bone in place of the part set's katana (SAN-78): a long shaft
     /// with the lead hand a little ahead of its middle, a butt spike, a head, and the look of the weapon: Mizuchi's
-    /// wave-banded lacquer shaft and kris head in a dragon collar, the Order's leaf-headed spear, Shiden's red-tasselled
+    /// wave-banded lacquer shaft and kris head in a dragon collar, the Order's leaf-headed spear, Shiden's violet-tasselled
     /// yari, or a plain staff (Kuroe's temple staff, the sage staff) with no head. Axis frame: x along the shaft from
     /// the lead hand's grip, so the head ends at the family's blade length.
     /// </summary>
@@ -26,8 +26,8 @@ namespace Kage
             {
                 case "sentinel_spear":
                     return new Look { head = Head.Leaf, shaft = KMath.Hex("#2b2a2e"), band = KMath.Hex("#c9a45c"), glow = KMath.Hex("#e8d29a"), fitting = KMath.Hex("#8f8a82"), tassel = KMath.Hex("#8c3b3b") };
-                case "vanguard_yari":
-                    return new Look { head = Head.Yari, shaft = KMath.Hex("#241b1b"), band = KMath.Hex("#8c2f26"), glow = KMath.Hex("#ff6a52"), fitting = KMath.Hex("#6c6a70"), tassel = KMath.Hex("#d9402e") };
+                case "vanguard_yari":   // Shiden's (SAN-106, the JS shiden/weapon.js): a black lacquered shaft banded violet, iron fittings, a violet tassel
+                    return new Look { head = Head.Yari, shaft = KMath.Hex("#111114"), band = KMath.Hex("#714fa3"), glow = KMath.Hex("#e4d6ff"), fitting = KMath.Hex("#6c7076"), tassel = KMath.Hex("#b07cff") };
                 case "temple_staff":    // Kuroe's (SAN-103, the JS kuroe/weapon.js): dark wood, gold bands, iron caps, a black ink-brush tassel
                     return new Look { head = Head.None, shaft = KMath.Hex("#3a2c20"), band = KMath.Hex("#c9a45c"), glow = KMath.Hex("#ecd9a8"), fitting = KMath.Hex("#4a4f57"), tassel = KMath.Hex("#0b0a0a") };
                 case "sage_staff":

@@ -74,7 +74,7 @@ namespace Kage
         /// 100), so a guard that holds in the JS holds here. A guarded hit adds damage × <see cref="GuardTuning.blockPostureFactor"/> × postureMul
         /// of Kage's <see cref="CharacterDef.postureMax"/> (the default, 60).
         /// </summary>
-        static float PostureMul(double gb, int unityDmg) =>
+        public static float PostureMul(double gb, int unityDmg) =>
             (float)(gb / JsGuardMax * new CharacterDef().postureMax / (unityDmg * Tuning.Get<GuardTuning>().blockPostureFactor));
 
         static AbilityDef Def(string id, MoveDef move)
