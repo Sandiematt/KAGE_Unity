@@ -42,6 +42,8 @@ namespace Kage.Tests
         public readonly StretchSession Session;
         public readonly StretchRoad Road;
         public readonly RoadWalker Walker;
+        /// <summary>The tutorial prompts of the road (SAN-96), when built with <c>tutorial: true</c>; else null.</summary>
+        public readonly StretchTutorial Tutorial;
         readonly List<string> _frames = new();
 
         /// <summary>Kage hits hard and lasts (as in the group-fight tests), so a long run reaches its end without him going down first.</summary>
@@ -54,7 +56,10 @@ namespace Kage.Tests
         }
 
         /// <param name="rig">With a camera rig the road is drawn too (review sheets); without, it is the floor only.</param>
-        public StretchFight(int seed, StretchData data, CharacterDef kageDef = null, float aiLevel = 0.9f, float foeLevel = 0.6f, CameraRig rig = null)
+        /// <param name="kageInput">Drives Kage instead of the <see cref="RoadWalker"/> (SAN-96: the Prologue's scripted Kage); the walker is still built.</param>
+        /// <param name="tutorial">Builds the road's tutorial prompts (<see cref="StretchTutorial"/>) too.</param>
+        public StretchFight(int seed, StretchData data, CharacterDef kageDef = null, float aiLevel = 0.9f, float foeLevel = 0.6f, CameraRig rig = null,
+            Func<StretchFight, IInputSource> kageInput = null, bool tutorial = false)
         {
             Root = new GameObject("StretchFight");
             var b = new FightBuilder(Root.transform, seed, manualClock: true);
@@ -66,6 +71,8 @@ namespace Kage.Tests
             Log = new CombatEventLog(Ctx.Events);
             Session = new StretchSession(Ctx, b, data, Kage, foeInput: _ => new AIInputSource { level = foeLevel });
             Walker.Session = Session;
+            if (tutorial) Tutorial = new StretchTutorial(Ctx, Session, Kage);
+            if (kageInput != null) Kage.input = kageInput(this);
             Road.Bind(Session);
             Ctx.Begin();
             Session.Begin();
@@ -129,6 +136,7 @@ namespace Kage.Tests
 
         public void Dispose()
         {
+            Tutorial?.Dispose();
             Session.Dispose();
             Road.Dispose();
             Log.Dispose();

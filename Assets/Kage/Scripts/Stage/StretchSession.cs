@@ -59,7 +59,7 @@ namespace Kage
         readonly List<SpawnRecord> _spawned = new();
         readonly HashSet<string> _warned = new();
 
-        sealed class Foe { public Fighter fighter; public int koFrame = -1; }
+        sealed class Foe { public Fighter fighter; public int koFrame = -1; public bool extra; }
 
         int _cleared, _enc = -1, _wave = -1, _waveNumber, _next;
         bool _waveLive, _begun;
@@ -300,10 +300,39 @@ namespace Kage
             return def ?? CharacterCatalog.Get(FallbackFoeId);
         }
 
+        /// <summary>
+        /// Puts a foe on the road that is not part of any wave (SAN-96: the Prologue's practice partner). It is an ordinary fighter on
+        /// team 1 and appears in <see cref="Foes"/> (so the host hooks and draws it), but it is not counted by <see cref="FoesLeft"/> or
+        /// by a wave's clear, and is not in <see cref="Spawned"/>. Remove it with <see cref="DismissExtra"/>.
+        /// </summary>
+        public Fighter SpawnExtra(CharacterDef def, IInputSource input, float x, float facing)
+        {
+            var f = _builder.Spawn(def, 1, input);
+            f.ResetForRound(x, facing);
+            f.BeginFight();
+            _foes.Add(new Foe { fighter = f, extra = true });
+            return f;
+        }
+
+        /// <summary>Takes a foe from <see cref="SpawnExtra"/> off the road at once.</summary>
+        public void DismissExtra(Fighter f)
+        {
+            for (int i = _foes.Count - 1; i >= 0; i--)
+            {
+                if (_foes[i].fighter != f) continue;
+                _foes.RemoveAt(i);
+                break;
+            }
+            if (f == null) return;
+            f.Dismiss();
+            _ctx.Fighters.Remove(f);
+            Object.Destroy(f.gameObject);
+        }
+
         int LiveFoes()
         {
             int n = 0;
-            foreach (var f in _foes) if (f.fighter != null && f.fighter.state != FState.KO) n++;
+            foreach (var f in _foes) if (!f.extra && f.fighter != null && f.fighter.state != FState.KO) n++;
             return n;
         }
 

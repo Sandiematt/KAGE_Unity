@@ -27,6 +27,13 @@ namespace Kage
         /// <summary>The road of the stretch in play.</summary>
         public StretchRoad Road { get; private set; }
 
+        /// <summary>The tutorial prompts of the road in play (SAN-96: the Prologue), null when the road has none.</summary>
+        public StretchTutorial Tutorial { get; private set; }
+        readonly InputDeviceTracker _device = new();
+        bool _tutorialHold;
+        /// <summary>The title card's length in seconds (SAN-96): a road with tutorial prompts keeps Kage still for it.</summary>
+        public const float TitleCardSeconds = 2.4f;
+
         readonly HashSet<Fighter> _hooked = new();
         readonly Dictionary<Fighter, Transform> _stretchShadows = new();
         bool _stretchEnded;
@@ -81,8 +88,31 @@ namespace Kage
             Stretch.Begin();
             Cam.Snap();
             Hud.SetTraining("");
-            Hud.Announce(data.Name != null ? data.Name.ToUpperInvariant() : "STRETCH", Palette.TrimBright, 1.6f);
+            // the plain title card opens the stage (SAN-96); a road with prompts keeps Kage still until it has gone
+            Hud.TitleCard((string.IsNullOrEmpty(data.ChapterName) ? "Dev" : data.ChapterName) + " · Stretch", data.Name ?? "Stretch", null, TitleCardSeconds);
+            if (data.Prompts.Length > 0)
+            {
+                Tutorial = new StretchTutorial(Fight, Stretch, player);
+                Tutorial.PromptCleared += _ => Audio.Play(SfxKind.Counter, 0.35f);
+                player.controlEnabled = false;
+                _tutorialHold = true;
+            }
             Audio.Play(SfxKind.Gong, 0.6f);
+        }
+
+        /// <summary>Update in stretch mode: the prompt slip follows the tutorial and the last device used, and the title card releases Kage.</summary>
+        void UpdateTutorialHud()
+        {
+            if (_tutorialHold && !Hud.TitleCardShowing)
+            {
+                _tutorialHold = false;
+                if (!_stretchEnded) player.controlEnabled = true;
+            }
+            var t = Tutorial;
+            if (t == null) return;
+            t.Device = _device.Poll();
+            Vector2 head = player.Pos + Vector2.up * 2.3f;
+            Hud.SetPrompt(_tutorialHold ? null : t.NowView(), t.DoneView(), head);
         }
 
         /// <summary>Update in stretch mode (the duel's round logic doesn't run).</summary>
@@ -111,6 +141,7 @@ namespace Kage
             var target = player.opponent != null && player.opponent.state != FState.KO ? player.opponent : null;
             string name = target != null ? target.Character.displayName.ToUpperInvariant() : "";
             if (name != _stretchTarget) { _stretchTarget = name; Hud.SetNames("KAGE  影", name); }
+            UpdateTutorialHud();
             Hud.Tick(player, target, 0f, 1, false);
 
             ResetComboIfRecovered(player, player.opponent);
