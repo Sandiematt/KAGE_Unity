@@ -38,6 +38,7 @@ namespace Kage
             _guardHeld = held;
             if (press) _sinceGuardPress = 0;
             else if (_sinceGuardPress < 9999) _sinceGuardPress++;
+            ParryTick(press);
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace Kage
             return true;
         }
 
-        /// <summary>Declared by SAN-86; implemented by SAN-91 (Fighter.Parry.cs). Defence step 5 (ADR-0004), before the guard.</summary>
+        /// <summary>Declared by SAN-86; implemented by SAN-91 in Fighter.Parry.cs. Defence step 5 (ADR-0004), before the guard.</summary>
         partial void ParryCheck(ref DefenceCheck c);
 
         /// <summary>Defence step 5: the parry check. True when it took the hit; <paramref name="result"/> is then its result.</summary>

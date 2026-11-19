@@ -1,0 +1,23 @@
+{
+    "windowFrames": 8,
+    "lockoutFrames": 20,
+    "parryProjectiles": false,
+    "regularStaggerFrames": 57,
+    "subStaggerFrames": 37,
+    "bossStaggerFrames": 30,
+    "playerStaggerFrames": 28,
+    "regularPostureShare": 0.55,
+    "subPostureShare": 0.34,
+    "bossPostureShare": 0.26,
+    "playerPostureShare": 0.3,
+    "stunResistFactor": 0.5,
+    "pushback": 2.4,
+    "meterGain": 14.0,
+    "playerHitstopFrames": 12,
+    "foeHitstopFrames": 8,
+    "shake": 0.35,
+    "flashTint": { "r": 1.0, "g": 0.89, "b": 0.66, "a": 0.35 },
+    "flashSeconds": 0.18,
+    "sparkTint": { "r": 1.0, "g": 0.89, "b": 0.66, "a": 1.0 },
+    "sparks": 18
+}

@@ -85,6 +85,11 @@ namespace Kage
         public string aiProfile;
         /// <summary>How often the AI throws an attack it has chosen, 0..1 (1 = the profile as is). The tutorial Hollow uses 0.3. SAN-95's per-profile tuning builds on it.</summary>
         public float attackRate = 1f;
+        /// <summary>
+        /// The share of the attacks the AI guards that it tries to parry, 0..1 (SAN-91). 0 (the default) never parries; the JS profiles' <c>parry</c> numbers
+        /// (regular 0.06, defensive 0.16, boss 0.12) are for SAN-95's per-profile tuning to set. A parry attempt presses Guard half a parry window before the blow.
+        /// </summary>
+        public float parryRate;
         /// <summary>Ability ids this character may use, in slot order (ADR-0008).</summary>
         public List<string> abilities = new();
         /// <summary>BossDef id when the character has phases (ADR-0008); else null.</summary>

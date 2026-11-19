@@ -20,7 +20,14 @@ namespace Kage
         public float attackRate = 1f;
 
         /// <summary>Takes the character's AI knobs (ADR-0005): <see cref="CharacterDef.attackRate"/>. Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.</summary>
-        public void Configure(CharacterDef def) { if (def != null) attackRate = def.attackRate; }
+        public void Configure(CharacterDef def) { if (def != null) { attackRate = def.attackRate; parryRate = def.parryRate; } }
+
+        /// <summary>The share of the attacks this AI guards that it tries to parry (<see cref="CharacterDef.parryRate"/>, SAN-91): 0 never, 1 every one it guards.</summary>
+        public float parryRate;
+        /// <summary>True while the guard being held is a parry attempt. A foe's parry only happens then (see Fighter.Parry.cs), so a plain guard that goes up by chance inside the window is only a block.</summary>
+        public bool ParryAttempt { get; private set; }
+        bool _parryTry;
+        int _parryWait;
 
         struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; }
         readonly Queue<Step> _plan = new();
@@ -47,7 +54,7 @@ namespace Kage
 
             // knocked down: mash for a quick kip-up (a waiting foe gets up in its own time: a mashed button would attack)
             if (self.state == FState.Down) { if (!waiting && R() < 0.08f * level) o.p = true; return o; }
-            if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; return o; }
+            if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; _parryTry = ParryAttempt = false; return o; }
 
             // react to the opponent's technique: guard high/low
             if (!passive && _guardFrames <= 0 && opp.IsAttacking && opp.move != null && !self.IsAttacking && self.Grounded)
@@ -59,8 +66,12 @@ namespace Kage
                 if (m.projectileFrame > 0) reach = 9f;
                 if (firstHit < 999 && dist < reach && R() < Mathf.Lerp(0.18f, 0.75f, level))
                 {
-                    _guardFrames = (firstHit - opp.moveFrame) + 10;
+                    int ahead = firstHit - opp.moveFrame;
+                    _guardFrames = ahead + 10;
                     _guardLow = lvl == HitLevel.Low;
+                    // a parry attempt holds the press back until the blow is half a window away (SAN-91); no extra roll when the rate is 0
+                    _parryTry = parryRate > 0f && lvl != HitLevel.Unblockable && R() < parryRate;
+                    _parryWait = _parryTry ? Mathf.Max(0, ahead - Tuning.Get<ParryTuning>().windowFrames / 2) : 0;
                     _plan.Clear(); _curLeft = 0;
                     if (lvl == HitLevel.Unblockable && R() < level) { _guardFrames = 0; Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1); }
                 }
@@ -68,8 +79,11 @@ namespace Kage
             if (_guardFrames > 0)
             {
                 _guardFrames--;
-                o.guard = true;                 // the same Guard input the player has; Down makes it a low guard
+                o.guard = _parryWait <= 0;      // the same Guard input the player has; Down makes it a low guard
+                if (_parryWait > 0) _parryWait--;
                 o.dy = _guardLow ? -1 : 0;
+                ParryAttempt = _parryTry;
+                if (_guardFrames == 0) { _parryTry = false; ParryAttempt = false; }
                 if (_guardFrames == 0 && self.state == FState.Blockstun && !waiting) Punish(dist);
                 return o;
             }

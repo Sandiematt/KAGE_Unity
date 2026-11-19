@@ -19,7 +19,12 @@ namespace Kage
         /// <summary>Move, projectile or rage-art id for the event stream; window = index in the move's hits, -1 when not a window.</summary>
         public string moveId;
         public int window;
+        /// <summary>What delivered the hit: a fighter's melee window (the default), a projectile or a hazard. The parry reads it (SAN-91).</summary>
+        public HitOrigin origin;
     }
+
+    /// <summary>Where a <see cref="HitInfo"/> came from (SAN-91): only a melee window staggers its owner when parried.</summary>
+    public enum HitOrigin { Melee, Projectile, Hazard }
 
     /// <summary>Something hits can land on: a fighter or a prop. Its hurt circles are <see cref="Hurtbox"/>es.</summary>
     public interface IHittable

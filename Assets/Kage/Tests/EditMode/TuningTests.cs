@@ -54,6 +54,22 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void TheShippedParryTuningIsTheSpecsParryNumbers()
+        {
+            // parry.json (SAN-91): the file and the in-code defaults agree, and they are the spec's and the JS game's numbers
+            var file = Tuning.Get<ParryTuning>();
+            var code = new ParryTuning();
+            Assert.AreEqual(JsonUtility(code), JsonUtility(file), "parry.json matches the ParryTuning defaults");
+            Assert.AreEqual(8, file.windowFrames, "about 8 frames (the JS game's 0.15 s is frames 0 to 8)");
+            Assert.AreEqual(20, file.lockoutFrames, "about 0.33 s");
+            Assert.AreEqual(30, file.bossStaggerFrames, "about 0.5 s (the JS boss's 0.5 s)");
+            Assert.AreEqual(57, file.regularStaggerFrames, "the JS regular foe's 0.95 s");
+            Assert.AreEqual(0.55f, file.regularPostureShare, "the JS 55 of 100 posture");
+            Assert.AreEqual(14f, file.meterGain, "the JS game's +14 Rage");
+            Assert.IsFalse(file.parryProjectiles, "the JS game blocks projectiles, it doesn't parry them");
+        }
+
+        [Test]
         public void TheShippedEngagementTuningIsTheJsGroupFightNumbers()
         {
             // engagement.json (SAN-83): the file and the in-code defaults agree, and they are the JS stretch numbers
