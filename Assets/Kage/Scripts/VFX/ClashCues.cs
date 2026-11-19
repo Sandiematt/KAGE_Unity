@@ -25,7 +25,7 @@ namespace Kage
                 {
                     float ang = Random.Range(-70f, 70f);
                     Vector2 dir = KMath.Dir(side > 0 ? ang : 180f - ang);
-                    Vfx.I.Spark(pos, dir * Random.Range(t.sparkSpeedMin, t.sparkSpeedMax) + Vector2.up * 1.5f, t.sparkTint, Random.Range(0.025f, 0.05f), t.sparkLife * Random.Range(0.7f, 1.2f));
+                    Vfx.I.Spark(pos, dir * Random.Range(t.sparkSpeedMin, t.sparkSpeedMax) + Vector2.up * 1.5f, t.sparkTint, t.sparkSize * Random.Range(0.6f, 1f), t.sparkLife * Random.Range(0.7f, 1.2f));
                 }
             KageGame.I?.Audio?.Play(SfxKind.Block, t.soundVolume);
         }

@@ -28,6 +28,8 @@ namespace Kage
         public float sparkSpeedMin = 3f;
         public float sparkSpeedMax = 9f;
         public float sparkLife = 0.35f;
+        /// <summary>Spark size (m, a thin streak) at its biggest; each spark is 60 to 100 % of it.</summary>
+        public float sparkSize = 0.06f;
         /// <summary>The four-point flare's size (m) and the ring's end radius (m).</summary>
         public float flareSize = 0.6f;
         public float ringRadius = 0.55f;

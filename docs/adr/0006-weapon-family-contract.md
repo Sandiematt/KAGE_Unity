@@ -207,3 +207,10 @@ With every multiplier at 1 and defence 0 this is exactly today's damage (`RoundT
 - Kage's defence and damage multiplier come from his gear and level through character data (`KageCharacter.Def(save)`, ADR-0005 notes): `defense` is helmet plus armour capped at 0.5, `damageMul` is `(1 + 0.012 x (player level - 1)) x (1 + dmg perk)`, and the weapon's multiplier is `WeaponStats.Combat(weaponId, weaponLevel)` as before. Nothing in the formula changed for them.
 - `DamageCalc.Damage` and `DamageCalc.For` gained an optional `extraMul` (default 1f, so every existing call is bit-for-bit as before). A projectile passes its owner's `ProjectileDamageMul(def)`: the kunai perk's multiplier for the kunai, 1 for everything else. It sits inside the single rounding.
 - Level 8 Kagetsu is x1.56 damage, x1.175 move rate and x1.105 reach; a test (`GearInCombatTests`) shows the Iai Draw hits for more than at level 1 through a save's loadout.
+
+## Notes from the implementation (SAN-93: clash)
+
+- **Clash eligibility as built:** `ClashGeometry.CollectBlades` turns a window's `HitPoint.Blade` and `HitPoint.BladeN` samples into blade runs; nothing else is ever a blade. A twin window gives two runs (far blade, near blade), so the near blade clashes on its own: a twin blade cut crossing a spear's thrust with only its `BladeN` line clashes (tested, `WeaponClashTests`; `ClashGeometryTests` for the splitting). The chain lash is part of the Blade line (`BladeExtension`), so it clashes at a range the unextended blade could not reach: a lash against a katana at 2.0 m clashes (tested). The fists family has no `Blade` point: fists against a katana never clash (tested), nor do the kicks or pommel strikes of any family.
+- **What the families do in a clash:** every move in `Blade`-pointed windows is eligible; the move is over and the fighter recoils into hitstun whatever its armour frames. Hit points are lines, so the weapon's `reach` multiplier (which lengthens the blade line) also lengthens what it can clash with.
+- Numbers are in `clash.json` (ADR-0004 notes), none in a family.
+
