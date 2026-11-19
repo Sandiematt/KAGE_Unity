@@ -18,7 +18,7 @@ namespace Kage
             partSet = "ronin",
             colors = new FighterColors(Palette.Amber, KMath.Hex("#FFF2D6"), Palette.AmberDeep),
             family = "katana",
-            aiProfile = "regular",
+            aiProfile = AiProfiles.LegacyId,      // the pre-SAN-95 utility AI, so the baseline replay and the dev arena are unchanged
         };
     }
 }

@@ -19,9 +19,9 @@ namespace Kage
         /// dx is relative to the fighter's facing. Buttons P, K, S and X are pressed on the step's first frame; G (Guard) is
         /// held for the whole step and pressed on its first frame (ADR-0004). <paramref name="dash"/> presses Dash on the first frame.
         /// </summary>
-        public ScriptedInput Add(int frames, int fwd = 0, int dy = 0, string buttons = "", bool tapFwd = false, bool tapBack = false, bool dash = false)
+        public ScriptedInput Add(int frames, int fwd = 0, int dy = 0, string buttons = "", bool tapFwd = false, bool tapBack = false, bool dash = false, int ability = 0)
         {
-            var f = new FrameInput { dx = fwd, dy = dy, p = buttons.Contains("P"), k = buttons.Contains("K"), s = buttons.Contains("S"), x = buttons.Contains("X"), dash = dash };
+            var f = new FrameInput { dx = fwd, dy = dy, p = buttons.Contains("P"), k = buttons.Contains("K"), s = buttons.Contains("S"), x = buttons.Contains("X"), dash = dash, ability = ability };
             f.guard = f.guardPressed = buttons.Contains("G");
             f.tapRight2 = tapFwd; f.tapLeft2 = tapBack;
             _q.Enqueue(new Step { frames = frames, input = f });
@@ -50,7 +50,7 @@ namespace Kage
                 if (tf) { if (face > 0) o.tapRight2 = true; else o.tapLeft2 = true; }
                 if (tb) { if (face > 0) o.tapLeft2 = true; else o.tapRight2 = true; }
             }
-            else { o.p = o.k = o.s = o.x = o.dash = o.guardPressed = false; }
+            else { o.p = o.k = o.s = o.x = o.dash = o.guardPressed = false; o.ability = 0; }
             return o;
         }
     }

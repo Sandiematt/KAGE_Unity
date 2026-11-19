@@ -77,6 +77,7 @@ namespace Kage
         {
             if (ctx == null || ctx.Engagement.MayAttack(this)) return;
             inp.p = inp.k = inp.s = inp.x = false;
+            inp.ability = 0;                 // an ability is an attack (SAN-95)
         }
     }
 }

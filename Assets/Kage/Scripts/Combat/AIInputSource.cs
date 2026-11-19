@@ -12,24 +12,36 @@ namespace Kage
     /// In a group fight a foe the engagement manager hasn't engaged waits its turn instead (SAN-83, <see cref="WaitTurn"/>):
     /// it keeps <see cref="EngagementTuning.waitDistance"/> from its target and circles, guards as usual, and never attacks.
     /// </summary>
-    public class AIInputSource : IInputSource
+    public partial class AIInputSource : IInputSource
     {
-        public float level = 0.6f;     // 0 easy … 1 hard
+        public float level = 0.6f;     // 0 easy … 1 hard: the stage's difficulty; the profile's own numbers at the default 0.6
         public bool passive;           // training: just stands and guards sometimes
         /// <summary>How often a chosen attack is actually thrown (<see cref="CharacterDef.attackRate"/>): 1 is the profile as is, 0.3 holds back seven times in ten.</summary>
         public float attackRate = 1f;
 
-        /// <summary>Takes the character's AI knobs (ADR-0005): <see cref="CharacterDef.attackRate"/>. Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.</summary>
-        public void Configure(CharacterDef def) { if (def != null) { attackRate = def.attackRate; parryRate = def.parryRate; } }
+        /// <summary>
+        /// Takes the character's AI knobs (ADR-0005): its <see cref="CharacterDef.aiProfile"/> (<see cref="AiProfiles"/>), <see cref="CharacterDef.attackRate"/>
+        /// and the parry rate (the character's own when it sets one, else the profile's). Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.
+        /// </summary>
+        public void Configure(CharacterDef def)
+        {
+            if (def == null) return;
+            profile = AiProfiles.Get(def.aiProfile);
+            attackRate = def.attackRate;
+            parryRate = def.parryRate > 0f ? def.parryRate : (profile != null ? profile.parryRate : 0f);
+        }
 
-        /// <summary>The share of the attacks this AI guards that it tries to parry (<see cref="CharacterDef.parryRate"/>, SAN-91): 0 never, 1 every one it guards.</summary>
+        /// <summary>
+        /// The share of the attacks this AI guards that it tries to parry (<see cref="CharacterDef.parryRate"/>, SAN-91): 0 never, 1 every one it guards.
+        /// With a <see cref="profile"/> (SAN-95) it is the chance per attack, the JS <c>parry</c> number, and it comes from the profile unless the character sets its own.
+        /// </summary>
         public float parryRate;
         /// <summary>True while the guard being held is a parry attempt. A foe's parry only happens then (see Fighter.Parry.cs), so a plain guard that goes up by chance inside the window is only a block.</summary>
         public bool ParryAttempt { get; private set; }
         bool _parryTry;
         int _parryWait;
 
-        struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; }
+        struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; public int ability; public bool dash; }
         readonly Queue<Step> _plan = new();
         Step _cur;
         int _curLeft, _think, _guardFrames;
@@ -56,8 +68,9 @@ namespace Kage
             if (self.state == FState.Down) { if (!waiting && R() < 0.08f * level) o.p = true; return o; }
             if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; _parryTry = ParryAttempt = false; return o; }
 
-            // react to the opponent's technique: guard high/low
-            if (!passive && _guardFrames <= 0 && opp.IsAttacking && opp.move != null && !self.IsAttacking && self.Grounded)
+            // react to the opponent's technique: guard high/low (a profile answers once per attack on its own rates, AIInputSource.Profile.cs)
+            if (Profiled) { if (!passive) ReactProfiled(self, opp, dist); }
+            else if (!passive && _guardFrames <= 0 && opp.IsAttacking && opp.move != null && !self.IsAttacking && self.Grounded)
             {
                 var m = opp.move;
                 int firstHit = 999; HitLevel lvl = HitLevel.Mid;
@@ -105,7 +118,7 @@ namespace Kage
             }
 
             // continue combos on confirmed hits
-            if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && R() < Mathf.Lerp(0.25f, 0.85f, level) * attackRate)
+            if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && ChainRoll())
             {
                 var keys = new List<Btn>(self.move.chain.Keys);
                 Btn b = keys[N(keys.Count)];
@@ -116,7 +129,13 @@ namespace Kage
             if (_curLeft <= 0)
             {
                 if (_plan.Count > 0) { _cur = _plan.Dequeue(); _curLeft = _cur.frames; }
-                else if (--_think <= 0 && !self.Busy) { Decide(self, opp, dist); Restrain(dist); _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level)) + N(6); }
+                else if (Profiled && !self.Busy && PunishOpening(self, opp, dist)) { }
+                else if (--_think <= 0 && !self.Busy)
+                {
+                    if (Profiled) DecideProfiled(self, opp, dist); else Decide(self, opp, dist);
+                    Restrain(dist);
+                    _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level) * ThinkMul) + N(6);
+                }
             }
             if (_curLeft > 0)
             {
@@ -125,6 +144,8 @@ namespace Kage
                 o.dx = (int)(_cur.fwd * face);
                 o.dy = _cur.dy;
                 if (first && _cur.btn != Btn.None) Press(ref o, _cur.btn);
+                if (first && _cur.ability > 0) o.ability = _cur.ability;      // an ability slot is pressed like a button (SAN-95)
+                if (first && _cur.dash) o.dash = true;
                 if (first && _cur.tap)
                 {
                     bool right = _cur.tapDir * face > 0;
@@ -177,9 +198,9 @@ namespace Kage
             switch (b) { case Btn.P: o.p = true; break; case Btn.K: o.k = true; break; case Btn.S: o.s = true; break; case Btn.X: o.x = true; break; }
         }
 
-        void Enqueue(int frames, int fwd, int dy, Btn b, bool tap = false, int tapDir = 0)
+        void Enqueue(int frames, int fwd, int dy, Btn b, bool tap = false, int tapDir = 0, int ability = 0, bool dash = false)
         {
-            _plan.Enqueue(new Step { frames = frames, fwd = fwd, dy = dy, btn = b, tap = tap, tapDir = tapDir });
+            _plan.Enqueue(new Step { frames = frames, fwd = fwd, dy = dy, btn = b, tap = tap, tapDir = tapDir, ability = ability, dash = dash });
         }
 
         /// <summary>
@@ -198,9 +219,8 @@ namespace Kage
 
         void Punish(float dist)
         {
-            if (R() > level * attackRate) return;
-            if (dist < 0.85f) Enqueue(2, 0, 0, Btn.P);
-            else if (dist < 1.3f) Enqueue(2, 0, 0, Btn.S);
+            if (R() > PunishChance()) return;
+            QuickAttack(dist);
         }
 
         void Decide(Fighter self, Fighter opp, float dist)
