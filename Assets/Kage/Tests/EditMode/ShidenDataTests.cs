@@ -160,7 +160,7 @@ namespace Kage.Tests
             var m = Ability("vanguardBreak").move;
             Assert.IsNotNull(m);
             var slam = m.hits.Single();
-            Assert.AreEqual(39, slam.from, "the spear lands on frame 40: 0.68 x Normal 1 x the sub-boss role's 0.98 = 0.666 s");
+            Assert.AreEqual(40, slam.from, "the spear lands on frame 40: 0.68 x Normal 1 x the sub-boss role's 0.98 = 0.666 s");
             Assert.AreEqual(85, m.total, "the wind-up + the JS 0.75 s");
             Assert.AreEqual(12, slam.dmg, "19 x the variant's 0.8 = 15.2 JS, x 0.8");
             Assert.AreEqual(HitLevel.Overhead, slam.level);
@@ -172,7 +172,7 @@ namespace Kage.Tests
             var h = m.hazard;
             Assert.IsNotNull(h, "the shockwave is a hazard (ADR-0007)");
             Assert.AreEqual(1, m.hazardFrame, "laid with the wind-up: the ground mark shows through it");
-            Assert.AreEqual(38, h.telegraphFrames, "...and strikes with the slam");
+            Assert.AreEqual(39, h.telegraphFrames, "...and strikes with the slam");
             var shock = Kage.Rules.JsTables.Projectile("shock");
             Assert.AreEqual(Mathf.RoundToInt((float)(shock.Life * 0.5 * 60)), h.strikeFrames, "the JS shockwave's life x the variant's 0.5");
             float run = (float)(shock.Speed * shock.Life * 0.5);

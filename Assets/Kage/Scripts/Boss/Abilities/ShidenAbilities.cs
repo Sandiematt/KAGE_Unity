@@ -134,11 +134,11 @@ namespace Kage
         static MoveDef VanguardBreak(JsBossAbility js, float scale)
         {
             int land = Frames(js.Windup * GaranAbilities.Windup);       // 40: the point reaches the floor
-            int slam = land - 1;                                        // the first frame of the blow, and of the shock
+            int slam = land;                                            // the first frame of the blow (the point in the ground: the JS reach), and of the shock
             int total = land + Frames(GaranAbilities.StormBreakRecovery);
             var overhead = Hold(P().Hip(-0.06f, -0.1f, 8f).Chest(16f).Head(-10f).Feet(0.34f, -0.32f), 0.1f, 1.98f, -24f);
             var higher = Hold(P().Hip(-0.08f, -0.08f, 10f).Chest(20f).Head(-12f).Feet(0.34f, -0.32f), 0.04f, 2.06f, -20f);
-            var down = Hold(P().Hip(0.12f, -0.42f, -10f).Chest(-44f).Head(22f).Feet(0.48f, -0.32f), 0.74f, 0.66f, -36f);
+            var down = Hold(P().Hip(0.12f, -0.42f, -10f).Chest(-44f).Head(22f).Feet(0.48f, -0.32f), 0.6f, 0.7f, -44f);
             double jsSlam = GaranAbilities.StormBreakDmg * js.Dmg;
             var shock = JsTables.Projectile("shock");
             double runPx = shock.Speed * shock.Life * js.ShockLife;     // how far the JS shockwave runs
@@ -159,10 +159,10 @@ namespace Kage
                 .Key(8, overhead, Ease.OutQuad)
                 .Key(land - 4, higher)
                 .Key(land, down, Ease.InCubic)
-                .Key(land + 18, Hold(P().Hip(0.12f, -0.42f, -10f).Chest(-42f).Head(20f).Feet(0.48f, -0.32f), 0.72f, 0.68f, -36f))
+                .Key(land + 18, Hold(P().Hip(0.12f, -0.42f, -10f).Chest(-42f).Head(20f).Feet(0.48f, -0.32f), 0.58f, 0.72f, -44f))
                 .Key(total, Ready(), Ease.InOutQuad)
                 .Hit(slam, slam + 4, new[] { HitPoint.Blade }, Dmg(jsSlam), HitLevel.Overhead, new Vector2(3.3f, 4.0f), stun: 30, hitstop: 12,
-                    shake: 0.5f, knockdown: true, heavy: true, radius: 0.18f, postureMul: HisameAbilities.PostureMul(GaranAbilities.StormBreakGb, Dmg(jsSlam)))
+                    shake: 0.5f, knockdown: true, heavy: true, radius: 0.1f, postureMul: HisameAbilities.PostureMul(GaranAbilities.StormBreakGb, Dmg(jsSlam)))
                 .Armour(0, land)
                 .Hazard(1, hazard, Metres(GaranAbilities.ShockStartPx * scale + runPx / 2))
                 .Fx(land - 8, land - 8, FxKind.Glint)
@@ -259,8 +259,8 @@ namespace Kage
             reach = speed * run / 60f;
             var drawn = Hold(P().Hip(-0.14f, -0.34f, -2f).Chest(-16f).Head(14f).FootN(0.4f, 0.13f).FootF(-0.44f, 0.15f, -25f), -0.12f, 0.84f, 2f);
             var deeper = Hold(P().Hip(-0.16f, -0.36f, -2f).Chest(-18f).Head(15f).FootN(0.4f, 0.13f).FootF(-0.46f, 0.15f, -25f), -0.16f, 0.83f, 2f);
-            var runA = Hold(P().Hip(0.18f, -0.26f, -18f).Chest(-30f).Head(20f).FootN(0.5f, 0.18f).FootF(-0.42f, 0.2f), 0.74f, 0.86f, 2f);
-            var runB = Hold(P().Hip(0.18f, -0.22f, -18f).Chest(-30f).Head(20f).FootN(-0.36f, 0.2f).FootF(0.46f, 0.18f), 0.74f, 0.88f, 2f);
+            var runA = Hold(P().Hip(0.18f, -0.26f, -18f).Chest(-30f).Head(20f).FootN(0.5f, 0.18f).FootF(-0.42f, 0.2f), 0.74f, 0.74f, 0f);
+            var runB = Hold(P().Hip(0.18f, -0.22f, -18f).Chest(-30f).Head(20f).FootN(-0.36f, 0.2f).FootF(0.46f, 0.18f), 0.74f, 0.76f, 0f);
             var m = new MoveDef("shiden.chargingThrust", "Charging Thrust", total)
                 .Key(10, drawn, Ease.OutQuad)
                 .Key(tell - 1, deeper);
