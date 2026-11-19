@@ -290,6 +290,7 @@ namespace Kage
                 if (opponent != null && opponent.AtWall)
                     Knock(new Vector2(KnockVelocity(new Vector2(-facing * 1.6f, 0f)).x, rb.linearVelocity.y));     // recoil off a cornered guard
             }
+            NoteContact(res);
             PublishHit(t, info, res);
             // a guard-break follows the event of the hit that caused it (on the target; on this fighter after a parry)
             (t as Fighter)?.FlushGuardBreak();

@@ -80,6 +80,7 @@ namespace Kage
         {
             var m = move;
             if (m == null) { SetState(FState.Idle); return; }
+            if (ContactFollowUp(m)) return;                       // a blow of a move with onContact landed: its follow-up plays (SAN-104)
             float rate = PlaybackRate;
             _movePrev = moveFrame;
             _moveTicks++;
@@ -113,6 +114,7 @@ namespace Kage
                 rb.linearVelocity = v;
                 driven = true;
             }
+            if (RanIntoWall(m, driven)) return;                   // a charge into the wall it faces staggers (SAN-104)
             if (!driven && Grounded && !m.airborne)
                 rb.linearVelocity = new Vector2(Mathf.MoveTowards(rb.linearVelocity.x, 0f, 16f * Time.fixedDeltaTime), rb.linearVelocity.y);
 
@@ -146,6 +148,7 @@ namespace Kage
             }
 
             if (m.projectileFrame >= 0 && Passed(m.projectileFrame)) { if (IsKunaiThrow(m)) ThrowKunai(); else SpawnCrescent(); }
+            if (m.hazard != null && Passed(m.hazardFrame)) SpawnMoveHazard(m);
             if (m.isThrow) ThrowUpdate();
 
             if (m.airborne && m.endsOnLanding && f > 4 && Grounded) { Landed(); return; }

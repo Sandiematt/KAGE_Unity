@@ -24,6 +24,11 @@ namespace Kage
         public Vector2 range = new(0f, 99f);
         /// <summary>The chance per decision that the AI uses it when it is in range, ready and enabled (JS <c>chance</c>).</summary>
         public float chance = 1f;
+        /// <summary>
+        /// A situation the AI also waits for (self, current target), on top of range, cooldown and phase (SAN-104: Garan clinches only a
+        /// guard, the JS style's <c>when</c>). Null: any. The fighter itself doesn't ask it, so a scripted press starts the ability anyway.
+        /// </summary>
+        public System.Func<Fighter, Fighter, bool> when;
     }
 
     /// <summary>
