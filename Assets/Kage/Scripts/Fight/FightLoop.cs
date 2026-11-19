@@ -25,6 +25,8 @@ namespace Kage
     /// With the legacy switch on, hits resolve inside the attacker's tick instead, as before SAN-65.</item>
     /// <item>Projectiles and hazards: each live <see cref="Projectile"/> moves and casts, each <see cref="Hazard"/>
     /// counts its telegraph or strikes (SAN-75). Both run in play and on a manual clock alike.</item>
+    /// <item>Boss phases (SAN-102): each boss's <see cref="PhaseController"/> opens the phases its health has fallen into and publishes
+    /// <see cref="CombatEventType.BossPhaseChanged"/>; the AI sees the new phase on the next frame's poll.</item>
     /// <item>Push: each fighter puts its push collider on the Push or PushPassThrough layer for this frame
     /// (SAN-68); the physics step that follows keeps fighters apart. Off under the legacy switch.</item>
     /// <item>World time scale: each slowed body's velocity and gravity are scaled for the physics step that follows
@@ -95,6 +97,7 @@ namespace Kage
                     _hazardTmp.AddRange(ctx.Hazards);
                     foreach (var h in _hazardTmp) if (h != null) h.Tick();
                 }
+                foreach (var f in fs) if (Live(f)) f.Phases?.Tick();      // boss phases, after this frame's hits and hazards (SAN-102, ADR-0008)
                 foreach (var f in fs) if (Live(f)) f.SyncPush();
                 foreach (var f in fs) if (Live(f)) f.ScaleWorldTime(clock.ScaleFor(f));
             }

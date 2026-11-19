@@ -206,6 +206,7 @@ namespace Kage
             _runBlend = 0f; _walkHeld = 0f; _dashCool = 0; _jumpBuf = _dashBuf = 99; _prevDy = 0;
             _airJumpUsed = _airDashUsed = false;
             health = maxHealth;
+            Phases?.Reset();                    // a boss starts again from its first phase (SAN-102)
             SetFacing(face, true);
             move = null;
             comboCount = 0;

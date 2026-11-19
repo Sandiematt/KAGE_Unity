@@ -8,8 +8,8 @@ namespace Kage
     /// <para>
     /// This file is the one place a source of armour is added. Today: a move's armour frames
     /// (<see cref="MoveDef.armorFrom"/>..<see cref="MoveDef.armorTo"/>, SAN-80), which ignore light hits (a
-    /// <see cref="HitWindow"/> without <c>heavy</c>). The boss-wide Armour flag (SAN-102) and frontal armour (SAN-98)
-    /// are two more lines in <see cref="ArmourCheck"/>.
+    /// <see cref="HitWindow"/> without <c>heavy</c>), and the character-wide <see cref="CharacterFlags.Armour"/> flag (SAN-102: Ironclad,
+    /// Raikon, a boss phase that adds it), which is the same rule for every frame. Frontal armour (SAN-98) is one more line in <see cref="ArmourCheck"/>.
     /// </para>
     /// </summary>
     public partial class Fighter
@@ -30,6 +30,7 @@ namespace Kage
             if (resistsFlinch || info.w == null) return;
             bool light = !info.w.heavy;
             if (light && MoveArmoured) resistsFlinch = true;          // a move's armour frames (SAN-80)
+            else if (light && Has(CharacterFlags.Armour)) resistsFlinch = true;    // the character-wide flag, from the data or a boss phase (SAN-102)
         }
     }
 }

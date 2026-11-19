@@ -96,6 +96,18 @@ namespace Kage
         public static CombatEvent RageArt(int frame, Fighter source, string moveId) =>
             new(frame, CombatEventType.RageArt, source, null, null, null, moveId);
 
+        /// <summary>The boss <paramref name="boss"/> entered phase <paramref name="index"/> (0 = the first, published when the fight begins); <paramref name="phaseName"/> is the JS phase name (SAN-102).</summary>
+        public static CombatEvent BossPhaseChanged(int frame, Fighter boss, int index, string phaseName) =>
+            new(frame, CombatEventType.BossPhaseChanged, null, boss, null, null, null, index: index, name: phaseName);
+
+        /// <summary>A stage fight ended with Kage the winner; Name = the stage id (SAN-102, FightSession).</summary>
+        public static CombatEvent StageCleared(int frame, string stageId) =>
+            new(frame, CombatEventType.StageCleared, null, null, null, null, null, name: stageId);
+
+        /// <summary>A stage fight ended with Kage beaten; Name = the stage id (SAN-102, FightSession).</summary>
+        public static CombatEvent StageFailed(int frame, string stageId) =>
+            new(frame, CombatEventType.StageFailed, null, null, null, null, null, name: stageId);
+
         /// <summary>
         /// The canonical line: the baseline replay format and every "identical event log" check.
         /// <c>{Frame} {Type} {SourceId}&gt;{TargetId} {MoveId}#{Window} dmg={Damage:0.###} pos={Posture:0.###} crit={0|1} lvl={Level} zone={Zone} i={Index} n={Name}</c>
