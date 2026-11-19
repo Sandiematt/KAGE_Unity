@@ -25,6 +25,8 @@ namespace Kage
         public static readonly Color MaskShade = KMath.Hex("#8E959D");
         public static readonly Color Eye = KMath.Hex("#C4C8CC");
         public static readonly Color Rim = KMath.Hex("#8EA0B6");            // cold back-light
+        public static readonly Color Skin = KMath.Hex("#9A8E82");           // a bare face (the Runner), dulled by the cold light
+        public static readonly Color SkinShade = KMath.Hex("#5F5851");
         public static readonly Color Steel = KMath.Hex("#A5AFBA");          // the Order's plain blades
     }
 }
