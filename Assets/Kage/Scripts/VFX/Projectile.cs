@@ -93,12 +93,19 @@ namespace Kage
 
         void OnDestroy() => Ctx?.Projectiles.Remove(this);
 
-        /// <summary>One fight-loop frame: move, cast, deliver hits, expire. (SAN-92 will scale the step by the world time scale here.)</summary>
+        /// <summary>
+        /// One fight-loop frame: move, cast, deliver hits, expire. Under the world time scale (SAN-92) a projectile its
+        /// owner doesn't keep at full speed moves by s of a frame every frame (smoothly; gravity's pull scales by s² in
+        /// world time), and its <see cref="Age"/> counts only the slowed world's frames, so it flies just as far.
+        /// </summary>
         public void Tick()
         {
             if (_done) return;
-            Age++;
-            float dt = Time.fixedDeltaTime;
+            var clock = Ctx.Clock;
+            float s = clock.ScaleFor(Owner);
+            if (s <= 0f) return;                       // a frozen world holds it in the air
+            if (clock.Advances(Owner)) Age++;
+            float dt = Time.fixedDeltaTime * s;
             Vector2 from = _pos;
             bool falls = Def.gravityScale != 0f && !Def.groundWave;
             if (falls) _vel.y += Physics2D.gravity.y * Def.gravityScale * dt;

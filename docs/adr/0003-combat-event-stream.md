@@ -113,6 +113,12 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 - `HitResult.Parried` and `HitResult.Dodged` map to `Parried` and `PerfectDodged` in `PublishHit`, ready for SAN-91 and SAN-92.
 - The baseline replay was re-recorded for the posture field and the AI's Guard input (ADR-0004, SAN-86 notes).
 
+## Notes from the implementation (SAN-92)
+
+- `PerfectDodged` is published by the **attacker** like every hit result (`PublishHit`, from `OnHitResolved` or `ResolveExternal` for projectiles and hazards): Source is the attacker, Target Kage, `MoveId` and `Window` the dodged hit's, `Damage` 0 (the dodge clears Kage's `LastDamageTaken`, so a stale value from an earlier hit never leaks in), `Posture` 0, `Crit` 0. One per perfect dodge, on the frame the hit would have landed; a dash or roll perfect-dodges once, so there is never a second one for the same dodge.
+- The `onHit` callback is invoked with `HitResult.Dodged`; `KageGame.OnFighterHit` ignores it. The "EVADE" call-out comes from the cue (`VFX_Kage_PerfectDodge`), not from a listener.
+- No baseline scenario dodges, so the baseline replay is unchanged.
+
 ## Consequences
 
 - The HUD, rating, tutorial and tests share one definition of what happened.

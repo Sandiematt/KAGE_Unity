@@ -98,6 +98,44 @@ With the same seed, the same scripted inputs and a manual clock, a fight produce
 
 Headless fights must run with no camera, HUD, audio or `Vfx`. Code that calls `Vfx.I`, `KageGame.I`, `KageGame.I.Hud` or `KageGame.I.Audio` must null-check it (SAN-61 fixes the existing calls).
 
+## Notes from the implementation (SAN-92: the world time scale)
+
+**The API is a timed call, not a setter.** The sketch above had `WorldScale { get; set; }`; a perfect dodge also needs a length and the exempt fighter, so it is built as:
+
+```csharp
+// FightClock
+public float WorldScale { get; }          // 1 normal, below 1 slow, 0 frozen
+public Fighter WorldExempt { get; }       // keeps full speed, and so does what it owns
+public bool WorldRuns { get; }            // the slowed world takes a frame on this loop frame
+public int WorldFramesLeft { get; }       // -1 until ResumeWorld, 0 when normal
+public float WorldPhase { get; }          // 0..1 into the slowed world's next frame (pose interpolation in play)
+public void SlowWorld(float scale, int frames, Fighter exempt);   // frames < 0: until ResumeWorld; replaces a running one
+public void ResumeWorld();
+public bool IsExempt(Fighter f);          // true at scale 1, or for the exempt fighter
+public float ScaleFor(Fighter owner);     // 1 when exempt, else WorldScale
+public bool Advances(Fighter owner);      // WorldRuns || IsExempt(owner)
+```
+
+**How it is counted.** One accumulator for the whole world, in the clock: on each frame the loop runs, `BeginFrame` adds `WorldScale` and the world takes a frame when it reaches 1 (`WorldRuns`). Every slowed thing shares that one beat, so a slowed fighter and the projectile it threw stay in step. At 0.4 the pattern is 0.4, 0.8, **1.2**, 0.6, **1.0**, ...: 9 world frames in 24 (`WorldTimeScaleTests`). It counts only frames the loop runs, in play and on a manual clock alike: hitstop frames don't spend it, and play and the harness behave the same. A slow started during frame F covers F's physics step and the next `frames` loop frames; the frame after that is normal. Floats are summed the same way every run, so it is deterministic under the fight loop (`PerfectDodgeTests.A_fight_with_a_perfect_dodge_is_identical_every_run`).
+
+**What slows, and how** (scale s, everything except `WorldExempt` and what it owns):
+
+| | How | Where |
+|---|---|---|
+| Fighter logic (input, state machine, move playback, timers, stun, posture drain, AI) | polled and ticked only when `clock.Advances(f)`; skipped frames record no sweeps | `FightLoop.Step` |
+| Fighter body | last thing in the frame: velocity × s and gravity scale × s² for the physics step (in world time x(t) = X(s·t): speed × s, acceleration × s²); first thing in the next frame: velocity ÷ s and gravity back, so all gameplay code (its tick, a knockback from Kage's hit, the push) reads and writes logic-unit velocities. At 0 the body is made kinematic and held, and gets its velocity back on resume | `Fighter.ScaleWorldTime` / `RestoreWorldTime` (`Fighter.WorldTime.cs`), called by the loop |
+| Fighter pose | `LogicVelocity` (not the rigidbody's scaled one) drives the air pose and secondary motion; in play the pose interpolates by `WorldPhase` and secondary motion runs at s | `Fighter.PoseOutput` |
+| Projectiles | move by s of a frame every frame (smooth; gravity × s² as above); `Age` counts only world frames, so life and range are unchanged; frozen at 0 | `Projectile.Tick` |
+| Hazards | count telegraph and strike frames only on world frames | `Hazard.Tick` |
+
+A slowed jump reaches the same height and lasts 1/s as long (within 6 cm: the physics step's integration differs slightly at a scaled velocity); a slowed walk covers s of the distance (`PerfectDodgeTests`). `Time.timeScale` is untouched: hitstop and whole-screen slow motion still compose with it.
+
+**Not slowed (known, cosmetic).** Particles and `Vfx` effects (they run on rendered time), the ragdoll bodies of a physical fall or a KO (separate rigidbodies; the tethered fall follows the slowed gameplay body, its limbs flail at full speed), and a projectile's flight cue lifetime (`seconds` is set at spawn).
+
+**For SAN-82 (Crimson Moon's freeze).** Call `ctx.Clock.SlowWorld(0f, -1, kage)` when the art starts and `ctx.Clock.ResumeWorld()` when it ends (or `SlowWorld(0f, frames, kage)` for a fixed length). Foes hold still mid-motion (kinematic) and resume with their velocity; their hazards and projectiles stop; Kage and his own projectiles and hazards keep full speed. A foe hit during the freeze gets its knockback velocity stored and released on resume. A later `SlowWorld` replaces a running one (a perfect dodge during the art would shorten the freeze: the art should not let one start, or should restore its own call afterwards).
+
+**Files.** `FightClock` (the counter), `FightLoop.Step` (skip, restore, scale), `Fighter.WorldTime.cs` (new partial: the body), two reads in `Fighter.Pose.cs`, `Projectile.Tick`, `Hazard.Tick`. Nothing changes at scale 1: the baseline replay is unchanged.
+
 ## Consequences
 
 - Tests can build any fight and replay it exactly.

@@ -174,3 +174,36 @@ A block also builds Rage: `Fighter.BlockRageGain(damage)` (SAN-84; JS damage × 
 **Baseline replay re-recorded.** All 27 `_vs_ai` scenarios (and their legacy copies under `Baselines/Legacy`) changed; the 27 `_vs_bag` scenarios did not. Two causes: the posture field on `Hit` and `Blocked` lines, and the AI guarding in place instead of walking backward. A temporary patch restoring the old semantics on this code (walking back counts as Guard, no guard stance, the AI guarding by holding back) reproduced all 54 old files exactly apart from `pos=`, so the Guard input reproduces the old blocks and posture changes nothing else. With the real code every block the old AI made is still made (17 blocks before, 20 after, since the AI no longer backs out of range). The legacy copy was re-recorded once for this deliberate change; the note on `BaselineReplay.LegacyPathOf` says so.
 
 **Tests.** `GuardPostureTests` (fight harness: the stance, the level rules at the `ReceiveHit` seam and in real fights, posture fill with `postureMul`, drain, no drain while guarding, guard-break timing, the guaranteed critical and its event order, the AI guarding through the Guard input, the HUD bars), `GuardInputTests` (keyboard O/B, S + O, gamepad RB/RT, LB/LT still dash, B still Special, the labels), `TuningTests.TheShippedGuardTuningIsTheSpecsDefenceNumbers`. Review sheet: `GuardScreenshots` → `Screenshots/review/SAN-86/`.
+
+
+## Notes from the implementation (SAN-92: the perfect dodge)
+
+**Where.** `Fighter.PerfectDodge.cs` implements `PreHitCheck` (step 2). It runs for every hit that found a contact on the defender's hurtboxes, before `HittableBy`: melee sweeps (`Fighter.ResolveContact`), projectiles and hazards (`ExternalHit.Deliver`). The tuning class is `DodgeTuning` (`Resources/Tuning/dodge.json`).
+
+**How "would have landed" is detected.** The hit's sweep, cast or box touched one of Kage's hurtboxes this frame. That is the whole test of the hit: it does not ask whether he is invulnerable (a roll's and a back dash's own frames, the dash perk's), because the check sits before step 3. A move that passes over a ducking body never reaches the check (the Ronin's jab misses a forward dash's low pose; his kick reaches it, which is what the tests use).
+
+**The window.** The defender is the player (`isPlayer`), in a dash (`FState.Dash`: ground or air, forward or back) or a dodge move (`moves.roll`, `moves.backflip`), and his `DodgeAge` (frames since it started, 0 on its first frame: the state's `stateFrame`, in his own frames, so hitstop doesn't count) is at most `PerfectDodgeWindow` = `windowFrames` (8) + `round(DashBonus × dashBonusWindowFrames)` (30, the same rate as SAN-84's dash invulnerability: a 0.1 dash perk gives 11). The boundary is inclusive: a dash started 8 frames before the hit perfect-dodges it, 9 frames before doesn't (measured with the Ronin's kick).
+
+**What it does.** The check resolves the hit with `HitResult.Dodged`: no damage, no posture, no hitstop. The attacker logs the window (a projectile logs the target and flies on through) and publishes `PerfectDodged` (ADR-0003). Kage gains `meterGain` (12, the JS game's) × his Rage perk, the world slows to `worldScale` (0.4) for `slowFrames` (24, 0.4 s) with Kage exempt (ADR-0002, SAN-92 notes), and the `VFX_Kage_PerfectDodge` cue plays: `afterimages` (3) blue snapshots of Kage trailing back along the dodge (`afterimageSpacing` 0.18 m apart, `afterimageLife` 0.45 s), a blue screen tint (`GameFeel.Flash`) and an "EVADE" call-out. `Vfx.Ghost` gained an optional offset for the trail.
+
+**Once per dodge.** Each `SetState` counts a state entry (`Fighter._stateEntries`, one line in `Fighter.cs`); a perfect dodge marks the entry it fired in. A second hit in the same dash or roll goes through the normal order (its invulnerability, then the hit); the next dash or roll can perfect-dodge again. So Rage is gained once per perfect dodge, and one `PerfectDodged` is published per dodge.
+
+**Normal dodge.** Outside the window nothing changes: a roll, backflip or back dash keeps its own invulnerable frames, a forward dash is hittable (unless the dash perk makes its first frames untouchable).
+
+**Player only.** A foe's dash or roll never resolves step 2: the check returns at once unless `isPlayer`.
+
+**Numbers** (`dodge.json`; the JS game's were 0.3 world speed for 0.75 s, +12 Rage, 3 afterimages; the spec asks for about 8 frames and about 0.4 s, the glossary for 0.4):
+
+| Number | Value | Meaning |
+|---|---|---|
+| `windowFrames` | 8 | frames from the dash's or roll's start in which a landing hit is perfect-dodged |
+| `dashBonusWindowFrames` | 30 | extra frames per 1.0 of the dash perk (`round(DashBonus × 30)`) |
+| `worldScale` | 0.4 | the world's speed during the slow motion |
+| `slowFrames` | 24 | 0.4 s of Kage's frames |
+| `meterGain` | 12 | Rage gained, × the Rage perk |
+| `afterimages`, `afterimageLife`, `afterimageSpacing`, `afterimageTint` | 3, 0.45 s, 0.18 m, light blue | the afterimage trail |
+| `screenTint`, `screenTintSeconds` | blue at 0.3, 0.4 s | the screen tint |
+
+**Baseline and the legacy switch.** No baseline scenario perfect-dodges, so the baseline replay is unchanged. Under the legacy switch (hits resolved inside the attacker's tick, `Fighter.TryTarget`) step 2 never runs, as before SAN-65: the legacy path has no perfect dodge, and its baseline copy is unchanged too. The world time scale itself works on either path.
+
+**Tests.** `PerfectDodgeTests` (fight harness: dash inside and outside the window, roll and backflip on both sides of the window's last frame, standing, walking and guarding never dodge, the dash perk's wider window, the meter gained once, one per dash and again on the next dash, the event's zero damage after an earlier hit, foes never dodge, the world slowed for its frames but not Kage, slowed walking, jumping and freezing, projectiles and hazards at their owner's scale, determinism of a fight with a perfect dodge), `WorldTimeScaleTests` (EditMode: the clock's counting), `TuningTests.TheShippedDodgeTuningIsTheSpecsPerfectDodgeNumbers`. Review sheet: `PerfectDodgeScreenshots` → `Screenshots/review/SAN-92/`.

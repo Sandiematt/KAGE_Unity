@@ -345,10 +345,12 @@ namespace Kage
             });
         }
 
-        public void Ghost(FighterRig rig, Color tint, float life)
+        /// <summary>A fading flat snapshot of <paramref name="rig"/>, moved by <paramref name="offset"/> (metres; the perfect dodge's trail).</summary>
+        public void Ghost(FighterRig rig, Color tint, float life, Vector2 offset = default)
         {
             var root = rig.Snapshot(tint, rig.baseOrder - 40);
             root.transform.SetParent(transform, true);
+            if (offset != Vector2.zero) root.transform.position += (Vector3)offset;
             var rs = root.GetComponentsInChildren<MeshRenderer>();
             var fx = new GhostFx { go = root, rs = rs, tint = tint, life = life };
             _live.Add(fx);
