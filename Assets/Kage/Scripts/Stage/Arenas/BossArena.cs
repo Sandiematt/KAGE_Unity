@@ -1,0 +1,36 @@
+using Kage.Rules;
+using UnityEngine;
+
+namespace Kage
+{
+    /// <summary>
+    /// The arena placeholder of a sub-boss (SAN-103): the dev arena's floor and walls (<see cref="ArenaBuilder.BuildPhysics"/>) under the
+    /// backdrop of the JS environment of the sub-boss's stage (<see cref="EnvBackdrop"/>, <see cref="EnvLook"/>). The stage is found in the
+    /// generated campaign by its enemy (act1.sub1 is Kuroe's, env "rooftops"), so Garan, Hisame and Shiden get theirs (the districts) the
+    /// moment they are in the catalog: nothing to add per boss. A foe with no sub-boss stage gets none, and the caller builds the shrine.
+    /// </summary>
+    public static class BossArena
+    {
+        /// <summary>The JS env id of the sub-boss stage whose enemy is <paramref name="characterId"/>, or null.</summary>
+        public static string EnvFor(string characterId)
+        {
+            if (characterId == null) return null;
+            foreach (var st in JsTables.Stages)
+                if (st.Kind == "subboss" && st.Enemy == characterId) return st.Env;
+            return null;
+        }
+
+        /// <summary>
+        /// Builds the arena of <paramref name="foeId"/> under <paramref name="root"/> when the foe is a sub-boss; false (and nothing built)
+        /// otherwise.
+        /// </summary>
+        public static bool TryBuild(Transform root, CameraRig cam, string foeId)
+        {
+            var env = EnvFor(foeId);
+            if (env == null) return false;
+            ArenaBuilder.BuildPhysics(root);
+            EnvBackdrop.Build(root, cam, EnvLook.For(env));
+            return true;
+        }
+    }
+}

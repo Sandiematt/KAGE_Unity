@@ -32,7 +32,7 @@ const CHECK = args.includes('--check');
 const CHAPTERS = ['prologue', 'act1'];
 
 const { loadSim } = require(path.join(JS_DIR, 'tests', 'helpers', 'load-sim.js'));
-const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV'] });
+const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS'] });
 
 /* ---------------- C# literal helpers ---------------- */
 const pascal = (k) => k[0].toUpperCase() + k.slice(1);
@@ -111,6 +111,17 @@ function aiRow(id, a, level) {
     ['Ranged', truthy(a.ranged)], ['Heavy', truthy(a.heavy)],
   ], level);
 }
+// A boss ability (BOSS_ABILITIES in 40-ai.js: cd, range, chance) and, for the Act I sub-bosses' reduced Raikon moves, the variant's
+// own numbers (RAIKON_VARIANTS in 10-data.js: base, label, stance, punish, dmg, unb, windup, shock, shockLife, reach, dash, wave).
+function bossAbilityRow(id, a, v, level) {
+  v = v || {};
+  const flag = (x) => (x === undefined || x === null ? undefined : x ? 'true' : 'false');
+  return obj('JsBossAbility', [
+    ['Id', str(id)], ['Cd', scalar(a.cd)], ['Range', a.range ? numArray(a.range, 'double') : undefined], ['Chance', scalar(a.chance)],
+    ...pick(v, ['base', 'label', 'stance', 'punish', 'dmg', 'windup', 'shock', 'shockLife', 'reach', 'dash']),
+    ['Unb', flag(v.unb)], ['Wave', flag(v.wave)],
+  ], level);
+}
 function rewardObj(r, level) {
   if (!r) return undefined;
   const list = (k) => (r[k] && r[k].length ? strArray(r[k]) : undefined);
@@ -151,6 +162,13 @@ for (const ch of chapters) for (const st of ch.stages) {
   if (st.stretch) for (const e of st.stretch.encounters) for (const wave of e.waves) wave.forEach(addEnemy);
 }
 for (const id of enemyIds) if (!js.ENEMIES[id]) throw new Error('stage names a missing enemy: ' + id);
+// every ability the exported foes use (their own lists and their boss phases'), in first-use order
+const abilityIds = [];
+for (const id of enemyIds) {
+  const e = js.ENEMIES[id];
+  for (const a of (e.abilities || []).concat(...(e.phases || []).map((p) => p.abilities || []))) if (!abilityIds.includes(a)) abilityIds.push(a);
+}
+for (const id of abilityIds) if (!js.BOSS_ABILITIES[id]) throw new Error('a foe names a missing boss ability: ' + id);
 
 function gitInfo() {
   const run = (...a) => cp.execFileSync('git', ['-C', JS_DIR, ...a], { encoding: 'utf8' }).trim();
@@ -190,6 +208,7 @@ member('JsWeapon', 'Weapons', Object.entries(js.WEAPONS).map(([id, w]) => weapon
 member('JsGear', 'Helmets', Object.entries(js.HELMETS).map(([id, g]) => gearRow(id, g, L + 1)));
 member('JsGear', 'Armors', Object.entries(js.ARMORS).map(([id, g]) => gearRow(id, g, L + 1)));
 member('JsEnemy', 'Enemies', enemyIds.map((id) => enemyRow(id, js.ENEMIES[id], L + 1)));
+member('JsBossAbility', 'BossAbilities', abilityIds.map((id) => bossAbilityRow(id, js.BOSS_ABILITIES[id], js.RAIKON_VARIANTS[id], L + 1)));
 member('JsAiProfile', 'AiProfiles', Object.entries(js.AI_PROFILES).map(([id, a]) => aiRow(id, a, L + 1)));
 member('JsTutorialStep', 'TutorialSteps', Object.entries(js.TUTORIAL_STEPS).map(([id, t]) => obj('JsTutorialStep', [['Id', str(id)], ['Verb', str(t.verb)], ['Hint', str(t.hint)]], L + 1)));
 member('JsChapter', 'Chapters', chapters.map((ch) => obj('JsChapter', [
@@ -206,5 +225,5 @@ if (CHECK) {
 } else {
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, text, 'utf8');
-  console.log(`wrote ${path.relative(REPO_ROOT, OUT)}: ${Object.keys(js.WEAPONS).length} weapons, ${Object.keys(js.HELMETS).length} helmets, ${Object.keys(js.ARMORS).length} armours, ${enemyIds.length} enemies, ${chapters.length} chapters`);
+  console.log(`wrote ${path.relative(REPO_ROOT, OUT)}: ${Object.keys(js.WEAPONS).length} weapons, ${Object.keys(js.HELMETS).length} helmets, ${Object.keys(js.ARMORS).length} armours, ${enemyIds.length} enemies, ${abilityIds.length} boss abilities, ${chapters.length} chapters`);
 }

@@ -65,6 +65,21 @@ namespace Kage.Rules
         public string[] Abilities = new string[0];
     }
 
+    /// <summary>
+    /// A boss ability the exported foes use (JS BOSS_ABILITIES: cooldown in seconds, distance band in pixels, pick chance) and, for an
+    /// Act I sub-boss's reduced Raikon move (JS RAIKON_VARIANTS), the variant's numbers: the base move, its call-out, how long a counter
+    /// stance is held, the punish delay, the damage multiplier, whether the punish breaks guards (null = the base move's), the wind-up
+    /// fraction, the shockwave, the reach and dash, and whether a Thunder Swing sends its wave. Seconds and pixels as in the JS (ADR-0010).
+    /// </summary>
+    public sealed class JsBossAbility
+    {
+        public string Id, Base, Label;
+        public double Cd, Chance;
+        public double[] Range;
+        public double Stance, Punish, Dmg, Windup, Shock, ShockLife, Reach, Dash;
+        public bool? Unb, Wave;
+    }
+
     /// <summary>One AI archetype (JS AI_PROFILES): a design brief for the Unity AI profiles.</summary>
     public sealed class JsAiProfile
     {

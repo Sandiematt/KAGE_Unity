@@ -8,6 +8,7 @@ namespace Kage.Rules
         static Dictionary<string, JsWeapon> weaponById;
         static Dictionary<string, JsGear> helmetById, armorById;
         static Dictionary<string, JsEnemy> enemyById;
+        static Dictionary<string, JsBossAbility> bossAbilityById;
         static Dictionary<string, JsStage> stageById;
         static Dictionary<string, JsTier> tierById;
         static JsStage[] allStages;
@@ -73,6 +74,13 @@ namespace Kage.Rules
                 }
                 return allStages;
             }
+        }
+
+        /// <summary>The boss ability with this id (one the exported foes use), or null.</summary>
+        public static JsBossAbility BossAbility(string id)
+        {
+            if (bossAbilityById == null) bossAbilityById = Index(BossAbilities, a => a.Id);
+            return Find(bossAbilityById, id);
         }
 
         /// <summary>The stage with this id, or null.</summary>

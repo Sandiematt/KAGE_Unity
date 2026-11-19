@@ -148,9 +148,10 @@ namespace Kage.Tests
         [Test]
         public void AFoeWithAbilitiesKeepsThemInSlotOrder()
         {
-            // the JS ability list is the slot order (ADR-0008); Raikon's is from the generated table
+            // the JS ability list is the slot order (ADR-0008); a JS boss lists its abilities only in its phases, so its slots are
+            // the phases' abilities in first-use order (SAN-103): Raikon's from the generated table
             var raikon = CharacterCatalog.Get("raikon");
-            CollectionAssert.AreEqual(Kage.Rules.JsTables.Enemy("raikon").Abilities.ToList(), raikon.abilities);
+            CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, raikon.abilities);
         }
     }
 }
