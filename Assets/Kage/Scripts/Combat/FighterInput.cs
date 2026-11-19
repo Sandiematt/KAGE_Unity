@@ -20,6 +20,11 @@ namespace Kage
         public bool guard;
         /// <summary>Guard went down since the last poll (latched between physics steps by <see cref="PlayerInputSource"/>).</summary>
         public bool guardPressed;
+        /// <summary>
+        /// Ability slot pressed this step (SAN-95, ADR-0004, ADR-0008): 0 = none, n = the n-th entry of <see cref="CharacterDef.abilities"/> (1-based).
+        /// A foe's AI profile sets it like a button; the player never does. See Fighter.Abilities.cs.
+        /// </summary>
+        public int ability;
         /// <summary>Kip-up mashing and the like: Guard doesn't count as "any button".</summary>
         public bool Any => p || k || s || x;
     }

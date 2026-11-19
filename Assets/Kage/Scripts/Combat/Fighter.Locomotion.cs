@@ -102,6 +102,7 @@ namespace Kage
             if (!TurnToWalk(inp)) FaceOpponent();
             fwd = inp.dx == 0 ? 0 : (int)Mathf.Sign(inp.dx * facing);
             if (TryBuffered(inp, fwd)) return;
+            if (TryAbility(inp)) return;          // an ability slot (SAN-95, Fighter.Abilities.cs)
 
             bool rollF = facing > 0 ? inp.tapRight2 : inp.tapLeft2;
             bool rollB = facing > 0 ? inp.tapLeft2 : inp.tapRight2;
