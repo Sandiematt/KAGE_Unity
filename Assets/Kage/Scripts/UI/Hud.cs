@@ -295,6 +295,7 @@ namespace Kage
             foreach (var p in _l.pips) p.enabled = _roundsShown;
             foreach (var p in _r.pips) p.enabled = _roundsShown;
             TickBoss(dt);
+            TickStageCard(dt);
 
             // announcer: pop in big, settle, fade
             _announceT += dt;
