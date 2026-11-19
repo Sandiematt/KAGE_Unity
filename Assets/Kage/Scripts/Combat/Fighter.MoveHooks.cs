@@ -14,6 +14,7 @@ namespace Kage
     /// SAN-105 (Hisame) adds three more, each off unless a move sets it: a <b>vault</b> over the target (<see cref="MoveDef.vaultFrom"/>,
     /// Kocho), a <b>thrown projectile</b> (<see cref="MoveDef.projectile"/>, Smoke Bomb) and <b>move cues</b> (<see cref="MoveDef.cues"/>,
     /// her glint before the cut).
+    /// SAN-106 (Shiden) adds the <b>brace</b> (<see cref="MoveDef.braceFrom"/>, the Braced Spear): a rush onto the held weapon sets off the answer.
     /// </summary>
     public partial class Fighter
     {
