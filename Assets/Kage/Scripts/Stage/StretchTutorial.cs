@@ -39,6 +39,9 @@ namespace Kage
         /// <summary>A partner farther than this from Kage is put back ahead of him (he outran it).</summary>
         public const float PartnerLeash = 9f;
 
+        /// <summary>The partner's move rate: half speed, so the draw that tells the blow is coming lasts about 16 frames (the tutorial Hollow's own 0.75 gives 11, a window of 8 is hard on a first parry).</summary>
+        public const float PartnerMoveRate = 0.5f;
+
         /// <summary>The partner's health multiplier: the stray hits of a practice cannot knock it out.</summary>
         public const float PartnerHealthMul = 60f;
 
@@ -51,6 +54,7 @@ namespace Kage
         bool _attacked, _guarded, _parried, _dodged;
         bool _wasAir;
         float _lastX;
+        bool _seen;
         float _walked;
         int _showFrames, _clearedAge = int.MaxValue;
         Fighter _partner;
@@ -86,7 +90,6 @@ namespace Kage
             _session = session;
             _kage = kage;
             _prompts = session.Data.Prompts ?? new StretchPrompt[0];
-            _lastX = kage.Pos.x;
             ctx.Events.Published += OnEvent;
             ctx.LateTicks.Add(this);
         }
@@ -165,7 +168,9 @@ namespace Kage
             bool air = _kage.state == FState.Air;
             bool jumped = air && !_wasAir;
             bool walking = _kage.Grounded && (_kage.state is FState.Walk or FState.Run);
-            float dx = Mathf.Abs(x - _lastX);
+            // the first frame, and a placement (a restart, a teleport), are not walking
+            float dx = _seen && Mathf.Abs(x - _lastX) < 1f ? Mathf.Abs(x - _lastX) : 0f;
+            _seen = true;
             _lastX = x;
             _wasAir = air;
 
@@ -231,6 +236,7 @@ namespace Kage
             string id = Current.Partner;
             var def = CharacterCatalog.Get(id) ?? StretchSession.ResolveFoe(id, out _);
             def.healthMul = PartnerHealthMul;
+            def.moveRate = PartnerMoveRate;
             float px = PartnerX(x);
             _partner = _session.SpawnExtra(def, new PracticeInput(), px, px > x ? -1f : 1f);
         }
@@ -253,8 +259,7 @@ namespace Kage
     /// <summary>
     /// The practice partner's input (SAN-96): it walks up to Kage and throws one weapon attack, waits, and does it again, on fixed frame
     /// counts, so a step practised against it is the same every run and the player can learn the timing. It never guards, stands still
-    /// during the wait and rolls no random numbers. The attacks are as slow as its character's move rate makes them (the tutorial
-    /// Hollow plays at 0.75).
+    /// during the wait and rolls no random numbers.
     /// </summary>
     public sealed class PracticeInput : IInputSource
     {

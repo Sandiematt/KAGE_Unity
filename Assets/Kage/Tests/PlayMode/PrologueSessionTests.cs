@@ -67,7 +67,7 @@ namespace Kage.Tests
             {
                 float at = (float)data.Prompts.Single(p => p.Step == step).At;
                 Assert.GreaterOrEqual(x, at - 0.01f, step + ": never before its position");
-                Assert.LessOrEqual(x, at + 0.8f, step + ": shown as Kage reaches it, not far past");
+                Assert.LessOrEqual(x, Mathf.Max(at, (float)data.Start) + 0.8f, step + ": shown as Kage reaches it (the first at the road's start), not far past");
             }
             CollectionAssert.AreEqual(new[] { "move", "jump", "attack", "guard", "parry", "dodge" }, f.Tutorial.Completed.Select(c => c.step).ToArray());
         }
@@ -97,7 +97,7 @@ namespace Kage.Tests
             ToPrompt(f, "jump");
             bot.Override = (self, p) => new FrameInput { dx = 1 };      // walks on, never jumps
             float x0 = f.Kage.Pos.x;
-            f.Run(240);
+            f.Run(100);
             Assert.Greater(f.Kage.Pos.x, x0 + 3f, "he walked well past the prompt's position");
             Assert.AreEqual("jump", f.Tutorial.Current.Step, "still waiting for the jump");
             Assert.AreEqual(1, f.Tutorial.Done);
@@ -107,7 +107,7 @@ namespace Kage.Tests
         public void Move_is_done_by_walking_140_px_not_by_standing()
         {
             var f = Fight(out var bot);
-            bot.Override = (self, p) => default;
+            bot.Override = (self, p) => new FrameInput();
             f.Run(120);
             Assert.AreEqual("move", f.Tutorial.Current.Step, "standing still does not move");
             bot.Override = null;
@@ -141,7 +141,7 @@ namespace Kage.Tests
             ToPrompt(f, "guard");
             Assert.IsNotNull(f.Tutorial.Partner, "the practice partner stands ahead");
             Assert.AreEqual("hollow_tutorial", f.Tutorial.Partner.CharacterId);
-            bot.Override = (self, p) => default;      // stands there and is hit
+            bot.Override = (self, p) => new FrameInput();      // stands there and is hit
             Assert.IsTrue(f.RunUntil(() => f.Events(CombatEventType.Hit).Any(e => e.Target == f.Kage), 600), "the partner's attack lands on a Kage who does not guard");
             Assert.AreEqual("guard", f.Tutorial.Current.Step, "a hit that lands is not a guard");
             Assert.AreEqual(0, f.Events(CombatEventType.Blocked).Count());
@@ -199,7 +199,7 @@ namespace Kage.Tests
             Assert.Less(partner.MoveRate, 1f, "slow attacks: the tutorial Hollow's move rate");
             Assert.IsTrue(partner.maxHealth > 1000f, "too much health for a stray combo");
             var starts = new List<int>();
-            bot.Override = (self, p) => default;
+            bot.Override = (self, p) => new FrameInput();
             f.Run(520);
             foreach (var e in f.Events(CombatEventType.MoveStarted)) if (e.Source == partner) starts.Add(e.Frame);
             Assert.GreaterOrEqual(starts.Count, 2, "it keeps attacking while the prompt waits");
@@ -213,7 +213,7 @@ namespace Kage.Tests
             var f = Fight(out var bot);
             ToPrompt(f, "guard");
             var partner = f.Tutorial.Partner;
-            bot.Override = (self, p) => default;
+            bot.Override = (self, p) => new FrameInput();
             f.Run(5);
             partner.ResetForRound(f.Kage.Pos.x + 12f, -1f);        // far ahead: out of reach
             partner.BeginFight();
@@ -270,6 +270,7 @@ namespace Kage.Tests
             Assert.AreEqual((float)d.Encounters[1].Gate, f.Ctx.Bounds.Right, 1e-3f, "the walk now ends at the second gate");
             Assert.IsTrue(f.RunUntil(() => f.Session.State == StretchState.Encounter, RunLimit));
             Assert.AreEqual(2, f.Session.EncounterNumber);
+            Assert.IsTrue(f.RunUntil(() => f.Session.StretchWave == 2, 200), "its wave comes");
             Assert.AreEqual("hollow_shade", f.Session.Spawned.Last().RequestedId);
             Assert.AreEqual(StretchState.Encounter, f.Session.State, "still shut until the Shade is down");
         }

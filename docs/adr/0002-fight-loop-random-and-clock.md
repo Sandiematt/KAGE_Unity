@@ -224,6 +224,31 @@ A wave spawns as in the JS `spawnWave`: foes alternate ahead (near the gate, 50 
 
 **Files.** New: `StretchData` (Kage.Rules), `StretchSession`, `StretchRoad`, `StageBounds`, `ILateTick`, `Fighter.Dismiss`, `KageGame.Stretch`. Changed: `FightContext` (`Bounds`, `Sessions`), `FightLoop` (late tick), `FightBuilder` (id counting), `CombatEvents` (wave and stage factories), `FightStatsRecorder` (`stretch`), `Fighter.Locomotion` (bounds, `WallSide`, `turnToWalk`), `Fighter.RageArt` and `Fighter.Specials` (bounds), `CameraRig` (`SetBounds`, `ClampX`, `lookAhead`), `KageGame`. Tests: `StretchDataTests` (EditMode), `StretchSessionTests`, `StretchCameraTests`, `StretchDevArenaTests`, the `StretchFight` harness, the review sheet `StretchScreenshots` (Screenshots/review/SAN-89).
 
+## Notes from the implementation (SAN-96: Prologue prompts, practice partner, title card)
+
+**Prompts** (`Stage/StretchTutorial.cs`, from the JS `updateTutorial`). `StretchData.Prompts` (`StretchPrompt`: step, road position in metres, verb, hint, optional partner id) lists a road's prompts in order. `StretchTutorial` is the second `ILateTick` on a stretch (after the session). A prompt shows when every earlier one is done, Kage's x has reached its position and the session is **walking** (none during an encounter, so none over a gate); it is done when its step happens while it shows. Completion is read from the event stream and Kage's state, never the keys, and only recorded in the event callback and acted on in the late tick (ADR-0003):
+
+| Step | Done by |
+|---|---|
+| move | 140 px (1.2 m, JS `tutorialWalk`) walked on the ground in the Walk or Run state while it shows; the first frame and a placement are not counted |
+| jump | Kage enters `FState.Air` |
+| attack | `MoveStarted` by Kage on an attack move (`InAttackMove`: a hit, throw, projectile or counter; a dash or roll is not one). The prompt shows the **Weapon** key; any attack move counts |
+| guard | `Blocked` with Kage the target; a `Parried` hit counts too (it was guarded) |
+| parry | `Parried` with Kage the target |
+| dodge | `PerfectDodged` with Kage the target (a plain dash does not count) |
+
+`StretchTutorial.Keys(step, device)` gives the caps from `KeyBindings.Label` (move: Left and Right; jump: Jump; attack: Weapon; guard and parry: Guard; dodge: Dash). The device is the last one used (`InputDeviceTracker`: gamepad button or stick press, or key press; `Observe` is the pure rule), set by the host each frame. A prompt does not block the road (as in the JS game): the player may walk past, and it waits. `PromptCleared` and `Completed` (step, frame) let a host play a sound or check order.
+
+**Practice partner.** Guard, parry and dodge need an attack to meet. While a prompt with a `Partner` shows, `StretchSession.SpawnExtra` puts the tutorial Hollow 3.2 m ahead of Kage; it is an ordinary team-1 fighter in `Foes` (the host hooks and draws it) but **not a wave foe**: `FoesLeft`, a wave's clear and `Spawned` ignore it. Its input is `PracticeInput`: walk to 1.25 m, wait 70 frames, press Weapon once (the katana's Iai Draw), stand 110 frames, repeat; no random numbers, never guards. The partner plays at **move rate 0.5** (the tutorial Hollow's 0.75 gives an 11-frame draw before the blow; the parry and perfect-dodge windows are 8 frames, too hard for a first try) and has `healthMul` 60, so stray hits cannot knock it out. It is dismissed the frame its prompt is done, so it never stands in the way of the next prompt (a new one is spawned when the next practice prompt shows); it is put back ahead of Kage when he is more than 9 m from it. The alternatives (a training bag that swings, an AI Hollow at `attackRate` 0.3) were not predictable enough to be a lesson or a test.
+
+**Title card.** `Hud.TitleCard(kicker, name, subtitle, seconds)` (`Hud.StageCard.cs`): a dark band, the chapter and kind in gold capitals, the stage name, a gold rule; it fades in over 0.25 s and out over the last 0.35 s on unscaled time. The dev arena shows it on every stretch (`KageGame.TitleCardSeconds` 2.4 s) in place of the old stage-name announcement; on a road **with prompts** it also keeps Kage's control off while it shows and the first prompt waits for it. The campaign's `StageHudPanel` draws the same card for the flow. **Prompt slip:** `Hud.SetPrompt(now, done, worldPos)`: the JS paper slip with the red seal, the verb, key caps and the hint, drifting after Kage (`StretchTutorial.NowView` and `DoneView` build what it draws; a done prompt turns gold, is crossed out and floats up for 72 frames).
+
+**Dev arena.** Shift+F10 cycles to `prologue.1`, which `StretchData.FromId` returns with the additions: the full Prologue. `KageGame.Stretch.cs` builds the tutorial when the road has prompts.
+
+**Not wired: the campaign flow.** `FlowController.FinishStage` and `StageWorld` still play one placeholder foe per stage; a stretch needs a stage world that builds the road, session, tutorial and HUD (what `KageGame.BuildStretch` does) and a result built with `new FightStatsRecorder(ctx.Events, kage, stretch: true)`. That is SAN-109's wiring for every stretch; the Prologue needs nothing extra from it (`StretchData.FromId("prologue.1")` is the road, `Tutorial.Device` takes `InputDeviceTracker.Poll()`).
+
+**Tests.** `PrologueDataTests` and `PrologueKeysTests` (EditMode); `PrologueSessionTests` (the fight harness: `PrologueBot` walks, jumps, swings, holds Guard through the partner's blow, presses Guard `ParryLead` move frames before its first hit window, dashes `DodgeLead` before it; the whole run to `StageCleared`, order and positions, each step waiting for its own action, determinism of events, positions and completion frames up to the last prompt), `PrologueDevArenaTests`, the review sheet `PrologueScreenshots` (Screenshots/review/SAN-96). `StretchFight` gained `kageInput` and `tutorial` options. **Files:** new `StretchTutorial`, `InputDeviceTracker`, `Hud.StageCard`, `PrologueAdditions` (Kage.Rules); changed `StretchData` (prompts, clues, scene ids, chapter name, `Added`; `FromId` applies the additions), `StretchSession` (`SpawnExtra`, `DismissExtra`), `KageGame.Stretch`, `Hud` (one line in `Tick`).
+
 ## Consequences
 
 - Tests can build any fight and replay it exactly.

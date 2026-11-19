@@ -249,7 +249,7 @@ namespace Kage
         {
             if (_cam == null) return;
             Vector3 sp = _cam.WorldToScreenPoint(_slipWorld);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, sp, null, out var lp);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, sp, _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera, out var lp);
             // the slip drifts after Kage (JS damp 5), and stays on screen
             _slipX = float.IsNaN(_slipX) ? lp.x : Mathf.Lerp(_slipX, lp.x, 1f - Mathf.Exp(-5f * Mathf.Max(Time.unscaledDeltaTime, 0.0001f)));
             var rect = _root.rect;
