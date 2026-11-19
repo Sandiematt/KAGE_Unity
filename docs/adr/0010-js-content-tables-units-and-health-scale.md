@@ -51,6 +51,17 @@ Many tickets need JS numbers: weapon, helmet and armour stats and prices, enemy 
 - Clues, props and tutorial prompts of a stretch stay in the table (`JsStretch.Clues`, `Tutorial`); SAN-89 does not read them (SAN-96 reads the prompts; clues are not built).
 - `PxPerMetre` is still the one place to change if roads feel too long or too short.
 
+## Notes from the implementation (SAN-96: Unity additions to the JS Prologue)
+
+The JS `prologue.1` ("The Empty Village") has one encounter (x 2600, gate 3200, wave `[hollow_tutorial]`) and five tutorial steps (move 0, jump 520, slash 1000, block 1420, dodge 1780 px); the ticket and spec stories 74 and 75 want a parry step and a Hollow Shade encounter as well. Those are **Unity-authored additions**, kept in one file and never written into the generated tables:
+
+- `Kage.Rules/PrologueAdditions.cs`. `StretchData.FromStage("prologue.1")` stays the pure JS road (one encounter, five prompts, `Added` empty); `StretchData.FromId("prologue.1")` returns it with `PrologueAdditions.Apply`, and `Added` names what was put on: `prompt:parry`, `prompt:practice-partner`, `prompt:hints`, `encounter:hollow_shade`. The dev arena and the future campaign wiring read `FromId`.
+- **Parry prompt** at 1600 px (13.9 m), between the guard prompt (1420) and the dodge prompt (1780).
+- **Hollow Shade encounter**: trigger 3450 px (30.0 m), gate 4050 px (35.2 m), one wave `[hollow_shade]`, after the tutorial Hollow's gate (3200 px) on the 4200 px road, so the road keeps its 36.5 m length and the stage still ends 60 px short of the end. Encounter ids are `prologue.1.e1` (the tutorial Hollow) and `.e2`.
+- **Practice partner** (`Partner = "hollow_tutorial"`) on the guard, parry and dodge prompts, and **hints** reworded for those three (the JS block hint described the parry too): guard "Hold Guard as the blow lands", parry "Press Guard just before the blow lands", dodge "Dash just before the blow lands: a perfect dodge".
+- **JS data read for the first time** (`StretchData.FromStage`): the prompts (`Prompts`; JS `slash` is the **attack** and `block` is the **guard**, `PromptStep.FromJs`; hints from `JsTables.TutorialSteps`), the clues (`Clues`: id, label, scene id, x in metres) and the stage's story scene ids (`SceneBefore`, `SceneAfter`, `SceneDefeat`), plus the chapter's id and name. Clues and scenes are **in the data and not played** (spec: no story).
+- Not changed: the road length, start, the tutorial Hollow's encounter and the five JS prompt positions (`PrologueDataTests` compares them with the JS numbers divided by 115).
+
 ## Consequences
 
 - JS numbers reach Unity by one script, so they can be checked and regenerated, and the rules tests match the JS tests.
