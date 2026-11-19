@@ -85,15 +85,6 @@ namespace Kage.Tests
             File.WriteAllBytes(Path.Combine(Dir, "garan_vs_kuroe_vs_footman.png"), sheet.EncodeToPNG());
             Object.DestroyImmediate(sheet);
 
-            // Storm Fist: the wind-up over its ground mark, then the slam and the shock
-            using (var f = Ability(1, -1.2f, 0.9f))
-            {
-                f.RunUntil(() => In(f.Ronin, "garan.stormFist") && f.Ronin.moveFrame >= 30, 60);
-                Save("storm_fist_windup", Render(Mid(f, 1.3f) + new Vector2(-0.3f, 0f), 1.9f), W, H);
-                f.RunUntil(() => In(f.Ronin, "garan.stormFist") && f.Ronin.moveFrame >= f.Ronin.move.hits[0].from + 2, 60);
-                Save("storm_fist_slam", Render(Mid(f, 1.3f) + new Vector2(-0.3f, 0f), 1.9f), W, H);
-            }
-
             // Tsuppari: the crouch, then a palm on a guard
             using (var f = Ability(2, -0.5f, 0.5f, k => k.Add(600, buttons: "G")))
             {
@@ -107,7 +98,7 @@ namespace Kage.Tests
             using (var f = Ability(4, -0.4f, 0.45f, k => k.Add(600, buttons: "G")))
             {
                 f.RunUntil(() => In(f.Ronin, "garan.clinch") && f.Ronin.moveFrame >= f.Ronin.move.grabTo + 16, 60);
-                Save("clinch_carry", Render(Mid(f, 1.5f), 1.7f), W, H);
+                Save("clinch_carry", Render(Mid(f, 1.4f), 1.9f), W, H);
             }
 
             // the charge (phase two): the run
@@ -117,6 +108,45 @@ namespace Kage.Tests
                 Save("charge_run", Render(Mid(f, 1.3f), 2.2f), W, H);
             }
             Assert.IsTrue(File.Exists(Path.Combine(Dir, "charge_run.png")));
+        }
+
+        /// <summary>Storm Fist with the effects live (a <see cref="Vfx"/> and real frames), so the hazard's ground mark and the shock show.</summary>
+        [UnityTest]
+        public IEnumerator RenderStormFist()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            Directory.CreateDirectory(Dir);
+            float prevCapture = Time.captureDeltaTime;
+            Time.captureDeltaTime = 1f / 60f;
+            var vfxGo = new GameObject("ReviewVfx");
+            vfxGo.AddComponent<Vfx>();
+            var f = Ability(1, -1.2f, 0.9f);
+            bool windup = false, slam = false;
+            try
+            {
+                for (int i = 0; i < 80 && !slam; i++)
+                {
+                    f.Run(1);
+                    yield return null;
+                    if (!windup && In(f.Ronin, "garan.stormFist") && f.Ronin.moveFrame >= 32)
+                    {
+                        windup = true;
+                        Save("storm_fist_windup", Render(Mid(f, 1.3f) + new Vector2(-0.3f, 0f), 1.9f), W, H);
+                    }
+                    if (In(f.Ronin, "garan.stormFist") && f.Ronin.moveFrame >= f.Ronin.move.hits[0].from + 2)
+                    {
+                        slam = true;
+                        Save("storm_fist_slam", Render(Mid(f, 1.3f) + new Vector2(-0.3f, 0f), 1.9f), W, H);
+                    }
+                }
+            }
+            finally
+            {
+                f.Dispose();
+                Object.DestroyImmediate(vfxGo);
+                Time.captureDeltaTime = prevCapture;
+            }
+            Assert.IsTrue(windup && slam);
         }
 
         [UnityTest]

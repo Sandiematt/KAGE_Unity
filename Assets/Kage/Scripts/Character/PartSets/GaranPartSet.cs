@@ -40,14 +40,16 @@ namespace Kage
         /// <summary>An iron tekko gauntlet on a hand bone: the flared cuff over the wrist, the fist, the knuckle plate with three studs, a storm crackle.</summary>
         static void Tekko(RigDef d, string name, B bone, int slot, float hx, float hy, bool far)
         {
-            Color iron = far ? G.IronFar : G.Iron, lit = far ? G.Iron : G.IronLit;
+            // brighter than the rest of his iron, so the gauntlets read against the dark gi at gameplay zoom
+            Color iron = far ? G.Iron : G.IronLit, lit = far ? G.IronLit : G.IronEdge;
             var fist = Ellipse(hx - 4, hy + 14, 27, 24, 10);
             var polys = new List<(Vector2[], Color)>
             {
                 Poly(Tube(hx + 18, hy - 22, hx + 6, hy - 4, 40, 46), iron),                 // the cuff over the wrist
-                Poly(Band(3f, hx - 6, hy - 16, hx + 26, hy - 10), lit),
+                Poly(Band(3.4f, hx - 6, hy - 18, hx + 26, hy - 12), far ? G.StormDark : G.Storm),
                 Poly(fist, iron),
-                Poly(Band(5f, hx - 26, hy - 2, hx - 22, hy + 30), lit),                       // the knuckle plate across the front
+                Poly(Band(3f, hx - 20, hy - 6, hx + 10, hy - 2), lit),
+                Poly(Band(6f, hx - 26, hy - 2, hx - 22, hy + 30), lit),                       // the knuckle plate across the front
                 Poly(Ellipse(hx - 24, hy + 2, 3, 3), G.IronEdge),
                 Poly(Ellipse(hx - 25, hy + 14, 3, 3), G.IronEdge),
                 Poly(Ellipse(hx - 23, hy + 26, 3, 3), G.IronEdge),
@@ -126,7 +128,6 @@ namespace Kage
                 Poly(Band(2.6f, 798, 382, 876, 382), G.IronEdge),
                 Poly(Band(3.2f, 876, 262, 862, 294, 884, 322, 866, 352, 888, 380, 872, 408, 884, 430), G.Storm),
             }, 1, dou, PartRole.Metal);
-            d.parts[d.parts.Count - 1].glow = 1f;
             Add(d, "Do_Scar", B.Chest, Slot.TorsoTrim, G.Storm, Band(2.2f, 870, 270, 856, 296, 876, 322, 860, 350, 880, 378), 2, PartRole.Eye, false, null, 2.2f);
 
             // a thick twisted rope belt and its knot
