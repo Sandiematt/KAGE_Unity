@@ -28,6 +28,9 @@ namespace Kage
         /// <summary>The key of the item that gets the focus when the panel opens.</summary>
         protected virtual string DefaultFocus { get { return null; } }
 
+        /// <summary>The key that gets the focus once the panel is built again; a panel can send it somewhere else than where it was.</summary>
+        protected virtual string FocusAfterBuild(string key) { return key; }
+
         protected abstract void Build();
 
         public void Show()
@@ -52,7 +55,7 @@ namespace Kage
             }
             Nav.Clear();
             Build();
-            Nav.SetFocus(focusKey);
+            Nav.SetFocus(FocusAfterBuild(focusKey));
         }
 
         /// <summary>Applies a command; the panel can use it before the focus does. Returns true if used.</summary>

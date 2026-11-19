@@ -21,6 +21,8 @@ namespace Kage
         public FlowController Controller { get; private set; }
         public SaveStore Store { get; private set; }
         public StageWorld World { get; private set; }
+        /// <summary>The Armory's camera and preview Kages (SAN-90); null on every other screen.</summary>
+        public ArmoryWorld ArmoryWorld { get; private set; }
         public RectTransform Stage { get; private set; }
 
         readonly Dictionary<FlowScreen, FlowPanel> panels = new Dictionary<FlowScreen, FlowPanel>();
@@ -60,6 +62,7 @@ namespace Kage
             panels[FlowScreen.Stage] = stageHud;
             panels[FlowScreen.Results] = new ResultsScreen(this, Stage);
             panels[FlowScreen.Settings] = new SettingsScreen(this, Stage);
+            panels[FlowScreen.Armory] = new ArmoryScreen(this, Stage);
             pause = new PauseOverlay(this, Stage);
             confirm = new ConfirmOverlay(this, Stage);
             controls = new ControlsOverlay(this, Stage);
@@ -117,6 +120,7 @@ namespace Kage
             var c = Controller;
             var scr = c.Screen;
             if (scr != FlowScreen.Settings) controlsOpen = false;
+            if (scr != FlowScreen.Armory) DestroyArmoryWorld();
 
             switch (scr)
             {
@@ -136,7 +140,14 @@ namespace Kage
                     EnsureStageWorld();
                     break;
                 case FlowScreen.Results:
+                    // back from the Armory the stage world was put away: stand the fighters up again for the results
+                    if (World == null && c.StageId != null) World = StageWorld.Create(transform, c.StageId, c.Save);
                     if (World != null) World.FrameResults();
+                    break;
+                case FlowScreen.Armory:
+                    // the Armory has its own camera and fighters
+                    DestroyWorld();
+                    if (ArmoryWorld == null) ArmoryWorld = ArmoryWorld.Create(transform);
                     break;
             }
 
@@ -193,8 +204,16 @@ namespace Kage
             worldAttempt = 0;
         }
 
+        void DestroyArmoryWorld()
+        {
+            if (ArmoryWorld == null) return;
+            DestroyImmediate(ArmoryWorld.gameObject);
+            ArmoryWorld = null;
+        }
+
         void OnDestroy()
         {
+            DestroyArmoryWorld();
             DestroyWorld();
             GameFeel.paused = false;
             Time.timeScale = 1f;

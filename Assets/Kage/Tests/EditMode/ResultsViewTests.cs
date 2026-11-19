@@ -108,8 +108,8 @@ namespace Kage.Tests
             Assert.AreEqual(0, v.Gems);
             Assert.AreEqual(gemsBefore, save.gems, "a loss gives no gems");
             CollectionAssert.AreEqual(new[] { false, false, false }, v.Seals);
-            CollectionAssert.AreEqual(new[] { "retry", "continue" }, v.Buttons.Select(b => b.Key).ToArray());
-            CollectionAssert.AreEqual(new[] { "Retry", "Map" }, v.Buttons.Select(b => b.Label).ToArray());
+            CollectionAssert.AreEqual(new[] { "retry", "armory", "continue" }, v.Buttons.Select(b => b.Key).ToArray());
+            CollectionAssert.AreEqual(new[] { "Retry", "Upgrade", "Map" }, v.Buttons.Select(b => b.Label).ToArray());
             StringAssert.EndsWith("still stands. Rise again.", PlayDev("act1.sub1", Loss()).Line);
             Assert.IsFalse(string.IsNullOrEmpty(v.Tip));
         }

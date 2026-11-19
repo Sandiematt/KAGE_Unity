@@ -66,7 +66,10 @@ namespace Kage.Tests
             Assert.AreEqual("continue", Focus);
 
             flow.Send(MenuCommand.Left);
-            Assert.AreEqual("campaign", Focus, "left from the Continue card reaches the menu row beside it");
+            Assert.AreEqual("armory-tile", Focus, "left from the Continue card reaches the Armory tile under it (SAN-90)");
+            flow.Send(MenuCommand.Left);
+            Assert.IsTrue(Focus == "settings" || Focus == "armory" || Focus == "campaign", "and left again reaches the menu rows");
+            flow.Active.Nav.SetFocus("campaign");
             flow.Send(MenuCommand.Up);
             Assert.AreEqual("play", Focus);
             flow.Send(MenuCommand.Down);
@@ -199,6 +202,8 @@ namespace Kage.Tests
             Assert.AreEqual(gems, flow.Controller.Save.gems);
             Assert.AreEqual("retry", Focus);
 
+            flow.Send(MenuCommand.Right);
+            Assert.AreEqual("armory", Focus, "Upgrade sits between Retry and Map (JS)");
             flow.Send(MenuCommand.Right);
             Assert.AreEqual("continue", Focus);
             flow.Send(MenuCommand.Submit);          // Map

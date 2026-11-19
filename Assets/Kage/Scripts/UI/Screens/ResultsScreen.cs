@@ -136,9 +136,15 @@ namespace Kage
             {
                 var b = v.Buttons[i];
                 bool primary = i == 0;
-                float bw = primary ? 256 : 190;
+                // a loss has three buttons (JS: Retry, Upgrade, Map) and the column is only 496 wide
+                float bw = v.Buttons.Length > 2 ? (i == 0 ? 210 : i == 1 ? 170 : 96) : primary ? 256 : 190;
                 string key = b.Key;
-                UiParts.Plate(Root, Nav, key, bx, y, bw, 60, b.Label, primary, () => { if (key == "continue") C.ContinueFromResults(); else C.RetryFromResults(); });
+                UiParts.Plate(Root, Nav, key, bx, y, bw, 60, b.Label, primary, () =>
+                {
+                    if (key == "continue") C.ContinueFromResults();
+                    else if (key == "armory") C.OpenArmory();
+                    else C.RetryFromResults();
+                });
                 bx += bw + 16;
             }
             Tick();
