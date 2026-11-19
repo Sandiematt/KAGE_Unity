@@ -113,6 +113,7 @@ namespace Kage
             if (TryGuard(info, out var guarded)) return guarded;      // step 6
 
             // step 7: the hit
+            _hitOnBrokenGuard = GuardBroken;        // the armour check below reads it: the break is spent next (Fighter.Armour.cs)
             ApplyGuardBreakCrit(ref info);
             if (state == FState.Down)
             {
