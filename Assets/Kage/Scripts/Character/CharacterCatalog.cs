@@ -18,6 +18,7 @@ namespace Kage
             Add(Ronin.Def());              // dev only: today's recolour
             Add(TestHeavy.Def());          // dev only: the mass-3 dummy (SAN-68)
             Add(OrderFootman.Def());
+            Add(OrderRunner.Def());
             Add(HollowShade.Def());
             Add(HollowTutorial.Def());
             Add(Raikon.Def());             // the Act I boss (look: SAN-71; fight: SAN-107)
@@ -28,6 +29,7 @@ namespace Kage
             Add(new KagePartSet());
             Add(new RoninPartSet());
             Add(new OrderFootmanPartSet());
+            Add(new OrderRunnerPartSet());
             Add(new HollowShadePartSet());
             Add(new HollowTutorialPartSet());
             Add(new RaikonPartSet());
