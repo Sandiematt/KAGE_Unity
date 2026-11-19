@@ -112,7 +112,7 @@ namespace Kage
                 var info = new HitInfo
                 {
                     attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, false), kb = new Vector2(w.kb.x * away, w.kb.y), zone = best.Zone, contact = pos,
-                    moveId = Def.id, window = -1,
+                    moveId = Def.id, window = -1, origin = HitOrigin.Hazard,
                 };
                 var outcome = ExternalHit.Deliver(Owner, t, info, out _);
                 if (outcome != ExternalHit.Outcome.Missed) _log.Add(t);

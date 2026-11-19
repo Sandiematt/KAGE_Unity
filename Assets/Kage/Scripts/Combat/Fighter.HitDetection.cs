@@ -257,6 +257,8 @@ namespace Kage
             float dmg = target != null ? target.LastDamageTaken : (res == HitResult.Hit ? info.dmg : 0f);
             // posture the target took from this hit (SAN-86); a parry's or a clash's posture is the checks' own business
             float posture = target != null && res is HitResult.Hit or HitResult.Blocked ? target.LastPostureTaken : 0f;
+            // a parry's posture is the one its attacker took (SAN-91); the blow it turned aside was no crit
+            if (target != null && res == HitResult.Parried) { posture = target.LastParryPosture; info.crit = false; }
             var w = info.w;
             ctx.Events.Publish(CombatEvent.HitResolved(ctx.Clock.Frame, type, this, target, FightContext.IdOf(t), info.moveId, info.window,
                 dmg, info.crit, w != null ? w.level : HitLevel.Mid, info.zone, info.contact, info.kb, posture));

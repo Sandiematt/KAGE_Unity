@@ -39,12 +39,15 @@ namespace Kage.Tests
         };
 
         /// <summary>Kage holds Guard (with Down when <paramref name="low"/>) and settles into the stance; the Ronin stands still.</summary>
+        /// <summary>Frames to hold Guard before a hit so it is blocked, not parried: past the parry window (SAN-91).</summary>
+        static int PastParry => Tuning.Get<ParryTuning>().windowFrames + 2;
+
         HeadlessFight Guarding(bool low = false, int hold = 600)
         {
             var f = Duel();
             f.RoninInput.Add(1200);
             f.KageInput.Add(hold, dy: low ? -1 : 0, buttons: "G");
-            f.Run(8);
+            f.Run(PastParry);
             Assert.IsTrue(f.Kage.IsGuarding, "Kage is in his guard");
             return f;
         }
@@ -248,8 +251,8 @@ namespace Kage.Tests
         {
             var f = Duel();
             f.RoninInput.Add(1200);
-            f.KageInput.Add(12, buttons: "G").Add(600);
-            f.Run(8);
+            f.KageInput.Add(PastParry + 2, buttons: "G").Add(600);
+            f.Run(PastParry);
             f.Kage.ReceiveHit(Incoming(f.Ronin, HitLevel.Mid, dmg: 6));
             float p = f.Kage.Posture;
             f.Run(T.drainDelayFrames);
@@ -376,7 +379,7 @@ namespace Kage.Tests
             _fights.Add(f);
             f.RoninInput.Add(1200);
             f.KageInput.Add(600, buttons: "G");
-            f.Run(8);
+            f.Run(PastParry);
             Assert.IsTrue(f.Kage.IsGuarding);
             return f;
         }
@@ -435,7 +438,8 @@ namespace Kage.Tests
             var guards = rec.Polled.Where(i => i.guard).ToList();
             Assert.IsNotEmpty(guards, "the AI guarded at least once");
             Assert.IsTrue(guards.All(i => i.dx == 0), "with no horizontal input");
-            Assert.Greater(f.Events(CombatEventType.Blocked).Count(e => e.TargetId == "ronin"), 0, "and it blocked a hit");
+            // the recording wrapper hides the AI from the fighter, so its guard may go up inside the parry window: a block or a parry
+            Assert.Greater(f.Events(CombatEventType.Blocked).Count(e => e.TargetId == "ronin") + f.Events(CombatEventType.Parried).Count(e => e.TargetId == "ronin"), 0, "and it guarded a hit");
         }
 
         // ---------------------------------------------------------------- the HUD
