@@ -12,17 +12,29 @@ namespace Kage
     /// In a group fight a foe the engagement manager hasn't engaged waits its turn instead (SAN-83, <see cref="WaitTurn"/>):
     /// it keeps <see cref="EngagementTuning.waitDistance"/> from its target and circles, guards as usual, and never attacks.
     /// </summary>
-    public class AIInputSource : IInputSource
+    public partial class AIInputSource : IInputSource
     {
-        public float level = 0.6f;     // 0 easy … 1 hard
+        public float level = 0.6f;     // 0 easy … 1 hard: the stage's difficulty; the profile's own numbers at the default 0.6
         public bool passive;           // training: just stands and guards sometimes
         /// <summary>How often a chosen attack is actually thrown (<see cref="CharacterDef.attackRate"/>): 1 is the profile as is, 0.3 holds back seven times in ten.</summary>
         public float attackRate = 1f;
 
-        /// <summary>Takes the character's AI knobs (ADR-0005): <see cref="CharacterDef.attackRate"/>. Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.</summary>
-        public void Configure(CharacterDef def) { if (def != null) { attackRate = def.attackRate; parryRate = def.parryRate; } }
+        /// <summary>
+        /// Takes the character's AI knobs (ADR-0005): its <see cref="CharacterDef.aiProfile"/> (<see cref="AiProfiles"/>), <see cref="CharacterDef.attackRate"/>
+        /// and the parry rate (the character's own when it sets one, else the profile's). Called by <see cref="FightBuilder.Spawn(CharacterDef,int,IInputSource)"/>.
+        /// </summary>
+        public void Configure(CharacterDef def)
+        {
+            if (def == null) return;
+            profile = AiProfiles.Get(def.aiProfile);
+            attackRate = def.attackRate;
+            parryRate = def.parryRate > 0f ? def.parryRate : (profile != null ? profile.parryRate : 0f);
+        }
 
-        /// <summary>The share of the attacks this AI guards that it tries to parry (<see cref="CharacterDef.parryRate"/>, SAN-91): 0 never, 1 every one it guards.</summary>
+        /// <summary>
+        /// The share of the attacks this AI guards that it tries to parry (<see cref="CharacterDef.parryRate"/>, SAN-91): 0 never, 1 every one it guards.
+        /// With a <see cref="profile"/> (SAN-95) it is the chance per attack, the JS <c>parry</c> number, and it comes from the profile unless the character sets its own.
+        /// </summary>
         public float parryRate;
         /// <summary>True while the guard being held is a parry attempt. A foe's parry only happens then (see Fighter.Parry.cs), so a plain guard that goes up by chance inside the window is only a block.</summary>
         public bool ParryAttempt { get; private set; }
