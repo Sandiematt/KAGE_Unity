@@ -119,6 +119,11 @@ A ticket that needs a new event type adds it to the end of the enum, so the orde
 - The `onHit` callback is invoked with `HitResult.Dodged`; `KageGame.OnFighterHit` ignores it. The "EVADE" call-out comes from the cue (`VFX_Kage_PerfectDodge`), not from a listener.
 - No baseline scenario dodges, so the baseline replay is unchanged.
 
+## Notes from the implementation (SAN-93)
+
+- `Clashed` (factory `CombatEvent.Clashed`) is published by the fight loop (`FightLoop.Clash.cs`) once per clashing pair: Source is the fighter earlier in fight order, Target the other; `MoveId` and `Window` are Source's, **`Name` is Target's move id** (the one place `Name` carries a move; `ToLine` prints it as `n=`), `Damage` 0, `Posture` what each fighter gained (the clash's posture loss, as added to Source's bar), `Contact` where the blades crossed. A guard-break the posture causes is published right after it (`GuardBroken`, Source the other fighter, `MoveId` that fighter's move).
+- No `Hit` or `Blocked` follows for either blade: both moves are over.
+
 ## Consequences
 
 - The HUD, rating, tutorial and tests share one definition of what happened.

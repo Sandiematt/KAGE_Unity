@@ -1,0 +1,17 @@
+{
+    "posture": 8.0,
+    "recoilFrames": 13,
+    "recoilSpeed": 3.6,
+    "hitstopFrames": 8,
+    "shake": 0.35,
+    "punch": 0.05,
+    "sparksPerSide": 12,
+    "sparkSpeedMin": 3.0,
+    "sparkSpeedMax": 9.0,
+    "sparkLife": 0.35,
+    "sparkSize": 0.06,
+    "flareSize": 0.6,
+    "ringRadius": 0.55,
+    "sparkTint": { "r": 1.0, "g": 0.886, "b": 0.659, "a": 1.0 },
+    "soundVolume": 0.9
+}
