@@ -19,6 +19,7 @@ namespace Kage
             Add(TestHeavy.Def());          // dev only: the mass-3 dummy (SAN-68)
             Add(OrderFootman.Def());
             Add(OrderRunner.Def());
+            Add(OrderShieldbearer.Def());
             Add(OrderChainthrower.Def());
             Add(HollowShade.Def());
             Add(HollowFlicker.Def());
@@ -33,6 +34,7 @@ namespace Kage
             Add(new RoninPartSet());
             Add(new OrderFootmanPartSet());
             Add(new OrderRunnerPartSet());
+            Add(new OrderShieldbearerPartSet());
             Add(new OrderChainthrowerPartSet());
             Add(new HollowShadePartSet());
             Add(new HollowFlickerPartSet());
