@@ -22,7 +22,7 @@ namespace Kage.Tests
     public class MultiTargetScreenshots
     {
         const int W = 640, H = 360;
-        static readonly int[] Shots = { 20, 200, 420, 700, 1000, 1400 };
+        static readonly int[] Shots = { 20, 140, 260, 380, 520, 700 };
         static readonly float[] FourFootmen = { 1.3f, -2.4f, 2.8f, -3.8f };
 
         static string Root => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-83"));
@@ -50,7 +50,7 @@ namespace Kage.Tests
             ArenaBuilder.Build(arena.transform, rig);
 
             var kage = CharacterCatalog.Get(KageCharacter.Id);
-            kage.damageMul = 4f;
+            kage.damageMul = 1.5f;
             kage.healthMul = 20f;
             var f = new GroupFight(83, 0f, FourFootmen, kageAi: true, kageDef: kage, aiLevel: 0.9f);
             var marks = new List<(GameObject engaged, GameObject waiting)>();
