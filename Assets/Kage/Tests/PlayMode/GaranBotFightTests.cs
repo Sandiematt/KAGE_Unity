@@ -17,12 +17,12 @@ namespace Kage.Tests
         /// <summary>
         /// The SAN-95 Kage bot (walk in, cycle its buttons) with the JS tips for Garan, reading only his move and its frame:
         /// <list type="bullet">
-        /// <item>Storm Fist ("dash away or behind him"): through the wind-up, close in and roll through him, so the slam and the shock land
-        /// in front of him and miss.</item>
-        /// <item>Tsuppari ("step back out of it"): walk back through the crouch and the palms.</item>
+        /// <item>Storm Fist ("dash away or behind him, then hit the long recovery") and Tsuppari: through the wind-up or the crouch, close in
+        /// and roll through him to his back, where the slam, the shock and the palms all go the other way, and hit him there; with no time
+        /// to get round, dash away and keep walking back.</item>
         /// <item>The charge: wait out the tell, roll through him as he comes; he meets the wall.</item>
-        /// <item>His other blows: hold Guard while one is coming when he is near (as the Kuroe bot). Guard is never held otherwise, so the
-        /// clinch (which takes only a guard) seldom comes.</item>
+        /// <item>His other blows: hold Guard while one is coming when he is near (as the Kuroe bot), low against a low blow. Guard is never
+        /// held otherwise, so the clinch (which takes only a guard) seldom comes.</item>
         /// </list>
         /// </summary>
         sealed class StormwiseBot : IInputSource
@@ -40,17 +40,18 @@ namespace Kage.Tests
                 float dist = Mathf.Abs(opp.Pos.x - self.Pos.x);
                 int toward = opp.Pos.x > self.Pos.x ? 1 : -1;
                 bool behind = Mathf.Sign(self.Pos.x - opp.Pos.x) == -Mathf.Sign(opp.facing);
-                if (m != null && m.id == "garan.stormFist" && m.hits.Count > 0 && opp.moveFrame < m.hits[0].from + 4)
+                bool storm = m != null && m.id == "garan.stormFist" && opp.moveFrame < m.hits[0].from + 4;
+                bool palms = m != null && m.id == "garan.tsuppari" && opp.moveFrame <= m.hits[m.hits.Count - 1].to;
+                if (storm || palms)
                 {
-                    // close: roll through him to his back; further: dash away out of the shock's length, then keep walking away
-                    if (_rolledFor != m && !self.Busy) return dist < 1.3f ? Roll(m, toward) : DashAway(m, toward);
-                    if (behind) return default;
-                    SteppedBack++;
-                    return new FrameInput { dx = -toward };
-                }
-                if (m != null && m.id == "garan.tsuppari" && opp.moveFrame <= m.hits[m.hits.Count - 1].to)
-                {
-                    if (_rolledFor != m && !self.Busy) return DashAway(m, toward);
+                    if (behind) return _bot.Poll(self);                         // his back, with the blow going the other way: free hits
+                    if (_rolledFor != m && !self.Busy)
+                    {
+                        if (dist < 1.05f) return Roll(m, toward);               // through him, to his back
+                        int time = m.hits[0].from - opp.moveFrame;
+                        if (time > 12) return new FrameInput { dx = toward };   // time to close in for the roll
+                        return DashAway(m, toward);                            // no time: out of it
+                    }
                     SteppedBack++;
                     return new FrameInput { dx = -toward };
                 }
@@ -62,7 +63,8 @@ namespace Kage.Tests
                 if (m != null && m.hits.Count > 0 && opp.moveFrame <= m.hits.Max(h => h.to) && dist < 2.8f)
                 {
                     Guarded++;
-                    return new FrameInput { guard = true };
+                    var next = m.hits.Where(h => h.to >= opp.moveFrame).OrderBy(h => h.from).FirstOrDefault();
+                    return new FrameInput { guard = true, dy = next != null && next.level == HitLevel.Low ? -1 : 0 };     // a low blow: the low guard
                 }
                 return _bot.Poll(self);
             }
