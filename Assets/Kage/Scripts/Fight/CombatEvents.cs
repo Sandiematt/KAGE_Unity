@@ -82,6 +82,14 @@ namespace Kage
         public static CombatEvent GuardBroken(int frame, Fighter source, Fighter target, string moveId, int window, float postureMax, Vector2 contact) =>
             new(frame, CombatEventType.GuardBroken, source, target, null, null, moveId, window, posture: postureMax, contact: contact);
 
+        /// <summary>
+        /// Two blades clashed (SAN-93), once for the pair. Source is the fighter earlier in fight order, Target the other;
+        /// MoveId and Window are Source's, <paramref name="targetMoveId"/> (written to Name) is Target's move. No damage.
+        /// Posture is what each fighter gained (the clash's posture loss, after the cap on Source's bar). Contact is where the blades crossed.
+        /// </summary>
+        public static CombatEvent Clashed(int frame, Fighter source, Fighter target, string moveId, int window, string targetMoveId, float posture, Vector2 contact) =>
+            new(frame, CombatEventType.Clashed, source, target, null, null, moveId, window, posture: posture, contact: contact, name: targetMoveId);
+
         public static CombatEvent KnockedOut(int frame, Fighter source, Fighter target, string moveId, Vector2 contact, Vector2 impulse) =>
             new(frame, CombatEventType.KnockedOut, source, target, null, null, moveId, contact: contact, knockback: impulse);
 

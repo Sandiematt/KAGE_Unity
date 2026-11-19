@@ -251,3 +251,33 @@ The spec says a stagger of "about 0.5 s": the sub-boss (0.62), boss (0.5) and Ka
 **Baseline replay.** Unchanged: no baseline scenario presses Guard, and the baseline AI has `parryRate` 0, so no parry occurs and the replay files match without re-recording.
 
 **Tests.** `ParryTests` (fight harness and the `ReceiveHit` seam: the window edge, held guard, no guard, the defender, the attacker's stagger, push, posture and roles, guard-break order, the stunRes perk, the lockout, mashing, one press one hit, unblockable, projectiles and hazards, the event, the rating, the cue and hit-stop, the AI), `TuningTests.TheShippedParryTuningIsTheSpecsParryNumbers`. Review sheet: `ParryScreenshots` → `Screenshots/review/SAN-91/`.
+
+## Notes from the implementation (SAN-93: the weapon clash)
+
+**Where.** `FightLoop.Clash.cs` implements `partial void ResolveClashes(List<HitSweep>)` (phase 4, step 1 of the defence order); the geometry is `Combat/ClashGeometry.cs` (pure math), the fighter's side `Fighter.Clash.cs` (`ClashRecoil`), the numbers `ClashTuning` / `Resources/Tuning/clash.json`, the placeholder look `VFX/ClashCues.cs` (`VFX_Kage_Clash`).
+
+**What is a blade.** A run of consecutive `HitPoint.Blade` or `HitPoint.BladeN` samples of one owner's one window (`ClashGeometry.CollectBlades`). A twin blade window gives two runs; the chain lash is part of the Blade line already (ADR-0006), so it is just a longer run. Fist, hilt, foot, shin and knee samples never make a run, so a blade passes through a fist or a foot and the hit phase treats it as an ordinary hit. A window that mixes (a fist and a blade) clashes with its blade only. Projectiles and hazards are not sweeps, so they never clash.
+
+**When two blades cross.** Each blade swept a strip this frame: its samples ran from where the window last saw them (`HitSweep.from`) to where they are now (`to`). The strip's outline is three sets of segments: the `to` points joined, each sample's own path, the `from` points joined (on a window's first active frame `from == to`, so only the line). Two blades cross when any segment of one meets any segment of the other (`ClashGeometry.SegmentsCross`, ends included; a collinear overlap counts, which is two spears thrust at each other). That catches a swing through a still blade, two crossing swings and a head-on thrust. It is pure float math on the recorded sweeps, so it is deterministic. The clash ignores the window radius (blades are lines) and the base-to-first-sample gap (about 14 cm at the guard). Two blades that pass without their lines or paths meeting are not a clash, even if both hit: a 1.0 m iai against an iai dashes through the other body, and the cuts land as a trade (the first fighter in fight order wins, as before).
+
+**Who clashes.** Two live fighters of different teams (`Fighter.team`), both still in the attack that recorded the blade (`state == Attack && move == run.move`). Pairs are tried in sweep order (fighter order, then window order); a clash ends both moves, so a fighter clashes at most once a frame and a third fighter's blade then meets nobody. Several foes (SAN-83) therefore clash pair by pair in fighter order. Under the world time scale (SAN-92) a fighter the slowed world doesn't advance this frame records no sweeps, so it can't clash on that frame; under the legacy switch (`ctx.LegacyHits`) the loop never calls `ResolveClashes`, so there are no clashes.
+
+**What a clash does.**
+
+| Number (`clash.json`) | Value | Meaning |
+|---|---|---|
+| `posture` | 8 | posture each fighter gains (of 60; Raikon 100), through `AddPosture(amount, by, moveId)`; a full bar breaks the guard |
+| `recoilFrames` | 13 | hitstun after the clash, the move is over (JS 0.22 s) |
+| `recoilSpeed` | 3.6 | m/s each is thrown away from the other, through `KnockVelocity` (mass and knockback taken count; JS 420 px/s) |
+| `hitstopFrames` | 8 | the whole fight freezes (JS 0.13 s) |
+| `shake`, `punch` | 0.35, 0.05 | `GameFeel.Shake` and `GameFeel.Punch` |
+| `sparksPerSide`, `sparkSpeedMin/Max`, `sparkLife`, `sparkSize`, `flareSize`, `ringRadius`, `sparkTint`, `soundVolume` | 12, 3 to 9 m/s, 0.35 s, 0.06 m, 0.6 m, 0.55 m, gold #ffe2a8, 0.9 | the placeholder cue |
+
+Neither takes damage: both are out of their moves, and the hit phase drops the sweeps of a move that is over, so neither blade hits (nor does either fighter's other windows). The recoil ignores armour (armour is for hits) and the stun-resist perk, so both fighters recoil alike. Order inside `Clash`: recoil, posture (`AddPosture`, so a break replaces the recoil's stun with the break's), the `Clashed` event, then `FlushGuardBreak` for both (so `GuardBroken` follows `Clashed` on the same frame), hit-stop, shake, the `VFX_Kage_Clash` cue at the crossing point. The sparks and rings count unscaled time, as the other hit effects, so they don't freeze in the hit-stop.
+
+**Event.** One `Clashed` per pair (ADR-0003 notes): Source is the earlier fighter, Target the other, `Name` the target's move.
+
+**Baseline.** No baseline scenario has two blade windows crossing, so the baseline replay is unchanged (the full PlayMode suite, including `BaselineReplayTests` and the legacy copies, passes on the unchanged files).
+
+**Tests.** `ClashGeometryTests` (EditMode: segment cases, still blades, a blade swung through a still one, near miss, heights, order independence, which samples are blades, twin windows, mixed windows) and `WeaponClashTests` (fight harness: katana against katana and low reap against low reap, no hit and no damage, the event, recoil and its length, posture, hit-stop length, the cue, a guard-break after the clash event, a near miss, out of reach, blade against fist, kick, fists family, same team, spear against spear, the chain lash beyond the blade's reach, the near twin blade alone clashing against a spear, a clash replaying identically). The scenarios' distances and button delays were measured on the move sets as they are; a retimed move needs its scenario re-measured. Review image: `Screenshots/review/SAN-93/clash_sheet.png` (from `WeaponClashScreenshots`, run without `-nographics`).
+
