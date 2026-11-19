@@ -56,11 +56,21 @@ namespace Kage
             center = new Vector2(cx, cy);
         }
 
+        // ---- group fights (SAN-83) ----
+        FightContext _fight;
+        Fighter _focus;
+
+        public void Frame(FightContext fight, Fighter focus) { _fight = fight; _focus = focus; }
+
         void LateUpdate()
         {
             if (cam == null) return;
+            Follow(Time.unscaledDeltaTime);
+        }
+
+        public void Follow(float dt)
+        {
             Compute(out var c, out var s);
-            float dt = Time.unscaledDeltaTime;
             _pos = KMath.Damp(_pos, c, 6f, dt);
             _size = KMath.Damp(_size, s, 4f, dt);
             Apply();
