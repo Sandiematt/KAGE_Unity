@@ -115,6 +115,7 @@ namespace Kage
                 driven = true;
             }
             if (RanIntoWall(m, driven)) return;                   // a charge into the wall it faces staggers (SAN-104)
+            if (VaultStep(m)) driven = true;                      // an arc over the target (SAN-105)
             if (!driven && Grounded && !m.airborne)
                 rb.linearVelocity = new Vector2(Mathf.MoveTowards(rb.linearVelocity.x, 0f, 16f * Time.fixedDeltaTime), rb.linearVelocity.y);
 
@@ -135,6 +136,8 @@ namespace Kage
                 }
             }
 
+            foreach (var c in m.cues) if (Passed(c.frame)) PlayMoveCue(c.cue);
+
             // hit windows: pose the rig at this exact logic frame before testing
             bool active = false;
             foreach (var w in m.hits) if (Touches(w.from, w.to)) active = true;
@@ -147,7 +150,12 @@ namespace Kage
                     if (Touches(w.from, w.to)) WindowActive(w);
             }
 
-            if (m.projectileFrame >= 0 && Passed(m.projectileFrame)) { if (IsKunaiThrow(m)) ThrowKunai(); else SpawnCrescent(); }
+            if (m.projectileFrame >= 0 && Passed(m.projectileFrame))
+            {
+                if (m.projectile != null) SpawnMoveProjectile(m);      // a thrown ability (Smoke Bomb, SAN-105)
+                else if (IsKunaiThrow(m)) ThrowKunai();
+                else SpawnCrescent();
+            }
             if (m.hazard != null && Passed(m.hazardFrame)) SpawnMoveHazard(m);
             if (m.isThrow) ThrowUpdate();
 
