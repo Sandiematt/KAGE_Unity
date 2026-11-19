@@ -107,7 +107,8 @@ namespace Kage
                 case FState.Victory: BlendTo(_victory, sf, 24f); break;
                 case FState.Intro: _display.CopyFrom(_ref); break;
                 case FState.Ultimate:
-                    if (_ultFrame < 66) BlendTo(_crouch, sf, 6f);
+                    if (_cmActive) CrimsonMovePoseOutput(alpha);        // Crimson Moon: Kage in plain sight through the whole art (SAN-82)
+                    else if (_ultFrame < 66) BlendTo(_crouch, sf, 6f);
                     else _display.CopyFrom(_ref);
                     break;
             }

@@ -41,7 +41,7 @@ namespace Kage.Tests
         {
             "jab", "cross", "uppercut", "crouchPunch", "lunge", "kick1", "kick2", "axe", "sweep", "push",
             "throwWhiff", "throw", "airKick", "airPunch", "airSlash", "roll", "backflip", "groundPound", "getUp", "getUpFront",
-            "iai", "risingMoon", "cleave", "shadowStep", "lowReap", "counterStance", "counterSlash", "crescent", Fighter.ThousandShadows,
+            "iai", "risingMoon", "cleave", "shadowStep", "lowReap", "counterStance", "counterSlash", "crescent", Fighter.CrimsonMoon,
         };
 
         static readonly (string name, float x, int frames, Action<ScriptedInput> script)[] Moves =
@@ -66,7 +66,7 @@ namespace Kage.Tests
             ("lowReap", 0f, 100, s => s.Add(1, dy: -1, buttons: "S")),
             ("counterStance", 0f, 90, s => s.Add(1, fwd: -1, buttons: "S")),
             ("crescent", -1.2f, 150, s => s.Add(1, buttons: "X")),
-            ("thousandShadows", 0f, 160, s => s.Add(1, dy: -1, buttons: "X")),
+            ("crimsonMoon", 0f, 160, s => s.Add(1, dy: -1, buttons: "X")),
         };
 
         /// <summary>Kage's offset from the bag or the Ronin: x below is added to these.</summary>

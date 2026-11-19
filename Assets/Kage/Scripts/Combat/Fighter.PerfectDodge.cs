@@ -56,6 +56,7 @@ namespace Kage
             get
             {
                 if (!isPlayer || ctx == null || _perfectDodgeSpentAt == _stateEntries) return false;
+                if (state == FState.Ultimate) return false;       // none during a rage art: it holds the world's scale itself (SAN-82)
                 int age = DodgeAge;
                 return age >= 0 && age <= PerfectDodgeWindow;
             }

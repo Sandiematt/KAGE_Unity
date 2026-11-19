@@ -51,6 +51,11 @@ namespace Kage.Tests
             }
             finally { Tuning.ClearOverrides(); }
 
+            if (BaselineReplay.RecordingLegacy)
+            {
+                BaselineReplay.WriteLegacy(scenario.name, actual);
+                return;
+            }
             string path = BaselineReplay.LegacyPathOf(scenario.name);
             Assert.IsTrue(File.Exists(path), $"No legacy baseline for {scenario.name}.");
             string diff = BaselineReplay.Compare(File.ReadAllText(path), actual);
@@ -96,7 +101,8 @@ namespace Kage.Tests
             // a sanity floor: the scripts are placed to connect, not to whiff (a guarded hit connects too:
             // since SAN-65 the AI's guard is judged on the frame it is hit, so it blocks one more of them)
             Assert.GreaterOrEqual(bagHits, 15);
-            Assert.GreaterOrEqual(aiHits, 14);
+            // (Kage's rage art in the replay is Crimson Moon since SAN-82: four hits, where Thousand Shadows landed six)
+            Assert.GreaterOrEqual(aiHits, 12);
             Assert.GreaterOrEqual(aiConnects, 30);
         }
 

@@ -244,6 +244,7 @@ namespace Kage
 
         void SetState(FState s)
         {
+            if (_cmActive && s != FState.Ultimate) AbortRageArt();     // the art ended early: the world and the camera come back (SAN-82)
             if (s != FState.Launched && s != FState.Down && s != FState.KO) EndPhysicalFall();
             if (s != FState.Attack) { move = null; rig.SetSwordFront(false); }
             _start.CopyFrom(_display);
@@ -355,6 +356,7 @@ namespace Kage
 
         void OnDestroy()
         {
+            AbortRageArt();
             _trailBlade?.Dispose(); _trailBladeN?.Dispose(); _trailFist?.Dispose(); _trailFootN?.Dispose(); _trailFootF?.Dispose();
         }
     }

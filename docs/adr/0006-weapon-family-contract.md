@@ -214,3 +214,9 @@ With every multiplier at 1 and defence 0 this is exactly today's damage (`RoundT
 - **What the families do in a clash:** every move in `Blade`-pointed windows is eligible; the move is over and the fighter recoils into hitstun whatever its armour frames. Hit points are lines, so the weapon's `reach` multiplier (which lengthens the blade line) also lengthens what it can clash with.
 - Numbers are in `clash.json` (ADR-0004 notes), none in a family.
 
+## Notes from the implementation (SAN-82)
+
+- `Fighter.StartRageArt` reads `WeaponFamilyDef.rageArt`: `crimsonMoon` plays Crimson Moon, anything else Thousand Shadows. SAN-70's note above ("`TrySpecialDown` still starts Thousand Shadows for every family until SAN-82 reads it") no longer holds. The weapon multiplier counts on every hit of the art (`DamageCalc.For(..., weaponHit: true)`), so a level 5 Kagetsu cuts for `round(7 x damageMul x weapon.dmg)`.
+- Tests: one weapon per family (`RageArtThousandShadowsTests`, `RageArtTests`), Kagetsu and Shizuka for Crimson Moon.
+- Files: `Combat/Fighter.RageArt.cs`, `Combat/CrimsonMoonTuning.cs` and `Resources/Tuning/crimsonMoon.json`, `VFX/RageArtCues.cs`.
+
