@@ -176,6 +176,16 @@ so input, move selection, the AI and facing all read this frame's `opponent` and
 
 **For SAN-89 (stretch sessions).** Spawn a wave's foes into the same context on team 1; nothing needs wiring, since the loop picks every fighter's targets and the engaged foes each frame. Removing a cleared foe (`SetActive(false)`) takes it out of every target list and frees its place. A stretch with no foe in sight leaves Kage's `opponent` null; the JS game then turns him to where he walks, which the session can do the same way.
 
+## Notes from the implementation (SAN-82: Crimson Moon's freeze)
+
+- **One mechanism, reused.** The art calls `ctx.Clock.SlowWorld(0f, -1, kage)` in its first tick and `ResumeWorld()` when the finisher lands (frame 83 of 111), or when it ends early: `Fighter.SetState` away from `Ultimate`, `ResetForRound` and `OnDestroy` abort it (`AbortRageArt`), so a round reset, a `Win()` or a destroyed fighter can never leave the world frozen. `ResumeWorld` is only called if the clock is still the art's (`WorldExempt == kage`).
+- **Longer than the JS freeze.** The JS art holds the world only through its 0.55 s anticipation. Here the world stays frozen until the finisher, because the ticket asks that other fighters hold still while the foe is bound and cut. Frozen foes take their hits (the knockback velocity of each is stored); the finisher resumes the world first, so the foe is thrown into a running world, in slow motion.
+- **Who is bound: only the target.** As in the JS game (`tgt = nearestEnemy`), only the foe Kage targeted when the art started is cut and bound (`PickTarget` holds `opponent` through the art). In a group fight (F6) every other foe is frozen with the world and free from the finisher on; none is touched. (Kage is untouchable until frame 111.)
+- **Timeline** (art frames = Kage's ticks; hit-stop and slow motion don't advance them): 0 freeze, cut-in band, camera close-in; 33, 44, 56 the three cuts (7 each, 0.8 m from the foe, alternating sides, the first binds); 67 step back and sheathe (slow motion 0.4 for 0.2 s); 83 giant crescent (15, knockdown, hit-stop 7, slow motion 0.3 for 0.45 s, shake, punch); 111 back in neutral. All in `crimsonMoon.json`.
+- **Camera.** The art uses `CameraRig`'s override (`useOverride`, `overrideCenter`, `overrideSize`), set each tick through `FightContext.Camera` (new; `KageGame` and `StageWorld` set it, with `FightContext.Hud` for the cut-in band). The override wins over SAN-83's `Frame` (group framing) and the previous override (a tableau's) is restored when the art ends or aborts.
+- Not slowed (as noted above for particles): the cut-in band and the effects run on rendered time.
+
+
 ## Consequences
 
 - Tests can build any fight and replay it exactly.

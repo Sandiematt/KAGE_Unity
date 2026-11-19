@@ -101,6 +101,8 @@ namespace Kage
             _shadowE = MakeShadow(false);
 
             Fight = fight.Build();
+            Fight.Camera = Cam;
+            Fight.Hud = Hud;        // what a rage art moves: the camera's override and the cut-in band (SAN-82)
             _stats = new FightStatsRecorder(Fight.Events, Player);
             Fight.Begin();
             Player.ResetForRound(-1.25f, 1f);

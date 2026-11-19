@@ -130,6 +130,8 @@ namespace Kage
 
             bag = fight.AddBag(stage.transform, new Vector2(1.6f, 2.65f));
             Fight = fight.Build();
+            Fight.Camera = Cam;
+            Fight.Hud = Hud;        // what a rage art moves: the camera's override and the cut-in band (SAN-82)
             Fight.Events.Published += OnCombatEvent;
             Fight.Begin();
             Cam.targets.Add(player.rig.Bone(B.Hips));
