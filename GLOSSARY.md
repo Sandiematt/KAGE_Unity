@@ -95,8 +95,9 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Special**: the Special button. A plain Special is the family's Special move (Crescent for the katana). *Avoid:* using "special" for rage arts or for abilities.
 - **Crescent**: the katana's 35-Rage projectile move.
 - **Kunai**: the thrown knife on Special + Down when Rage isn't full, with a per-fight count.
-- **Projectile**: a thrown or launched object with a hit window (Crescent, kunai, the Chainthrower's lash if built as one, Thunder Swing's ground wave).
+- **Projectile**: a thrown or launched object with a hit window (Crescent, kunai, the Chainthrower's lash if built as one, Thunder Swing's ground wave, Hisame's smoke bomb). A **lob** is thrown upward and falls (`ProjectileDef.launchVy`; the smoke bomb, SAN-105).
 - **Hazard**: an area that shows a **telegraph** (ground mark) and then strikes once (Skyfall, the shock areas of Storm Break, Storm Fist and Vanguard Break). A move lays one down with `MoveDef.Hazard(frame, def, ahead)` (SAN-104: Storm Fist's ground mark shows through the wind-up and the shock strikes with the slam).
+- **Vault**: a move that arcs the fighter over its current target to land a set distance past it, facing it (`MoveDef.Vault`, SAN-105), or beside it on its own side when a wall leaves no room at the target's back. **Kocho** (the butterfly step, `hisameKocho`): Hisame's vault, the ticket's "mist step": invulnerable from the start to the landing, a glint on her fan as she lands at Kage's back, the cut 0.2 s later; her AI uses it only on a Kage who chases her. *Avoid:* teleport (she is never out of sight), mist step (in code).
 - **Wall stagger**: the stagger of a fighter whose charging move runs it into the wall it faces (`MoveDef.wallStagger`; Garan's dodged charge, the JS "STAGGERED" opening).
 - **Ability**: a named special move a foe or boss chooses through an **ability slot** in its input (Thunder Swing, Censure, Tsuppari). Abilities are moves. *Avoid:* skill, power.
 - **Effect cue**: a named effect request whose id is the JS VFX manifest id (or `VFX_Kage_<Name>`). It plays a placeholder until the VFX stage.

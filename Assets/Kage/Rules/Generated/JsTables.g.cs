@@ -1850,6 +1850,14 @@ namespace Kage.Rules
                 T = new double[] { 0.06, 0.08, 0.3 },
                 Dmg = 0,
                 Box = new double[] { 14, -170, 64, 120 }
+            },
+            new JsMove
+            {
+                Id = "tw1",
+                Kind = "weapon",
+                T = new double[] { 0.05, 0.05, 0.13 },
+                Dmg = 5,
+                Box = new double[] { 16, -200, 120, 130 }
             }
         };
 

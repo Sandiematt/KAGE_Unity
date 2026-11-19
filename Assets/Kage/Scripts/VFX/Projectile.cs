@@ -16,6 +16,13 @@ namespace Kage
         public float speed;
         /// <summary>0 = a straight line. Ignored by a ground wave.</summary>
         public float gravityScale;
+        /// <summary>Metres per second upward at the throw (a lob: Hisame's Smoke Bomb, SAN-105); 0 = level.</summary>
+        public float launchVy;
+        /// <summary>
+        /// Above <see cref="speed"/>: the thrower rolls each throw's speed in [speed, speedMax] on its own random stream (the JS smoke
+        /// bomb's <c>rand(380, 560)</c>, SAN-105). 0 = always <see cref="speed"/>.
+        /// </summary>
+        public float speedMax;
         /// <summary>Slides along the floor at its spawn height (Thunder Swing).</summary>
         public bool groundWave;
         /// <summary>Hit radius, metres.</summary>
@@ -62,8 +69,11 @@ namespace Kage
         static readonly List<HurtboxHit> SweepTmp = new();
         static readonly List<IHittable> TargetTmp = new();
 
-        /// <summary>Creates a projectile at <paramref name="pos"/> flying along <paramref name="dir"/> (+1 right, -1 left); the fight loop moves it.</summary>
-        public static Projectile Spawn(FightContext ctx, Fighter owner, ProjectileDef def, Vector2 pos, float dir)
+        /// <summary>
+        /// Creates a projectile at <paramref name="pos"/> flying along <paramref name="dir"/> (+1 right, -1 left); the fight loop moves it.
+        /// <paramref name="speed"/> (metres per second) replaces the def's speed for this one when it is not negative.
+        /// </summary>
+        public static Projectile Spawn(FightContext ctx, Fighter owner, ProjectileDef def, Vector2 pos, float dir, float speed = -1f)
         {
             var go = new GameObject("Projectile_" + def.id) { layer = PhysicsLayers.Projectile };
             go.transform.SetParent(owner.transform.parent, false);    // the fight root
@@ -75,15 +85,15 @@ namespace Kage
             col.isTrigger = true;
             col.radius = def.radius;
             var p = go.AddComponent<Projectile>();
-            p.Init(ctx, owner, def, pos, dir >= 0f ? 1f : -1f);
+            p.Init(ctx, owner, def, pos, dir >= 0f ? 1f : -1f, speed >= 0f ? speed : def.speed);
             return p;
         }
 
-        void Init(FightContext ctx, Fighter owner, ProjectileDef def, Vector2 pos, float dir)
+        void Init(FightContext ctx, Fighter owner, ProjectileDef def, Vector2 pos, float dir, float speed)
         {
             Ctx = ctx; Owner = owner; Def = def; Dir = dir;
             _pos = pos;
-            _vel = new Vector2(dir * def.speed, 0f);
+            _vel = new Vector2(dir * speed, def.launchVy);
             ctx.Projectiles.Add(this);
             EffectCues.Play(def.flightCue, pos, new CueArgs
             {

@@ -34,8 +34,9 @@ const CHAPTERS = ['prologue', 'act1'];
 const { loadSim } = require(path.join(JS_DIR, 'tests', 'helpers', 'load-sim.js'));
 const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS',
   'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES'] });
-// The basic moves the sub-boss abilities are measured against or built from (SAN-104): the jab (the damage scale) and the grab (the clinch).
-const MOVE_IDS = ['p1', 'grab'];
+// The basic moves the sub-boss abilities are measured against or built from (SAN-104): the jab (the damage scale) and the grab (the clinch);
+// and the twin blades' first cut (SAN-105: Hisame's Kocho ends in it).
+const MOVE_IDS = ['p1', 'grab', 'tw1'];
 
 /* ---------------- C# literal helpers ---------------- */
 const pascal = (k) => k[0].toUpperCase() + k.slice(1);
