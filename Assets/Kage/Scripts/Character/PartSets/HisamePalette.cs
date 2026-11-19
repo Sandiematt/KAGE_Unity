@@ -27,7 +27,7 @@ namespace Kage
         public static readonly Color Pale = KMath.Hex("#9FD4FF");            // her eye, the glint on the fans
         public static readonly Color Face = KMath.Hex("#1A1B20");            // the anime sub-bosses' black face, a cool cast
         public static readonly Color Rim = KMath.Hex("#8FB8DC");             // a cold rain back-light
-        public static readonly Color Smoke = KMath.Hex("#7A8494");           // the smoke bomb's smoke
-        public static readonly Color SmokeDark = KMath.Hex("#4A5260");
+        public static readonly Color Smoke = KMath.Hex("#9AA5B4");           // the smoke bomb's smoke
+        public static readonly Color SmokeDark = KMath.Hex("#6A7584");
     }
 }

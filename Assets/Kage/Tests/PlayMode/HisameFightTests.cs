@@ -218,7 +218,7 @@ namespace Kage.Tests
             Assert.AreEqual(1, hit.Count, "the cut lands on a Kage who stands");
             Assert.AreSame(f.Kage, hit[0].Target);
             Assert.AreEqual(12, hit[0].Frame - glint[0].frame, "0.2 s from the glint to the cut (JS tw1 held to 0.2 s)");
-            int land = _cues.First(c => c.cue == HisameAbilities.SmokeBurstCue && c.owner == f.Ronin && c.frame > glint[0].frame - 1).frame;
+            int land = _cues.Single(c => c.cue == HisameAbilities.KochoSmokeCue && c.owner == f.Ronin).frame;
             Assert.AreEqual(glint[0].frame, land, "the glint as she lands");
         }
 

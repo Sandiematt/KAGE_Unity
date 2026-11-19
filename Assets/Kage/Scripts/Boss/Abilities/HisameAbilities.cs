@@ -37,8 +37,10 @@ namespace Kage
         public const string CrackleCue = "VFX_Kage_LightningCrackle", CutGlintCue = "VFX_Kage_LightningGlint";
         /// <summary>The smoke bomb in flight.</summary>
         public const string SmokeBombCue = "VFX_Kage_SmokeBomb";
-        /// <summary>The JS manifest's toon smoke burst: where the bomb bursts, and where Kocho lands.</summary>
+        /// <summary>The JS manifest's toon smoke burst: where the bomb bursts.</summary>
         public const string SmokeBurstCue = "VFX_Anime_Smoke_Burst";
+        /// <summary>A little smoke at her feet where Kocho lands (the JS <c>w.fx.smoke(f.x, -30, 3)</c>).</summary>
+        public const string KochoSmokeCue = "VFX_Kage_KochoSmoke";
 
         // ---- constants of the JS ability code (not data, so not in the generated tables) ----
         const double SwingDmg = 15, SwingGb = 70, SwingKbPx = 420, SwingUpPx = 240, SwingStun = 0.5;   // 40-ai.js raikonRelease: 15 x the variant's dmg, gb 70
@@ -184,7 +186,7 @@ namespace Kage
                 .NoPush(wind, land + 2)
                 .Hit(cut, cut + active - 1, NearFan, Dmg(tw1.Dmg), HitLevel.Mid, new Vector2(0.78f, 0f), stun: 16, hitstop: 4, shake: 0.06f, radius: 0.08f)
                 .Fx(wind, land, FxKind.AfterImage).Fx(wind, wind, FxKind.Dust).Fx(cut - 1, cut + active + 1, FxKind.TrailBladeN)
-                .Cue(wind, SmokeBurstCue).Cue(land, SmokeBurstCue).Cue(land, KochoGlintCue).Sword();
+                .Cue(land, KochoSmokeCue).Cue(land, KochoGlintCue).Sword();
         }
 
         // ---------------------------------------------------------------------------------------------- Smoke Bomb
@@ -226,6 +228,7 @@ namespace Kage
             EffectCues.Register(CutGlintCue, PlayCutGlint);
             EffectCues.Register(SmokeBombCue, SmokeBombLook.Play);
             EffectCues.Register(SmokeBurstCue, PlaySmokeBurst);
+            EffectCues.Register(KochoSmokeCue, PlayKochoSmoke);
         }
 
         static readonly Color StormRed = KMath.Hex("#FF6A52"), GlintRed = KMath.Hex("#FF4A3C");
@@ -257,17 +260,27 @@ namespace Kage
             vfx.Star(pos, 0.5f, Color.white, GlintRed);
         }
 
+        /// <summary>Three small puffs at her feet as she lands.</summary>
+        static void PlayKochoSmoke(Vector2 pos, in CueArgs a)
+        {
+            var vfx = Vfx.I;
+            if (vfx == null || a.owner == null) return;
+            var feet = a.owner.Pos + Vector2.up * 0.12f;
+            for (int i = -1; i <= 1; i++)
+                vfx.Puff(feet + new Vector2(i * 0.22f, 0f), new Vector2(i * 0.8f, 0.35f), HisamePalette.Smoke, 0.22f, 0.5f);
+        }
+
         /// <summary>Placeholder toon smoke: grey-blue puffs blooming and rising.</summary>
         static void PlaySmokeBurst(Vector2 pos, in CueArgs a)
         {
             var vfx = Vfx.I;
             if (vfx == null) return;
             var ground = new Vector2(pos.x, Mathf.Max(0.05f, pos.y));
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 15; i++)
             {
-                float k = (i - 4) / 4f;
-                vfx.Puff(ground + new Vector2(k * 0.35f, 0.1f + Mathf.Abs(k) * 0.05f), new Vector2(k * 0.9f, 0.5f + (1f - Mathf.Abs(k)) * 0.6f),
-                    i % 2 == 0 ? HisamePalette.Smoke : HisamePalette.SmokeDark, 0.34f + (1f - Mathf.Abs(k)) * 0.12f, 0.75f);
+                float k = (i - 7) / 7f, up = 1f - Mathf.Abs(k);
+                vfx.Puff(ground + new Vector2(k * 0.5f, 0.12f + up * 0.25f), new Vector2(k * 1.1f, 0.4f + up * 0.9f),
+                    i % 3 == 0 ? HisamePalette.SmokeDark : HisamePalette.Smoke, 0.42f + up * 0.22f, 0.95f);
             }
             vfx.Dust(ground, 0.8f, 0f);
         }
