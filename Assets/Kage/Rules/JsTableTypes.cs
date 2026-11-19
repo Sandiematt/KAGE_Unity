@@ -97,6 +97,16 @@ namespace Kage.Rules
         public bool Kd, Unb, Ground;
     }
 
+    /// <summary>
+    /// Shiden's Braced Spear (JS <c>SHIDEN_BRACE</c>, 41-styles/shiden.js; SAN-106): how long the brace is held (s), how far the thrust
+    /// carries (px, x his scale), how close a rushing Kage must come before the point goes out (px, x his scale), the thrust's damage, and
+    /// how long he stands open after lifting the point when nobody came (s).
+    /// </summary>
+    public sealed class JsBrace
+    {
+        public double Hold, Reach, Trigger, Dmg, Open;
+    }
+
     /// <summary>A foe role's multipliers on its AI tuning (JS BUDO.roles: regular, sub, boss), e.g. the wind-up of its tells (SAN-104).</summary>
     public sealed class JsAiRole
     {
@@ -120,10 +130,11 @@ namespace Kage.Rules
         public bool When;
     }
 
-    /// <summary>A foe's fighting style (JS FIGHT_STYLES): its school and its strings (SAN-104).</summary>
+    /// <summary>A foe's fighting style (JS FIGHT_STYLES): its school, its strings (SAN-104) and its poise (posture gained x poise; 1 when the style has none; SAN-106).</summary>
     public sealed class JsFightStyle
     {
         public string Id, Art;
+        public double Poise = 1;
         public JsStyleString[] Strings = new JsStyleString[0];
     }
 
