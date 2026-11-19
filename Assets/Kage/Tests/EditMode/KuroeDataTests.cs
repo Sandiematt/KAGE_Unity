@@ -115,6 +115,19 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void Her_arena_is_the_env_of_her_JS_stage_and_the_other_sub_bosses_get_theirs()
+        {
+            Assert.AreEqual("rooftops", BossArena.EnvFor(Id), "act1.sub1");
+            Assert.AreEqual("districts", BossArena.EnvFor("garan"), "act1.sub2");
+            Assert.AreEqual("districts", BossArena.EnvFor("shiden"), "act1.sub4");
+            Assert.IsNull(BossArena.EnvFor("order_footman"), "a regular foe has no arena of its own");
+            Assert.IsNull(BossArena.EnvFor("raikon"), "the boss stage is not a sub-boss arena");
+            Assert.AreEqual("rooftops", EnvLook.For("rooftops").id);
+            Assert.AreEqual("districts", EnvLook.For("districts").id);
+            Assert.AreEqual("rooftops", EnvLook.For("hoshimura").id, "an env with no look of its own paints as the rooftops");
+        }
+
+        [Test]
         public void Her_part_set_draws_her_on_Kages_skeleton_in_her_own_palette()
         {
             var d = CharacterCatalog.Get(Id);

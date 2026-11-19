@@ -98,7 +98,7 @@ namespace Kage
             var stage = new GameObject("Stage");
             stage.transform.SetParent(transform, false);
             if (stretchData != null) Road = StretchRoad.Build(stage.transform, stretchData, fight.Context.Bounds, Cam);
-            else ArenaBuilder.Build(stage.transform, Cam);
+            else if (!BossArena.TryBuild(stage.transform, Cam, (NextGroupSize ?? groupSize) > 1 ? null : NextFoeId ?? foeId)) ArenaBuilder.Build(stage.transform, Cam);   // a sub-boss fights in its arena (SAN-103)
 
             var hudGo = new GameObject("HUD", typeof(RectTransform));
             hudGo.transform.SetParent(transform, false);

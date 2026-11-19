@@ -14,19 +14,26 @@ namespace Kage.Tests
     {
         const int Seed = 103, Cap = 60 * 240, MaxQuiet = 600;
 
-        /// <summary>The SAN-95 Kage bot (walk in, cycle punch, punch, kick, weapon, kick, weapon) that waits while a counter window is up.</summary>
+        /// <summary>
+        /// The SAN-95 Kage bot (walk in, cycle punch, punch, kick, weapon, kick, weapon) with two rules from the JS tip and the parry lesson:
+        /// it holds its blade while a counter window is up, and it holds Guard while the foe's blow is coming (from the start of her attack to
+        /// the end of its last hit window) when she is near. No randomness.
+        /// </summary>
         sealed class CensureAwareBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
-            public int Waited;
+            public int Waited, Guarded;
             public void Sample() { }
             public FrameInput Poll(Fighter self)
             {
                 var opp = self.opponent;
-                if (opp != null && opp.state == FState.Attack && opp.move != null && opp.move.counterFrom >= 0 && opp.moveFrame <= opp.move.counterTo)
+                if (opp == null) return default;
+                var m = opp.state == FState.Attack ? opp.move : null;
+                if (m != null && m.counterFrom >= 0 && opp.moveFrame <= m.counterTo) { Waited++; return default; }
+                if (m != null && m.hits.Count > 0 && opp.moveFrame <= m.hits.Max(h => h.to) && Mathf.Abs(opp.Pos.x - self.Pos.x) < 2.8f)
                 {
-                    Waited++;
-                    return new FrameInput();
+                    Guarded++;
+                    return new FrameInput { guard = true };
                 }
                 return _bot.Poll(self);
             }
@@ -51,7 +58,7 @@ namespace Kage.Tests
             Debug.Log($"SAN-103 bot fight vs Kuroe: {(ended ? (f.Ronin.state == FState.KO ? "Kuroe knocked out" : "Kage knocked out") : "NOT ended")} " +
                       $"after {frames} frames = time-to-kill {frames / 60f:0.0} s (spec: 60-90 s for a sub-boss); Kage {f.Kage.health:0.0}/{f.Kage.maxHealth:0}, " +
                       $"Kuroe {f.Ronin.health:0.0}/{f.Ronin.maxHealth:0}; phases {f.Events(CombatEventType.BossPhaseChanged).Count()}, Censures raised {censures}, " +
-                      $"countered {f.Events(CombatEventType.Countered).Count()}, bot waited {bot.Waited} frames; {f.Events(CombatEventType.Hit).Count()} hits, " +
+                      $"countered {f.Events(CombatEventType.Countered).Count()}, bot waited {bot.Waited} and guarded {bot.Guarded} frames; {f.Events(CombatEventType.Hit).Count()} hits, " +
                       $"{f.Events(CombatEventType.Blocked).Count()} blocks, {f.Events(CombatEventType.Parried).Count()} parries");
 
             Assert.IsTrue(ended, $"no knock-out in {Cap} frames (Kage {f.Kage.health:0.0}, Kuroe {f.Ronin.health:0.0})");

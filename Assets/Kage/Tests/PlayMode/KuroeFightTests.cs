@@ -24,7 +24,7 @@ namespace Kage.Tests
             Tuning.ClearOverrides();
         }
 
-        HeadlessFight Fight(Foe foe = Foe.Scripted, float kageX = -0.45f, float kuroeX = 0.45f)
+        HeadlessFight Fight(Foe foe = Foe.Scripted, float kageX = -0.37f, float kuroeX = 0.37f)
         {
             var f = new HeadlessFight(Seed, foe, kageX, kuroeX, foeDef: CharacterCatalog.Get(Kuroe.Id));
             f.Kage.maxHealth = f.Kage.health = 1e6f;
@@ -39,7 +39,7 @@ namespace Kage.Tests
         static void RaiseCensure(HeadlessFight f) => f.RoninInput.Add(2).Add(1, ability: 1).Add(5000);
 
         /// <summary>The loop frame on which <paramref name="until"/> first holds when Kuroe raises Censure and Kage stands still (a probe run).</summary>
-        int FrameWhen(System.Func<Fighter, bool> until, float kageX = -0.45f, float kuroeX = 0.45f)
+        int FrameWhen(System.Func<Fighter, bool> until, float kageX = -0.37f, float kuroeX = 0.37f)
         {
             using var f = new HeadlessFight(Seed, Foe.Scripted, kageX, kuroeX, foeDef: CharacterCatalog.Get(Kuroe.Id));
             RaiseCensure(f);
@@ -50,7 +50,7 @@ namespace Kage.Tests
         }
 
         /// <summary>Kuroe raises Censure; Kage presses <paramref name="buttons"/> (with <paramref name="fwd"/>) on loop frame <paramref name="at"/>.</summary>
-        HeadlessFight PressAt(int at, string buttons, int fwd = 0, float kageX = -0.45f, float kuroeX = 0.45f)
+        HeadlessFight PressAt(int at, string buttons, int fwd = 0, float kageX = -0.37f, float kuroeX = 0.37f)
         {
             var f = Fight(kageX: kageX, kuroeX: kuroeX);
             RaiseCensure(f);
@@ -81,6 +81,7 @@ namespace Kage.Tests
             f.Run(90);
 
             var countered = f.Events(CombatEventType.Countered).ToList();
+            if (countered.Count != 1) Debug.Log("SAN-103 diag: " + string.Join(" | ", f.Frames.Take(60)) + " || " + string.Join(" | ", f.Log.Lines()));
             Assert.AreEqual(1, countered.Count, "the blow was caught");
             Assert.AreSame(f.Kage, countered[0].Source);
             Assert.AreSame(f.Ronin, countered[0].Target);
