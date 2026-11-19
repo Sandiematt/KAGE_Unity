@@ -21,6 +21,7 @@ namespace Kage
             Add(OrderRunner.Def());
             Add(OrderShieldbearer.Def());
             Add(OrderIronclad.Def());
+            Add(HollowHusk.Def());
             Add(OrderChainthrower.Def());
             Add(HollowShade.Def());
             Add(HollowFlicker.Def());
@@ -36,6 +37,7 @@ namespace Kage
             Add(new OrderRunnerPartSet());
             Add(new OrderShieldbearerPartSet());
             Add(new OrderIroncladPartSet());
+            Add(new HollowHuskPartSet());
             Add(new OrderChainthrowerPartSet());
             Add(new HollowShadePartSet());
             Add(new HollowFlickerPartSet());
