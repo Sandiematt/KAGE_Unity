@@ -1700,6 +1700,139 @@ namespace Kage.Rules
             }
         };
 
+        public static readonly JsBossAbility[] BossAbilities = new JsBossAbility[]
+        {
+            new JsBossAbility
+            {
+                Id = "censure",
+                Cd = 7,
+                Range = new double[] { 60, 260 },
+                Chance = 0.5,
+                Base = "redlineCounter",
+                Label = "CENSURE",
+                Stance = 0.7,
+                Punish = 0.14,
+                Dmg = 0.6,
+                Unb = false
+            },
+            new JsBossAbility
+            {
+                Id = "stormFist",
+                Cd = 5.6,
+                Range = new double[] { 0, 240 },
+                Chance = 0.6,
+                Base = "stormBreak",
+                Label = "STORM FIST",
+                Dmg = 0.65,
+                Windup = 0.78,
+                Shock = 0.5,
+                ShockLife = 0.4,
+                Reach = 170
+            },
+            new JsBossAbility
+            {
+                Id = "garanTsuppari",
+                Cd = 6,
+                Range = new double[] { 0, 230 },
+                Chance = 0.55
+            },
+            new JsBossAbility
+            {
+                Id = "charge",
+                Cd = 6.5,
+                Range = new double[] { 200, 1200 },
+                Chance = 0.6
+            },
+            new JsBossAbility
+            {
+                Id = "lightningCut",
+                Cd = 5,
+                Range = new double[] { 120, 420 },
+                Chance = 0.65,
+                Base = "thunderSwing",
+                Label = "LIGHTNING CUT",
+                Dmg = 0.6,
+                Windup = 0.56,
+                Reach = 160,
+                Dash = 900,
+                Wave = false
+            },
+            new JsBossAbility
+            {
+                Id = "hisameKocho",
+                Cd = 4.5,
+                Range = new double[] { 60, 300 },
+                Chance = 0.6
+            },
+            new JsBossAbility
+            {
+                Id = "smokeBomb",
+                Cd = 6,
+                Range = new double[] { 140, 700 },
+                Chance = 0.6
+            },
+            new JsBossAbility
+            {
+                Id = "vanguardBreak",
+                Cd = 5,
+                Range = new double[] { 0, 300 },
+                Chance = 0.6,
+                Base = "stormBreak",
+                Label = "VANGUARD BREAK",
+                Dmg = 0.8,
+                Windup = 0.68,
+                Shock = 0.7,
+                ShockLife = 0.5
+            },
+            new JsBossAbility
+            {
+                Id = "shidenBrace",
+                Cd = 6.5,
+                Range = new double[] { 150, 420 },
+                Chance = 0.5
+            },
+            new JsBossAbility
+            {
+                Id = "vanguardGuard",
+                Cd = 7.5,
+                Range = new double[] { 60, 280 },
+                Chance = 0.5,
+                Base = "redlineCounter",
+                Label = "HOLD THE LINE",
+                Stance = 0.8,
+                Dmg = 0.75,
+                Unb = false
+            },
+            new JsBossAbility
+            {
+                Id = "thunderSwing",
+                Cd = 7,
+                Range = new double[] { 210, 520 },
+                Chance = 0.6
+            },
+            new JsBossAbility
+            {
+                Id = "stormBreak",
+                Cd = 6.5,
+                Range = new double[] { 0, 340 },
+                Chance = 0.5
+            },
+            new JsBossAbility
+            {
+                Id = "skyfall",
+                Cd = 7,
+                Range = new double[] { 460, 2400 },
+                Chance = 0.8
+            },
+            new JsBossAbility
+            {
+                Id = "redlineCounter",
+                Cd = 6.5,
+                Range = new double[] { 60, 300 },
+                Chance = 0.3
+            }
+        };
+
         public static readonly JsAiProfile[] AiProfiles = new JsAiProfile[]
         {
             new JsAiProfile

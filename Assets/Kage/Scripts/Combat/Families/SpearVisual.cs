@@ -28,8 +28,8 @@ namespace Kage
                     return new Look { head = Head.Leaf, shaft = KMath.Hex("#2b2a2e"), band = KMath.Hex("#c9a45c"), glow = KMath.Hex("#e8d29a"), fitting = KMath.Hex("#8f8a82"), tassel = KMath.Hex("#8c3b3b") };
                 case "vanguard_yari":
                     return new Look { head = Head.Yari, shaft = KMath.Hex("#241b1b"), band = KMath.Hex("#8c2f26"), glow = KMath.Hex("#ff6a52"), fitting = KMath.Hex("#6c6a70"), tassel = KMath.Hex("#d9402e") };
-                case "temple_staff":
-                    return new Look { head = Head.None, shaft = KMath.Hex("#cfc6ae"), band = KMath.Hex("#7a6e58"), glow = KMath.Hex("#ece5d3"), fitting = KMath.Hex("#3c3834"), tassel = KMath.Hex("#cfc6ae") };
+                case "temple_staff":    // Kuroe's (SAN-103, the JS kuroe/weapon.js): dark wood, gold bands, iron caps, a black ink-brush tassel
+                    return new Look { head = Head.None, shaft = KMath.Hex("#3a2c20"), band = KMath.Hex("#c9a45c"), glow = KMath.Hex("#ecd9a8"), fitting = KMath.Hex("#4a4f57"), tassel = KMath.Hex("#0b0a0a") };
                 case "sage_staff":
                     return new Look { head = Head.None, shaft = KMath.Hex("#5a4636"), band = KMath.Hex("#7fd0c8"), glow = KMath.Hex("#bff3ee"), fitting = KMath.Hex("#2e5f5b"), tassel = KMath.Hex("#7fd0c8") };
                 default:    // Mizuchi: the water dragon

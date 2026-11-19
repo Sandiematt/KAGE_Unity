@@ -99,10 +99,13 @@ namespace Kage
         HitResult ReceiveHitCore(ref HitInfo info)
         {
             var w = info.w;
-            // step 4, the counter window. Mirror Guard: parry and teleport-slash behind the attacker
-            if (state == FState.Attack && move != null && move.counterFrom >= 0 && moveFrame >= move.counterFrom && moveFrame <= move.counterTo && w.level != HitLevel.Unblockable)
+            // step 4, the counter window. Mirror Guard: parry and teleport-slash behind the attacker; a counter stance (Censure): turn
+            // the blow aside and answer it where it stands
+            if (state == FState.Attack && move != null && move.counterFrom >= 0 && moveFrame >= move.counterFrom && moveFrame <= move.counterTo && w.level != HitLevel.Unblockable
+                && (!move.counterFrontOnly || CounterCatches(info)))
             {
-                TriggerCounter(info.attacker);
+                if (move.counterAnswer != null) TriggerCounterAnswer(info, move.counterAnswer);
+                else TriggerCounter(info.attacker);
                 return HitResult.Countered;
             }
 

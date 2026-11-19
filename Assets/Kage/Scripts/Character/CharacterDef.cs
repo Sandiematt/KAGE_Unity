@@ -141,6 +141,11 @@ namespace Kage
                 aiProfile = e.Ai,
                 abilities = new List<string>(e.Abilities ?? new string[0]),
             };
+            // a JS boss lists its abilities only in its phases: the slots are every phase's abilities in first-use order (ADR-0008)
+            if (c.abilities.Count == 0 && e.Phases != null)
+                foreach (var p in e.Phases)
+                    foreach (var a in p.Abilities ?? new string[0])
+                        if (!c.abilities.Contains(a)) c.abilities.Add(a);
             if (e.HeavyArmor) c.flags |= CharacterFlags.Armour;
             if (e.NoGrab) c.flags |= CharacterFlags.NoGrab;
             if (e.Phases != null && e.Phases.Length > 0) c.bossId = e.Id;      // the boss data is the JS phases until the boss's own entry (BossCatalog, SAN-102)
