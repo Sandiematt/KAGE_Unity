@@ -186,6 +186,7 @@ namespace Kage
                     Combo(); return;
                 }
                 if (dist > t.specialFar && p.kunaiRate > 0f && R() < p.kunaiRate * 0.6f && ShotReady(self)) { Enqueue(2, 0, 0, Btn.X); return; }
+                if (dist < t.lungeRange && R() < aggr * t.lungeShare) { Enqueue(2, 1, 0, Btn.S); Combo(); return; }      // the shadow step
                 if (dist > pref + 0.05f) Enqueue(8 + N(8), 1, 0, Btn.None);
                 else Enqueue(10 + N(10), 0, 0, Btn.None);
                 return;

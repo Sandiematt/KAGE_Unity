@@ -46,6 +46,14 @@ namespace Kage
         /// <summary>The Special (the ranged shot) needs this much Shadow, as in the legacy AI.</summary>
         public float specialMeter = 35f;
 
+        // ---- lunging ----
+        /// <summary>
+        /// Out of attack range but nearer than <see cref="lungeRange"/>, a foe that would attack (aggression) throws the shadow step, the
+        /// weapon's lunge, with this share of that chance: it closes the gap with a blow rather than only walking (the legacy AI did so from
+        /// 1.25 to 2.2 m). It is what lets a foe pressed behind another in a group fight still attack.
+        /// </summary>
+        public float lungeRange = 2.0f, lungeShare = 0.35f;
+
         // ---- spacing ----
         /// <summary>
         /// A foe in range that did not attack and stands nearer than its preferred range minus <see cref="spacingBand"/> backs off a step with chance
