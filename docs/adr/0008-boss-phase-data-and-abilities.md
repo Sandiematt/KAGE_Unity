@@ -92,3 +92,9 @@ What each JS ability is, so the Unity move matches its design intent:
 - One phase mechanism serves four sub-bosses and Raikon, and a test boss (a Footman variant) can prove it before any real boss exists.
 - Boss abilities are moves fed through input, so the player's own rules (guard, parry, dodge, armour) apply to them with no special case.
 - Some ticket texts describe a sub-boss signature differently from the JS ability list (SAN-104, SAN-105, SAN-106). The JS list above is the reference. Those tickets have comments explaining the mapping.
+
+## Notes from the implementation (SAN-95: what SAN-102 can call)
+
+- **Ability slots** are built (ADR-0004's SAN-95 notes): `FrameInput.ability`, `Fighter.AbilityIds`, `Fighter.SetEnabledAbilities(ids)` (a phase's `abilities`), `Fighter.AbilityReady(slot)`, `AbilityDef` and `AbilityCatalog` (`Combat/AbilityDef.cs`; `id`, `move` or `moveId`, `cooldownFrames`, `range` in metres, `chance`; the projectile and hazard fields are for the boss tickets). Boss files `AbilityCatalog.Register` their abilities. `CharacterDef.FromJs` already fills `CharacterDef.abilities` with the JS ids in the JS order, so slot n is the n-th JS ability.
+- **Phase hooks on the AI:** `AIInputSource.SetProfile(AiProfiles.Get(phase.aiProfile))` swaps the profile (and with it the parry rate); `AIInputSource.aggressive = phase.aggressive` adds `AiTuning.aggressiveBonus` (0.2, the JS `aggr += 0.2`) to aggression and multiplies ability chances by 1.3 (the JS number). `berserk` (JS: ability cooldown × 0.7) and `secondWave` are not wired: the cooldown lives on the fighter, so `PhaseController` can change `AbilityDef.cooldownFrames` per fighter if it wants to.
+- Which profile each boss starts with is the JS archetype in the generated table, taken by `CharacterDef.FromJs`: Kuroe `defensive`, Garan `heavy`, Hisame `agile`, Shiden and Raikon `boss`. A phase's `aiProfile` swaps it (the Act I phases in the table above change none).

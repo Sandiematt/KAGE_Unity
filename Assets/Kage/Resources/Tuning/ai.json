@@ -13,6 +13,8 @@
     "jumpInRange": 3.3,
     "grabRange": 0.78,
     "specialMeter": 35,
+    "spacingBand": 0.2,
+    "spacingChance": 0.6,
     "strafeChance": 0.35,
     "holdGuardChance": 0.2,
     "holdGuardMin": 18,

@@ -46,6 +46,13 @@ namespace Kage
         /// <summary>The Special (the ranged shot) needs this much Shadow, as in the legacy AI.</summary>
         public float specialMeter = 35f;
 
+        // ---- spacing ----
+        /// <summary>
+        /// A foe in range that did not attack and stands nearer than its preferred range minus <see cref="spacingBand"/> backs off a step with chance
+        /// <see cref="spacingChance"/> per decision, so the preferred range holds from both sides (the JS game only walks in to it).
+        /// </summary>
+        public float spacingBand = 0.2f, spacingChance = 0.6f;
+
         // ---- decisions ----
         /// <summary>Chance per decision, once in range and not attacking, that it side-steps (strafes); and that it holds its guard up for a moment (JS 0.35, 0.2).</summary>
         public float strafeChance = 0.35f, holdGuardChance = 0.2f;

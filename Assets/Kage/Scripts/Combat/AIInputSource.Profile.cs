@@ -199,6 +199,11 @@ namespace Kage
                 _comboLeft = 0;
                 return;
             }
+            if (dist < pref - t.spacingBand && !wallBehind && R() < t.spacingChance)
+            {
+                Enqueue(8 + N(8), -1, 0, Btn.None);                     // too close for its liking: back off to its range
+                return;
+            }
             float r = R();
             if (r < t.strafeChance)
             {
