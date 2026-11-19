@@ -9,11 +9,12 @@ namespace Kage
     /// meters with the 35% (Crescent) and 100% (Thousand Shadows) marks, posture bars (SAN-86), round pips, timer,
     /// announcer, technique banner, combo counter, floating combat text, move list, screen flash.
     /// </summary>
-    public class Hud : MonoBehaviour
+    public partial class Hud : MonoBehaviour
     {
         class Side
         {
             public Text name, combo, meterLabel, postureLabel;
+            public Image notch;
             public InkBar hp, trail, meter, hpBack, meterBack, posture, postureBack;
             public Image[] pips;
             public float trailVal = 1f, comboShow;
@@ -120,7 +121,7 @@ namespace Kage
             s.meterBack = MakeBar("MeterBack", anchor, new Vector2(sx * 330, -104), new Vector2(480, 14), right, new Color(0.06f, 0.02f, 0.03f, 0.85f), new Color(0.06f, 0.02f, 0.03f, 0.85f));
             s.meter = MakeBar("Meter", anchor, new Vector2(sx * 330, -104), new Vector2(474, 10), right, KMath.Hex("#3A0A10"), right ? Palette.Amber : KMath.Hex("#FF4A50"));
             // 35% notch
-            var notch = MakeImage("Notch", _root, new Color(1, 1, 1, 0.5f));
+            var notch = s.notch = MakeImage("Notch", _root, new Color(1, 1, 1, 0.5f));
             Place(notch.rectTransform, anchor, new Vector2(sx * (330 - 237 + 474 * 0.35f), -104), new Vector2(3, 18));
             s.meterLabel = MakeText("MeterLabel", _root, 15, right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, new Color(1, 1, 1, 0.6f), anchor, new Vector2(sx * 680, -104), new Vector2(200, 20), false);
             s.meterLabel.text = "SHADOW";
@@ -271,6 +272,14 @@ namespace Kage
             _l.name.text = l; _r.name.text = r;
         }
         public void SetMode(string mode) => _mode.text = mode;
+
+        bool _clockShown = true, _roundsShown = true;
+
+        /// <summary>
+        /// Shows only what a fight format has (SAN-102): a format with no clock hides the timer, and one round hides the round count and the
+        /// round pips (the boss format). The default shows everything, as a duel does.
+        /// </summary>
+        public void SetFormat(FightFormat f) { _clockShown = f.HasClock; _roundsShown = f.HasRounds; }
         public void SetTraining(string text) => _training.text = text;
 
         public void Tick(Fighter l, Fighter r, float timer, int round, bool showTimer)
@@ -281,6 +290,11 @@ namespace Kage
             _timer.text = showTimer ? Mathf.CeilToInt(Mathf.Max(0f, timer)).ToString() : "∞";
             _timer.color = showTimer && timer < 10f ? KMath.Hex("#FF6060") : Color.white;
             _round.text = "ROUND " + round;
+            _timer.enabled = _clockShown;
+            _round.enabled = _roundsShown;
+            foreach (var p in _l.pips) p.enabled = _roundsShown;
+            foreach (var p in _r.pips) p.enabled = _roundsShown;
+            TickBoss(dt);
 
             // announcer: pop in big, settle, fade
             _announceT += dt;
