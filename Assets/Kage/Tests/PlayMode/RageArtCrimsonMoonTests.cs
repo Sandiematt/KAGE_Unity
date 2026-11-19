@@ -149,7 +149,7 @@ namespace Kage.Tests
             f.Run(37);
             Assert.AreEqual(0, f.Events(CombatEventType.RageArt).Count(), "no Down, no rage art");
             Assert.AreEqual("crescent", f.Events(CombatEventType.MoveStarted).Single(e => e.SourceId == "kage").MoveId);
-            Assert.AreEqual(1, f.Ctx.Projectiles.Count);
+            Assert.AreEqual(1, f.Events(CombatEventType.Hit).Count(e => e.MoveId == "crescent"), "the Crescent was thrown and hit");
         }
 
         // ---- the timeline and the damage ----
