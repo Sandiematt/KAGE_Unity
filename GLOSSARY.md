@@ -71,7 +71,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Blade length** (`WeaponFamilyDef.bladeLength`): metres from the guard to the tip of the cutting blade; the tachi's is the longest. *Not* **total reach**, the distance from the body to the farthest hit point of a move (the spear's is the longest, 2.25 m).
 - **Posture multiplier** (`HitWindow.postureMul`): how much more posture damage a window does than a plain hit; the tachi's windows are the highest (up to ×3.0).
 - **Armour frames**: the frames of a move (`MoveDef.armorFrom..armorTo`) in which the fighter has armour: light hits land their damage and don't flinch it, and a held victim stays held. Heavy hits still flinch. The check is `Fighter.Armour.cs`.
-- **Counter window**: frames of a move that catch an incoming hit and answer it (Mirror Guard, Kuroe's Censure, Shiden's Hold the Line, Raikon's Redline Counter). Not a parry.
+- **Counter window**: frames of a move that catch an incoming hit and answer it (Mirror Guard, Kuroe's Censure, Shiden's Hold the Line, Raikon's Redline Counter). Not a parry. **Counter stance**: a counter window with its own answer (`MoveDef.counterAnswer`, SAN-103): it catches only a melee blow from the front (`counterFrontOnly`), turns it aside as a parry would (the attacker reels and loses posture by its role) and plays the answer in place, with no teleport. Waited out, the stance drops and leaves the fighter open; a throw still takes it. Kuroe's **Censure** is the first.
 
 ## Defence
 
@@ -103,6 +103,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 ## Stages and campaign
 
 - **Chapter**: `prologue` or `act1` (JS chapter ids). *Avoid:* level, world.
+- **Arena placeholder**: a sub-boss stage's backdrop painted in code from the JS environment of its stage (`BossArena`, `EnvBackdrop`, `EnvLook`: rooftops, districts) over the dev arena's floor and walls, until the stage art pass (SAN-103). *Avoid:* level art, skybox.
 - **Stage**: one entry on the campaign map, with a kind: **stretch**, **sub-boss** or **boss**. *Avoid:* level, mission.
 - **Stretch**: a side-scrolling walk along a **road** with encounters. The JS term. *Avoid:* corridor, run.
 - **Road**: the floor of a stretch, in metres from its left end (the JS pixels / 115, ADR-0010): its **length**, Kage's **start** and its encounters. Built in code (`StretchRoad`); the data is `StretchData`. The **dev stretch** is the test road of Footmen (`dev.footmen`, F10 in the dev arena).

@@ -81,7 +81,6 @@ namespace Kage.Tests
             f.Run(90);
 
             var countered = f.Events(CombatEventType.Countered).ToList();
-            if (countered.Count != 1) Debug.Log("SAN-103 diag: " + string.Join(" | ", f.Frames.Take(60)) + " || " + string.Join(" | ", f.Log.Lines()));
             Assert.AreEqual(1, countered.Count, "the blow was caught");
             Assert.AreSame(f.Kage, countered[0].Source);
             Assert.AreSame(f.Ronin, countered[0].Target);
