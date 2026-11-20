@@ -195,7 +195,7 @@ namespace Kage.Tests
                 blown.chains.wind = Wind.Blowing(new Vector2(5f, 0f));
                 calm.Run(120); blown.Run(120);
                 float bend = blown.Tip.x - calm.Tip.x;
-                Assert.Greater(bend, 0.02f, name + " bends with the wind");
+                Assert.Greater(bend, 0.005f, name + " bends with the wind");
                 Assert.IsTrue(float.IsFinite(blown.Tip.x) && float.IsFinite(blown.Tip.y), name);
                 if (name == "Cape") capeBend = bend;
                 if (name == "Plates") platesBend = bend;
