@@ -19,7 +19,6 @@ namespace Kage
         float scroll, cardScroll, cardMax;
         // what the last build showed: the entrances (tiles rising, the details fading in) play when the tab, the row or the item changes, like the JS render
         ArmoryTab? builtTab;
-        ArmorLine? builtLine;
         string builtSelection;
         bool enterTiles, enterDetail;
         RectTransform tileContent, cardsFront, cardsBack;
@@ -74,9 +73,9 @@ namespace Kage
                 if (armor) ArmorBackdrop(back); else Backdrop(back);
             }
 
-            enterTiles = Fresh || builtTab != v.Tab || builtLine != v.Line;
+            enterTiles = Fresh || builtTab != v.Tab;
             enterDetail = enterTiles || builtSelection != v.SelectedId;
-            builtTab = v.Tab; builtLine = v.Line; builtSelection = v.SelectedId;
+            builtTab = v.Tab; builtSelection = v.SelectedId;
             Ui.Label(Root, v.Kanji, UiFont.Brush, armor ? 46 : 64, Ui.A(Ui.Bone, 0.2f), armor ? 44 : 64, armor ? 98 : 150, 400, armor ? 60 : 80, TextAnchor.UpperLeft);
             if (v.Preview == ArmoryPreview.Illustration) Preview(v);
             Header(v);
@@ -115,7 +114,7 @@ namespace Kage
                 saves.Add(ArmoryView.PreviewSave(save, ArmoryTab.Armor, v.Tiles[i].Id));
                 xs.Add(CardX(i) + 3f + 0.54f * (CardW - 6f));
             }
-            string key = v.Line + "|" + save.equipped.weapon + ":" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
+            string key = "armor|" + save.equipped.weapon + ":" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
             // the row scrolls by the camera panning with it, so each Kage stays in his card
             world.ShowRow(saves, xs, key, cardScroll);
         }
@@ -442,6 +441,8 @@ namespace Kage
                 Ui.Frame(rt, 0, 0, TileW, H, 1.5f, Ui.Gold);
             }
             else Ui.Frame(rt, 0, 0, TileW, H, 1f, Ui.GoldDim);
+            // hover and focus only highlight: a faint gold wash and the lift; the selection changes when the tile is pressed
+            var wash = Ui.Box(rt, 0, 0, TileW, H, Color.clear, "Focus");
 
             // the picture: the item drawn the way the JS draws it (the sword, the helmet), dim when it is not owned (JS .locked .art)
             // the JS drawings of helmets and armour are dark on a dark tile, so a locked one is dimmed less than a weapon render
@@ -486,13 +487,17 @@ namespace Kage
 
             string id = t.Id;
             float tx = x;
-            var lift = UiFocusTween.On(rt, .16f, k => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * k)));
-            var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f =>
+            var lift = UiFocusTween.On(rt, .16f, k =>
+            {
+                UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * k));
+                wash.color = Ui.A(Ui.Gold, 0.12f * k);
+            });
+            var item = UiParts.Make(rt, Nav, "tile:" + id, null, f =>
             {
                 lift.Set(f);
                 if (f) KeepVisible(tx);
             });
-            item.onUserFocus = () => A.Select(id);
+            ArmoryTilePick.Bind(item, id, A.Select);
         }
 
         void KeepVisible(float tileX)
@@ -546,50 +551,28 @@ namespace Kage
 
         static float CardX(int i) { return 42f + i * CardPitch; }
 
-        void KeepCardVisible(int i)
+        // returns true when the row scrolled
+        bool KeepCardVisible(int i)
         {
+            float before = cardScroll;
             float lo = CardX(i) - RowX - 4f, hi = CardX(i) - RowX + CardW + 4f;
             if (lo < cardScroll) cardScroll = Mathf.Clamp(lo, 0f, cardMax);
             else if (hi > cardScroll + RowW) cardScroll = Mathf.Clamp(hi - RowW, 0f, cardMax);
+            return Mathf.Abs(cardScroll - before) > 0.01f;
         }
+
+        int scrollRebuilds;
 
         void ArmorBody(ArmoryView v, SaveData save, RectTransform back)
         {
-            // the two rows
-            string[] chips = { "Armor line", "Trophies" };
-            float cx = 112f;
-            for (int i = 0; i < 2; i++)
-            {
-                int idx = i;
-                bool on = (int)v.Line == i;
-                string text = chips[i].ToUpperInvariant();
-                var tl = Ui.Label(Root, text, UiFont.Title, 13, on ? Ui.Bone : Ui.Muted, 0, 0, 300f, 34f, TextAnchor.MiddleLeft, 2.6f);
-                float tw = UiParts.Width(tl, 2.6f) + 2.6f;
-                Text count = null;
-                float cw = 0f;
-                if (i == 1)
-                {
-                    count = Ui.Label(Root, v.TrophyCount.ToString(), UiFont.Title, 13, Ui.Gold, 0, 0, 60f, 34f, TextAnchor.MiddleLeft);
-                    cw = 8f + UiParts.Width(count);
-                }
-                float w = 32f + tw + cw;
-                var rt = Ui.Node(Root, "Chip" + i, cx, 104f, w, 34f);
-                Ui.Box(rt, 0, 0, w, 34f, on ? Ui.A(Ui.Gold, 0.14f) : Ui.PanelA(0.7f)).transform.SetAsFirstSibling();
-                Ui.Frame(rt, 0, 0, w, 34f, 1f, on ? Ui.Gold : Ui.Hair);
-                tl.transform.SetParent(rt, false);
-                tl.rectTransform.anchoredPosition = new Vector2(16f, 0);
-                if (count != null) { count.transform.SetParent(rt, false); count.rectTransform.anchoredPosition = new Vector2(16f + tw + 8f, 0); }
-                var tlRef = tl;
-                UiParts.Make(rt, Nav, "line:" + i, () => A.SetLine((ArmorLine)idx), f => tlRef.color = on || f ? Ui.Bone : Ui.Muted);
-                cx += w + 10f;
-            }
-
             // the cards, in a row that is clipped to its window and scrolls
             int n = v.Tiles.Length;
             cardMax = Mathf.Max(0f, CardX(n - 1) + CardW + 4f - RowX - RowW);
             cardScroll = Mathf.Clamp(cardScroll, 0f, cardMax);
-            for (int i = 0; i < n; i++)
-                if (v.Tiles[i].Selected) KeepCardVisible(i);
+            // the row follows the selection when it changes; a redraw for the focus scrolling the row must not pull it back to the selected card
+            if (enterDetail)
+                for (int i = 0; i < n; i++)
+                    if (v.Tiles[i].Selected) KeepCardVisible(i);
             cardsFront = Ui.Node(Root, "Cards", RowX, 0, RowW, 900);
             cardsFront.gameObject.AddComponent<RectMask2D>();
             cardsBack = null;
@@ -695,13 +678,26 @@ namespace Kage
             string id = t.Id;
             float cardX = x;
             int idx = index;
-            var lift = UiFocusTween.On(rt, .18f, k => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 4f * k)));
-            var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f =>
+            // hover and focus only highlight (an outline round the card and the lift); the selection changes when the card is pressed
+            var ring = Ui.Line(rt, Closed(Octagon(-2f, -2f, w + 4f, H + 4f, 12f)), 2f, Color.clear);
+            var lift = UiFocusTween.On(rt, .18f, k =>
+            {
+                UiOffsets.Of(rt).SetFocus(new Vector2(0f, 4f * k));
+                ring.color = Ui.A(Lit, 0.6f * k);
+            });
+            var item = UiParts.Make(rt, Nav, "tile:" + id, null, f =>
             {
                 lift.Set(f);
-                if (f) KeepCardVisible(idx);
+                // moving the focus along a row of more than eight cards scrolls it; the Kages in the cards follow when the screen is drawn
+                // again (it used to happen because focusing selected, which redraws). One redraw at most per focus move.
+                if (f && KeepCardVisible(idx) && scrollRebuilds == 0)
+                {
+                    scrollRebuilds++;
+                    try { Rebuild(); }
+                    finally { scrollRebuilds--; }
+                }
             });
-            item.onUserFocus = () => A.Select(id);
+            ArmoryTilePick.Bind(item, id, A.Select);
         }
 
         void ArmorDetail(ArmoryView v)

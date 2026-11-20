@@ -5,7 +5,7 @@ using Kage.Rules;
 namespace Kage
 {
     /// <summary>
-    /// The Armory's state and actions, with no Unity types: which tab, row and item are selected, and Buy, Upgrade and Equip through
+    /// The Armory's state and actions, with no Unity types: which tab and item are selected, and Buy, Upgrade and Equip through
     /// the rules (<see cref="GameRules.BuyItem"/>, <see cref="GameRules.UpgradeItem"/>, <see cref="GameRules.EquipItem"/>). A
     /// successful action is saved at once and announced; a refused one changes nothing. <see cref="View"/> is what the screen draws.
     /// </summary>
@@ -16,7 +16,6 @@ namespace Kage
         readonly Action changed;
         readonly Action<string, string> toast;
         string selected;
-        ArmorLine? line;
 
         public ArmoryController(SaveData save, Action<SaveData> persist, Action changed, Action<string, string> toast = null)
         {
@@ -30,9 +29,9 @@ namespace Kage
 
         public SaveData Save { get { return save; } }
 
-        public ArmoryView View { get { return ArmoryView.Build(save, Tab, selected, line); } }
+        public ArmoryView View { get { return ArmoryView.Build(save, Tab, selected); } }
 
-        /// <summary>The item the tab is on (never null: the worn item, or the row's first).</summary>
+        /// <summary>The item the tab is on (never null: the worn item, or the list's first).</summary>
         public string SelectedId { get { return View.SelectedId; } }
 
         void Raise() { changed(); }
@@ -42,7 +41,6 @@ namespace Kage
         {
             Tab = tab;
             selected = null;
-            line = null;
             Raise();
         }
 
@@ -53,20 +51,15 @@ namespace Kage
             if ((ArmoryTab)t != Tab) SelectTab((ArmoryTab)t);
         }
 
-        /// <summary>Selects an item of the open tab (and row). Anything the tab doesn't list is ignored.</summary>
+        /// <summary>
+        /// Selects an item of the open tab: what the player does by clicking its tile or pressing confirm on it. Focus and hover never
+        /// call this, so pointing at a tile changes nothing. Anything the tab doesn't list is ignored.
+        /// </summary>
         public void Select(string id)
         {
             var v = View;
             if (id == null || v.Tiles.All(t => t.Id != id)) return;
             selected = id;
-            Raise();
-        }
-
-        /// <summary>Switches the Armor tab's row.</summary>
-        public void SetLine(ArmorLine l)
-        {
-            line = l;
-            selected = null;
             Raise();
         }
 

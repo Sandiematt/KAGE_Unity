@@ -13,13 +13,6 @@ namespace Kage
         Armor,
     }
 
-    /// <summary>The two rows of the Armor tab: the eight-armour line (Shinobi Garb to Mugen) and the trophies.</summary>
-    public enum ArmorLine
-    {
-        Line,
-        Trophy,
-    }
-
     /// <summary>What the main button of the detail panel does.</summary>
     public enum ArmoryAction
     {
@@ -86,10 +79,6 @@ namespace Kage
         public GearKind Kind;
         public ArmoryTile[] Tiles;
         public string SelectedId;
-        /// <summary>The row showing on the Armor tab.</summary>
-        public ArmorLine Line;
-        public int TrophyCount;
-
         public string TierId, TierLine, Name, Lore, Desc;
         public ArmoryPreview Preview;
         /// <summary>The image under Resources/UI/Img of the weapon illustration (Weapons tab only, else null).</summary>
@@ -118,31 +107,17 @@ namespace Kage
 
         static int Cost(GearItem it) { return it.Price + it.Gems * 100; }
 
-        /// <summary>The row that shows when none was chosen: the trophies when a trophy armour is worn.</summary>
-        public static ArmorLine DefaultLine(SaveData save)
-        {
-            var worn = JsTables.Armor(save.equipped.armor);
-            return worn != null && worn.Tier == "trophy" ? ArmorLine.Trophy : ArmorLine.Line;
-        }
-
         /// <summary>
         /// The ids of a tab in the order the Armory lists them: the shop from the cheapest tier to the dearest and, inside a tier,
-        /// by price (a gem counts as 100 coins), then the trophies and boss weapons. Enemy-only gear and bare hands are left out.
-        /// The Armor tab lists one row only.
+        /// by price (a gem counts as 100 coins), then the reward gear. Only <see cref="ArmoryClass.Implemented"/> gear is listed
+        /// (<see cref="ArmoryListing"/>); enemy-only gear and bare hands are left out. There is one armour list: an Act I reward
+        /// armour (Ikazuchi-do, Shiden Yoroi) is in it after the shop armours once the save owns it, and not before.
         /// </summary>
-        public static string[] Items(ArmoryTab tab, ArmorLine line)
+        public static string[] Items(ArmoryTab tab, SaveData save)
         {
             var kind = KindOf(tab);
-            IEnumerable<GearItem> items;
-            if (kind == GearKind.Weapons) items = JsTables.Weapons.Select(w => GameRules.Item(kind, w.Id));
-            else if (kind == GearKind.Helmets) items = JsTables.Helmets.Select(g => GameRules.Item(kind, g.Id));
-            else items = JsTables.Armors.Select(g => GameRules.Item(kind, g.Id));
-            items = items.Where(i => !i.Enemy && i.Id != "fists");
-            if (tab == ArmoryTab.Armor)
-            {
-                bool trophies = line == ArmorLine.Trophy;
-                items = items.Where(i => (i.Tier == "trophy") == trophies);
-            }
+            var items = ArmoryListing.Candidates(kind).Where(i => !i.Enemy && ArmoryListing.Listed(kind, i.Id));
+            if (kind == GearKind.Armors) items = items.Where(i => !i.Exclusive || GameRules.Owns(save, kind, i.Id));
             return items
                 .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
                 .ThenBy(Cost)
@@ -173,11 +148,10 @@ namespace Kage
             return preview;
         }
 
-        public static ArmoryView Build(SaveData save, ArmoryTab tab, string selectedId = null, ArmorLine? armorLine = null)
+        public static ArmoryView Build(SaveData save, ArmoryTab tab, string selectedId = null)
         {
             var kind = KindOf(tab);
-            var line = armorLine ?? DefaultLine(save);
-            var ids = Items(tab, line);
+            var ids = Items(tab, save);
             string worn = EquippedId(save, kind);
             string id = selectedId;
             if (id == null || !ids.Contains(id)) id = worn;
@@ -198,8 +172,6 @@ namespace Kage
                 Tab = tab,
                 Kind = kind,
                 SelectedId = id,
-                Line = line,
-                TrophyCount = tab == ArmoryTab.Armor ? Items(ArmoryTab.Armor, ArmorLine.Trophy).Length : 0,
                 TierId = GameRules.ItemTier(kind, id, lv1),
                 Name = item.Name,
                 Owned = owned > 0,
