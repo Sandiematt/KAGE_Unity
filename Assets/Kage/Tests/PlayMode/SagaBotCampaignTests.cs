@@ -75,7 +75,7 @@ namespace Kage.Tests
             return r;
         }
 
-        static IInputSource BossBot(string foeId)
+        internal static IInputSource BossBot(string foeId)
         {
             switch (foeId)
             {
