@@ -21,9 +21,12 @@ namespace Kage.Tests
             "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "raijin_kabuto", "sumi_eboshi", "hisame_zukin",
         };
 
-        // worn with the head hair gone (hoods, caps) / hair kept under a kabuto or band / hair only below the brim
-        static readonly string[] HairHidden = { "kuro_zukin", "kasumi_men", "hoshi_kabuto", "shikko_zukin", "raijin_kabuto", "sumi_eboshi", "hisame_zukin" };
-        static readonly string[] HairKept = { "hachigane", "tetsu_kabuto", "oni_menpo", "shika_kabuto", "utsuro_kabuto" };
+        // worn with the head hair gone (hoods, caps and the closed kabuto) / hair kept with a band or the open oni mask / hair only below the brim (SAN-72 rework)
+        static readonly string[] HairHidden =
+        {
+            "kuro_zukin", "kasumi_men", "tetsu_kabuto", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "raijin_kabuto", "sumi_eboshi", "hisame_zukin",
+        };
+        static readonly string[] HairKept = { "hachigane", "oni_menpo" };
 
         // later-act helmets: in the data, no drawing yet
         static readonly string[] NoDrawing = { "shiro_maki", "hakobi_gasa", "utsushi_men", "deshi_tenugui", "mokushi_kabuto", "kasa", "no_such_helmet", "", null };
@@ -161,7 +164,7 @@ namespace Kage.Tests
         // ---------------------------------------------------------------- hair and scarf
 
         [Test]
-        public void HoodsAndCapsCoverTheHairAndLeaveABareHead()
+        public void HoodsCapsAndClosedKabutoCoverTheHairAndLeaveABareHead()
         {
             foreach (var id in HairHidden)
             {
@@ -173,7 +176,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void KabutoAndBandsKeepTheHairMovingUnderThem()
+        public void BandsAndTheOpenOniMaskKeepTheHairMovingUnderThem()
         {
             var bare = Bare();
             var hair = bare.parts.First(p => p.soft == SoftKind.Hair);
