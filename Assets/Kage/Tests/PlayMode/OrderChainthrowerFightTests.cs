@@ -86,8 +86,7 @@ namespace Kage.Tests
         [Test]
         public void StretchWavesResolveTheChainthrowerToTheRealCharacter()
         {
-            var def = StretchSession.ResolveFoe(Id, out bool fellBack);
-            Assert.IsFalse(fellBack, "no Footman fallback for the Chainthrower");
+            var def = StretchSession.ResolveFoe(Id);
             Assert.AreEqual(Id, def.id);
         }
 

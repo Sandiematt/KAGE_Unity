@@ -234,7 +234,7 @@ namespace Kage
         void SpawnPartner(float x)
         {
             string id = Current.Partner;
-            var def = CharacterCatalog.Get(id) ?? StretchSession.ResolveFoe(id, out _);
+            var def = StretchSession.ResolveFoe(id);
             def.healthMul = PartnerHealthMul;
             def.moveRate = PartnerMoveRate;
             float px = PartnerX(x);

@@ -243,7 +243,7 @@ namespace Kage.Tests
             CollectionAssert.AreEqual(new[] { "prologue.1.e1", "prologue.1.e2" }, waves.Select(w => w.Name).ToArray());
             CollectionAssert.AreEqual(new[] { "prologue.1.e1", "prologue.1.e2" }, clears.Select(w => w.Name).ToArray());
             CollectionAssert.AreEqual(new[] { "hollow_tutorial", "hollow_shade" }, f.Session.Spawned.Select(s => s.RequestedId).ToArray());
-            Assert.IsFalse(f.Session.Spawned.Any(s => s.FellBack), "both foes are real characters");
+            Assert.IsTrue(f.Session.Spawned.All(s => s.CharacterId == s.RequestedId), "both foes are the characters the road names");
             Assert.Less(waves[0].Frame, clears[0].Frame);
             Assert.Less(clears[0].Frame, waves[1].Frame, "the Hollow Shade comes after the tutorial Hollow is down");
             Assert.AreEqual(2, f.Session.EncountersCleared);

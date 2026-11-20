@@ -25,7 +25,7 @@ namespace Kage.Tests
         /// <item>Her other blows: hold Guard while one is coming when she is near (as the Kuroe bot).</item>
         /// </list>
         /// </summary>
-        sealed class RainwiseBot : IInputSource
+        internal sealed class RainwiseBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             public int GuardedCut, GuardedKocho, GuardedBomb, Guarded;

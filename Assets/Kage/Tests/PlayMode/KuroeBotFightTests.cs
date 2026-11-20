@@ -19,7 +19,7 @@ namespace Kage.Tests
         /// it holds its blade while a counter window is up, and it holds Guard while the foe's blow is coming (from the start of her attack to
         /// the end of its last hit window) when she is near. No randomness.
         /// </summary>
-        sealed class CensureAwareBot : IInputSource
+        internal sealed class CensureAwareBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             public int Waited, Guarded;

@@ -143,7 +143,7 @@ namespace Kage
             string desc;
             if (sel.Kind == "stretch" && sel.Stretch != null)
             {
-                int e = sel.Stretch.Encounters.Length;
+                int e = (StretchData.FromId(sel.Id) ?? StretchData.FromStage(sel.Id)).Encounters.Length;      // the road that is played (the Prologue has its Unity additions, SAN-96)
                 desc = e + (e == 1 ? " encounter holds the road." : " encounters hold the road.");
             }
             else

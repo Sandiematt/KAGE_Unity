@@ -141,8 +141,7 @@ namespace Kage.Tests
         [Test]
         public void StretchWavesResolveTheShieldbearerToTheRealCharacter()
         {
-            var def = StretchSession.ResolveFoe(Id, out bool fellBack);
-            Assert.IsFalse(fellBack, "no Footman fallback for the Shieldbearer");
+            var def = StretchSession.ResolveFoe(Id);
             Assert.AreEqual(Id, def.id);
             Assert.IsTrue(def.flags.HasFlag(CharacterFlags.FrontalArmour));
         }

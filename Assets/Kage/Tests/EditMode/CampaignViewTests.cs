@@ -105,7 +105,7 @@ namespace Kage.Tests
             Assert.AreEqual("Fight", card.Action);
             Assert.IsTrue(card.CanStart);
             Assert.AreEqual(GameRules.StageRewardPreview(save, "prologue.1").Coins, card.Coins);
-            StringAssert.Contains("1 encounter", card.Description);
+            StringAssert.Contains("2 encounters", card.Description, "the Prologue road has the tutorial Hollow and the Hollow Shade (SAN-96)");
         }
 
         [Test]
