@@ -6,12 +6,12 @@ namespace Kage
 {
     /// <summary>
     /// Armour visuals, the second gear layer on Kage's part set (SAN-85, ADR-0005). An armour is drawn in code from its JS look
-    /// (<c>21-characters/kage/armory</c> for the seven shop armours, the Act I sub-bosses' torsos for the two trophies): the shop
-    /// armours are cuts of his own coat, scarf and belt (new tones, a cut hem with art along it, a chest piece, a shoulder guard,
-    /// extra scarf strands); the trophies are plates over his chest, shoulder and hips. Everything is layered on the rig as parts of
-    /// the bones it dresses (or appended to the coat's own cloth), so his skeleton, scarf simulation, coat cloth and hurt circles
-    /// never change. An armour with no drawing (the starter Shinobi Garb, whose plain coat is his own design, and every later-act
-    /// or retired one) leaves Kage exactly as he is. <see cref="KagePartSet"/> calls <see cref="Apply"/>.
+    /// (<c>21-characters/kage/armory</c> for the seven shop armours, the sub-bosses' and bosses' torsos for the ten trophies): the
+    /// shop armours are cuts of his own coat, scarf and belt (new tones, a cut hem with art along it, a chest piece, a shoulder guard,
+    /// extra scarf strands); each trophy is its own plates, trim and hanging pieces over his chest, shoulder and coat (SAN-90 rework).
+    /// Everything is layered on the rig as parts of the bones it dresses (or appended to the coat's own cloth), so his skeleton, scarf
+    /// simulation, coat cloth and hurt circles never change. An armour with no drawing (the starter Shinobi Garb, whose plain coat is
+    /// his own design, and every retired one) leaves Kage exactly as he is. <see cref="KagePartSet"/> calls <see cref="Apply"/>.
     /// </summary>
     public static class ArmorVisuals
     {
@@ -22,7 +22,8 @@ namespace Kage
             public Action<ArmorArt> draw;       // plates only (trophies)
         }
 
-        // keyed by the JS armour id. The 9 Act I armours that have a drawing; the 10th, the starter, is Kage's plain design.
+        // keyed by the JS armour id. The 7 shop armours and all 10 trophies have a drawing (each trophy its own, named for its JS look);
+        // the starter is Kage's plain design.
         static readonly Dictionary<string, Look> Looks = new()
         {
             ["ronin_yoroi"] = new Look { name = "ronin", theme = ArmorLooks.Ronin },
@@ -34,6 +35,14 @@ namespace Kage
             ["mugen_yoroi"] = new Look { name = "mugen", theme = ArmorLooks.Mugen },
             ["ikazuchi_do"] = new Look { name = "half_do", draw = ArmorLooks.HalfDo },
             ["shiden_yoroi"] = new Look { name = "vanguard_plate", draw = ArmorLooks.VanguardPlate },
+            ["shirabe_do"] = new Look { name = "operative_vest", draw = ArmorLooks.OperativeVest },
+            ["kasane_haori"] = new Look { name = "ledger_coat", draw = ArmorLooks.LedgerCoat },
+            ["tetsumon_do"] = new Look { name = "gate_plate", draw = ArmorLooks.GatePlate },
+            ["kudamaki_do"] = new Look { name = "conduit_harness", draw = ArmorLooks.ConduitHarness },
+            ["mei_en_garb"] = new Look { name = "mei_en", draw = ArmorLooks.MeiEn },
+            ["kysmei_robe"] = new Look { name = "kysmei", draw = ArmorLooks.KysmeiRobe },
+            ["kurokumo_yoroi"] = new Look { name = "tyrant", draw = ArmorLooks.Tyrant },
+            ["shinsei_yoroi"] = new Look { name = "shinsei", draw = ArmorLooks.Shinsei },
         };
 
         /// <summary>True when this JS armour id has a drawing.</summary>

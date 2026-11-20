@@ -14,13 +14,16 @@ namespace Kage.Tests
     /// </summary>
     public class ArmorVisualTests
     {
-        // the Act I armours with a drawing: the 7 shop armours after the starter, and the 2 Act I trophies
+        // the armours with a drawing: the 7 shop armours after the starter, and every trophy (SAN-85 rework: all 10, each its own look)
         static readonly string[] ShopDrawn = { "ronin_yoroi", "yami_yoroi", "shinsen_yoroi", "raiko_yoroi", "kagehira_yoroi", "yurei_yoroi", "mugen_yoroi" };
-        static readonly string[] TrophyDrawn = { "ikazuchi_do", "shiden_yoroi" };
+        static readonly string[] TrophyDrawn =
+        {
+            "ikazuchi_do", "shiden_yoroi", "shirabe_do", "kasane_haori", "tetsumon_do", "kudamaki_do", "mei_en_garb", "kysmei_robe", "kurokumo_yoroi", "shinsei_yoroi",
+        };
         static readonly string[] Drawn = ShopDrawn.Concat(TrophyDrawn).ToArray();
 
-        // Kage's own look (the starter, whose plain coat is the design itself), later-act and retired armours, and bad ids
-        static readonly string[] NoDrawing = { "tachibana_yoroi", "shirabe_do", "kasane_haori", "tetsumon_do", "kurokumo_yoroi", "kozane_do", "kawa_do", "no_such_armor", "", null };
+        // Kage's own look (the starter, whose plain coat is the design itself), retired armours, and bad ids
+        static readonly string[] NoDrawing = { "tachibana_yoroi", "kozane_do", "kawa_do", "no_such_armor", "", null };
 
         static readonly string[] Helmets =
         {
@@ -90,7 +93,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void TheNineArmoursWithADrawingAreTheShopsAndTheTwoActITrophies()
+        public void TheSevenShopArmoursAndEveryTrophyHaveADrawing()
         {
             CollectionAssert.AreEquivalent(Drawn, ArmorVisuals.Ids.ToArray());
             foreach (var id in Drawn)
@@ -98,7 +101,6 @@ namespace Kage.Tests
                 var row = JsTables.Armor(id);
                 Assert.IsNotNull(row, id);
                 Assert.IsFalse(row.Retired, id);
-                Assert.IsFalse(row.NgOnly, id);
             }
         }
 

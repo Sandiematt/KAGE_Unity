@@ -106,6 +106,58 @@ namespace Kage.Tests
                 FileAssert.Exists(Path.Combine(OutDir, f));
         }
 
+        /// <summary>The trophies the Armory shows after the first two (SAN-90 rework): each gets its own look.</summary>
+        public static readonly string[] OtherTrophies =
+        {
+            "shirabe_do", "kasane_haori", "tetsumon_do", "kudamaki_do", "mei_en_garb", "kysmei_robe", "kurokumo_yoroi", "shinsei_yoroi",
+        };
+
+        [Test]
+        public void SheetOfTheOtherTrophies()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            Directory.CreateDirectory(OutDir);
+            var close = new Dictionary<string, List<Color32[]>>();
+            var torso = new List<Color32[]>();
+            foreach (var pose in Poses) close[pose] = new List<Color32[]>();
+            foreach (var id in OtherTrophies)
+            {
+                string label = Label(id);
+                foreach (var pose in Poses)
+                {
+                    using var f = Pose(id, pose);
+                    close[pose].Add(Render(BodyCentre(f), 1.15f, label + "  " + pose));
+                    if (pose == "idle")
+                    {
+                        File.WriteAllBytes(Path.Combine(OutDir, $"armor_{id}.png"), Png(Render(TorsoCentre(f), 0.62f, label, 800, 800), 800, 800));
+                        torso.Add(Render(TorsoCentre(f), 0.55f, label));
+                    }
+                }
+            }
+            foreach (var pose in Poses) SheetCols($"armors_trophies_{pose}.png", close[pose], 4);
+            SheetCols("armors_trophies_chest_closeup.png", torso, 4);
+            FileAssert.Exists(Path.Combine(OutDir, "armors_trophies_idle.png"));
+            FileAssert.Exists(Path.Combine(OutDir, "armors_trophies_chest_closeup.png"));
+        }
+
+        [Test]
+        public void SheetOfTheMugenRingInEveryPoseAndFacing()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            Directory.CreateDirectory(OutDir);
+            var cells = new List<Color32[]>();
+            foreach (var facing in new[] { 1f, -1f })
+                foreach (var pose in Poses)
+                {
+                    using var f = Pose("mugen_yoroi", pose);
+                    f.Kage.rig.SetFacing(facing, true);
+                    var c = BodyCentre(f);
+                    cells.Add(Render(new Vector2(c.x, c.y + 0.35f), 0.95f, $"mugen ring  {pose}  facing {(facing > 0 ? "right" : "left")}"));
+                }
+            SheetCols("mugen_ring_poses.png", cells, Poses.Length);
+            FileAssert.Exists(Path.Combine(OutDir, "mugen_ring_poses.png"));
+        }
+
         [Test]
         public void SheetOfHelmetAndArmourCombinations()
         {
