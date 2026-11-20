@@ -30,6 +30,7 @@ namespace Kage
             Add(Kuroe.Def());              // the first Act I sub-boss (SAN-103)
             Add(Garan.Def());              // the second Act I sub-boss (SAN-104)
             Add(Hisame.Def());             // the third Act I sub-boss (SAN-105)
+            Add(Shiden.Def());             // the fourth Act I sub-boss (SAN-106)
             Add(FootmanBoss.Def());        // dev only: the two-phase test boss (SAN-102)
 
             // ---- part sets ----
@@ -48,6 +49,7 @@ namespace Kage
             Add(new KuroePartSet());
             Add(new GaranPartSet());
             Add(new HisamePartSet());
+            Add(new ShidenPartSet());
         }
 
         static void Add(CharacterDef d) => _defs[d.id] = d;

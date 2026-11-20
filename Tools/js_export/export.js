@@ -33,7 +33,7 @@ const CHAPTERS = ['prologue', 'act1'];
 
 const { loadSim } = require(path.join(JS_DIR, 'tests', 'helpers', 'load-sim.js'));
 const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS',
-  'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES'] });
+  'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES', 'SHIDEN_BRACE'] });
 // The basic moves the sub-boss abilities are measured against or built from (SAN-104): the jab (the damage scale) and the grab (the clinch);
 // and the twin blades' first cut (SAN-105: Hisame's Kocho ends in it).
 const MOVE_IDS = ['p1', 'grab', 'tw1'];
@@ -138,7 +138,7 @@ function projRow(id, p, level) {
 // A foe's fighting style (FIGHT_STYLES in 41-styles/*.js): its school and its strings (SAN-104). `When` marks a string the style plays
 // only in a situation (a guarding Kage, an airborne one); the condition itself is code and is described in the ability that uses it.
 function styleRow(id, st, level) {
-  return obj('JsFightStyle', [['Id', str(id)], ['Art', scalar(st.art)],
+  return obj('JsFightStyle', [['Id', str(id)], ['Art', scalar(st.art)], ['Poise', scalar(st.poise)],
     ['Strings', arr('JsStyleString', (st.strings || []).map((x) => obj('JsStyleString', [
       ['Seq', strArray(x.seq)], ['Range', numArray(x.range, 'double')], ['W', scalar(x.w)], ['Tell', scalar(x.tell)], ['When', truthy(x.when)],
     ], level + 2)), level + 1)]], level);
@@ -235,6 +235,9 @@ member('JsProjectile', 'Projectiles', Object.entries(js.PROJ).map(([id, p]) => p
 member('JsAiRole', 'AiRoles', Object.entries(js.BUDO.roles).map(([id, r]) => obj('JsAiRole', [['Id', str(id)], ...pick(r, ['hp', 'dmg', 'aggr', 'guard', 'parry', 'react', 'punish', 'idle', 'windup', 'recovery'])], L + 1)));
 member('JsDifficulty', 'Difficulties', Object.entries(js.DIFFICULTIES).map(([id, d]) => obj('JsDifficulty', [['Id', str(id)], ...pick(d, ['hp', 'dmg', 'bossHp', 'bossDmg', 'windup', 'recovery'])], L + 1)));
 member('JsFightStyle', 'FightStyles', enemyIds.filter((id) => js.FIGHT_STYLES[id]).map((id) => styleRow(id, js.FIGHT_STYLES[id], L + 1)));
+// Shiden's Braced Spear (SAN-106): its numbers are a const of 41-styles/shiden.js, not a BOSS_ABILITIES field.
+out.push(`        public static readonly JsBrace ShidenBrace = ${obj('JsBrace', pick(js.SHIDEN_BRACE, ['hold', 'reach', 'trigger', 'dmg', 'open']), L)};
+`);
 member('JsAiProfile', 'AiProfiles', Object.entries(js.AI_PROFILES).map(([id, a]) => aiRow(id, a, L + 1)));
 member('JsTutorialStep', 'TutorialSteps', Object.entries(js.TUTORIAL_STEPS).map(([id, t]) => obj('JsTutorialStep', [['Id', str(id)], ['Verb', str(t.verb)], ['Hint', str(t.hint)]], L + 1)));
 member('JsChapter', 'Chapters', chapters.map((ch) => obj('JsChapter', [
