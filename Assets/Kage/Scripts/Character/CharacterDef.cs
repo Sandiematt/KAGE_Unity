@@ -133,6 +133,7 @@ namespace Kage
                 displayName = e.Name,
                 title = e.Title,
                 jsHealth = e.Hp,
+                healthMul = HealthTuning.MulOf(e.Id),     // the pacing multiplier of Tuning/health.json (SAN-110)
                 defense = (float)e.Def,
                 damageMul = (float)e.Dmg,
                 speedMul = (float)e.Speed,

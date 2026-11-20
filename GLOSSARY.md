@@ -35,6 +35,7 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 - **Attacking** (for the engagement limit): in an attack move (`Fighter.InAttackMove`): a move with a hit window, a throw, a projectile or a counter window; not a roll, backflip, dash or getting up. **Committed**: attacking, or with an attack button still buffered; an engaged foe keeps its place while committed.
 - **Group fight**: the dev arena's Kage against four Footmen (F6), and any fight with more than one foe. *Avoid:* mob fight, horde.
 - **Health scale**: the one shared multiplier from JS health to Unity health (about 0.431). **JS health**: a character's raw health in the JS data, before the scale. *Avoid:* HP multiplier, difficulty scaling.
+- **Health multiplier** (pacing multiplier): a character's own factor on top of the health scale (`CharacterDef.healthMul`, rows in `Tuning/health.json`); it tunes how long that foe takes to beat. **Time-to-kill (TTK)**: seconds from the foe's (or wave's) first frame alive to its last knock-out, measured by the pacing report (`PacingReportTests`) with a **helped Kage**: his real gear and damage with 20 times the health, so a bot that would have died does not end the run. *Avoid:* difficulty scaling.
 - **Damage multiplier**: a character's or weapon's multiplier on Unity window damage.
 - **Speed multiplier**: how fast a character moves around (walk, run, dash). **Move rate**: how fast its attacks play. They are different things.
 - **Mass**: a character's physics mass. Knockback impulses are divided by it.

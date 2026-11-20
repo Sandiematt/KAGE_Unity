@@ -35,7 +35,7 @@ namespace Kage.Tests
             Assert.AreEqual("Hisame", d.displayName);
             Assert.AreEqual("the Rain Courier", d.title);
             Assert.AreEqual(375f, d.jsHealth, "41-styles/hisame.js raises 10-data.js's 330 to 375");
-            Assert.AreEqual(375f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(375f * 1.2f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.04f, d.defense, 1e-6);
             Assert.AreEqual(0.95f, d.damageMul, 1e-6);
             Assert.AreEqual(1.16f, d.speedMul, 1e-6);

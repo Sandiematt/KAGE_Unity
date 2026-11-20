@@ -20,7 +20,7 @@ namespace Kage.Tests
             Assert.AreEqual("Hollow Flicker", d.displayName);
             Assert.AreEqual("Memory echo", d.title);
             Assert.AreEqual(140f, d.jsHealth);
-            Assert.AreEqual(140f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(140f * 2.5f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.02f, d.defense, 1e-6);
             Assert.AreEqual(0.8f, d.damageMul, 1e-6);
             Assert.AreEqual(1.18f, d.speedMul, 1e-6);

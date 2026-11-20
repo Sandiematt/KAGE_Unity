@@ -26,8 +26,8 @@ namespace Kage.Tests
         public void AFoeStartsAtItsRawJsHealthTimesTheHealthScale()
         {
             // raw JS hp (ADR-0005 table), no JS role multipliers (owner decision on SAN-59)
-            Assert.AreEqual(170f * 100f / 232f, CharacterDef.FromJs("order_footman").MaxHealth(), 1e-3);
-            Assert.AreEqual(73.2759f, CharacterDef.FromJs("order_footman").MaxHealth(), 1e-3);
+            Assert.AreEqual(170f * 1.65f * 100f / 232f, CharacterDef.FromJs("order_footman").MaxHealth(), 1e-3);
+            Assert.AreEqual(120.9052f, CharacterDef.FromJs("order_footman").MaxHealth(), 1e-3, "170 x the pacing multiplier 1.65 (SAN-110)");
             Assert.AreEqual(275.8621f, CharacterDef.FromJs("raikon").MaxHealth(), 1e-3);
         }
 
