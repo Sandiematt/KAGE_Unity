@@ -6,15 +6,30 @@ using H = Kage.HollowPalette;
 namespace Kage
 {
     /// <summary>
-    /// The Hollow Shade's look (SAN-76), drawn in code on Kage's skeleton with <see cref="OpponentKit"/>: a memory of a samurai
-    /// coming apart. A ragged cowl with a crown of floating mask shards, a gaunt face under a cracked half-mask, a cold white eye,
-    /// a torn haori with a rip across the chest that glows violet, frayed sleeves, wrapped forearms and shins, a torn skirt of
-    /// swinging panels to the calf and a saya. Violet-black cloth and a violet light along every break, where the Order is slate
-    /// and silver and Kage crimson. Based on the JS Hollow skin (<c>hollow_shade</c>: cowl, shards, half-mask, rip, saya).
+    /// The Hollow Shade's look (SAN-76, redrawn smooth in the SAN-76 rework): a port of the JS <c>hollow_shade</c> shape for shape,
+    /// on Kage's skeleton with the smooth half of <see cref="OpponentKit"/> and the gi body of <see cref="HollowAnimeBody"/>. A memory
+    /// of a samurai coming apart: a ragged cowl with a torn tail and a crown of three floating mask shards, the gaunt black profile
+    /// with a long nose and a parted mouth under the upper half of a cracked mask, a cold white eye, a gi with a violet-edged collar
+    /// and a rip across the chest showing the dark under it, sleeves torn into points at mid-forearm over bandaged kote, a torn obi
+    /// with a hanging end, a saya at the hip, a torn haori skirt to the calf (a long back panel and a shorter front flap, cloth on
+    /// chains), wide hakama over wrapped shins and straw sandals. The echo of a katana is <see cref="HollowBody.Sword"/>.
+    /// <para>
+    /// Sizes: the JS Shade is the lean Hollow (build 9.5, U 1.14 JS px per design unit against the Husk's 2.14), so its limbs are
+    /// 2.84 reference px per unit (the Husk's 4.45 scaled by the two skeletons), its trunk 4.1 across (the Husk's 6.45 the same way)
+    /// and its head 56 px (the Husk's 58 at 1.16 times the body).
+    /// </para>
     /// </summary>
     public sealed class HollowShadePartSet : IPartSet
     {
         public string Id => "hollow_shade";
+
+        static readonly HollowAnimeBody K = new(2.84f, 1.04f, 4.1f, 846f, 168f, 56f);
+
+        // the JS face of a hollow_shade: gaunt, the nose a little longer, the mouth parted
+        static readonly HollowAnimeBody.Profile Face = new() { nose = 1.15f, lip = 0.7f, chin = 1f, jaw = 0.88f, brow = 1.1f, open = 0.1f };
+
+        static readonly Tone Obi = new(KMath.Hex("#0C0A12"), KMath.Hex("#17131F"), KMath.Hex("#2C2640"));
+        static readonly Tone SayaT = new(KMath.Hex("#0A0810"), KMath.Hex("#15111C"), KMath.Hex("#2C2638"));
 
         public RigDef Build(CharacterDef c)
         {
@@ -24,94 +39,129 @@ namespace Kage
             d.scarf = false;
             d.softCoat = false;
 
-            HollowBody.FarArm(d);
-            HollowBody.FarLeg(d);
-            HollowBody.Pelvis(d);
+            // JS robe: back [7 links, 11 px, 22 -> 50 wide], flap [6, 10.5, 15 -> 30], teeth 6 (the flap one fewer), rag 9;
+            // hung from the waist, to the calf behind and over the knee in front
+            K.Robe(d, true, 7, 22f, 50f, 6, 9f, new Vector2(914f, 412f), new Vector2(982f, 742f), 1f);
+            K.Arm(d, far: true, HollowAnimeBody.Cuff.Torn);
+            K.Leg(d, far: true);
+            K.Pelvis(d);
             Torso(d);
-            HollowBody.NearLeg(d);
-            Skirt(d);
+            K.Leg(d, far: false);
+            K.Robe(d, false, 6, 15f, 30f, 5, 9f, new Vector2(852f, 404f), new Vector2(848f, 686f), 0.65f);
+            Sash(d);
+            Saya(d);
+            K.Neck(d);
             Head(d);
-            HollowBody.NearArm(d);
+            K.Arm(d, far: false, HollowAnimeBody.Cuff.Torn);
             HollowBody.Sword(d);
             return d;
         }
 
+        // ---------------------------------------------------------------------------------------------- the rip across the chest (drawHollowArmor 'rip')
         static void Torso(RigDef d)
         {
-            Add(d, "Torso", B.Chest, Slot.Torso, H.Cloth, V(834, 226, 870, 214, 908, 220, 932, 240, 946, 268, 950, 310, 951, 355, 953, 425, 880, 428, 808, 425, 807, 360, 812, 322, 818, 290, 824, 260));
-            // the haori: a torn robe over it, lapels falling open, the hem ragged
-            var haori = V(812, 240, 862, 226, 904, 232, 944, 262, 954, 330, 958, 410, 940, 424, 928, 404, 910, 428, 892, 404, 872, 424, 850, 402, 826, 424, 806, 404, 802, 340, 806, 284);
-            var polys = new List<(Vector2[], Color)> { Poly(haori, H.ClothDeep) };
-            // the rip across the chest: a dark gash lined with violet light
-            polys.Add(Poly(V(812, 296, 846, 300, 880, 336, 924, 350, 948, 360, 934, 372, 878, 362, 838, 340, 806, 316), H.Violet));
-            polys.Add(Poly(V(818, 302, 846, 306, 880, 343, 920, 357, 940, 364, 930, 366, 878, 354, 840, 334, 812, 314), H.FaceDark));
-            polys.Add(Poly(Band(2.2f, 828, 308, 860, 322, 884, 346), H.Eye));
-            // cracks fanning from the rip
-            polys.Add(Poly(Band(1.8f, 892, 340, 900, 312, 914, 300), H.Violet));
-            polys.Add(Poly(Band(1.8f, 906, 356, 922, 384, 918, 404), H.Violet));
-            // the lapel edge, lit
-            polys.Add(Poly(Band(2.6f, 818, 252, 848, 238, 874, 300, 862, 346), H.ClothLit));
-            AddMulti(d, "Haori", B.Chest, Slot.TorsoTrim, polys, 1, haori);
-            // wraps bound across the shoulder
-            Add(d, "Shoulder_Wrap", B.Chest, Slot.TorsoTrim, H.Wrap, Band(7f, 822, 252, 868, 270, 910, 276, 946, 296), 2, PartRole.Trim, false);
-
-            // ragged sash, its ends hanging in tatters
-            Add(d, "Sash", B.Chest, Slot.Belt, H.ClothDeep, V(802, 384, 956, 388, 957, 410, 802, 406), 0, PartRole.Trim, false);
-            AddSwinging(d, "Sash_Tail", B.Chest, Slot.BeltTrim, H.Cloth, V(810, 404, 840, 404, 852, 456, 842, 448, 838, 492, 824, 462, 814, 480, 818, 440), 826, 404, 0.9f, 1, PartRole.Trim);
-            Add(d, "Neck", B.Neck, Slot.Neck, H.ClothDeep, V(838, 200, 868, 200, 872, 240, 842, 240), 0, PartRole.Body, false);
+            var torso = K.Torso(d);
+            var sp = K.Sp;
+            var rip = Rounded(sp, 0.82f, -9f, 1, 0.74f, -4f, 1, 0.7f, 0f, 1, 0.6f, 4f, 1, 0.52f, 9f, 1, 0.44f, 13f, 1, 0.5f, 10.4f, 1,
+                0.56f, 6.6f, 1, 0.64f, 2.4f, 1, 0.7f, -2.4f, 1, 0.76f, -6f, 1);
+            var polys = new List<(Vector2[] pts, Color col)> { (rip, HollowAnimeBody.Black) };
+            // its lips frayed violet: the lower lip back to the start
+            polys.Add((Band(3f, sp.Xy(0.44f, 13f, 0.5f, 10.4f, 0.56f, 6.6f, 0.64f, 2.4f, 0.7f, -2.4f, 0.76f, -6f, 0.82f, -9f)), H.Violet));
+            polys.Add((Band(1.6f, sp.Xy(0.82f, -9f, 0.74f, -4f, 0.7f, 0f, 0.6f, 4f, 0.52f, 9f)), H.ClothLit));
+            d.parts.Add(new PartDef
+            {
+                name = "Chest_Rip", bone = B.Chest, order = Slot.TorsoTrim * 4, role = PartRole.Detail, rim = false,
+                polys = new List<(Vector2[] pts, Color col)>(Inside(HollowAnimeBody.ConvexHull(torso), polys)),
+            });
         }
 
-        static void Skirt(RigDef d)
+        // ---------------------------------------------------------------------------------------------- the torn obi (JS hollowSash, the Hollow's own)
+        static void Sash(RigDef d)
         {
-            // front: three torn haori panels, each hanging from its own point
-            void Front(string n, float sw, int sub, float px, float py, Vector2[] pts, Color col) => AddSwinging(d, n, B.Hips, Slot.FrontPlates, col, pts, px, py, sw, sub);
-            Front("Skirt_F1", 0.5f, 0, 838, 404, HollowBody.Torn(796, 892, 402, 560, 6, 26, 1), H.Cloth);
-            Front("Skirt_F2", 0.8f, 1, 830, 404, HollowBody.Torn(786, 862, 410, 640, 5, 30, 3, -4), H.ClothDeep);
-            Front("Skirt_F2_Glow", 0.8f, 2, 830, 404, V(800, 470, 806, 474, 830, 566, 822, 570), H.Violet);
-            // back: two long panels
-            AddSwinging(d, "Skirt_B1", B.Hips, Slot.BackPlates, H.ClothDeep, HollowBody.Torn(922, 996, 402, 590, 4, 28, 2), 960, 402, 0.8f, 1);
-            AddSwinging(d, "Skirt_B2", B.Hips, Slot.BackPlates, H.ClothFar, HollowBody.Torn(938, 1030, 410, 650, 5, 32, 4, 8), 980, 410, 1.1f, 0);
+            var sp = K.Sp;
+            float U = K.U;
+            // the torn end hanging at the front, swinging
+            Vector2 t = sp.Px(0.04f, 9.5f);
+            Vector2 down = (sp.Px(0f, 0f) - sp.Px(1f, 0f)).normalized;
+            Vector2 du = (down * 0.7f + new Vector2(0f, 0.5f)).normalized, n = new(-du.y, du.x);
+            float L = 22f * U, w = 2.6f * U;
+            Vector2 P(float nw, float l) => t + n * w * nw + du * L * l;
+            var end = new Outline().MoveTo(P(-1f, 0f).x, P(-1f, 0f).y);
+            foreach (var (a, b) in new[] { (1f, 0f), (1.2f, 0.86f), (0.3f, 0.72f), (-0.2f, 1f), (-1.1f, 0.78f) }) end.LineTo(P(a, b).x, P(a, b).y);
+            AddCloth(d, "Sash_Tail", B.Chest, Slot.Belt, end.Bind(), HollowAnimeBody.Back, 1.6f * U, 0f,
+                new ChainFeel { stiffRoot = 0.4f, stiffTip = 0.08f, drag = 2.2f, gravity = 5f, breeze = 0.7f },
+                new[] { HollowAnimeBody.Xy(t, P(0f, 0.5f), P(0f, 1f)) }, 0, true);
+
+            // the band: a dark obi across the waist, its corners eased, two broken violet lines along it
+            var band = RoundedAll(sp, 0f, -12f, 0f, -12.8f, 0.04f, -13f, 0.12f, -13f, 0.16f, -12.8f, 0.16f, -12f,
+                0.16f, 11f, 0.16f, 11.8f, 0.12f, 12f, 0.04f, 12f, 0f, 11.8f, 0f, 11f);
+            var detail = new List<(Vector2[] pts, Color col)>();
+            foreach (float u in new[] { 0.03f, 0.135f })
+                detail.AddRange(Dashes(H.Violet, 2.6f, 4f * U, 2f * U, sp.Xy(u, -12.8f, u, 11.8f)));
+            AddCel(d, "Sash", B.Chest, Slot.Belt, band, Obi, 3f * U, 0.6f * U, 1, true, Inside(band, detail), PartRole.Trim);
         }
+
+        // ---------------------------------------------------------------------------------------------- the saya (JS animeSaya)
+        static void Saya(RigDef d)
+        {
+            var sp = K.Sp;
+            float U = K.U;
+            Vector2 a = sp.Px(0.16f, 7f);
+            Vector2 front = sp.ay.normalized, up = (sp.Px(1f, 0f) - sp.Px(0f, 0f)).normalized;
+            Vector2 dir = (-front * 0.78f - up * 0.62f).normalized;
+            Vector2 b = a + dir * 175f, n = new(-dir.y, dir.x);
+            var saya = Capsule(a.x, a.y, b.x, b.y, 2.4f * U * 1.2f, 1.9f * U * 1.2f);
+            Vector2 L(float k) => Vector2.Lerp(a, b, k);
+            var detail = new List<(Vector2[] pts, Color col)>
+            {
+                (Oval(b.x, b.y, 2.1f * U * 1.2f, 2.1f * U * 1.2f), H.Steel),                                       // the chape
+                (Band(1.4f * U, L(0.04f).x + n.x * 3f * U, L(0.04f).y + n.y * 3f * U, L(0.04f).x - n.x * 3f * U, L(0.04f).y - n.y * 3f * U), H.Steel),   // the mouth
+                (Band(1.2f * U, HollowAnimeBody.QuadPx(L(0.16f), L(0.25f) + new Vector2(0f, 6f * U), L(0.34f))), H.VioletDeep),   // the cord
+            };
+            AddCel(d, "Saya", B.Hips, Slot.BeltTrim, saya, SayaT, 1.6f * U, 0.6f * U, 0, true, detail, PartRole.Detail);
+        }
+
+        // ---------------------------------------------------------------------------------------------- the head (JS drawHollowHead 'shade')
+        static readonly float[][] Shards =
+        {
+            new[] { -0.62f, -1.2f, 1f, -1.2f, -1.86f, 1f, -0.92f, -2.0f, 1f, -0.3f, -1.3f, 1f },
+            new[] { -0.2f, -1.26f, 1f, -0.12f, -2.24f, 1f, 0.14f, -2.08f, 1f, 0.22f, -1.24f, 1f },
+            new[] { 0.36f, -1.16f, 1f, 0.86f, -1.72f, 1f, 0.98f, -1.5f, 1f, 0.64f, -1.04f, 1f },
+        };
 
         static void Head(RigDef d)
         {
-            // the crown: four shards of its broken mask hang in the air above the head and drift
-            void Shard(string n, float swing, int sub, Color c, float cx, float cy, float w, float h, float lean)
+            float R = K.R;
+            K.Face(d, Face);
+
+            // the crown: three shards of its broken mask hanging in the air over the head, drifting (two behind the cowl, one before it)
+            for (int i = 0; i < 3; i++)
             {
-                var s = AddSwinging(d, n, B.Head, Slot.HeadTop, c, V(cx - w, cy + h * 0.4f, cx + lean, cy - h, cx + w, cy + h * 0.5f, cx + w * 0.2f, cy + h * 0.2f), cx, cy + h, swing, sub, PartRole.Metal);
-                s.rimColor = H.Violet;
+                var s = Shards[i];
+                var shape = Rounded(K.Hd, s);
+                bool far = i == 0;
+                var p = AddCel(d, "Shard_" + (i + 1), B.Head, i < 2 ? Slot.Head : Slot.HeadTop, shape, far ? HollowAnimeBody.MaskFar : HollowAnimeBody.Mask,
+                    R * 0.2f, far ? 0f : R * 0.07f, i < 2 ? 1 : 0, true, null, PartRole.Metal);
+                Vector2 pv = K.Hd.Px((s[0] + s[9]) * 0.5f, (s[1] + s[10]) * 0.5f);
+                Swing(p, pv.x, pv.y, 0.7f + 0.2f * i);
             }
-            Shard("Shard_1", 1.1f, 0, H.MaskDark, 822, 64, 11, 30, -6);
-            Shard("Shard_2", 1.4f, 1, H.Mask, 858, 46, 9, 34, 4);
-            Shard("Shard_3", 1.2f, 2, H.MaskDark, 892, 70, 10, 26, 6);
-            Shard("Shard_4", 1.6f, 0, H.Mask, 928, 100, 8, 22, 8);
 
-            // the ragged cowl, its tail torn into points
-            AddSwinging(d, "Cowl_Tail", B.Head, Slot.Neck, H.ClothDeep, V(898, 140, 930, 156, 944, 206, 962, 244, 934, 232, 928, 262, 908, 226, 892, 232, 902, 190), 912, 150, 1.0f, 2);
-            Add(d, "Cowl", B.Head, Slot.Head, H.Cloth, V(802, 168, 804, 136, 826, 112, 860, 100, 892, 108, 912, 138, 916, 176, 910, 214, 920, 238, 896, 226, 884, 244, 862, 224, 836, 226, 818, 212), 3);
-            Add(d, "Cowl_Edge", B.Head, Slot.HeadTop, H.Violet, Band(2.2f, 808, 144, 828, 118, 862, 108, 890, 116, 908, 142), 0, PartRole.Trim, false, null, 1.4f);
+            // the ragged cowl, its tail torn into points at the nape, a dashed violet seam over it
+            var cowl = Rounded(K.Hd, 0.66f, -0.78f, 0, 0.2f, -1.16f, 0, -0.55f, -1.12f, 0, -1.08f, -0.6f, 0, -1.2f, 0.2f, 0, -1.06f, 0.86f, 0,
+                -1.42f, 1.42f, 1, -0.86f, 1.1f, 0, -0.78f, 1.62f, 1, -0.4f, 1.12f, 0, -0.12f, 1.46f, 1, 0.04f, 1.0f, 0, 0.42f, 1.02f, 1,
+                0.2f, 0.62f, 0, 0.0f, 0.2f, 0, 0.06f, -0.32f, 0, 0.4f, -0.62f, 0);
+            AddCel(d, "Cowl", B.Head, Slot.Head, cowl, HollowAnimeBody.Fab, R * 0.3f, R * 0.05f, 2, true,
+                Inside(HollowAnimeBody.ConvexHull(cowl), Dashes(H.Violet, R * 0.06f, R * 0.3f, R * 0.14f, QuadXy(K.Hd, 0.5f, -0.72f, -0.2f, -0.6f, -0.5f, 0.6f, 16))));
 
-            // the gaunt face: a pale ash-violet profile with a long nose, the mouth a little parted
-            var face = V(820, 142, 850, 138, 856, 172, 852, 208, 834, 228, 806, 228, 800, 212, 790, 192, 802, 186, 799, 168, 806, 150);
-            AddMulti(d, "Face", B.Head, Slot.Face, new List<(Vector2[], Color)>
-            {
-                Poly(face, H.Face),
-                Poly(V(800, 210, 812, 220, 834, 226, 852, 208, 830, 212), H.FaceDark),
-                Poly(Band(2.4f, 799, 168, 802, 186, 790, 192, 800, 212), H.Violet),
-                Poly(Band(2f, 802, 207, 818, 210), H.FaceDark),
-            }, 0, face);
+            // the upper half of its mask, sculpted on its own face (grown 1.06) and broken off over the parted mouth (JS HOLLOW_HALF_CUT)
+            var grown = HollowAnimeBody.FacePath(Frame.Head(K.HeadX, K.HeadY, K.Rf * 1.06f), Face);
+            var cut = Rounded(K.Hd, 0.06f, -1.6f, 1, 1.8f, -1.6f, 1, 1.8f, 0.36f, 1, 1.02f, 0.42f, 1, 0.86f, 0.28f, 1, 0.66f, 0.42f, 1,
+                0.48f, 0.22f, 1, 0.3f, 0.34f, 1, 0.12f, 0.14f, 1, 0.0f, -0.4f, 1);
+            var mask = ClipStar(grown, cut, P(K.Hd.Px(0.5f, 0f).x, K.Hd.Px(0.5f, 0f).y));
+            K.MaskPart(d, "Mask", Slot.HeadTop, 1, mask, HollowAnimeBody.Mask, true,
+                new[] { 0.56f, -0.97f, 0.62f, -0.58f, 0.5f, -0.36f, 0.64f, -0.12f, 0.6f, 0.12f }, true);
 
-            // the cracked half-mask: over the brow and the eye, broken off before the mouth
-            var mask = V(800, 148, 846, 140, 854, 172, 838, 186, 818, 182, 800, 196, 794, 176, 800, 162);
-            AddMulti(d, "Mask", B.Head, Slot.Face, new List<(Vector2[], Color)>
-            {
-                Poly(mask, H.Mask),
-                Poly(Band(2.6f, 802, 152, 846, 144), H.MaskLit),
-                Poly(Band(2f, 826, 146, 822, 164, 832, 178), H.Violet),
-                Poly(Band(2f, 806, 170, 812, 182, 802, 192), H.Violet),
-            }, 1, mask);
-            Add(d, "Eye_Slit", B.Head, Slot.Face, H.FaceDark, V(806, 160, 836, 156, 850, 164, 834, 174, 810, 172), 2, PartRole.Detail, false);
-            Add(d, "Eye", B.Head, Slot.Face, H.Eye, V(820, 163, 836, 159, 848, 164, 836, 170, 823, 170), 3, PartRole.Eye, false, null, 3.2f);
+            K.Eye(d);
         }
     }
 }

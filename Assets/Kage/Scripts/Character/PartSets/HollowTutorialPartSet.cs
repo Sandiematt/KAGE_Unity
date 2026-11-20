@@ -6,14 +6,28 @@ using H = Kage.HollowPalette;
 namespace Kage
 {
     /// <summary>
-    /// The tutorial Hollow's look (SAN-76): the Shade's training husk. Same violet-black body, but dressed as a practice dummy: a
-    /// stitched sack hood with straw bursting from its crown, a plank practice mask strapped over the eyes, rope bindings crossed
-    /// over the chest, a rope sash, straw at the cuffs and a short rag skirt. Gentler and lower than the Shade, with no floating
-    /// shards. Based on the JS Hollow skin (<c>hollow_tutorial</c>: sack hood, plank mask, rope, straw).
+    /// The tutorial Hollow's look (SAN-76, redrawn smooth in the SAN-76 rework): a port of the JS <c>hollow_tutorial</c> shape for
+    /// shape, on Kage's skeleton with the smooth half of <see cref="OpponentKit"/> and the gi body of <see cref="HollowAnimeBody"/>.
+    /// The training husk: a straw dummy that learned to stand. Straw bursting from the crown of a stitched sack hood tied at the
+    /// throat with a rope whose two ends hang at the nape, a plank practice board strapped over the eyes (wood grain, two nails, a
+    /// glowing crack), a softer gaunt profile with a snub nose under it, two ropes crossed over the chest and a stitched patch, a rope
+    /// sash knotted at the front with two short ends, straw bursting from the sleeve openings, a short rag skirt to above the knee,
+    /// hakama over wrapped shins and straw sandals. No saya and no shards. The echo of a katana is <see cref="HollowBody.Sword"/>.
+    /// <para>
+    /// Sizes as the Shade's (the same JS build), the sleeves the JS width (1, the Shade's 1.04).
+    /// </para>
     /// </summary>
     public sealed class HollowTutorialPartSet : IPartSet
     {
         public string Id => "hollow_tutorial";
+
+        static readonly HollowAnimeBody K = new(2.84f, 1f, 4.1f, 846f, 168f, 56f);
+
+        // the JS face of a hollow_tutorial: gaunt but softer, a short lifted nose, a smaller chin and jaw, a low brow
+        static readonly HollowAnimeBody.Profile Face = new() { nose = 0.92f, up = 0.03f, lip = 0.85f, chin = 0.9f, jaw = 0.94f, brow = 0.8f, open = 0.07f };
+
+        static readonly Tone SackT = new(H.SackDark, H.Sack, KMath.Hex("#4E443A"));
+        static readonly Tone WoodT = new(KMath.Hex("#14100C"), H.Wood, KMath.Hex("#5A4A36"));
 
         public RigDef Build(CharacterDef c)
         {
@@ -23,109 +37,152 @@ namespace Kage
             d.scarf = false;
             d.softCoat = false;
 
-            HollowBody.FarArm(d, straw: true);
-            HollowBody.FarLeg(d);
-            HollowBody.Pelvis(d);
+            // JS robe: back [4 links, 10 px, 22 -> 32 wide], flap [4, 9.5, 16 -> 24], teeth 4 (the flap one fewer), rag 6: a short rag skirt
+            K.Robe(d, true, 4, 22f, 32f, 4, 6f, new Vector2(912f, 412f), new Vector2(944f, 590f), 0.85f);
+            K.Arm(d, far: true, HollowAnimeBody.Cuff.Straw);
+            K.Leg(d, far: true);
+            K.Pelvis(d);
             Torso(d);
-            HollowBody.NearLeg(d);
-            Skirt(d);
+            K.Leg(d, far: false);
+            K.Robe(d, false, 4, 16f, 24f, 3, 6f, new Vector2(852f, 404f), new Vector2(846f, 578f), 0.7f);
+            Sash(d);
+            K.Neck(d);
             Head(d);
-            HollowBody.NearArm(d, straw: true);
+            K.Arm(d, far: false, HollowAnimeBody.Cuff.Straw);
             HollowBody.Sword(d);
             return d;
         }
 
+        // ---------------------------------------------------------------------------------------------- crossed ropes and a patch (drawHollowArmor 'rope')
         static void Torso(RigDef d)
         {
-            Add(d, "Torso", B.Chest, Slot.Torso, H.Cloth, V(834, 226, 870, 214, 908, 220, 932, 240, 946, 268, 950, 310, 951, 355, 953, 425, 880, 428, 808, 425, 807, 360, 812, 322, 818, 290, 824, 260));
-            // a patched, open gi with straw poking out of the tears
-            var gi = V(814, 244, 862, 230, 908, 236, 944, 264, 954, 330, 956, 408, 806, 410, 802, 340, 806, 284);
-            var polys = new List<(Vector2[], Color)> { Poly(gi, H.ClothDeep) };
-            polys.Add(Poly(Band(2.4f, 818, 254, 850, 240, 876, 300, 864, 346), H.ClothLit));
-            polys.Add(Poly(V(900, 296, 934, 292, 940, 326, 906, 332), H.Sack));          // a patch
-            polys.Add(Poly(Band(1.8f, 904, 298, 936, 296, 938, 324, 906, 328, 900, 298), H.SackDark));
-            polys.Add(Poly(Band(1.6f, 912, 292, 912, 300), H.Rope));
-            polys.Add(Poly(V(826, 330, 846, 340, 840, 360, 822, 350), H.FaceDark));       // a tear
-            polys.Add(Poly(V(830, 336, 846, 334, 850, 352, 836, 352), H.Straw));
-            polys.Add(Poly(Band(2f, 830, 340, 842, 346), H.StrawDark));
-            AddMulti(d, "Gi", B.Chest, Slot.TorsoTrim, polys, 1, gi);
-            // rope crossed over the chest in two bands, knotted where they meet
-            var rope = new List<(Vector2[], Color)>
+            var torso = K.Torso(d);
+            var sp = K.Sp;
+            float U = K.U;
+            var polys = new List<(Vector2[] pts, Color col)>();
+            // a stitched patch of sacking
+            var patch = V(sp.Xy(0.72f, -6f, 0.72f, 2f, 0.48f, 3f, 0.46f, -6f));
+            polys.Add((patch, H.SackDark));
+            polys.AddRange(Dashes(H.Sack, 2.2f, 1.6f * U, 1.4f * U, sp.Xy(0.72f, -6f, 0.72f, 2f, 0.48f, 3f, 0.46f, -6f, 0.72f, -6f)));
+            // two ropes crossed over the chest, the twist of their strands across each
+            Vector2 up = (sp.Px(1f, 0f) - sp.Px(0f, 0f)).normalized, nf = sp.ay.normalized;
+            foreach (var (a, b) in new[] { (sp.Px(1.0f, -10f), sp.Px(0.1f, 12f)), (sp.Px(1.0f, 9f), sp.Px(0.12f, -12f)) })
             {
-                Poly(Band(9f, 820, 250, 858, 308, 918, 392), H.Rope),
-                Poly(Band(9f, 944, 266, 892, 318, 822, 392), H.Rope),
-                Poly(Band(2.2f, 820, 252, 858, 308, 916, 390), H.RopeDark),
-                Poly(Band(2.2f, 942, 268, 892, 318, 824, 390), H.RopeDark),
-                Poly(Ellipse(872, 322, 13, 12), H.Rope),
-                Poly(Ellipse(872, 322, 8, 7), H.RopeDark),
-            };
-            AddMulti(d, "Rope_Cross", B.Chest, Slot.TorsoTrim, rope, 2, null, PartRole.Detail);
-
-            // rope sash, its ends hanging
-            Add(d, "Sash", B.Chest, Slot.Belt, H.Rope, V(802, 384, 956, 388, 957, 410, 802, 406), 0, PartRole.Trim, false);
-            Add(d, "Sash_Twist", B.Chest, Slot.Belt, H.RopeDark, Band(2.4f, 806, 392, 830, 400, 856, 392, 884, 400, 912, 392, 940, 400), 1, PartRole.Trim, false);
-            AddSwinging(d, "Sash_Tail", B.Chest, Slot.BeltTrim, H.Rope, Band(7f, 822, 402, 832, 440, 826, 480), 822, 402, 0.9f, 1, PartRole.Trim);
-            AddSwinging(d, "Sash_Tail2", B.Chest, Slot.BeltTrim, H.RopeDark, Band(6f, 836, 402, 850, 436, 856, 466), 836, 402, 0.9f, 0, PartRole.Trim);
-            Add(d, "Neck", B.Neck, Slot.Neck, H.SackDark, V(838, 200, 868, 200, 872, 240, 842, 240), 0, PartRole.Body, false);
+                polys.Add((Band(3.2f * U, a.x, a.y, b.x, b.y), KMath.Hex("#17130D")));
+                polys.Add((Band(2.2f * U, a.x, a.y, b.x, b.y), H.RopeDark));
+                for (int i = 1; i < 12; i++)
+                {
+                    Vector2 x = Vector2.Lerp(a, b, i / 12f), p = x - up * 1.2f * U, q = x + nf * 1.1f * U;
+                    polys.Add((Band(2.2f, p.x, p.y, q.x, q.y), H.Rope));
+                }
+            }
+            d.parts.Add(new PartDef
+            {
+                name = "Rope_Cross", bone = B.Chest, order = Slot.TorsoTrim * 4, role = PartRole.Detail, rim = false,
+                polys = new List<(Vector2[] pts, Color col)>(Inside(HollowAnimeBody.ConvexHull(torso), polys)),
+            });
         }
 
-        static void Skirt(RigDef d)
+        // ---------------------------------------------------------------------------------------------- the rope sash (JS hollowSash 'rope')
+        static void Sash(RigDef d)
         {
-            // a short rag skirt: two torn panels in front and one behind, ending at the knee
-            AddSwinging(d, "Skirt_F1", B.Hips, Slot.FrontPlates, H.Cloth, HollowBody.Torn(796, 888, 402, 540, 4, 18, 5), 838, 404, 0.5f, 0);
-            AddSwinging(d, "Skirt_F2", B.Hips, Slot.FrontPlates, H.ClothDeep, HollowBody.Torn(790, 856, 410, 580, 3, 22, 1, -3), 826, 408, 0.8f, 1);
-            AddSwinging(d, "Skirt_B1", B.Hips, Slot.BackPlates, H.ClothFar, HollowBody.Torn(920, 1008, 402, 570, 4, 22, 3), 960, 402, 0.9f, 1);
+            var sp = K.Sp;
+            float U = K.U;
+            const float w0 = 12.6f, w1 = 11.8f, u1 = 0.1f;
+            Vector2 k = sp.Px(u1 * 0.5f, w1 - 2.6f);
+
+            // two short ends hanging from the knot, swinging
+            Vector2 down = (sp.Px(0f, 0f) - sp.Px(1f, 0f)).normalized, nf = sp.ay.normalized;
+            int i = 0;
+            foreach (var (lean, len) in new[] { (0.35f, 15f), (-0.1f, 12f) })
+            {
+                Vector2 e = k + (down + nf * lean).normalized * len * U;
+                var shape = Capsule(k.x, k.y, e.x, e.y, 1.3f * U, 0.95f * U);
+                AddCloth(d, i == 0 ? "Sash_Tail" : "Sash_Tail2", B.Chest, Slot.BeltTrim, shape, HollowAnimeBody.Rope, 0.8f * U, 0.4f * U,
+                    new ChainFeel { stiffRoot = 0.45f, stiffTip = 0.1f, drag = 2.2f, gravity = 6f, breeze = 0.5f },
+                    new[] { HollowAnimeBody.Xy(k, Vector2.Lerp(k, e, 0.5f), e) }, i, false);
+                i++;
+            }
+
+            // the band, its corners eased as a rope's, the twist of the strands and the knot at the front
+            var band = RoundedAll(sp, 0f, -w0 + 0.8f, 0f, -w0, 0.03f, -w0 - 0.2f, 0.07f, -w0 - 0.2f, u1, -w0, u1, -w0 + 0.8f,
+                u1, w1 - 0.8f, u1, w1, 0.07f, w1 + 0.2f, 0.03f, w1 + 0.2f, 0f, w1, 0f, w1 - 0.8f);
+            var strands = new List<(Vector2[] pts, Color col)>();
+            for (int j = 0; j <= 14; j++)
+            {
+                float w = Mathf.Lerp(-w0, w1, j / 14f);
+                strands.Add((Band(3f, sp.Xy(0f, w - 1.6f, u1, w + 1.6f)), KMath.Hex("#17130D")));
+                strands.Add((Band(1.8f, sp.Xy(u1 * 0.2f, w + 0.8f - 1.2f, u1 * 0.8f, w + 0.8f + 1.2f)), H.Rope));
+            }
+            var detail = new List<(Vector2[] pts, Color col)>(Inside(band, strands));
+            detail.AddRange(Cel(Oval(k.x, k.y, 2.4f * U * 1.3f, 2.4f * U * 1.3f), HollowAnimeBody.Rope, 1f * U, 0.5f * U));
+            AddCel(d, "Sash", B.Chest, Slot.Belt, band, HollowAnimeBody.Rope, 2.2f * U, 0.6f * U, 1, true, detail, PartRole.Trim);
         }
 
+        // ---------------------------------------------------------------------------------------------- the head (JS drawHollowHead 'sack')
         static void Head(RigDef d)
         {
-            // straw bursting from the crown of the sack: spikes that sway
-            float[,] straw = { { 838, 106, 806, 36 }, { 856, 102, 856, 22 }, { 878, 104, 916, 34 }, { 822, 118, 770, 64 }, { 896, 118, 950, 70 } };
-            for (int i = 0; i < 5; i++)
+            float R = K.R;
+            var hd = K.Hd;
+            K.Face(d, Face);
+
+            // straw bursting from the crown: five tufts that sway, behind the sack
+            var tufts = new[] { (-0.5f, -0.2f, -0.86f, -1.9f), (-0.25f, 0.05f, -0.18f, -2.05f), (0f, 0.3f, 0.42f, -1.86f), (-0.7f, -0.45f, -1.3f, -1.56f), (0.2f, 0.46f, 0.86f, -1.42f) };
+            var strands = new[] { (-0.35f, -0.8f, -1.7f), (-0.1f, -0.15f, -1.85f), (0.15f, 0.4f, -1.66f) };
+            for (int i = 0; i < tufts.Length; i++)
             {
-                float x0 = straw[i, 0], y0 = straw[i, 1], tx = straw[i, 2], ty = straw[i, 3];
-                AddSwinging(d, "Straw_" + i, B.Head, Slot.HeadTop, i % 2 == 0 ? H.Straw : H.StrawDark,
-                    V(x0 - 7, y0 + 6, tx, ty, x0 + 7, y0 + 4), x0, y0 + 6, 0.8f, i % 3, PartRole.Detail);
+                var (x0, x1, tx, ty) = tufts[i];
+                var tuft = Rounded(hd, x0, -1.0f, 1, tx, ty, 1, x1, -1.02f, 1, (x0 + x1) * 0.5f, -0.86f, 0);
+                var detail = new List<(Vector2[] pts, Color col)>();
+                if (i < strands.Length)
+                {
+                    var (x, sx, sy) = strands[i];
+                    detail.AddRange(Inside(HollowAnimeBody.ConvexHull(tuft), new[] { (Band(Mathf.Max(1.6f, R * 0.035f), hd.Xy(x, -1f, sx, sy)), KMath.Hex("#2A2216")) }));
+                }
+                var p = AddCel(d, "Straw_" + i, B.Head, Slot.Head, tuft, HollowAnimeBody.Straw, R * 0.08f, R * 0.03f, 1, true, detail, PartRole.Detail, seamPx: 0f);
+                Vector2 pv = hd.Px((x0 + x1) * 0.5f, -1.0f);
+                Swing(p, pv.x, pv.y, 0.5f + 0.1f * (i % 3));
             }
-            // the sack hood's tail: the rope's loose ends at the nape
-            AddSwinging(d, "Sack_Tail", B.Head, Slot.Neck, H.RopeDark, V(902, 190, 920, 196, 948, 250, 934, 256, 912, 224), 906, 192, 0.9f, 2, PartRole.Detail);
 
-            // the stitched sack: a lumpy hood down to the throat
-            var sack = V(804, 170, 806, 136, 828, 112, 860, 102, 892, 112, 912, 140, 914, 182, 906, 216, 880, 232, 846, 230, 818, 216);
-            AddMulti(d, "Sack", B.Head, Slot.Head, new List<(Vector2[], Color)>
+            // the stitched sack hood: a seam over the crown with its stitches, a glowing crack at the back
+            var sack = RoundedAll(hd, 0.74f, -0.58f, 0.44f, -1.1f, -0.3f, -1.22f, -0.96f, -0.82f, -1.14f, 0.0f, -0.98f, 0.7f, -0.5f, 0.98f, 0.0f, 0.92f,
+                0.2f, 0.66f, 0.02f, 0.2f, 0.1f, -0.3f, 0.5f, -0.5f);
+            var sd = new List<(Vector2[] pts, Color col)>();
+            float lw = Mathf.Max(2f, R * 0.045f);
+            sd.Add((Band(lw, QuadXy(hd, -0.1f, -1.2f, -0.7f, -0.6f, -0.62f, 0.6f, 14)), H.Rope));
+            for (int i = 0; i < 7; i++)
             {
-                Poly(sack, H.Sack),
-                Poly(Band(2f, 868, 104, 842, 140, 846, 190), H.SackDark),
-                Poly(Band(1.6f, 856, 112, 864, 118, 850, 128, 858, 134, 846, 146, 854, 152, 842, 164), H.Rope),
-                Poly(V(884, 150, 904, 146, 908, 168, 888, 172), H.SackDark),                 // a patch
-                Poly(Band(1.4f, 886, 152, 902, 150, 906, 166, 888, 170, 884, 152), H.Rope),
-                Poly(Band(2.2f, 806, 168, 810, 146, 830, 120), H.Violet),                    // light along a break
-            }, 3, sack);
-            // the rope at the throat
-            Add(d, "Throat_Rope", B.Head, Slot.Face, H.Rope, Band(8f, 812, 212, 846, 224, 880, 222, 904, 210), 0, PartRole.Detail, false);
+                float k = i / 6f, x = Mathf.Lerp(-0.2f, -0.66f, k) - Mathf.Sin(k * 3f) * 0.2f, y = Mathf.Lerp(-1.1f, 0.5f, k);
+                sd.Add((Band(lw, hd.Xy(x - 0.08f, y - 0.06f, x + 0.08f, y + 0.06f)), H.Rope));
+            }
+            sd.AddRange(Crack(HollowAnimeBody.Bloom, H.Violet, Mathf.Max(1.6f, R * 0.03f), hd.Xy(-0.9f, -0.4f, -0.62f, -0.2f, -0.74f, 0.1f)));
+            AddCel(d, "Sack", B.Head, Slot.Head, sack, SackT, R * 0.3f, R * 0.06f, 2, true, Inside(HollowAnimeBody.ConvexHull(sack), sd));
 
-            // the gaunt face showing under the plank: snub nose, parted mouth, chin
-            var face = V(806, 168, 840, 164, 852, 196, 846, 218, 824, 230, 802, 224, 796, 208, 788, 196, 800, 188);
-            AddMulti(d, "Face", B.Head, Slot.Face, new List<(Vector2[], Color)>
+            // the rope at the throat, its two ends hanging at the nape (cloth)
+            var rope = RoundedAll(hd, -0.98f, 0.6f, -0.4f, 0.64f, 0.24f, 0.7f, 0.22f, 0.86f, -0.4f, 0.84f, -0.96f, 0.8f);
+            AddCel(d, "Throat_Rope", B.Head, Slot.Head, rope, HollowAnimeBody.Rope, R * 0.06f, R * 0.03f, 3, true, null, PartRole.Detail);
+            foreach (var (name, a, b, sub) in new[] { ("Sack_Tail", new Vector2(-0.85f, 0.74f), new Vector2(-1.23f, 1.33f), 0), ("Sack_Tail2", new Vector2(-0.8f, 0.75f), new Vector2(-0.89f, 1.46f), 1) })
             {
-                Poly(face, H.Face),
-                Poly(V(798, 208, 812, 218, 830, 222, 846, 214, 826, 208), H.FaceDark),
-                Poly(Band(2f, 788, 196, 798, 210), H.Violet),
-            }, 0, face);
-            // the plank across the eyes, nailed
-            var plank = V(780, 150, 852, 142, 856, 182, 784, 188);
-            AddMulti(d, "Plank", B.Head, Slot.Face, new List<(Vector2[], Color)>
+                Vector2 pa = hd.Px(a.x, a.y), pb = hd.Px(b.x, b.y);
+                var end = Capsule(pa.x, pa.y, pb.x, pb.y, R * 0.075f, R * 0.06f);
+                AddCloth(d, name, B.Head, Slot.Neck, end, HollowAnimeBody.Rope, R * 0.05f, R * 0.02f,
+                    new ChainFeel { stiffRoot = 0.45f, stiffTip = 0.1f, drag = 2.2f, gravity = 6f, breeze = 0.6f },
+                    new[] { HollowAnimeBody.Xy(pa, Vector2.Lerp(pa, pb, 0.5f), pb) }, 2 + sub, false);
+            }
+
+            // the plank: a narrow board across the eyes only, so the snub nose, the parted mouth and the chin show under it;
+            // wood grain, two nails, the eye holes and a glowing crack
+            var plank = Rounded(hd, 0.08f, -0.42f, 1, 1.02f, -0.4f, 1, 1.0f, 0.08f, 1, 0.84f, 0.03f, 1, 0.7f, 0.12f, 1, 0.1f, 0.12f, 1);
+            var pp = K.MaskPart(d, "Plank", Slot.HeadTop, 1, plank, WoodT, true, new[] { 0.24f, -0.42f, 0.32f, -0.14f, 0.22f, 0.12f }, false);
+            var grain = new List<(Vector2[] pts, Color col)> { (Band(Mathf.Max(1.6f, R * 0.03f), hd.Xy(0.12f, -0.24f, 1.0f, -0.22f)), KMath.Hex("#14100C")) };
+            foreach (float x in new[] { 0.16f, 0.96f })
             {
-                Poly(plank, H.Wood),
-                Poly(Band(1.8f, 784, 160, 854, 154), H.WoodDark),
-                Poly(Band(1.8f, 786, 174, 854, 168), H.WoodDark),
-                Poly(Ellipse(795, 158, 3.4f, 3.4f), H.Rope),
-                Poly(Ellipse(842, 154, 3.4f, 3.4f), H.Rope),
-                Poly(Band(2.2f, 818, 146, 812, 166, 822, 184), H.Violet),
-            }, 1, plank);
-            // the eye glows through a slit in the plank
-            Add(d, "Eye_Slit", B.Head, Slot.Face, H.WoodDark, V(804, 160, 840, 156, 842, 168, 806, 172), 2, PartRole.Detail, false);
-            Add(d, "Eye", B.Head, Slot.Face, H.Eye, V(818, 162, 834, 159, 840, 164, 830, 168, 820, 168), 3, PartRole.Eye, false, null, 3f);
+                Vector2 c = hd.Px(x, -0.3f);
+                grain.Add((Oval(c.x, c.y, R * 0.06f, R * 0.06f), KMath.Hex("#625B76")));
+            }
+            pp.polys.AddRange(Inside(HollowAnimeBody.ConvexHull(plank), grain));
+
+            K.Eye(d);
         }
     }
 }
