@@ -12,11 +12,23 @@ namespace Kage
     /// and the stage world of the fight in play, and routes keyboard, gamepad and mouse to whichever screen or overlay is on top.
     /// It lives in its own scene and never touches KageGame, which stays the dev arena.
     /// </summary>
+    public enum InfoView
+    {
+        None,
+        Controls,
+        Records,
+        Trophies,
+        Profile,
+    }
+
     [DefaultExecutionOrder(-60)]
     public sealed class GameFlow : MonoBehaviour
     {
         /// <summary>Folder of the save file. Null means the persistent data path (tests set a temporary folder).</summary>
         public string saveDirectory;
+
+        /// <summary>Opens on the animated splash (the JS boot screen) before the title. The campaign scene turns it on; tests and fixtures leave it off.</summary>
+        public bool showSplash;
 
         public FlowController Controller { get; private set; }
         public SaveStore Store { get; private set; }
@@ -29,10 +41,17 @@ namespace Kage
         PauseOverlay pause;
         ConfirmOverlay confirm;
         ControlsOverlay controls;
+        RecordsOverlay records;
+        TrophiesOverlay trophies;
+        ProfileOverlay profile;
+        ToastLayer toasts;
         StageHudPanel stageHud;
-        bool controlsOpen;
+        InfoView info = InfoView.None;
         int worldAttempt;
         FlowScreen? shown;
+        RectTransform canvasRoot;
+        ScreenWipe wipe;
+        SplashPanel splash;
         readonly MenuInput input = new MenuInput();
         readonly List<MenuCommand> commands = new List<MenuCommand>();
         Vector2 lastMouse;
@@ -66,6 +85,11 @@ namespace Kage
             pause = new PauseOverlay(this, Stage);
             confirm = new ConfirmOverlay(this, Stage);
             controls = new ControlsOverlay(this, Stage);
+            records = new RecordsOverlay(this, Stage);
+            trophies = new TrophiesOverlay(this, Stage);
+            profile = new ProfileOverlay(this, Stage);
+            toasts = ToastLayer.Create(Stage);
+            Controller.Toasted += (e, t, red) => toasts.Show(e, t, red);
             Sync();
         }
 
@@ -87,7 +111,17 @@ namespace Kage
             Stage.pivot = new Vector2(0.5f, 0.5f);
             Stage.sizeDelta = new Vector2(1600, 900);
             Stage.anchoredPosition = Vector2.zero;
+            canvasRoot = (RectTransform)go.transform;
+            // over the stage: the ink wipe between screens and, on a real start, the opening splash
+            wipe = ScreenWipe.Create(canvasRoot);
+            if (showSplash) splash = SplashPanel.Create(canvasRoot);
         }
+
+        /// <summary>The opening splash while it is up (null when the flow opened on the title).</summary>
+        public SplashPanel Splash { get { return splash; } }
+
+        /// <summary>The ink wipe between screens.</summary>
+        public ScreenWipe Wipe { get { return wipe; } }
 
         // ---------------- what is on screen ----------------
 
@@ -100,6 +134,9 @@ namespace Kage
             {
                 if (confirm.Visible) return confirm;
                 if (controls.Visible) return controls;
+                if (records.Visible) return records;
+                if (trophies.Visible) return trophies;
+                if (profile.Visible) return profile;
                 if (pause.Visible) return pause;
                 return panels[Controller.Screen];
             }
@@ -110,16 +147,34 @@ namespace Kage
         public PauseOverlay PauseMenu { get { return pause; } }
         public ConfirmOverlay Confirm { get { return confirm; } }
         public ControlsOverlay ControlsGuide { get { return controls; } }
+        public RecordsOverlay Records { get { return records; } }
+        public TrophiesOverlay Trophies { get { return trophies; } }
+        public ProfileOverlay Profile { get { return profile; } }
+        public ToastLayer Toasts { get { return toasts; } }
 
-        public void OpenControls() { controlsOpen = true; Sync(); }
+        /// <summary>The info overlay that is up (the controls guide, the records, the trophies, the profile).</summary>
+        public InfoView Info { get { return info; } }
 
-        public void CloseControls() { controlsOpen = false; Sync(); }
+        public void OpenControls() { info = InfoView.Controls; Sync(); }
+
+        /// <summary>The title's Records, Trophies and Profile diamonds, and its Codex button (the controls guide).</summary>
+        public void OpenInfo(InfoView view) { info = view; Sync(); }
+
+        public void CloseControls() { info = InfoView.None; Sync(); }
+
+        public void CloseInfo() { info = InfoView.None; Sync(); }
 
         void Sync()
         {
             var c = Controller;
             var scr = c.Screen;
-            if (scr != FlowScreen.Settings) controlsOpen = false;
+            // a change of screen plays the JS ink wipe: the old screen is copied first and stays under the stroke until it covers the
+            // screen; the new one is built at once (input and the controller never wait for the animation)
+            GameObject ghost = null;
+            bool changing = shown.HasValue && shown.Value != scr && wipe != null && UiClock.Animate && (splash == null || !splash.Active);
+            if (wipe != null && wipe.Running) wipe.Finish(true);
+            if (changing) ghost = MakeGhost(panels[shown.Value]);
+            if (scr != FlowScreen.Settings && scr != FlowScreen.Title) info = InfoView.None;
             if (scr != FlowScreen.Armory) DestroyArmoryWorld();
 
             switch (scr)
@@ -155,11 +210,43 @@ namespace Kage
             var p = panels[scr];
             if (shown != scr || !p.Visible) p.Show(); else p.Rebuild();
             shown = scr;
+            if (changing) BeginWipe(ghost, p);
 
             Overlay(pause, scr == FlowScreen.Stage && c.Paused);
             Overlay(confirm, c.DevOffPending);
-            Overlay(controls, controlsOpen);
+            Overlay(controls, info == InfoView.Controls);
+            Overlay(records, info == InfoView.Records);
+            Overlay(trophies, info == InfoView.Trophies);
+            Overlay(profile, info == InfoView.Profile);
             if (World != null && scr == FlowScreen.Stage) World.Paused = c.Paused;
+        }
+
+        /// <summary>A still copy of a screen: what stays on show under the wipe's stroke until it covers the screen.</summary>
+        GameObject MakeGhost(FlowPanel old)
+        {
+            if (old == null || !old.Visible) return null;
+            var g = Instantiate(old.Root.gameObject, Stage);
+            g.name = "Ghost";
+            g.SetActive(true);
+            g.transform.SetAsLastSibling();
+            var group = g.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = 1f;
+            // a copy does not move, listen or choose
+            foreach (var t in g.GetComponentsInChildren<UiFocusTween>(true)) Destroy(t);
+            foreach (var n in g.GetComponentsInChildren<NavItem>(true)) Destroy(n);
+            return g;
+        }
+
+        void BeginWipe(GameObject ghost, FlowPanel entering)
+        {
+            var group = entering.Root.GetComponent<CanvasGroup>();
+            if (group == null) group = entering.Root.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            wipe.Begin(() =>
+            {
+                if (ghost != null) Destroy(ghost);
+                if (group != null) group.alpha = 1f;
+            });
         }
 
         static void Overlay(FlowPanel o, bool want)
@@ -217,6 +304,7 @@ namespace Kage
 
         void OnDestroy()
         {
+            if (wipe != null) wipe.Finish(false);
             DestroyArmoryWorld();
             DestroyWorld();
             GameFeel.paused = false;
@@ -230,7 +318,7 @@ namespace Kage
         {
             if (cmd == MenuCommand.Pause)
             {
-                if (Controller.Screen == FlowScreen.Stage && !confirm.Visible && !controls.Visible)
+                if (Controller.Screen == FlowScreen.Stage && !confirm.Visible && info == InfoView.None)
                 {
                     if (Controller.Paused) Controller.Resume(); else Controller.Pause();
                 }
@@ -241,6 +329,8 @@ namespace Kage
 
         void Update()
         {
+            // the splash takes the first press (any key, click or button); the menu hears nothing until it is open
+            if (splash != null && splash.Active) return;
             commands.Clear();
             input.Poll(commands, InFight);
             foreach (var cmd in commands) Send(cmd);

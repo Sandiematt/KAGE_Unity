@@ -36,6 +36,8 @@ namespace Kage
         public Action onUserFocus;
         /// <summary>Left / Right pressed on this item; return true if it was used (a slider), false to move focus instead.</summary>
         public Func<int, bool> onSide;
+        /// <summary>The scale this item dips to when pressed (the JS <c>:active</c> .96 / .97), 0 for none.</summary>
+        public float press;
 
         public RectTransform Rt { get { return (RectTransform)transform; } }
 
@@ -112,7 +114,12 @@ namespace Kage
             switch (cmd)
             {
                 case MenuCommand.Submit:
-                    if (focus != null && focus.interactable && focus.onSubmit != null) { focus.onSubmit(); return true; }
+                    if (focus != null && focus.interactable && focus.onSubmit != null)
+                    {
+                        if (focus.press > 0f) UiFx.Press(focus.Rt, focus.press);
+                        focus.onSubmit();
+                        return true;
+                    }
                     return false;
                 case MenuCommand.Left:
                     if (focus != null && focus.onSide != null && focus.onSide(-1)) return true;

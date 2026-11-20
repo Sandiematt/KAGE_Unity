@@ -17,19 +17,20 @@ namespace Kage
         float start;
         CanvasGroup group;
         RectTransform rt;
-        Vector2 lastDelta;
         Vector3 baseScale;
         float baseRot;
         Action onDone;
-        bool done;
+        bool done, absolute;
 
         public bool Finished { get { return done; } }
 
-        public static UiAnimator Play(Transform target, UiAnim anim, Action onDone = null)
+        /// <summary>Plays <paramref name="anim"/> on <paramref name="target"/>. An <paramref name="absolute"/> animation runs on the clock itself (an ambient loop, so a redraw of the screen does not restart it).</summary>
+        public static UiAnimator Play(Transform target, UiAnim anim, Action onDone = null, bool absolute = false)
         {
             var old = target.GetComponents<UiAnimator>();
             foreach (var o in old) if (o.anim != null && o.anim.Name == anim.Name) { o.Cancel(); }
             var a = target.gameObject.AddComponent<UiAnimator>();
+            a.absolute = absolute;
             a.Begin(anim, onDone);
             return a;
         }
@@ -43,7 +44,7 @@ namespace Kage
             if (group == null) group = gameObject.AddComponent<CanvasGroup>();
             baseScale = rt.localScale;
             baseRot = rt.localEulerAngles.z;
-            start = UiClock.Now;
+            start = absolute ? 0f : UiClock.Now;
             if (!UiClock.Animate)
             {
                 // still screens: a loop shows its middle, everything else its end
@@ -94,10 +95,39 @@ namespace Kage
             float cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
             Vector2 sc = new Vector2(c.x * p.SX, c.y * p.SY);
             Vector2 moved = new Vector2(sc.x * cos - sc.y * sin, sc.x * sin + sc.y * cos);
-            Vector2 delta = new Vector2(p.X, -p.Y) + (c - moved);
-            rt.anchoredPosition += delta - lastDelta;
-            lastDelta = delta;
+            UiOffsets.Of(rt).SetAnim(new Vector2(p.X, -p.Y) + (c - moved));
         }
+    }
+
+    /// <summary>
+    /// The position of a node as three parts that add up: where the screen built it (the base), a focus lift or slide, and what a running
+    /// animation adds. Everything that moves an animated node goes through here, so a hover and a rise never overwrite each other.
+    /// </summary>
+    [AddComponentMenu("")]
+    public sealed class UiOffsets : MonoBehaviour
+    {
+        RectTransform rt;
+        Vector2 basePos, focus, anim;
+
+        public static UiOffsets Of(RectTransform rt)
+        {
+            var o = rt.GetComponent<UiOffsets>();
+            if (o != null) return o;
+            o = rt.gameObject.AddComponent<UiOffsets>();
+            o.rt = rt;
+            o.basePos = rt.anchoredPosition;
+            return o;
+        }
+
+        /// <summary>Moves the node's base position (a screen that scrolls or lays the node out again).</summary>
+        public void SetBase(Vector2 p) { basePos = p; Write(); }
+
+        /// <summary>The focus offset in stage px (+x right, +y up).</summary>
+        public void SetFocus(Vector2 v) { focus = v; Write(); }
+
+        public void SetAnim(Vector2 v) { anim = v; Write(); }
+
+        void Write() { if (rt != null) rt.anchoredPosition = basePos + focus + anim; }
     }
 
     /// <summary>
@@ -142,6 +172,56 @@ namespace Kage
             if (value == goal) return;
             value = UiFocusCurve.Step(value, target, Time.unscaledDeltaTime, duration);
             apply(value);
+        }
+    }
+
+    /// <summary>
+    /// The light that sweeps across a JS button on hover and after a press (<c>.btn-primary::after</c> and <c>.w-brush::after</c>): a soft slanted
+    /// bar sliding from the left edge past the right edge, clipped to the button. It is not played for a button that was only just built (a rebuild
+    /// restoring the focus), and never when motion is off.
+    /// </summary>
+    [AddComponentMenu("")]
+    public sealed class ButtonSheen : MonoBehaviour
+    {
+        RectTransform bar;
+        float width, half, start = -99f, seconds = .45f;
+        int born;
+
+        public static ButtonSheen Add(RectTransform button, float w, float h)
+        {
+            var clip = Ui.Node(button, "Sheen", 0, 0, w, h);
+            clip.gameObject.AddComponent<RectMask2D>();
+            var s = clip.gameObject.AddComponent<ButtonSheen>();
+            s.width = w;
+            s.half = h * 0.5f;
+            s.born = Time.frameCount;
+            float bw = Mathf.Max(60f, w * 0.34f);
+            s.bar = Ui.Node(clip, "Bar", -bw, -h * 0.3f, bw, h * 1.6f);
+            s.bar.pivot = new Vector2(0.5f, 0.5f);
+            s.bar.localRotation = Quaternion.Euler(0f, 0f, -16f);
+            var g = s.bar.gameObject.AddComponent<GradRect>();
+            g.raycastTarget = false;
+            g.Set(true, new[] { new Color(1f, 1f, 1f, 0f), new Color(1f, 1f, 1f, .3f), new Color(1f, 1f, 1f, 0f) });
+            s.bar.gameObject.SetActive(false);
+            return s;
+        }
+
+        public void Play(float duration)
+        {
+            if (!UiClock.Animate || Time.frameCount == born) return;
+            seconds = duration;
+            start = UiClock.Now;
+            bar.gameObject.SetActive(true);
+        }
+
+        void Update()
+        {
+            if (!bar.gameObject.activeSelf) return;
+            float k = (UiClock.Now - start) / seconds;
+            if (k >= 1f) { bar.gameObject.SetActive(false); return; }
+            float e = UiEase.Ease.Evaluate(Mathf.Clamp01(k));
+            float x = Mathf.Lerp(-bar.rect.width * 0.5f, width + bar.rect.width * 0.5f, e);
+            bar.anchoredPosition = new Vector2(x, -half);
         }
     }
 
@@ -332,7 +412,7 @@ namespace Kage
         public static UiAnimator In(Transform node, UiAnim anim) { return UiAnimator.Play(node, anim); }
 
         /// <summary>Plays an ambient loop on a node.</summary>
-        public static UiAnimator Loop(Transform node, UiAnim anim) { return UiAnimator.Play(node, anim); }
+        public static UiAnimator Loop(Transform node, UiAnim anim) { return UiAnimator.Play(node, anim, null, true); }
 
         /// <summary>The press feedback of a button: a quick dip and back.</summary>
         public static void Press(Transform node, float low = .96f)

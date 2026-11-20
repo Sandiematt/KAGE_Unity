@@ -33,10 +33,21 @@ namespace Kage
 
         protected abstract void Build();
 
+        /// <summary>True while the panel is built for the moment it opens: entrances (the JS <c>animation: rise</c>) play only then, not on every redraw.</summary>
+        protected bool Fresh { get; private set; }
+
+        /// <summary>Plays a JS entrance on a node when the panel is opening (and a screen with motion off shows the end state at once).</summary>
+        protected void Enter(Transform node, UiAnim anim)
+        {
+            if (Fresh && node != null) UiFx.In(node, anim);
+        }
+
         public void Show()
         {
             Root.gameObject.SetActive(true);
+            Fresh = true;
             Rebuild(DefaultFocus);
+            Fresh = false;
         }
 
         public void Hide()

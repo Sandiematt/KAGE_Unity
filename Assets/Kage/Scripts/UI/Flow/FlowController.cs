@@ -68,6 +68,15 @@ namespace Kage
         /// <summary>Raised after anything the screens show changed (screen, selection, pause, save).</summary>
         public event Action Changed;
 
+        /// <summary>A toast to show (JS UIManager.toast): eyebrow, title, and whether it is a refusal (red).</summary>
+        public event Action<string, string, bool> Toasted;
+
+        public void Toast(string eyebrow, string title, bool red = false)
+        {
+            var t = Toasted;
+            if (t != null) t(eyebrow, title, red);
+        }
+
         void Raise() { var c = Changed; if (c != null) c(); }
 
         void Persist() { persist(Save); }
@@ -232,7 +241,7 @@ namespace Kage
         {
             if (Screen != FlowScreen.Title && Screen != FlowScreen.Loadout && Screen != FlowScreen.Results) return false;
             ArmoryFrom = Screen;
-            Armory = new ArmoryController(Save, s => persist(s), Raise);
+            Armory = new ArmoryController(Save, s => persist(s), Raise, (e, t) => Toast(e, t));
             Screen = FlowScreen.Armory;
             Raise();
             return true;

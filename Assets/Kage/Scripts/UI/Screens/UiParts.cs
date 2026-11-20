@@ -125,16 +125,23 @@ namespace Kage
             lb.rectTransform.anchoredPosition = new Vector2(start + kw + (kw > 0 ? gap : 0), 0);
             lb.rectTransform.sizeDelta = new Vector2(lw + 40, h);
             lb.alignment = TextAnchor.MiddleLeft;
-            return Make(rt, nav, key, onSubmit, f =>
+            var sheen = ButtonSheen.Add(rt, w, h);
+            Color d0 = Ui.Deep, d1 = Ui.Acc, d2 = Ui.Deep, h0 = Ui.Acc, h1 = Ui.Hot, h2 = Ui.Acc;
+            var tween = UiFocusTween.On(rt, 0.14f, v =>
             {
-                rt.localScale = Vector3.one * (f && !locked ? 1.03f : 1f);
-                if (!locked)
-                {
-                    shape.SetColors(f ? Ui.Acc : Ui.Deep, f ? Ui.Hot : Ui.Acc, f ? Ui.Acc : Ui.Deep);
-                    glow.color = Ui.A(Ui.Acc, f ? 0.4f : 0.16f);
-                    glow.SetVerticesDirty();
-                }
+                if (locked) return;
+                rt.localScale = Vector3.one * (1f + 0.03f * v);
+                shape.SetColors(Color.Lerp(d0, h0, v), Color.Lerp(d1, h1, v), Color.Lerp(d2, h2, v));
+                glow.color = Ui.A(Ui.Acc, Mathf.Lerp(0.16f, 0.4f, v));
+                glow.SetVerticesDirty();
+            });
+            var brushItem = Make(rt, nav, key, () => { sheen.Play(0.32f); onSubmit(); }, f =>
+            {
+                tween.Set(f && !locked);
+                if (f && !locked) sheen.Play(0.55f);
             }, !locked);
+            brushItem.press = 0.97f;
+            return brushItem;
         }
 
         // ---------------- overlay buttons ----------------
@@ -152,12 +159,22 @@ namespace Kage
                 primary ? Ui.Hex("#fbe9c4") : Ui.Hex("#2a1210"), primary ? Ui.Hex("#e1b974") : Ui.Hex("#1c0c0a"), primary ? Ui.Hex("#b98c45") : Ui.Hex("#120807"), false);
             var edge = Ui.Frame2(rt, w, h);
             var t = Ui.Label(rt, label.ToUpperInvariant(), UiFont.Cond, primary ? 23 : 21, primary ? Ui.Hex("#1a0907") : Ui.Hex("#f3d9a8"), 0, 0, w, h, TextAnchor.MiddleCenter, primary ? 3.6f : 3f);
-            return Make(rt, nav, key, onSubmit, f =>
+            var sheen = primary ? ButtonSheen.Add(rt, w, h) : null;
+            Color r0 = Ui.Hex("#2a1210"), r1 = Ui.Hex("#1c0c0a"), r2 = Ui.Hex("#120807");
+            Color f0 = Ui.Mix(Ui.Acc, Ui.Hex("#2a1210"), 0.35f), f1 = Ui.Hex("#3a1612"), f2 = Ui.Hex("#1c0c0a");
+            var tween = UiFocusTween.On(rt, 0.16f, v =>
             {
-                rt.localScale = Vector3.one * (f ? 1.02f : 1f);
-                edge.color = f ? Ui.A(Ui.Gold, 0.9f) : Color.clear;
-                if (!primary) shape.SetColors(f ? Ui.Mix(Ui.Acc, Ui.Hex("#2a1210"), 0.35f) : Ui.Hex("#2a1210"), f ? Ui.Hex("#3a1612") : Ui.Hex("#1c0c0a"), f ? Ui.Hex("#1c0c0a") : Ui.Hex("#120807"));
+                rt.localScale = Vector3.one * (1f + 0.02f * v);
+                edge.color = Ui.A(Ui.Gold, 0.9f * v);
+                if (!primary) shape.SetColors(Color.Lerp(r0, f0, v), Color.Lerp(r1, f1, v), Color.Lerp(r2, f2, v));
             });
+            var item = Make(rt, nav, key, () => { if (sheen != null) sheen.Play(0.32f); onSubmit(); }, f =>
+            {
+                tween.Set(f);
+                if (f && sheen != null) sheen.Play(0.45f);
+            });
+            item.press = 0.96f;
+            return item;
         }
 
         // ---------------- segmented control ----------------
