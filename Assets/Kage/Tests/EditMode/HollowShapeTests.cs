@@ -107,9 +107,10 @@ namespace Kage.Tests
         public void TheBodyIsDrawnInCurvesNotBlocks(string id, string hood)
         {
             var rig = Rig(id);
-            // (the neck, a short capsule mostly under the hood, is round with fewer points; it is checked as a cel part below)
+            // (the neck, a short capsule mostly under the hood, and the sash, a band with eased corners and straight sides, have fewer
+            // points; they are checked as cel parts below)
             foreach (var name in new[] { "Torso", "Pelvis", "ArmN_Sleeve", "ArmN_Forearm", "ArmN_Kote", "HandN_Fist", "LegN_Hakama", "LegN_Shin", "LegN_Wrap",
-                         "Face", hood, "Robe_Back", "Robe_Flap", "Sash" })
+                         "Face", hood, "Robe_Back", "Robe_Flap" })
             {
                 var o = Outline(Part(rig, name));
                 Assert.GreaterOrEqual(o.Length, 24, id + " " + name + " is a curve, not a box");
