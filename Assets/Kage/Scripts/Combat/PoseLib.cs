@@ -37,8 +37,16 @@ namespace Kage
         public static Pose Jodan(Pose p) => p.HandF(0.06f, 1.62f, 0f).Blade(118f).Grip();
         /// <summary>Waki-gamae: hands at the rear hip, the blade low and pointing back. Sweeps and draws start here.</summary>
         public static Pose Waki(Pose p) => p.HandF(0.02f, 0.86f, 0f).Blade(-160f).Grip();
-        /// <summary>Kasumi-no-kamae: hands by the head, the blade level and pointing forward. Thrusts start here.</summary>
-        public static Pose Kasumi(Pose p) => p.HandF(0.12f, 1.5f, 0f).Blade(4f).Grip();
+        /// <summary>
+        /// Kasumi-no-kamae: the hands at the forehead beside the head, the blade level over the eyes and pointing at the opponent's
+        /// face, the edge turned up (SAN-118: head height, as the reference). Mirror Guard holds it; the Kage Counter thrusts out of it.
+        /// </summary>
+        public static Pose Kasumi(Pose p) => p.HandF(KasumiX, KasumiY, 0f).Blade(-8f).Grip().EdgeUp();
+
+        public const float KasumiX = 0.14f, KasumiY = 1.53f;
+
+        /// <summary>Hassō-no-kamae: the hilt by the shoulder, the blade almost upright and tilted back. Kesa-giri starts here (SAN-118).</summary>
+        public static Pose Hasso(Pose p) => p.HandF(-0.04f, 1.36f, 0f).Blade(106f).Grip();
 
         /// <summary>The unarmed guard (sword broken): both fists up.</summary>
         public static Pose FistGuard(Pose p) => p.HandN(0.26f, 1.3f, 10f).HandF(0.16f, 1.18f, 10f);
@@ -169,21 +177,27 @@ namespace Kage
             return into;
         }
 
-        /// <summary>Forward sprint: torso low and forward, fist arm pumping, katana trailing. phase in cycles.</summary>
+        /// <summary>
+        /// Forward sprint: torso low and forward, the katana carried in both hands in a low chūdan, the point forward and a little
+        /// up (SAN-118: a drawn sword is never trailed in one hand; the JS armed run keeps the stance arms). The hands ride the
+        /// stride with the shoulders. phase in cycles.
+        /// </summary>
         public static Pose RunCycle(float phase, Pose into)
         {
             GaitFoot(phase, 1f, 0.04f, RunStride, RunDuty, 0.24f, true, out float nx, out float ny, out float na);
             GaitFoot(phase + 0.5f, 1f, 0.0f, RunStride, RunDuty, 0.24f, true, out float fx, out float fy, out float fa);
             // body drops on each mid-stance (twice per cycle) and rises through the flight phase
             float bob = Mathf.Cos((phase - RunDuty * 0.5f) * Mathf.PI * 4f);
-            float arm = Mathf.Sin((phase - RunDuty) * Mathf.PI * 2f + Mathf.PI * 0.5f);   // fist swings against the near leg
+            float sway = Mathf.Sin((phase - RunDuty) * Mathf.PI * 2f + Mathf.PI * 0.5f);   // the shoulders turn against the near leg
             into.Hip(0.04f, -0.12f - bob * 0.045f, -9f).Chest(-17f + bob * 2f).Neck(4f).Head(16f - bob * 1.5f)
                 .FootN(nx, ny, na).FootF(fx, fy, fa)
-                .HandN(0.14f + arm * 0.2f, 1.02f + Mathf.Abs(arm) * 0.05f, 10f + arm * 25f)
-                .HandF(-0.1f - arm * 0.07f, 1.0f).Blade(-168f + arm * 5f);
+                .HandF(RunCarryX + sway * 0.02f, RunCarryY - bob * 0.02f).Blade(RunCarryBlade + sway * 3f).Grip();
             into.MarkDirty();
             return into;
         }
+
+        /// <summary>The run's two-handed carry: the lead wrist low in front of the belly, the blade forward and a little up.</summary>
+        public const float RunCarryX = 0.26f, RunCarryY = 0.88f, RunCarryBlade = 16f;
 
         /// <summary>Procedural shuffle-walk built on the stance; phase in radians, dir = +1 forward / -1 back.</summary>
         public static Pose Walk(float phase, float dir, Pose into)
