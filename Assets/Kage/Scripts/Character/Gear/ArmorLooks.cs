@@ -32,7 +32,7 @@ namespace Kage
     /// JS cel shading is flattened to one tone per shape with a thin rim light; glow, the baked Godot flame and spirit sheets and
     /// the JS hairstyles per armour are not drawn (see the SAN-85 notes in ADR-0005).
     /// </summary>
-    static class ArmorLooks
+    static partial class ArmorLooks
     {
         static Color C(string hex) => KMath.Hex(hex);
 
@@ -429,15 +429,34 @@ namespace Kage
 
         // ---------------------------------------------------------------- the halo
 
-        /// <summary>The Mugen Armor's crescent behind his head (the JS code-drawn stand-in for the card art), thick behind him and thin in front.</summary>
+        // Kage's skull in reference pixels: his head shape runs x 799..899, y 116..225, so its centre is (849, 170) and its radius (hr) 50.
+        // The JS (armory/mugen.js, mugenHalo) pins the ring's centre a head radius behind the skull's centre and 0.52 radius above it:
+        // the back of his head. Kage faces left in these pixels, so behind is +x. The ring is 2.98 radii out (the art's 256 px at the
+        // JS's 2.85 * hr / 245 scale) and sweeps 159 to 371 degrees of the art (facing right), opening below, towards the face.
+        public const float SkullR = 50f;
+        public static readonly Vector2 HaloCentre = new(849f + 1.0f * SkullR, 170f - 0.52f * SkullR);
+        public const float HaloRadius = 2.98f * SkullR;
+
+        /// <summary>One arc of the ring between two radii, as a polygon (outer edge out, inner edge back), mirrored for Kage facing left.</summary>
+        static List<Vector2> HaloBand(float rOut, float rIn)
+        {
+            const int N = 28;
+            Vector2 At(float deg, float r) { float x = deg * Mathf.Deg2Rad; return new Vector2(HaloCentre.x - Mathf.Cos(x) * r, HaloCentre.y + Mathf.Sin(x) * r); }
+            var o = new List<Vector2>(N * 2 + 2);
+            for (int i = 0; i <= N; i++) o.Add(At(Mathf.Lerp(159f, 371f, i / (float)N), rOut));
+            for (int i = N; i >= 0; i--) o.Add(At(Mathf.Lerp(159f, 371f, i / (float)N), rIn));
+            return o;
+        }
+
+        /// <summary>
+        /// The Mugen Armor's ring: the JS art's thin glowing arch, a bright core inside a darker edge, centred on the back of his head
+        /// (<see cref="HaloCentre"/>) and carried by the head bone so it turns with him in every pose (SAN-85 rework).
+        /// </summary>
         static void Halo(ArmorArt a, ArmorTheme t)
         {
-            Vector2 c = new(922f, 138f);
-            var o = new List<Vector2>();
-            for (int i = 0; i <= 20; i++) { float ang = Mathf.Lerp(135f, 415f, i / 20f) * Mathf.Deg2Rad; o.Add(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 82f); }
-            Vector2 ci = c + new Vector2(-16f, 8f);
-            for (int i = 20; i >= 0; i--) { float ang = Mathf.Lerp(135f, 415f, i / 20f) * Mathf.Deg2Rad; o.Add(ci + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 66f); }
-            a.Fill(B.Head, HaloOrder, t.red, false, o, 1.5f);
+            float R = HaloRadius;
+            a.Fill(B.Head, HaloOrder, t.redLo, false, HaloBand(R, R * 0.87f));
+            a.Fill(B.Head, HaloOrder + 1, t.red, false, HaloBand(R * 0.975f, R * 0.895f), 1.5f);
         }
 
         // ---------------------------------------------------------------- the chest piece
