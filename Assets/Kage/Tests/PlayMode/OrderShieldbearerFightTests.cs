@@ -45,7 +45,7 @@ namespace Kage.Tests
         {
             var foe = Duel().Ronin;
             Assert.AreEqual(Id, foe.FighterId);
-            Assert.AreEqual(220f * 100f / 232f, foe.maxHealth, 1e-3);
+            Assert.AreEqual(220f * 1.1f * 100f / 232f, foe.maxHealth, 1e-3);
             Assert.AreEqual(0.12f, foe.Defense, 1e-6);
             Assert.AreEqual(1f, foe.DamageMul, 1e-6);
             Assert.AreEqual(1f, foe.SpeedMul, 1e-6);

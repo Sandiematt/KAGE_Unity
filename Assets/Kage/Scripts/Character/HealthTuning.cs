@@ -10,5 +10,24 @@ namespace Kage
     {
         public const double Default = 100.0 / 232.0;
         public double healthScale = Default;
+
+        /// <summary>Per-character pacing multipliers (SAN-110): a foe's <see cref="CharacterDef.healthMul"/>. Unlisted characters are 1.</summary>
+        public System.Collections.Generic.List<CharacterHealthMul> multipliers = new System.Collections.Generic.List<CharacterHealthMul>();
+
+        /// <summary>The multiplier of the character with this id in health.json (1 when it has none).</summary>
+        public static float MulOf(string id)
+        {
+            foreach (var m in Tuning.Get<HealthTuning>().multipliers)
+                if (m.id == id) return m.mul;
+            return 1f;
+        }
+    }
+
+    /// <summary>One row of <see cref="HealthTuning.multipliers"/>.</summary>
+    [System.Serializable]
+    public class CharacterHealthMul
+    {
+        public string id;
+        public float mul = 1f;
     }
 }

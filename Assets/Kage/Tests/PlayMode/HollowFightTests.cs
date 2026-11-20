@@ -35,7 +35,7 @@ namespace Kage.Tests
             var shade = sf.Ronin;
             Assert.AreSame(sf.Kage.moves, shade.moves, "the Shade plays the one katana move set");
             Assert.AreEqual("hollow_shade", shade.FighterId);
-            Assert.AreEqual(160f * 100f / 232f, shade.maxHealth, 1e-3);
+            Assert.AreEqual(160f * 1.4f * 100f / 232f, shade.maxHealth, 1e-3);
             Assert.AreEqual(0.85f, shade.DamageMul, 1e-6);
             Assert.AreEqual("katana", shade.Family.id);
             var f = Duel("hollow_tutorial");

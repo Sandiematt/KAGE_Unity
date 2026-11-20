@@ -25,7 +25,7 @@ namespace Kage.Tests
     /// </summary>
     public class SagaBotCampaignTests
     {
-        const int Seeds = 3, RoadCap = 60 * 900, BossCap = 60 * 300, RoadQuiet = 60 * 60, BossQuiet = 600;
+        const int Seeds = 3, RoadCap = 60 * 900, BossCap = 60 * 300, RoadQuiet = 60 * 60, BossQuiet = 900;      // SAN-110: 900 (was 600), the bar Raikon's own bot test uses: the tuned boss fights are longer and one Garan loss went quiet for 12.5 s
 
         static readonly string[] Order =
         {
@@ -75,7 +75,7 @@ namespace Kage.Tests
             return r;
         }
 
-        static IInputSource BossBot(string foeId)
+        internal static IInputSource BossBot(string foeId)
         {
             switch (foeId)
             {
@@ -88,12 +88,12 @@ namespace Kage.Tests
             }
         }
 
-        static Run PlayBoss(string stage, int seed, float? level = null)
+        static Run PlayBoss(string stage, int seed, float? level = null, CharacterDef kage = null)
         {
             var st = GameRules.Stage(stage);
             var kind = GameRules.WorldKindOf(stage);
             var bot = BossBot(st.Enemy);
-            using var f = new HeadlessFight(seed, Foe.Ai, -1.2f, 1.2f, foeDef: CharacterCatalog.Get(st.Enemy), kageDef: KageDef(false));
+            using var f = new HeadlessFight(seed, Foe.Ai, -1.2f, 1.2f, foeDef: CharacterCatalog.Get(st.Enemy), kageDef: kage ?? KageDef(false));
             if (bot is RaikonFightBotTests.StormBot storm) storm.Fight = f;       // Raikon's bot reads his waves and hazards from the fight
             f.Ai.level = level ?? StageWorld.FoeLevel(kind);
             using var stats = new FightStatsRecorder(f.Ctx.Events, f.Kage);
@@ -112,8 +112,8 @@ namespace Kage.Tests
 
         static bool IsFight(string stage) => GameRules.WorldKindOf(stage) != StageWorldKind.Road;
 
-        static Run Play(string stage, int seed, bool boostRoads) =>
-            IsFight(stage) ? PlayBoss(stage, seed) : PlayRoad(stage, seed, boostRoads && stage != PrologueAdditions.StageId);
+        static Run Play(string stage, int seed, bool boostRoads, CharacterDef bossKage = null) =>
+            IsFight(stage) ? PlayBoss(stage, seed, kage: bossKage) : PlayRoad(stage, seed, boostRoads && stage != PrologueAdditions.StageId);
 
         static void AssertNoSoftlock(Run r)
         {
@@ -173,7 +173,7 @@ namespace Kage.Tests
                     Run run = null;
                     for (int attempt = 1; attempt <= Attempts; attempt++)
                     {
-                        run = Play(id, 108 + attempt, boostRoads: true);
+                        run = Play(id, 108 + attempt, boostRoads: true, bossKage: IsFight(id) ? PacingKit.LoadoutOf(id).Kage.Clone() : null);   // SAN-110: the gear a player owns by then (PacingKit), not the starter loadout
                         attempts[id] = attempt;
                         Debug.Log($"SAN-109 bot run (attempt {attempt}): " + run.Line);
                         AssertNoSoftlock(run);

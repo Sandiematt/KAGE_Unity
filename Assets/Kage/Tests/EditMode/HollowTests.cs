@@ -20,7 +20,7 @@ namespace Kage.Tests
             Assert.AreEqual("Hollow Shade", d.displayName);
             Assert.AreEqual("Memory echo", d.title);
             Assert.AreEqual(160f, d.jsHealth);
-            Assert.AreEqual(160f * 100f / 232f, d.MaxHealth(), 1e-3);
+            Assert.AreEqual(160f * 1.4f * 100f / 232f, d.MaxHealth(), 1e-3);
             Assert.AreEqual(0.03f, d.defense, 1e-6);
             Assert.AreEqual(0.85f, d.damageMul, 1e-6);
             Assert.AreEqual("regular", d.aiProfile);

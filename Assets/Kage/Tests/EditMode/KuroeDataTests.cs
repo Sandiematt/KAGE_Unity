@@ -21,7 +21,7 @@ namespace Kage.Tests
             Assert.AreEqual("Kuroe", d.displayName);
             Assert.AreEqual("the Ink Censor", d.title);
             Assert.AreEqual(360f, d.jsHealth);
-            Assert.AreEqual(360f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(360f * 1.15f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.08f, d.defense, 1e-6);
             Assert.AreEqual(1.15f, d.damageMul, 1e-6, "41-styles/kuroe.js raises her 10-data.js dmg 1 to 1.15");
             Assert.AreEqual(1f, d.speedMul, 1e-6);
