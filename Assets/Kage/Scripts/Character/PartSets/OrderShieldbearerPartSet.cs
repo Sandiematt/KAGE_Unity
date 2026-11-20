@@ -46,13 +46,14 @@ namespace Kage
         static readonly Tone Lacq = new(KMath.Hex("#08090B"), O.Lacquer, O.LacquerLit);
         static readonly Tone LacqFar = new(KMath.Hex("#060708"), O.LacquerFar, KMath.Hex("#161A1F"));
         static readonly Tone Silver = new(O.SilverDark, O.SilverMid, O.Silver);
+        /// <summary>The tate's planks: the same lacquer weathered a step lighter than the dō, so the shield reads in front of the armour
+        /// it covers (the JS holds it out clear of the body; Kage's near arm keeps it over the trunk).</summary>
+        static readonly Tone Plank = new(KMath.Hex("#12161C"), KMath.Hex("#252C35"), KMath.Hex("#46515F"));
         static readonly Tone Fab = new(O.ClothDeep, O.Cloth, KMath.Hex("#3A4757"));
         static readonly Tone FabFar = new(O.ClothFar, O.ClothFar, O.ClothDeep);
         static readonly Tone Lining = new(O.ClothFar, O.ClothFar, O.ClothDeep);
         static readonly Tone Metal = new(KMath.Hex("#0B0B0E"), KMath.Hex("#1A1D23"), KMath.Hex("#3C4048"));
-        static readonly Tone MetalFar = new(KMath.Hex("#0B0B0E"), KMath.Hex("#0E0F12"), KMath.Hex("#1A1D23"));
         static readonly Tone GloveT = new(KMath.Hex("#0C0F13"), O.Glove, KMath.Hex("#323A45"));
-        static readonly Tone GloveFar = new(KMath.Hex("#0C0F13"), KMath.Hex("#0C0F13"), O.Glove);
         static readonly Tone BeltT = new(KMath.Hex("#080606"), KMath.Hex("#111214"), KMath.Hex("#26282C"));
         static readonly Tone Sandal = new(O.ClothFar, O.ClothDeep, O.Cloth);
         static readonly Tone SandalFar = new(O.ClothFar, O.ClothFar, O.ClothDeep);
@@ -252,15 +253,16 @@ namespace Kage
         {
             B upper = far ? B.ArmFU : B.ArmNU, lower = far ? B.ArmFL : B.ArmNL, hand = far ? B.HandF : B.HandN;
             Vector2 sh = Pv(d, upper), el = Pv(d, lower), ha = Pv(d, hand);
+            // the spear family holds the weapon arm in front of the body at all times (FighterRig.SetSwordAlwaysFront), so the far arm
+            // is never behind him: both arms are lit, rimmed and laced alike (no JS far tones); the far arm's parts are sword-layer parts
+            bool sw = far;
             int slot = far ? Slot.FarArm : Slot.NearArm;
             string s = far ? "ArmF" : "ArmN";
-            var tone = far ? FabFar : Fab;
-            bool sw = far;
+            var tone = Fab;
 
             // the upper sleeve: full at the shoulder, gathered to the elbow, creases and a shoulder seam
             var sleeve = Capsule(sh.x, sh.y, el.x, el.y, 8.2f * Ua, 6.6f * Ua, 1.5f * Ua, 0.38f);
             var creases = new List<(Vector2[] pts, Color col)>();
-            if (!far)
             {
                 Vector2 dd = el - sh, n = Nrm(sh, el);
                 foreach (var (u, o0, o1) in new[] { (0.5f, -6f, 2f), (0.66f, -5.6f, 3.4f), (0.8f, -5f, 1.4f) })
@@ -272,10 +274,10 @@ namespace Kage
                 }
                 creases.AddRange(Fold(Fab.lit, 2.6f, QuadPx(sh + dd * 0.18f + n * 8f * Ua, sh + dd * 0.27f, sh + dd * 0.18f - n * 8f * Ua)));
             }
-            AddCel(d, s + "_Sleeve", upper, slot, sleeve, tone, 4.2f * Ua, far ? 0f : 1.1f * Ua, 0, !far, Inside(sleeve, creases), swordLayer: sw);
+            AddCel(d, s + "_Sleeve", upper, slot, sleeve, tone, 4.2f * Ua, 1.1f * Ua, 0, true, Inside(sleeve, creases), swordLayer: sw);
 
             // the sode over the upper sleeve, hung from the shoulder
-            Sode(d, s, upper, slot, sh, el, far, 1.15f);
+            Sode(d, s, upper, slot, sh, el, 1.15f, sw);
 
             // along the forearm: u from the elbow (0) to the hand (1), o across it
             Vector2 ex = ha - el, fn = Nrm(el, ha);
@@ -286,14 +288,13 @@ namespace Kage
                 Vector2 a = At(0.25f, 0f), b = At(0.95f, 0f);
                 var kote = Capsule(a.x, a.y, b.x, b.y, 4.4f * Ua, 3.6f * Ua, 0.4f * Ua, 0.4f);
                 var straps = new List<Line>();
-                if (!far)
-                    foreach (float k in new[] { 0.62f, 0.84f })
+                foreach (float k in new[] { 0.62f, 0.84f })
                     {
                         Vector2 p = At(k, 5f * Ua), q = At(k + 0.05f, -5f * Ua);
                         straps.Add(new Line(Xy(p, q), 1.6f * Ua, Seam));
                         straps.Add(new Line(Xy(p, q), 0.6f * Js, Acc));
                     }
-                AddCel(d, s + "_Kote", lower, slot + 1, kote, far ? MetalFar : Metal, 2.2f * Ua, far ? 0f : 0.8f * Ua, 0, !far, Stroke(kote, straps), PartRole.Metal, sw);
+                AddCel(d, s + "_Kote", lower, slot + 1, kote, Metal, 2.2f * Ua, 0.8f * Ua, 0, true, Stroke(kote, straps), PartRole.Metal, sw);
             }
 
             // the forearm sleeve: bunched at the elbow, flaring to the gi's wide opening
@@ -303,16 +304,15 @@ namespace Kage
                 Vector2 m = At(u1, 0f);
                 var fore = Capsule(el.x, el.y, m.x, m.y, r0, r1, 0.4f * Ua, 0.4f);
                 var folds = new List<(Vector2[] pts, Color col)>();
-                if (!far)
-                    foreach (var (u, o0, o1) in new[] { (0.04f, 5.4f, -3f), (0.18f, -5.6f, 2.6f), (u1 * 0.6f, 6f, -1f) })
+                foreach (var (u, o0, o1) in new[] { (0.04f, 5.4f, -3f), (0.18f, -5.6f, 2.6f), (u1 * 0.6f, 6f, -1f) })
                     {
                         Vector2 p = At(u, o0 * Ua), q = At(u + 0.1f, o1 * Ua), cc = At(u + 0.1f, (o0 + o1) * 0.2f * Ua);
                         folds.AddRange(Fold(Fab.lit, 2.4f, QuadPx(p, cc, q)));
                     }
-                AddCel(d, s + "_Forearm", lower, slot + 1, fore, tone, 3.6f * Ua, far ? 0f : 0.9f * Ua, 1, !far, Inside(fore, folds), swordLayer: sw);
+                AddCel(d, s + "_Forearm", lower, slot + 1, fore, tone, 3.6f * Ua, 0.9f * Ua, 1, true, Inside(fore, folds), swordLayer: sw);
             }
 
-            // the sleeve opening: the gi's dark inner lining
+            // the sleeve opening: the gi's dark inner lining (the near arm's: the spear arm's opening faces away)
             if (!far)
             {
                 Vector2 p0 = At(u1 - 0.08f, r1 * 0.96f), p1 = At(u1 + 0.01f, r1 * 1.02f), pc = At(u1 + 0.05f, 0f), p2 = At(u1 + 0.01f, -r1 * 1.02f), p3 = At(u1 - 0.08f, -r1 * 0.96f);
@@ -327,8 +327,8 @@ namespace Kage
                 Vector2 c = ha + u * r * 0.25f;
                 var glove = Oval(c.x, c.y, r, r * 0.82f, Mathf.Atan2(u.y, u.x) * Mathf.Rad2Deg);
                 Vector2 f0 = ha + u * 1.6f * Ua * 1.35f + nn * 2.3f * Ua * 1.35f, f1 = ha + u * 1.6f * Ua * 1.35f - nn * 2.3f * Ua * 1.35f;
-                AddCel(d, far ? "HandF" : "HandN_Fist", hand, far ? Slot.FarArm + 2 : Slot.NearHand, glove, far ? GloveFar : GloveT, 1.4f * Ua, 0.6f * Ua,
-                    0, !far, Stroke(glove, new[] { new Line(Xy(f0, f1), 0.7f * Js, GloveT.lit) }), swordLayer: sw);
+                AddCel(d, far ? "HandF" : "HandN_Fist", hand, far ? Slot.FarArm + 2 : Slot.NearHand, glove, GloveT, 1.4f * Ua, 0.6f * Ua,
+                    0, true, Stroke(glove, new[] { new Line(Xy(f0, f1), 0.7f * Js, GloveT.lit) }), swordLayer: sw);
             }
         }
 
@@ -336,7 +336,7 @@ namespace Kage
         /// The JS <c>orderSode</c>: a laced shoulder plate hung from the shoulder over the upper arm, between straight down the spine and
         /// along the arm, a little behind the shoulder so it flares past the sleeve. Rides the upper arm.
         /// </summary>
-        static void Sode(RigDef d, string s, B bone, int slot, Vector2 sh, Vector2 el, bool far, float size)
+        static void Sode(RigDef d, string s, B bone, int slot, Vector2 sh, Vector2 el, float size, bool swordLayer)
         {
             Vector2 down = (Sp.Px(0f, 0f) - Sp.Px(1f, 0f)).normalized, front = Sp.ay.normalized;
             Vector2 dir = ((el - sh).normalized * 0.45f + down * 0.55f).normalized, n = new(-dir.y, dir.x);
@@ -345,15 +345,14 @@ namespace Kage
             Vector2 a0 = top - n * w0 * 0.5f, a1 = top + n * w0 * 0.5f, b1 = top + dir * len + n * w1 * 0.5f, b0 = top + dir * len - n * w1 * 0.5f;
             Vector2 Q(float k, float t) => Vector2.LerpUnclamped(Vector2.LerpUnclamped(a0, a1, k), Vector2.LerpUnclamped(b0, b1, k), t);
             var plate = Plate(a0, a1, b1, b0, 2f * U * size);
-            var tone = far ? LacqFar : Lacq;
+            var tone = Lacq;
             var lines = new List<Line>();
-            if (!far)
             {
                 lines.AddRange(Lames(Q, size > 1.4f ? 5 : 4, 5, tone, 1.1f * U));
                 Vector2 off = -LightDir * 1.4f * U + new Vector2(0f, 1.4f * U);   // the top plate's lit edge
                 lines.Add(new Line(Xy(a0 + off, a1 + off), 1.3f * U, tone.lit));
             }
-            AddCel(d, s + "_Sode", bone, slot, plate, tone, 3.4f * U, far ? 0f : 1f * U, 1, true, Stroke(plate, lines), PartRole.Metal, far);
+            AddCel(d, s + "_Sode", bone, slot, plate, tone, 3.4f * U, 1f * U, 1, true, Stroke(plate, lines), PartRole.Metal, swordLayer);
         }
 
         // ---------------------------------------------------------------------------------------------- legs (JS animeLeg, orderSuneate, animeFoot)
@@ -599,7 +598,7 @@ namespace Kage
         /// </summary>
         static void Tate(RigDef d)
         {
-            Vector2 c = Pv(d, B.HandN) + new Vector2(-14f, 0f);
+            Vector2 c = Pv(d, B.HandN) + new Vector2(-24f, 0f);
             const float k = 4.125f, w = 13f * k, h = 40f * k;
             var f = new Frame(c, Vector2.right, Vector2.up);
             var shape = new Outline(f).MoveTo(-w, -h + 4f * k).QuadTo(0f, -h - 3f * k, w, -h + 4f * k).LineTo(w * 0.92f, h - 2f * k)
@@ -612,8 +611,8 @@ namespace Kage
             {
                 detail.AddRange(Inside(shape, new[]
                 {
-                    (V(f.Xy(-w * 1.1f, y - 2.6f * k, w * 1.1f, y - 2.6f * k, w * 1.1f, y + 2.6f * k, -w * 1.1f, y + 2.6f * k)), Lacq.shade),
-                    (V(f.Xy(-w * 1.1f, y - 2.6f * k, w * 1.1f, y - 2.6f * k, w * 1.1f, y - 1.6f * k, -w * 1.1f, y - 1.6f * k)), Lacq.lit),
+                    (V(f.Xy(-w * 1.1f, y - 2.6f * k, w * 1.1f, y - 2.6f * k, w * 1.1f, y + 2.6f * k, -w * 1.1f, y + 2.6f * k)), Lacq.mid),
+                    (V(f.Xy(-w * 1.1f, y - 2.6f * k, w * 1.1f, y - 2.6f * k, w * 1.1f, y - 1.6f * k, -w * 1.1f, y - 1.6f * k)), Plank.lit),
                 }));
                 foreach (float x in new[] { -w * 0.6f, 0f, w * 0.6f })
                 {
@@ -621,9 +620,9 @@ namespace Kage
                     detail.Add((Oval(p.x, p.y, 1.1f * k, 1.1f * k), O.SilverMid));
                 }
             }
-            detail.AddRange(Mark(c, 6.4f * k, 2f * k, AccHi, Lacq.mid));
+            detail.AddRange(Mark(c, 6.4f * k, 2f * k, AccHi, Plank.mid));
             detail.AddRange(Stroke(shape, new[] { new Line(QuadXy(f, -w * 0.7f, -h * 0.3f, 0f, -h * 0.18f, w * 0.7f, -h * 0.3f, 16), 1.6f * k, Acc) }));
-            AddCel(d, "Tate", B.ArmNL, Slot.NearArm + 1, shape, Lacq, 4f * k, 1.2f * k, 3, true, detail, PartRole.Metal);
+            AddCel(d, "Tate", B.ArmNL, Slot.NearArm + 1, shape, Plank, 4f * k, 1.2f * k, 3, true, detail, PartRole.Metal);
         }
     }
 }
