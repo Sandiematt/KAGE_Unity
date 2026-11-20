@@ -26,6 +26,12 @@ namespace Kage
 
         public static float Now { get { return frozen ? frozenAt : Time.unscaledTime; } }
 
+        /// <summary>
+        /// Seconds the entrances of a screen that is being built wait before they start. The ink wipe sets it to its swap time while the new screen is
+        /// built, so the screen's rises and pops begin when the stroke has uncovered it (the JS builds the screen at that moment).
+        /// </summary>
+        public static float EntranceDelay;
+
         public static bool IsFrozen { get { return frozen; } }
 
         public static void Freeze(float at) { frozen = true; frozenAt = at; }
@@ -35,7 +41,7 @@ namespace Kage
         public static void Unfreeze() { frozen = false; }
 
         /// <summary>Back to the defaults (tests and fixtures call this when they are done).</summary>
-        public static void Reset() { frozen = false; Skip = false; ForceReduced = null; }
+        public static void Reset() { frozen = false; Skip = false; ForceReduced = null; EntranceDelay = 0f; }
 
         public static bool Reduced
         {

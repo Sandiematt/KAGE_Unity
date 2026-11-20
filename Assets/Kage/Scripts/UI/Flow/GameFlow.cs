@@ -6,12 +6,7 @@ using Kage.Rules;
 
 namespace Kage
 {
-    /// <summary>
-    /// The campaign entry (ADR-0001, SAN-67): title, campaign map, pre-fight loadout, stage, results and back to the map, with pause
-    /// and settings. It owns the save, the <see cref="FlowController"/> (which decides where the player goes), the JS-style screens
-    /// and the stage world of the fight in play, and routes keyboard, gamepad and mouse to whichever screen or overlay is on top.
-    /// It lives in its own scene and never touches KageGame, which stays the dev arena.
-    /// </summary>
+    /// <summary>The info overlays on the title (and the controls guide on the settings and the pause menu).</summary>
     public enum InfoView
     {
         None,
@@ -21,6 +16,12 @@ namespace Kage
         Profile,
     }
 
+    /// <summary>
+    /// The campaign entry (ADR-0001, SAN-67): title, campaign map, pre-fight loadout, stage, results and back to the map, with pause
+    /// and settings. It owns the save, the <see cref="FlowController"/> (which decides where the player goes), the JS-style screens
+    /// and the stage world of the fight in play, and routes keyboard, gamepad and mouse to whichever screen or overlay is on top.
+    /// It lives in its own scene and never touches KageGame, which stays the dev arena.
+    /// </summary>
     [DefaultExecutionOrder(-60)]
     public sealed class GameFlow : MonoBehaviour
     {
@@ -57,12 +58,13 @@ namespace Kage
         Vector2 lastMouse;
 
         /// <summary>Creates a flow on its own object. <paramref name="saveDirectory"/> null uses the persistent data path.</summary>
-        public static GameFlow Create(string saveDirectory = null)
+        public static GameFlow Create(string saveDirectory = null, bool showSplash = false)
         {
             var go = new GameObject("GameFlow");
             go.SetActive(false);
             var f = go.AddComponent<GameFlow>();
             f.saveDirectory = saveDirectory;
+            f.showSplash = showSplash;
             go.SetActive(true);
             return f;
         }
@@ -174,7 +176,7 @@ namespace Kage
             bool changing = shown.HasValue && shown.Value != scr && wipe != null && UiClock.Animate && (splash == null || !splash.Active);
             if (wipe != null && wipe.Running) wipe.Finish(true);
             if (changing) ghost = MakeGhost(panels[shown.Value]);
-            if (scr != FlowScreen.Settings && scr != FlowScreen.Title) info = InfoView.None;
+            if (scr != FlowScreen.Settings && scr != FlowScreen.Title && !(scr == FlowScreen.Stage && c.Paused)) info = InfoView.None;
             if (scr != FlowScreen.Armory) DestroyArmoryWorld();
 
             switch (scr)
@@ -208,7 +210,9 @@ namespace Kage
 
             foreach (var kv in panels) if (kv.Key != scr && kv.Value.Visible) kv.Value.Hide();
             var p = panels[scr];
+            UiClock.EntranceDelay = changing ? UiWipe.RevealAt : 0f;
             if (shown != scr || !p.Visible) p.Show(); else p.Rebuild();
+            UiClock.EntranceDelay = 0f;
             shown = scr;
             if (changing) BeginWipe(ghost, p);
 

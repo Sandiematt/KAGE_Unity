@@ -21,6 +21,11 @@ namespace Kage
 
         const float MapX = 410, MapY = 124;
 
+        // what the last build showed: the rail rises when the screen opens, the map's nodes pop when the chapter changes, the card rises when the stage does
+        string builtChapter, builtStage;
+        bool enterAll, enterMap, enterCard;
+        int chapterIndex;
+
         public CampaignScreen(GameFlow flow, RectTransform stage) : base(flow, stage, "Campaign") { }
 
         protected override string DefaultFocus { get { return "node:" + C.SelectedStage; } }
@@ -58,6 +63,11 @@ namespace Kage
             string chId = ChapterOfSelected();
             var view = CampaignView.Build(save, chId, C.SelectedStage);
             var ch = view.Chapter;
+            enterAll = Fresh;
+            enterMap = Fresh || builtChapter != chId;
+            enterCard = Fresh || builtStage != C.SelectedStage;
+            builtChapter = chId; builtStage = C.SelectedStage;
+            chapterIndex = 0;
 
             Backdrop(Root);
 
@@ -106,6 +116,8 @@ namespace Kage
         void ChapterRow(ChapterView c, float x, float y)
         {
             var rt = Ui.Node(Root, "Chapter_" + c.Id, x, y, 340, 80);
+            Enter(rt, UiAnims.WRise(.5f, chapterIndex * 0.04f));
+            chapterIndex++;
             bool locked = c.State == ChapterState.Locked;
             Ui.Box(rt, 0, 0, 340, 80, Ui.PanelA(0.7f));
             if (c.Selected)
@@ -122,11 +134,12 @@ namespace Kage
             else Ui.Label(rt, c.Done + " / " + c.Total, UiFont.Title, 16, c.Selected ? Ui.Bone : Ui.Muted, 200, 0, 120, 80, TextAnchor.MiddleRight);
             var ring = Ui.Box(rt, 0, 0, 340, 80, Color.clear);
             string id = c.Id;
-            UiParts.Make(rt, Nav, "chapter:" + id, () => PickChapter(id), f =>
+            var slide = UiFocusTween.On(rt, .18f, v =>
             {
-                rt.anchoredPosition = new Vector2(x + (f && !c.Selected ? 4f : 0f), -y);
-                ring.color = f && !c.Selected ? Ui.A(Ui.Gold, 0.10f) : Color.clear;
-            }, !locked);
+                UiOffsets.Of(rt).SetFocus(new Vector2(c.Selected ? 0f : 4f * v, 0f));
+                ring.color = c.Selected ? Color.clear : Ui.A(Ui.Gold, 0.10f * v);
+            });
+            UiParts.Make(rt, Nav, "chapter:" + id, () => PickChapter(id), f => slide.Set(f), !locked);
         }
 
         public static void LockIcon(Transform p, float cx, float cy, Color c)
@@ -146,6 +159,7 @@ namespace Kage
         void MapPanel(CampaignView view, SaveData save)
         {
             var map = Ui.Node(Root, "Map", MapX, MapY, 680, 736);
+            if (enterMap) UiFx.In(map, UiAnims.WFade(.5f));
             Ui.Grad(map, 0, 0, 680, 736, Ui.Mix(Ui.Acc, Ui.Sky1, 0.14f), Ui.Panel);
             Ui.Glow(map, 520, 150, 220, Ui.A(Ui.Hot, 0.35f), 1.2f);
             Ui.Disc(map, 520, 150, 64, Ui.A(Ui.Mix(Ui.Hot, Ui.Panel, 0.55f), 0.45f));
@@ -157,11 +171,13 @@ namespace Kage
             for (int i = 0; i < sky.Length; i += 2) pts.Add(new Vector2(sky[i], sky[i + 1]));
             pts.Add(new Vector2(680, 736)); pts.Add(new Vector2(0, 736));
             Ui.Shape(map, 0, 0, 680, 736, pts.ToArray(), Ui.Mix(Ui.Ground, Ui.Panel, 0.85f), Ui.Mix(Ui.Ground, Ui.Panel, 0.85f), null, false, "Skyline");
+            var lamps = Ui.Node(map, "Lamps", 0, 0, 680, 736);
             foreach (var w in new[] { new Vector2(60, 452), new Vector2(170, 440), new Vector2(410, 420), new Vector2(540, 452) })
             {
-                Ui.Disc(map, w.x, w.y, 14, Ui.A(Ui.Hot, 0.12f));
-                Ui.Disc(map, w.x, w.y, 4, Ui.Hot);
+                Ui.Disc(lamps, w.x, w.y, 14, Ui.A(Ui.Hot, 0.12f));
+                Ui.Disc(lamps, w.x, w.y, 4, Ui.Hot);
             }
+            UiFx.Loop(lamps, UiAnims.WGlow(3f));
             Ui.Box(map, 0, 0, 680, 736, Ui.PanelA(0.35f));
 
             // title block
@@ -189,11 +205,12 @@ namespace Kage
                 path.Add(b);
                 var line = Ui.Line(map, path.ToArray(), ok ? 3f : 2f, ok ? Ui.Acc : Ui.A(Ui.Muted, 0.5f), ok ? 0f : 8f, 8f);
                 line.rectTransform.sizeDelta = new Vector2(680, 736);
+                if (!ok) UiDashFlow.On(line);
             }
-            for (int i = 0; i < n; i++) Node(map, view.Stages[i], pos[i]);
+            for (int i = 0; i < n; i++) Node(map, view.Stages[i], pos[i], i);
         }
 
-        void Node(Transform map, StageView st, Vector2 p)
+        void Node(Transform map, StageView st, Vector2 p, int index)
         {
             bool big = st.Kind == "stretch";
             float box = st.IsNext ? 92f : st.Kind == "boss" ? 88f : st.Kind == "subboss" ? 56f : 68f;
@@ -206,7 +223,8 @@ namespace Kage
             if (st.Kind == "boss" && !locked) { fill = Ui.Acc; edge = Ui.Bone; bw = 2f; Ui.Glow(rt, 70, box / 2, 60, Ui.A(Ui.Acc, 0.5f), 1.6f); }
             if (st.IsNext) { fill = Ui.InkOnGold; edge = Ui.Gold; bw = 2f; Ui.Glow(rt, 70, box / 2, 56, Ui.A(Ui.Gold, 0.45f), 1.6f); }
             float cx = 70, cy = box / 2;
-            if (st.IsNext) Ui.Diamond(rt, cx, cy, 56 * 1.35f, Color.clear, Ui.GoldHair, 1f);
+            // the current node's ring breathes (cpHalo: 2.4 s, scale 1.3 to 1.45, opacity 1 to .45)
+            if (st.IsNext) UiFx.Loop(Ui.Diamond(rt, cx, cy, 56f, Color.clear, Ui.GoldHair, 1f).transform, UiAnims.CpHalo());
             var dia = Ui.Diamond(rt, cx, cy, ds, fill, edge, bw);
             if (st.Selected && !st.IsNext) Ui.Diamond(rt, cx, cy, ds * 1.32f, Color.clear, Ui.Gold, 1.5f);
 
@@ -235,11 +253,14 @@ namespace Kage
             string id = st.Id;
             // the whole node is the target
             rt.sizeDelta = new Vector2(140, box + 14 + nh + 18);
+            // JS: a node pops in from 60% (cpPop, .45 s, 40 ms apart), and hovering one grows its diamond 10% in .2 s
+            if (enterMap) UiFx.In(rt, UiAnims.NodePop(index * 0.04f));
+            var grow = UiFocusTween.On(rt, .2f, v => dia.rectTransform.localScale = Vector3.one * (1f + 0.1f * v));
             var item = UiParts.Make(rt, Nav, "node:" + id, () =>
             {
                 if (C.SelectedStage == id) C.BeginLoadout();
                 else C.SelectStage(id);
-            });
+            }, f => grow.Set(f));
             // moving onto a node selects it, so the card follows the cursor (a rebuild restoring the focus does not)
             item.onUserFocus = () => { if (C.SelectedStage != id) C.SelectStage(id); };
         }
@@ -252,6 +273,7 @@ namespace Kage
             float x = 1120, y = 124, w = 440;
             float cardH = withBoss ? 425f : 736f;
             var rt = Ui.Node(Root, "StageCard", x, y, w, cardH);
+            if (enterCard) UiFx.In(rt, UiAnims.WRise(.45f));
             Ui.Box(rt, 0, 0, w, cardH, Ui.PanelA(0.88f));
 
             // texts first, to know the height of the body
@@ -304,7 +326,9 @@ namespace Kage
                 var reveal = Ui.Node(Root, "BossReveal", x, ry, 440, 293);
                 var img = Ui.Pic(reveal, "reveal_" + card.BossArt, 0, 0, 440, 293);
                 Ui.Glow(reveal, 220, 146, 330, Ui.A(Ui.Acc, 0.0f), 1f);
+                var sheen = ButtonSheen.Add(reveal, 440, 293);
                 Ui.Frame(reveal, 0, 0, 440, 293, 1.5f, Ui.Gold);
+                if (enterCard) { UiRevealUp.On(reveal, 293); sheen.PlayAfter(1.2f, 1.4f); }
             }
         }
 
@@ -314,7 +338,7 @@ namespace Kage
             var rt = Ui.Node(card, "Strip", 0, 0, w, h);
             Ui.Grad(rt, 0, 0, w, h, Ui.Mix(Ui.Acc, Ui.Sky1, 0.12f), Ui.Mix(Ui.Acc, Ui.Sky1, 0.30f));
             float sunY = Mathf.Min(h * 0.45f, 120f);
-            Ui.Glow(rt, 300, sunY, 90, Ui.A(Ui.Sun1, 0.25f), 1.5f);
+            UiFx.Loop(Ui.Glow(rt, 300, sunY, 90, Ui.A(Ui.Sun1, 0.25f), 1.5f).transform, UiAnims.WGlow(5f));
             Ui.Disc(rt, 300, sunY, 48, Ui.Sun1);
             float by = h - 8f;
             Ui.Ground2(rt, new float[] { 0, by - 34, 80, by - 54, 160, by - 42, 240, by - 60, 340, by - 46, 440, by - 58 }, h, Ui.Mix(Ui.Acc, Ui.Sky1, 0.12f)).rectTransform.sizeDelta = new Vector2(w, h);

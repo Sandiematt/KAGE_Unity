@@ -44,7 +44,7 @@ namespace Kage
             if (group == null) group = gameObject.AddComponent<CanvasGroup>();
             baseScale = rt.localScale;
             baseRot = rt.localEulerAngles.z;
-            start = absolute ? 0f : UiClock.Now;
+            start = absolute ? 0f : UiClock.Now + UiClock.EntranceDelay;
             if (!UiClock.Animate)
             {
                 // still screens: a loop shows its middle, everything else its end
@@ -184,7 +184,7 @@ namespace Kage
     public sealed class ButtonSheen : MonoBehaviour
     {
         RectTransform bar;
-        float width, half, start = -99f, seconds = .45f;
+        float width, half, start = -99f, seconds = .45f, playAt = -1f, afterSeconds = 1.4f;
         int born;
 
         public static ButtonSheen Add(RectTransform button, float w, float h)
@@ -214,14 +214,94 @@ namespace Kage
             bar.gameObject.SetActive(true);
         }
 
+        /// <summary>Plays the sweep once, <paramref name="delay"/> seconds from now (the boss card's light, JS brSweep: 1.4 s after 1.2 s).</summary>
+        public void PlayAfter(float delay, float duration)
+        {
+            playAt = UiClock.Now + delay;
+            afterSeconds = duration;
+        }
+
         void Update()
         {
+            if (bar == null) return;            // a copy of a screen (the wipe's ghost) has no sweep
+            if (playAt >= 0f && UiClock.Now >= playAt)
+            {
+                playAt = -1f;
+                seconds = afterSeconds;
+                start = UiClock.Now;
+                if (UiClock.Animate) bar.gameObject.SetActive(true);
+            }
             if (!bar.gameObject.activeSelf) return;
             float k = (UiClock.Now - start) / seconds;
             if (k >= 1f) { bar.gameObject.SetActive(false); return; }
             float e = UiEase.Ease.Evaluate(Mathf.Clamp01(k));
             float x = Mathf.Lerp(-bar.rect.width * 0.5f, width + bar.rect.width * 0.5f, e);
             bar.anchoredPosition = new Vector2(x, -half);
+        }
+    }
+
+    /// <summary>Marches the dashes of an unvisited road along it (JS <c>cpDash</c>: stroke-dashoffset to -32 in 1.6 s, linear, forever).</summary>
+    [AddComponentMenu("")]
+    public sealed class UiDashFlow : MonoBehaviour
+    {
+        PolyLine line;
+
+        public static UiDashFlow On(PolyLine l)
+        {
+            var d = l.gameObject.AddComponent<UiDashFlow>();
+            d.line = l;
+            return d;
+        }
+
+        /// <summary>The pattern's offset at a time: 32 px every 1.6 s, wrapped to the 16 px period.</summary>
+        public static float PhaseAt(float time) { return (time * 20f) % 16f; }
+
+        void Update()
+        {
+            if (line == null) return;
+            line.SetPhase(UiClock.Animate ? PhaseAt(UiClock.Now) : 0f);
+        }
+    }
+
+    /// <summary>
+    /// A card that rises and is uncovered from the bottom upward (JS <c>cpBossCard</c>: up 26 px while its clip opens from 100% to 0). The clip is the
+    /// node's own rect: its top edge rises while the bottom stays, and what is inside stays where it is (children sit on a bottom-anchored content node).
+    /// </summary>
+    [AddComponentMenu("")]
+    public sealed class UiRevealUp : MonoBehaviour
+    {
+        public const float Seconds = .7f, Rise = 26f;
+
+        RectTransform node;
+        float fullH, y0, born;
+
+        /// <summary>The share of the card uncovered at a time (the JS --ease over .7 s).</summary>
+        public static float Open(float time) { return UiEase.Ease.Evaluate(Mathf.Clamp01(time / Seconds)); }
+
+        /// <summary>Makes <paramref name="n"/> (already holding its children, placed from its top-left corner) reveal itself.</summary>
+        public static void On(RectTransform n, float fullHeight)
+        {
+            n.gameObject.AddComponent<RectMask2D>();
+            var kids = new System.Collections.Generic.List<Transform>();
+            foreach (Transform c in n) kids.Add(c);
+            var content = Ui.Node(n, "Content", 0, 0, n.sizeDelta.x, fullHeight);
+            content.anchorMin = content.anchorMax = Vector2.zero;
+            content.pivot = Vector2.zero;
+            content.anchoredPosition = Vector2.zero;
+            foreach (var c in kids) c.SetParent(content, false);
+            var r = n.gameObject.AddComponent<UiRevealUp>();
+            r.node = n; r.fullH = fullHeight; r.y0 = n.anchoredPosition.y; r.born = UiClock.Now;
+            r.Tick();
+        }
+
+        void Update() { Tick(); }
+
+        void Tick()
+        {
+            if (node == null) return;
+            float k = UiClock.Animate ? Open(UiClock.Now - born) : 1f;
+            node.sizeDelta = new Vector2(node.sizeDelta.x, Mathf.Max(0.01f, fullH * k));
+            node.anchoredPosition = new Vector2(node.anchoredPosition.x, y0 - fullH * (1f - k) - Rise * (1f - k));
         }
     }
 
@@ -363,7 +443,7 @@ namespace Kage
     [AddComponentMenu("")]
     public sealed class PetalGraphic : MaskableGraphic
     {
-        Color hot = Color.white, maple = Color.red;
+        [SerializeField] Color hot = Color.white, maple = Color.red;
 
         public void Set(Color hotColour, Color mapleColour) { hot = hotColour; maple = mapleColour; SetVerticesDirty(); }
 
