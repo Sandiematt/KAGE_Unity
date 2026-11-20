@@ -88,6 +88,13 @@ namespace Kage
                     else if (p.soft == SoftKind.Coat) Cloth(d, p.clothLayer).Bind(multi);
                     else if (p.soft == SoftKind.Chain) _chains.Add(new SoftChains(multi, parent, Relative(p.chains, pivot), p.chainFeel));
                     if (p.glow > 1.01f) Glow(rt.main, p.glow);
+                    if (p.rimPts != null)   // a cel part (OpponentKit.AddCel): the world-fixed back-light rim round its outline
+                    {
+                        var rl = new Vector2[p.rimPts.Length];
+                        for (int k = 0; k < rl.Length; k++) rl[k] = p.rimPts[k] - pivot;
+                        rt.rim = MeshKit.MakeRenderer(p.name + "_Rim", parent, MeshKit.Poly(MeshKit.Grow(rl, p.rimGrow), p.rimColor ?? d.rimColor, p.name + "_Rim"), MeshKit.Alpha, 0);
+                        _all.Add(rt.rim);
+                    }
                     continue;
                 }
                 if (p.jigglePivot.HasValue)
