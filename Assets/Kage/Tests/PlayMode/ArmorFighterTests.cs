@@ -46,7 +46,7 @@ namespace Kage.Tests
         [Test]
         public void WithoutAnArmourDrawingKagesRigHasNoArmourParts()
         {
-            foreach (var id in new[] { "tachibana_yoroi", "kasane_haori", null })
+            foreach (var id in new[] { "tachibana_yoroi", "kozane_do", null })
             {
                 using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: KageWearing(id));
                 Assert.IsEmpty(ArmourRenderers(fight.Kage), id);
