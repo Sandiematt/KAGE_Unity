@@ -162,7 +162,7 @@ namespace Kage.Tests
                 vfxGo = FreshVfx(vfxGo);
 
                 // Redline Counter (phase two): the stance, then the punish answering a jab into it
-                f = Ability(4, -0.5f, 0.5f, k => k.Add(24).Add(1, buttons: "P").Add(600), 0.65f);
+                f = Ability(4, -0.4f, 0.4f, k => k.Add(24).Add(1, buttons: "P").Add(600), 0.65f);
                 bool stance = false, punish = false;
                 for (int i = 0; i < 100 && !punish; i++)
                 {

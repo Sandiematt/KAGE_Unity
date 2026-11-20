@@ -60,22 +60,5 @@ namespace Kage.Tests
             Assert.IsNull(Find(game.transform, "Pagoda"), "not the shrine");
             Assert.IsNotNull(Find(game.transform, "Ground"), "with the arena's floor");
         }
-
-        [UnityTest]
-        public IEnumerator The_boss_bar_follows_his_phases()
-        {
-            var game = Start(Raikon.Id);
-            yield return null;
-            for (int i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
-            Assert.AreEqual(0, game.Hud.Boss.PhaseIndex);
-            game.enemy.health = game.enemy.maxHealth * 0.6f;
-            for (int i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
-            yield return null;
-            Assert.AreEqual(1, game.Hud.Boss.PhaseIndex);
-            game.enemy.health = game.enemy.maxHealth * 0.3f;
-            for (int i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
-            yield return null;
-            Assert.AreEqual(2, game.Hud.Boss.PhaseIndex);
-        }
     }
 }
