@@ -36,7 +36,8 @@ namespace Kage
         public bool Visible;
         public string Id, Name, Title, ArtId, PhaseName, PhaseLabel;
         public Color Accent;
-        public float Hp = 1f, Chip = 1f, Hurt;
+        /// <summary>Health as drawn (eased), its trail, and the health the bar is heading for.</summary>
+        public float Hp = 1f, Chip = 1f, Health = 1f, Hurt;
         public bool Low;
         public int PhaseIndex, PhaseCount;
         public float[] Marks = new float[0];
@@ -212,6 +213,7 @@ namespace Kage
                     _bTrail.Step(Ratio(f.Foe), dt);
                     Boss.Hp = _bTrail.Value;
                     Boss.Chip = _bTrail.Chip;
+                    Boss.Health = Ratio(f.Foe);
                     Boss.Low = Ratio(f.Foe) < Low;
                 }
             }
