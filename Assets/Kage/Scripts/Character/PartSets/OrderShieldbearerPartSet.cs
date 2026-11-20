@@ -593,7 +593,7 @@ namespace Kage
         /// <summary>
         /// The JS <c>orderShield</c>: a tall lacquered plank shield, bowed at top and bottom, two plank seams, two iron bands with
         /// silver rivets, the Order mark and a crimson brush stroke; centred a little in front of the near hand and strapped to the near
-        /// forearm, so it follows the arm. The JS shield (26 x 80 JS px) at the scale that makes it a third taller than the JS
+        /// forearm, so it follows the arm. The JS shield (26 x 80 JS px) at the scale that makes it about a sixth taller than the JS
         /// proportion of the body, so it reads at fighting distance: 107 px wide, about 345 px tall.
         /// </summary>
         static void Tate(RigDef d)
