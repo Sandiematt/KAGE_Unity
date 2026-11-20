@@ -94,13 +94,15 @@ The JS keeps the screens in `70-ui.js` (`UIManager`), the palette in `71-theme.j
 | Weapon preview: the blade illustration turning in front of the sun over a faint warrior | `startPreview` | `ArmoryScreen.Preview`, `ArmoryBladeSway`, `ArmoryPreviewMotion` | ported now (the JS drawing of every weapon, sway, bob, turn and shimmer) |
 | Helmet preview: Kage's head wearing the helmet | `startPreview` | `ArmoryWorld` | ported (live Kage) |
 | Armor tab: a row of tall cards, Kage in each armour | `armorScreenHTML`, `startArmorCards` | `ArmoryScreen.Card`, `ArmoryWorld` | ported; cards rise in turn: ported now |
-| Weapon tiles: the sword | `renderArmory` (`.ar-tile`, `drawWeaponIcon`) | `ArmoryScreen.Tile`, `GearArt` | ported now (the design's renders and the JS drawing of the four boss swords) |
-| Helmet tiles: the helmet | `paintIcon` | `ArmoryScreen.Tile`, `GearArt` | ported now (the JS drawing of all 19 helmets, in place of the 兜 glyph) |
+| Weapon tiles: the sword | `renderArmory` (`.ar-tile`, `drawWeaponIcon`) | `ArmoryScreen.Tile`, `GearArt` | ported now (the design's renders and the JS drawing of the boss sword) |
+| Helmet tiles: the helmet | `paintIcon` | `ArmoryScreen.Tile`, `GearArt` | ported now (the JS drawing of the 14 helmets the Armory lists, in place of the 兜 glyph) |
 | Armour cards and chips: the armour | `paintIcon`, `startArmorCards` | `ArmoryScreen.Card`, `GearArt` | ported (live Kage on the cards); the JS drawing is also on the results chip and the profile: ported now |
 | Detail panel: rarity, name, lore, description, level, stats with the next-level preview, perks or rage art, lock box | `renderArmory` (`.ar-det`) | `ArmoryScreen.Detail`, `ArmoryView` | ported; fades in when the item changes: ported now |
 | Buy, Upgrade, Equip buttons | `renderArmory` (`.ar-acts`) | `ArmoryScreen.Button`, `ArmoryController` | ported |
-| Armor line and Trophies chips | `armorScreenHTML` (`.al-chips`) | `ArmoryScreen.ArmorBody` | ported |
-| Tile rise (`wRise`, 25 ms apart), hover lift | `renderArmory` | `ArmoryScreen.Tile` | ported now |
+| Armor line and Trophies chips | `armorScreenHTML` (`.al-chips`) | none | removed on purpose (SAN-85, owner: "remove the trophies section completely"): the Armor tab is one list, with an owned Act I reward armour after the shop armours |
+| Items the Armory lists | `renderArmory` | `ArmoryListing`, `ArmoryView.Items` | listed only when implemented in Unity (SAN-108): the table of every weapon, helmet and armour with its class is `docs/armory-items.md` |
+| Pick on click, not on hover | `renderArmory` (`.ar-tile` click) | `ArmoryTilePick`, `ArmoryScreen.Tile`, `Card` | changed (SAN-108): hover, arrows and the stick only highlight a tile (lift and wash); a click, or Enter, Space, J or A on the focused tile, selects it |
+| Tile rise (`wRise`, 25 ms apart), hover lift | `renderArmory` | `ArmoryScreen.Tile` | ported now; hover and focus no longer change the selection (SAN-108) |
 | "Acquired" and "tempered" toasts | `buy`, `upgrade` | `ArmoryController` toast, `ToastLayer` | ported now |
 | Rim-light outline on the armour cards' fighters | `startArmorCards` (`rim`) | none | not ported: it is part of how the character is drawn (fights unchanged) |
 
@@ -154,7 +156,7 @@ The JS keeps the screens in `70-ui.js` (`UIManager`), the palette in `71-theme.j
 | Foe panel | `showHud` (`.fp.right`) | `Hud` | ported |
 | Boss bar: art card, phases, name, track, phase marks, hurt shake | `showHud` (`.boss-bar`), `bossArtHTML` | `Hud.Boss` | ported (no 3D turn or light sweep on the card) |
 | Clock and round pips | `showHud` (`.clock`) | `Hud` | ported |
-| Road strip: track, encounter marks, Kage marker | `showHud` (`.hud-road`) | `Hud` | ported (no clue count: clues are not played) |
+| Road strip: track, encounter marks, Kage marker | `showHud` (`.hud-road`) | `Hud`, `HudLayoutRects` | ported (no clue count: clues are not played); the label is centred under the strip, between the two health numbers (SAN-108: left-aligned it ran over Kage's health number; the JS CSS has no fix for this) |
 | Pause button | `showHud` (`.hud-pause`) | `Hud.PauseRequested` | ported |
 | Combo counter | `showHud` (`.combo`) | `Hud` | ported |
 | Stage title card, tutorial prompt slip | Unity addition (spec story 81) | `Hud.StageCard`, `StageHudPanel` | ported |

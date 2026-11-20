@@ -8,14 +8,16 @@ using UnityEngine;
 namespace Kage.Tests
 {
     /// <summary>
-    /// Every armour the Armory offers has its own look on the preview Kage (SAN-90 rework: "each armor should have different design
-    /// like first 2 ones"). Seam: the Armory's rows (<see cref="ArmoryView.Items"/>) -> the rig the equipped armour builds. Before the
-    /// rework only Ikazuchi-do and Shiden Yoroi had a drawing and the other eight trophies all rendered as Kage's plain red coat.
+    /// Every armour has its own look on Kage (SAN-90 rework: "each armor should have different design like first 2 ones"). Seam: the
+    /// armour list (the shop armours from <see cref="ArmoryView.Items"/>, the ten trophy armours from the tables) -> the rig the equipped
+    /// armour builds. Before the rework only Ikazuchi-do and Shiden Yoroi had a drawing and the other eight trophies all rendered as Kage's
+    /// plain red coat. SAN-108 stops the Armory listing the eight later-act trophies, but their drawings stay for the acts that use them.
     /// </summary>
     public class TrophyLookTests
     {
-        static string[] Trophies => ArmoryView.Items(ArmoryTab.Armor, ArmorLine.Trophy);
-        static string[] Line => ArmoryView.Items(ArmoryTab.Armor, ArmorLine.Line);
+        // the Armory lists only the Act I reward armours (SAN-108), but all ten trophy drawings stay for the later acts: read the tables
+        static string[] Trophies => JsTables.Armors.Where(a => a.Tier == "trophy").Select(a => a.Id).ToArray();
+        static string[] Line => ArmoryView.Items(ArmoryTab.Armor, GameRules.DefaultSave(false));
 
         static RigDef Kage(string armor)
         {
@@ -56,7 +58,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void TheArmoryOffersTenTrophies()
+        public void TheTablesHoldTenTrophyArmoursAndEachKeepsItsDrawing()
         {
             Assert.AreEqual(10, Trophies.Length);
             CollectionAssert.Contains(Trophies, "shirabe_do");
@@ -79,7 +81,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void EveryArmourTheArmoryOffersHasItsOwnLook()
+        public void EveryArmourTheArmoryOffersOrASaveCouldOwnHasItsOwnLook()
         {
             var seen = new Dictionary<string, string>();
             foreach (var id in Line.Concat(Trophies).Where(i => JsTables.Armor(i).Tier != "starter"))

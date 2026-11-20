@@ -100,7 +100,7 @@ namespace Kage.Tests
         // ---- browsing ----
 
         [UnityTest]
-        public IEnumerator Moving_across_the_tiles_selects_each_item_and_the_preview_shows_each_blade()
+        public IEnumerator Moving_across_the_tiles_only_highlights_and_confirm_selects_the_item_and_shows_its_blade()
         {
             StartFlow(false, s => { s.owned.weapons["tsubame"] = 1; });
             yield return null;
@@ -109,7 +109,11 @@ namespace Kage.Tests
             Assert.AreEqual("tile:kagetsu", Focus);
             flow.Send(MenuCommand.Right);
             Assert.AreEqual("tile:tsubame", Focus);
-            Assert.AreEqual("tsubame", Armory.SelectedId, "browsing selects, like pointing at it");
+            // SAN-108: focus (arrows, stick, hover) only highlights; the selection changes on click or confirm
+            Assert.AreEqual("kagetsu", Armory.SelectedId, "moving the focus selects nothing");
+            Assert.AreEqual("big_w_kagetsu", Armory.View.PreviewKey, "the preview still shows the selected blade");
+            flow.Send(MenuCommand.Submit);
+            Assert.AreEqual("tsubame", Armory.SelectedId, "confirm selects the focused tile");
             Assert.AreEqual("big_w_tsubame", Armory.View.PreviewKey, "the preview shows the selected blade");
             Assert.IsNotNull(Ui.Tex(Armory.View.PreviewKey));
             Assert.AreEqual("kagetsu", flow.Controller.Save.equipped.weapon, "only equipping changes the save");
@@ -122,7 +126,7 @@ namespace Kage.Tests
             yield return null;
             flow.Controller.OpenArmory();
             yield return null;
-            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" })
+            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "raiko_no_tachi" })
             {
                 Armory.Select(id);
                 Assert.AreEqual("big_w_" + id, Armory.View.PreviewKey, id);
@@ -160,9 +164,10 @@ namespace Kage.Tests
             flow.Send(MenuCommand.Next);
             Assert.AreEqual(ArmoryTab.Armor, Armory.Tab);
             var ids = Armory.View.Tiles.Select(t => t.Id).ToArray();
-            Assert.AreEqual(8, ids.Length);
-            yield return Until(() => flow.ArmoryWorld.Fighters.Count == 8, 4f, "the eight armour cards");
-            for (int i = 0; i < 8; i++)
+            // dev mode owns the eight shop armours and the two Act I rewards (SAN-108: one list, no Trophies row)
+            Assert.AreEqual(10, ids.Length);
+            yield return Until(() => flow.ArmoryWorld.Fighters.Count == 10, 4f, "the ten armour cards");
+            for (int i = 0; i < 10; i++)
             {
                 Assert.AreEqual(ids[i], flow.ArmoryWorld.Fighters[i].Character.armor, "card " + i);
                 Assert.AreEqual("shiro_maki", flow.ArmoryWorld.Fighters[i].Character.helmet);
@@ -172,10 +177,9 @@ namespace Kage.Tests
             Armory.Select("ronin_yoroi");
             yield return null;
             Assert.AreEqual(builds, flow.ArmoryWorld.Builds);
-            // the trophies are a second row
-            Armory.SetLine(ArmorLine.Trophy);
-            yield return Until(() => flow.ArmoryWorld.Fighters.Count == 10, 4f, "the ten trophies");
-            Assert.AreEqual("ikazuchi_do", flow.ArmoryWorld.Fighters[0].Character.armor);
+            // the reward armours stand after the shop armours in the same row
+            Assert.AreEqual("ikazuchi_do", flow.ArmoryWorld.Fighters[8].Character.armor);
+            Assert.AreEqual("shiden_yoroi", flow.ArmoryWorld.Fighters[9].Character.armor);
         }
 
         // ---- buying, upgrading, equipping ----
@@ -308,7 +312,13 @@ namespace Kage.Tests
             yield return null;
             Release(pad.dpad.right);
             yield return null;
-            Assert.AreEqual("tsubame", Armory.SelectedId, "the d-pad moves across the tiles");
+            Assert.AreEqual("tile:tsubame", Focus, "the d-pad moves the focus across the tiles");
+            Assert.AreEqual("kagetsu", Armory.SelectedId, "without selecting");
+            Press(pad.buttonSouth);
+            yield return null;
+            Release(pad.buttonSouth);
+            yield return null;
+            Assert.AreEqual("tsubame", Armory.SelectedId, "A selects the focused tile");
 
             Press(pad.buttonEast);
             yield return null;

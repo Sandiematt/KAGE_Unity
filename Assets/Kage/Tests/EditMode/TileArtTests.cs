@@ -17,7 +17,7 @@ namespace Kage.Tests
         public void Every_weapon_tile_shows_a_drawn_sword_that_exists()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Weapons);
-            Assert.Greater(v.Tiles.Length, 8);
+            Assert.AreEqual(7, v.Tiles.Length);
             foreach (var t in v.Tiles)
             {
                 Assert.IsNotNull(t.Art, t.Id);
@@ -27,28 +27,25 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void The_seven_shop_swords_use_the_design_renders_and_the_boss_swords_the_JS_canvas_drawing()
+        public void The_six_listed_shop_swords_use_the_design_renders_and_the_boss_sword_the_JS_canvas_drawing()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Weapons);
-            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" })
+            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" })
             {
                 var t = v.Tiles.Single(x => x.Id == id);
                 Assert.AreEqual(ArtSource.WeaponRender, t.Art.Source, id);
                 Assert.AreEqual("ui_w_" + id, t.Art.Key);
             }
-            foreach (var id in new[] { "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha" })
-            {
-                var t = v.Tiles.Single(x => x.Id == id);
-                Assert.AreEqual(ArtSource.WeaponIcon, t.Art.Source, id);
-                Assert.AreEqual("icon_w_" + id, t.Art.Key);
-            }
+            var raiko = v.Tiles.Single(x => x.Id == "raiko_no_tachi");
+            Assert.AreEqual(ArtSource.WeaponIcon, raiko.Art.Source);
+            Assert.AreEqual("icon_w_raiko_no_tachi", raiko.Art.Key);
         }
 
         [Test]
         public void Every_helmet_tile_shows_the_drawn_helmet_not_a_glyph()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Helmets);
-            Assert.Greater(v.Tiles.Length, 15);
+            Assert.AreEqual(14, v.Tiles.Length);
             foreach (var t in v.Tiles)
             {
                 Assert.AreEqual(ArtSource.HelmetIcon, t.Art.Source, t.Id);
@@ -58,18 +55,15 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Every_armour_card_in_both_rows_shows_the_armour()
+        public void Every_armour_card_shows_the_armour()
         {
-            foreach (var line in new[] { ArmorLine.Line, ArmorLine.Trophy })
+            var v = ArmoryView.Build(Save(), ArmoryTab.Armor);
+            Assert.AreEqual(10, v.Tiles.Length, "the shop armours and the two Act I rewards dev mode owns");
+            foreach (var t in v.Tiles)
             {
-                var v = ArmoryView.Build(Save(), ArmoryTab.Armor, null, line);
-                Assert.Greater(v.Tiles.Length, 7, line.ToString());
-                foreach (var t in v.Tiles)
-                {
-                    Assert.AreEqual(ArtSource.ArmorIcon, t.Art.Source, t.Id);
-                    Assert.AreEqual("icon_a_" + t.Id, t.Art.Key);
-                    Assert.IsNotNull(t.Art.Texture, "the armour drawing of " + t.Id);
-                }
+                Assert.AreEqual(ArtSource.ArmorIcon, t.Art.Source, t.Id);
+                Assert.AreEqual("icon_a_" + t.Id, t.Art.Key);
+                Assert.IsNotNull(t.Art.Texture, "the armour drawing of " + t.Id);
             }
         }
 
