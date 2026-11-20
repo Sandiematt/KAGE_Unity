@@ -105,7 +105,10 @@ namespace Kage
             Hud = hudGo.AddComponent<Hud>();
             Hud.Build(_camera);
 
-            player = fight.Spawn(KageCharacter.Def(SaveSource != null ? SaveSource() : SaveStore.AtPersistentDataPath().Load()), 0, new PlayerInputSource());
+            var save = SaveSource != null ? SaveSource() : SaveStore.AtPersistentDataPath().Load();
+            Hud.SetPlayerLevel(save.level);
+            Hud.PauseRequested += TogglePause;
+            player = fight.Spawn(KageCharacter.Def(save), 0, new PlayerInputSource());
             if (stretchData != null) { BuildStretch(fight, stretchData); return; }      // the session brings the foes
             _ai = new AIInputSource();
             if (NextFoeId != null) { foeId = NextFoeId; NextFoeId = null; }
@@ -136,6 +139,7 @@ namespace Kage
             Fight = fight.Build();
             Fight.Camera = Cam;
             Fight.Hud = Hud;        // what a rage art moves: the camera's override and the cut-in band (SAN-82)
+            Hud.BindEvents(Fight.Events);       // the HUD hears hits, phases and waves from the stream (SAN-108)
             Fight.Events.Published += OnCombatEvent;
             Fight.Begin();
             Cam.targets.Add(player.rig.Bone(B.Hips));
@@ -380,6 +384,16 @@ namespace Kage
             }
         }
 
+        /// <summary>P, Esc and the gamepad's Start pause the arena, like the HUD's pause button (SAN-108).</summary>
+        static bool PausePressed(Keyboard kb)
+        {
+            var pad = Gamepad.current;
+            return kb.pKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame || (pad != null && pad.startButton.wasPressedThisFrame);
+        }
+
+        /// <summary>Stops and restarts the arena's game time (the HUD's pause button, P, Esc, Start).</summary>
+        public void TogglePause() => GameFeel.paused = !GameFeel.paused;
+
         void HandleHotkeys()
         {
             var kb = Keyboard.current;
@@ -402,7 +416,7 @@ namespace Kage
             }
             if (kb.f5Key.wasPressedThisFrame) ReloadWithFoe(NextFoe(foeId));      // dev: next opponent (SAN-69)
             if (kb.f6Key.wasPressedThisFrame) ReloadWithGroup(Group ? 0 : GroupFightSize);      // dev: Kage vs 4 Footmen and back (SAN-83)
-            if (kb.pKey.wasPressedThisFrame) GameFeel.paused = !GameFeel.paused;
+            if (PausePressed(kb)) TogglePause();
             if (kb.f7Key.wasPressedThisFrame)       // dev: break (or restore) the player's sword (SAN-113)
             {
                 if (player.SwordBroken) player.RestoreSword(); else player.BreakSword();

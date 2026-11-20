@@ -186,8 +186,12 @@ namespace Kage
         {
             worldAttempt = Controller.Attempt;
             World.Finished += OnWorldFinished;
+            World.Hud.PauseRequested -= OnHudPause;
+            World.Hud.PauseRequested += OnHudPause;       // the HUD's pause button (SAN-108)
             World.Begin();
         }
+
+        void OnHudPause() { Send(MenuCommand.Pause); }
 
         void OnWorldFinished(FightResult r)
         {

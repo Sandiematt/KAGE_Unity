@@ -22,6 +22,12 @@ namespace Kage
         Brush,
         /// <summary>Rajdhani 700: HUD numbers.</summary>
         Num,
+        /// <summary>Teko 600: the fight HUD's names, titles and labels (JS --font-ui, SAN-108).</summary>
+        Teko,
+        /// <summary>Permanent Marker: the combo count (JS --font-brush, SAN-108).</summary>
+        Marker,
+        /// <summary>Yuji Boku kanji (subset): the rage icon (JS --font-kanji, SAN-108).</summary>
+        Kanji,
     }
 
     /// <summary>
@@ -75,6 +81,9 @@ namespace Kage
                 UiFont.Body => "barlow_400",
                 UiFont.Cond => "barlowc_600",
                 UiFont.Brush => "syuku_kanji",
+                UiFont.Teko => "teko_600",
+                UiFont.Marker => "marker_400",
+                UiFont.Kanji => "yuji_kanji",
                 _ => "rajdhani_700",
             };
             font = Resources.Load<Font>("UI/Fonts/" + file);
