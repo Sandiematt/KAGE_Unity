@@ -75,6 +75,12 @@ namespace Kage
         /// decides: this is used when <see cref="weaponId"/> is null or its family isn't registered yet.
         /// </summary>
         public string family = "katana";
+        /// <summary>
+        /// A per-character blade length (SAN-107), in metres from the guard to the tip along the drawn blade (Sword-bone units, before the build scale).
+        /// 0 (the default) = the family's <see cref="WeaponFamilyDef.bladeLength"/> times the weapon's reach. Set, it replaces both: <c>Fighter.SetBlade</c>
+        /// puts the Blade hit points exactly this long, so a character whose painted weapon is not the family's length (Raikon's tachi) hits where it is drawn.
+        /// </summary>
+        public float bladeLength;
         /// <summary>JS weapon id for stats and drawing; null = the family's reference weapon.</summary>
         public string weaponId;
         /// <summary>Weapon level 1..8 (the player's upgrade; foes fight at 1). Scales damage, move rate and reach (ADR-0006).</summary>

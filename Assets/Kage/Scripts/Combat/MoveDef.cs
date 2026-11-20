@@ -130,6 +130,19 @@ namespace Kage
         public MoveDef braceAnswer;
         public System.Func<Fighter, Fighter, bool> braceWhen;
 
+        // ---- more boss-move hooks (SAN-107, Raikon; Fighter.MoveHooks.cs). Off by default too. ----
+        /// <summary>The hazard stands on the current target's feet instead of ahead of the fighter (Skyfall's mark); with <see cref="HazardDef.followFrames"/> it follows the target.</summary>
+        public bool hazardOnTarget;
+        /// <summary>More projectiles the move throws, each on its own frame (Thunder Swing's second wave); <see cref="projectile"/> is the first.</summary>
+        public readonly List<(int frame, ProjectileDef def, Vector2 from)> extraThrows = new();
+        /// <summary>
+        /// Another version of this ability to start in place of it, asked of the fighter when the ability is pressed (Thunder Swing's two-wave swing in
+        /// the last phase, the shorter Redline stance); null or a null answer starts this move.
+        /// </summary>
+        public System.Func<Fighter, MoveDef> variantFor;
+        /// <summary>Posture the fighter's own bar takes on a frame (<c>fraction</c> of its maximum): Redline's spent stance costs Raikon a share of his posture.</summary>
+        public readonly List<(int frame, float fraction)> selfPosture = new();
+
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
         public MoveDef Key(int frame, Pose p, Ease e = Ease.OutQuad)
@@ -193,6 +206,12 @@ namespace Kage
         public MoveDef Cancel(int from) { cancelFrom = from; return this; }
         /// <summary>Lays <paramref name="def"/> down on <paramref name="frame"/>, <paramref name="ahead"/> metres in front of the fighter (SAN-104).</summary>
         public MoveDef Hazard(int frame, HazardDef def, float ahead) { hazardFrame = frame; hazard = def; hazardAhead = ahead; return this; }
+        /// <summary>Lays <paramref name="def"/> down on <paramref name="frame"/> on the current target's feet (SAN-107: Skyfall's mark).</summary>
+        public MoveDef HazardOnTarget(int frame, HazardDef def) { hazardFrame = frame; hazard = def; hazardOnTarget = true; return this; }
+        /// <summary>Throws another <paramref name="def"/> on <paramref name="frame"/> from <paramref name="from"/>, after the first (SAN-107: the second wave).</summary>
+        public MoveDef ThrowAlso(int frame, ProjectileDef def, Vector2 from) { extraThrows.Add((frame, def, from)); return this; }
+        /// <summary>The fighter's own posture takes <paramref name="fraction"/> of its maximum on <paramref name="frame"/> (SAN-107).</summary>
+        public MoveDef SelfPosture(int frame, float fraction) { selfPosture.Add((frame, fraction)); return this; }
         /// <summary>Vaults over the current target from <paramref name="from"/> to <paramref name="to"/> (SAN-105; see <see cref="vaultFrom"/>).</summary>
         public MoveDef Vault(int from, int to, float past, float height, float room, float margin)
         {

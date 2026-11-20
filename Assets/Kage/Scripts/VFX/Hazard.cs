@@ -10,6 +10,11 @@ namespace Kage
         public string id;
         /// <summary>Frames the ground mark shows with no hit.</summary>
         public int telegraphFrames;
+        /// <summary>
+        /// For this many of the first frames the hazard follows its owner's current target along the floor (SAN-107: Skyfall's mark follows Kage while the
+        /// storm gathers, then locks). 0 = it stays where it was laid.
+        /// </summary>
+        public int followFrames;
         /// <summary>Active frames after the telegraph.</summary>
         public int strikeFrames = 1;
         /// <summary>The box on the floor, metres (width, height); it stands on the ground point.</summary>
@@ -82,6 +87,7 @@ namespace Kage
             if (Phase == HazardPhase.Done) return;
             if (!Ctx.Clock.Advances(Owner)) return;
             Age++;
+            if (Age <= Def.followFrames && Owner.TryHazardFollowX(out float fx)) MoveTo(fx);
             int telegraph = Def.telegraphFrames;
             if (Age <= telegraph) return;
             if (Age == telegraph + 1)
@@ -91,6 +97,12 @@ namespace Kage
             }
             Strike();
             if (Age >= telegraph + Def.strikeFrames) Finish();
+        }
+
+        void MoveTo(float x)
+        {
+            transform.position = new Vector3(x, transform.position.y, transform.position.z);
+            Centre = new Vector2(x, Centre.y);
         }
 
         void Strike()

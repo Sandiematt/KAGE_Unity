@@ -2426,6 +2426,31 @@ namespace Kage.Rules
             Open = 0.55
         };
 
+        public static readonly JsSkyfall RaikonSkyfall = new JsSkyfall
+        {
+            Cd = 7,
+            Chance = 0.8,
+            Charge = 0.5,
+            Fall = 0.5,
+            Width = 130,
+            Dmg = 21,
+            Zap = 1.1,
+            Color = "#ff3b2f",
+            Range = new double[] { 460, 2400 }
+        };
+
+        public static readonly JsRaikonRedline RaikonRedline = new JsRaikonRedline
+        {
+            Cd = 6.5,
+            Settle = 0.24,
+            Punish = 0.1,
+            Dmg = 17,
+            Spent = 0.62,
+            SpentPosture = 38,
+            HurtPosture = 24,
+            Stance = new double[] { 1.5, 1.25 }
+        };
+
         public static readonly JsAiProfile[] AiProfiles = new JsAiProfile[]
         {
             new JsAiProfile
