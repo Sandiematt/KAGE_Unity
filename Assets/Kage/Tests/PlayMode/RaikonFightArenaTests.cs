@@ -52,6 +52,7 @@ namespace Kage.Tests
             Assert.IsNotNull(bar);
             Assert.AreEqual("RAIKON", bar.Name);
             Assert.AreEqual("the Lightning Ascendant", bar.Title);
+            Assert.AreEqual("boss_raikon", bar.ArtId, "the JS boss card");
             Assert.AreEqual(3, bar.PhaseCount);
             CollectionAssert.AreEqual(new[] { 0.66f, 0.33f }, bar.Marks.ToArray(), "a mark where each later phase opens");
 

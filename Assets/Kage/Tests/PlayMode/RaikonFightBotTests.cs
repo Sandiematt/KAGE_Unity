@@ -12,7 +12,7 @@ namespace Kage.Tests
     /// </summary>
     public class RaikonFightBotTests
     {
-        const int Seed = 107, Cap = 60 * 420, MaxQuiet = 900;
+        const int Seed = 107, Cap = 60 * 420, MaxQuiet = 900, ParryLead = 4;
 
         /// <summary>
         /// The SAN-95 Kage bot (walk in, cycle its buttons) with the JS tips for Raikon, reading only his move, its frame and its windows, the waves
@@ -31,8 +31,8 @@ namespace Kage.Tests
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             public HeadlessFight Fight;
-            public int Jumps, BackedOff, GuardedShock, SteppedOff, HeldBlade, GuardedCut, Guarded;
-            int _tick, _dashAt = -999, _jumpAt = -999;
+            public int Jumps, BackedOff, GuardedShock, SteppedOff, HeldBlade, GuardedCut, Guarded, Punished, Hopped;
+            int _tick, _dashAt = -999, _jumpAt = -999, _shockJumpAt = -999;
             public void Sample() { }
 
             bool Dash(Fighter self)
@@ -68,15 +68,14 @@ namespace Kage.Tests
                 foreach (var p in Fight.Ctx.Projectiles)
                 {
                     if (p.Def.id != RaikonAbilities.WaveId || p.Owner != opp || !p.Alive) continue;
-                    float gap = (p.Position.x - self.Pos.x) * Mathf.Sign(p.Dir * -1f);
                     float d = Mathf.Abs(p.Position.x - self.Pos.x);
                     bool approaching = Mathf.Sign(self.Pos.x - p.Position.x) == p.Dir;
-                    if (approaching && d < 2.2f && d > 0.8f && self.Grounded && !self.Busy && _tick - _jumpAt > 20)
+                    if (approaching && d < 1.7f && d > 0.5f && self.Grounded && !self.Busy && _tick - _jumpAt > 30)
                     {
                         _jumpAt = _tick;
                         Jumps++;
-                        return new FrameInput { dy = 1, dx = 0 };
                     }
+                    if (_tick - _jumpAt < 22) return new FrameInput { dy = 1 };      // over it: the wave runs along the floor; the jump button held, a full jump
                     if (approaching && d < 4f) return default;                     // wait for it
                 }
 
@@ -91,6 +90,14 @@ namespace Kage.Tests
                         return new FrameInput { dx = -toward, dash = Dash(self) };
                     }
                     if (dist > 5.2f) return default;
+                    foreach (var h in Fight.Ctx.Hazards)
+                    {
+                        if (h.Def.id != RaikonAbilities.ShockId || h.Owner != opp) continue;
+                        float hx = Mathf.Abs(self.Pos.x - h.Centre.x);
+                        if (hx > h.Def.size.x * 0.5f + 0.2f) return default;                                       // out of its reach
+                        if (h.Age >= h.Def.telegraphFrames - 10 && h.Age < h.Def.telegraphFrames + 8 && self.Grounded && !self.Busy) _shockJumpAt = _tick;
+                    }
+                    if (_tick - _shockJumpAt < 20) { Hopped++; return new FrameInput { dy = 1 }; }                // the shock is a floor box: over it
                     GuardedShock++;
                     return new FrameInput { guard = true };
                 }
@@ -99,19 +106,43 @@ namespace Kage.Tests
                     HeldBlade++;
                     return default;
                 }
-                if (m != null && (m.id == RaikonAbilities.MoveSwing || m.id == RaikonAbilities.MoveSwing2) && dist < 3.3f && opp.moveFrame >= m.hits[0].from - 10)
+                if (m != null && m.hits.Count > 0)
                 {
-                    GuardedCut++;
-                    return new FrameInput { guard = true };
-                }
-                if (m != null && m.hits.Count > 0 && opp.moveFrame <= m.hits.Max(h => h.to) && dist < 3.0f)
-                {
-                    Guarded++;
-                    return new FrameInput { guard = true };
+                    // any other blow, the cut included: a Guard press just before it lands is a parry (the JS tip: wait for the committed cut, PARRY it), and the
+                    // hold that follows blocks it; the bot stands still until then
+                    HitWindow next = null;
+                    int lastTo = 0;
+                    foreach (var w in m.hits)
+                    {
+                        lastTo = Mathf.Max(lastTo, w.to);
+                        if (w.to >= opp.moveFrame && (next == null || w.from < next.from)) next = w;
+                    }
+                    if (next != null && dist < 3.2f)
+                    {
+                        if (opp.moveFrame >= next.from - ParryLead)
+                        {
+                            if (m.id == RaikonAbilities.MoveSwing || m.id == RaikonAbilities.MoveSwing2) GuardedCut++; else Guarded++;
+                            return new FrameInput { guard = true };
+                        }
+                        return default;
+                    }
+                    // his blow is over and he is still recovering: the opening ("punish the follow-through")
+                    if (next == null && opp.moveFrame < m.total - 6)
+                    {
+                        Punished++;
+                        if (dist > 1.3f) return new FrameInput { dx = toward, dash = dist > 2.2f && Dash(self) };
+                        return _bot.Poll(self);
+                    }
+                    return default;
                 }
                 if (m != null && m.id == RaikonAbilities.MoveSkyfall) return new FrameInput { dx = toward };
-                if (dist > 2.6f && !self.Busy && (m == null || m.hits.Count == 0)) return new FrameInput { dx = toward, dash = Dash(self) };
-                return _bot.Poll(self);
+                if (opp.state is FState.Hitstun or FState.Down or FState.Launched)
+                {
+                    Punished++;
+                    return dist > 1.3f ? new FrameInput { dx = toward, dash = dist > 2.2f && Dash(self) } : _bot.Poll(self);        // staggered or knocked down: strike
+                }
+                if (dist > 2.3f && !self.Busy) return new FrameInput { dx = toward };       // close to his reach and wait for him to commit
+                return default;
             }
         }
 
@@ -143,14 +174,15 @@ namespace Kage.Tests
                       $"Storm Breaks {Count(RaikonAbilities.MoveBreak)} (slam hits {Hits(RaikonAbilities.MoveBreak)}, shock hits {Hits(RaikonAbilities.ShockId)}), " +
                       $"Skyfalls {Count(RaikonAbilities.MoveSkyfall)} (bolt hits {Hits(RaikonAbilities.BoltId)}), " +
                       $"Redlines {Count(RaikonAbilities.MoveRedline) + Count(RaikonAbilities.MoveRedlineShort)} (punish hits {Hits(RaikonAbilities.MovePunish)}); " +
-                      $"bot jumped {bot.Jumps}, backed off {bot.BackedOff}, guarded the shock {bot.GuardedShock}, stepped off marks {bot.SteppedOff}, held the blade {bot.HeldBlade}, guarded the cut {bot.GuardedCut}, other blows {bot.Guarded} frames; " +
+                      $"bot jumped {bot.Jumps} waves, backed off {bot.BackedOff}, jumped the shock {bot.Hopped}, guarded the shock {bot.GuardedShock}, stepped off marks {bot.SteppedOff}, held the blade {bot.HeldBlade}, guarded the cut {bot.GuardedCut}, other blows {bot.Guarded} frames, punished {bot.Punished} frames; " +
                       $"{f.Events(CombatEventType.Hit).Count()} hits, {f.Events(CombatEventType.Blocked).Count()} blocks, " +
-                      $"{f.Events(CombatEventType.Parried).Count(e => e.Target == f.Ronin)} of his parries, {f.Events(CombatEventType.Countered).Count()} counters, " +
+                      $"{f.Events(CombatEventType.Parried).Count(e => e.Source == f.Ronin)} of his blows parried, {f.Events(CombatEventType.Countered).Count()} counters, " +
                       $"{f.Events(CombatEventType.GuardBroken).Count()} guard-breaks; " +
                       $"Kage landed {f.Events(CombatEventType.Hit).Count(e => e.Source == f.Kage)} for {f.Events(CombatEventType.Hit).Where(e => e.Source == f.Kage).Sum(e => e.Damage):0}; " +
                       "Raikon's hits by move: " +
                       string.Join(", ", f.Events(CombatEventType.Hit).Where(e => e.Source == f.Ronin).GroupBy(e => e.MoveId).Select(g => $"{g.Key} {g.Count()}x{g.Sum(e => e.Damage):0}")));
 
+            Assert.That(frames / 60f, Is.InRange(100f, 240f), "the spec's 2 to 3 minutes for Raikon (this Kage has no gear, so a little over two)");
             Assert.IsTrue(ended, $"no knock-out in {Cap} frames (Kage {f.Kage.health:0.0}, Raikon {f.Ronin.health:0.0})");
             Assert.AreEqual(FState.KO, f.Ronin.state, "the bot beats him");
             CollectionAssert.AreEqual(new[] { 0, 1, 2 }, f.Events(CombatEventType.BossPhaseChanged).Select(e => e.Index).ToArray(), "all three phases opened, in order");

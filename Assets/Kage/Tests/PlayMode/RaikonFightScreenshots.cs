@@ -73,7 +73,6 @@ namespace Kage.Tests
             try
             {
                 int n = 12;
-                var d = f.Ronin.def;
                 for (int i = 0; i <= n; i++)
                 {
                     var p = f.Ronin.rig.World(B.Sword, Vector2.Lerp(f.Ronin.BladeBaseLocal, f.Ronin.BladeTipLocal, i / (float)n));
