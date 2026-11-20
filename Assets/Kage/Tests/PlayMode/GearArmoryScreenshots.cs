@@ -92,6 +92,13 @@ namespace Kage.Tests
             yield return Shot("armors_line");
             yield return Show(ArmoryTab.Armor, "ikazuchi_do", ArmorLine.Trophy);
             yield return Shot("armors_trophy");
+            // the rest of the trophies (SAN-90 rework: each has its own look), and the Mugen Armor's ring on its card
+            yield return Show(ArmoryTab.Armor, "kurokumo_yoroi", ArmorLine.Trophy);
+            yield return Shot("armors_trophy_end");
+            yield return Show(ArmoryTab.Armor, "shinsei_yoroi", ArmorLine.Trophy);
+            yield return Shot("armors_trophy_shinsei");
+            yield return Show(ArmoryTab.Armor, "mugen_yoroi", ArmorLine.Line);
+            yield return Shot("armors_line_mugen");
 
             // more of the families on the preview
             foreach (var id in new[] { "tsubame", "shizuka", "mizuchi", "yamigama", "iwakudaki" })
