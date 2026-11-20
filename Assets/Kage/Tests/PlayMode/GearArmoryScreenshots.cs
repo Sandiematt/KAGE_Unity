@@ -18,7 +18,7 @@ namespace Kage.Tests
     [Category("Screenshots")]
     public class GearArmoryScreenshots
     {
-        string dir, outDir;
+        string dir, outDir, shotDir;
         GameFlow flow;
 
         [SetUp]
@@ -28,6 +28,7 @@ namespace Kage.Tests
             Directory.CreateDirectory(dir);
             outDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-90", "unity"));
             Directory.CreateDirectory(outDir);
+            shotDir = outDir;
             UiClock.Skip = true;      // still images: every animation at its end state
         }
 
@@ -63,10 +64,9 @@ namespace Kage.Tests
 
         ArmoryController A { get { return flow.Controller.Armory; } }
 
-        IEnumerator Show(ArmoryTab tab, string id, ArmorLine? line = null)
+        IEnumerator Show(ArmoryTab tab, string id)
         {
             A.SelectTab(tab);
-            if (line.HasValue) A.SetLine(line.Value);
             A.Select(id);
             // the fighters are built after a short pause; give them a second to stand and the cloth to settle
             yield return new WaitForSecondsRealtime(1.2f);
@@ -86,24 +86,22 @@ namespace Kage.Tests
             yield return Shot("weapons_buy");
             yield return Show(ArmoryTab.Weapons, "kagetsu");
             yield return Shot("weapons_upgrade");
-            yield return Show(ArmoryTab.Weapons, "shinsen");
+            yield return Show(ArmoryTab.Weapons, "raiko_no_tachi");
             yield return Shot("weapons_locked");
             yield return Show(ArmoryTab.Helmets, "oni_menpo");
             yield return Shot("helmets_buy");
-            yield return Show(ArmoryTab.Armor, "ronin_yoroi", ArmorLine.Line);
+            yield return Show(ArmoryTab.Armor, "ronin_yoroi");
             yield return Shot("armors_line");
-            yield return Show(ArmoryTab.Armor, "ikazuchi_do", ArmorLine.Trophy);
-            yield return Shot("armors_trophy");
-            // the rest of the trophies (SAN-90 rework: each has its own look), and the Mugen Armor's ring on its card
-            yield return Show(ArmoryTab.Armor, "kurokumo_yoroi", ArmorLine.Trophy);
-            yield return Shot("armors_trophy_end");
-            yield return Show(ArmoryTab.Armor, "shinsei_yoroi", ArmorLine.Trophy);
-            yield return Shot("armors_trophy_shinsei");
-            yield return Show(ArmoryTab.Armor, "mugen_yoroi", ArmorLine.Line);
+            yield return Show(ArmoryTab.Armor, "mugen_yoroi");
             yield return Shot("armors_line_mugen");
+            // SAN-108: no Trophies row. A reward armour the save owns stands after the shop armours in the same row.
+            A.Save.owned.armors["ikazuchi_do"] = 1;
+            A.Save.owned.armors["shiden_yoroi"] = 1;
+            yield return Show(ArmoryTab.Armor, "ikazuchi_do");
+            yield return Shot("armors_reward_owned");
 
             // more of the families on the preview
-            foreach (var id in new[] { "tsubame", "shizuka", "mizuchi", "yamigama", "iwakudaki" })
+            foreach (var id in new[] { "tsubame", "shizuka", "mizuchi", "yamigama" })
             {
                 yield return Show(ArmoryTab.Weapons, id);
                 yield return Shot("weapon_" + id);
@@ -118,6 +116,62 @@ namespace Kage.Tests
             flow.Controller.BeginLoadout();
             yield return new WaitForSecondsRealtime(0.6f);
             yield return Shot("loadout_change_gear");
+        }
+
+        // SAN-108: pointing at a tile only highlights it; the preview and the details change when it is clicked or confirmed.
+        [UnityTest]
+        public IEnumerator Capture_hover_does_not_apply_and_click_does()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            shotDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-108", "unity"));
+            Directory.CreateDirectory(shotDir);
+            Start(MidGame());
+            yield return null;
+            flow.Controller.OpenArmory();
+            yield return null;
+
+            // Weapons: Kagetsu is selected; the pointer moves onto Onikiri
+            yield return Show(ArmoryTab.Weapons, "kagetsu");
+            Assert.AreEqual("big_w_kagetsu", A.View.PreviewKey);
+            yield return Shot("pick_weapons_1_start");
+            flow.Active.Nav.FocusOn(Item("tile:onikiri"), true);
+            yield return new WaitForSecondsRealtime(0.5f);
+            Assert.AreEqual("kagetsu", A.SelectedId, "hovering selected nothing");
+            Assert.AreEqual("big_w_kagetsu", A.View.PreviewKey);
+            yield return Shot("pick_weapons_2_hover_onikiri");
+            flow.Send(MenuCommand.Submit);
+            yield return new WaitForSecondsRealtime(0.5f);
+            Assert.AreEqual("onikiri", A.SelectedId, "the click selected it");
+            Assert.AreEqual("big_w_onikiri", A.View.PreviewKey);
+            yield return Shot("pick_weapons_3_click_onikiri");
+
+            // Helmets: the live Kage keeps his helmet while the pointer is on Oni Menpo, and wears it after the click
+            yield return Show(ArmoryTab.Helmets, "shiro_maki");
+            flow.Active.Nav.FocusOn(Item("tile:oni_menpo"), true);
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.AreEqual("shiro_maki", A.SelectedId);
+            yield return Shot("pick_helmets_1_hover_oni_menpo");
+            flow.Send(MenuCommand.Submit);
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.AreEqual("oni_menpo", A.SelectedId);
+            yield return Shot("pick_helmets_2_click_oni_menpo");
+
+            // Armor: ten cards scroll; moving the focus to the last one scrolls the row (and the Kages in it) without selecting it
+            A.Save.owned.armors["ikazuchi_do"] = 1;
+            A.Save.owned.armors["shiden_yoroi"] = 1;
+            yield return Show(ArmoryTab.Armor, "tachibana_yoroi");
+            flow.Active.Nav.FocusOn(Item("tile:shiden_yoroi"), true);
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.AreEqual("tachibana_yoroi", A.SelectedId, "focusing a card selected nothing");
+            yield return Shot("pick_armor_focus_last_card");
+            shotDir = outDir;
+        }
+
+        NavItem Item(string key)
+        {
+            foreach (var i in flow.Active.Nav.Items) if (i != null && i.key == key) return i;
+            Assert.Fail("no item " + key);
+            return null;
         }
 
         // ---------------- capture (as in FlowScreenshots) ----------------
@@ -171,7 +225,7 @@ namespace Kage.Tests
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
             tex.SetPixels32(outPx);
             tex.Apply();
-            File.WriteAllBytes(Path.Combine(outDir, name + ".png"), tex.EncodeToPNG());
+            File.WriteAllBytes(Path.Combine(shotDir, name + ".png"), tex.EncodeToPNG());
 
             foreach (var e in canvases) { e.c.renderMode = e.mode; e.c.worldCamera = e.cam; }
             foreach (var l in layers) if (l.t != null) l.t.gameObject.layer = l.layer;

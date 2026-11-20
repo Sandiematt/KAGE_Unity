@@ -95,6 +95,24 @@ namespace Kage.Tests
             yield return Shot("stretch");
         }
 
+        // SAN-108: on the road, before any gate, the label reads "ENCOUNTERS 0/3". It used to run over Kage's health number; it is centred now.
+        [UnityTest]
+        public IEnumerator A_road_walking_before_the_first_gate()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            Directory.CreateDirectory(Dir);
+            KageGame.NextStretchId = "act1.stretch1";
+            var game = Start();
+            yield return null;
+            yield return new WaitForSecondsRealtime(4.0f);
+            Assert.AreEqual(StretchState.Walking, game.Stretch.State, "still on the road, before the first gate");
+            Assert.AreEqual(HudLayout.Stretch, game.Hud.Model.Layout);
+            StringAssert.StartsWith("ENCOUNTERS 0/", game.Hud.Model.Road.Label);
+            GameFeel.paused = true;
+            yield return new WaitForSecondsRealtime(1.0f);
+            yield return Shot("road_encounters");
+        }
+
         [UnityTest]
         public IEnumerator A_boss_fight()
         {
