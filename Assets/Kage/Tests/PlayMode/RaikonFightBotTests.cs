@@ -27,7 +27,7 @@ namespace Kage.Tests
         /// <item>His other blows: hold Guard while one is coming when he is within the tachi's reach.</item>
         /// </list>
         /// </summary>
-        sealed class StormBot : IInputSource
+        internal sealed class StormBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             public HeadlessFight Fight;

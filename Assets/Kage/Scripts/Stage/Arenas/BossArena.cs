@@ -46,7 +46,7 @@ namespace Kage
             var env = GameRules.BossEnvOf(stageId);
             if (env == null) return false;
             ArenaBuilder.BuildPhysics(root);
-            EnvBackdrop.Build(root, cam, EnvLook.For(env));
+            EnvBackdrop.Build(root, cam, GameRules.Stage(stageId)?.Enemy == Raikon.Id ? EnvLook.RaikonStorm : EnvLook.For(env));      // Raikon fights under his storm (SAN-107)
             return true;
         }
     }
