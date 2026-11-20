@@ -28,11 +28,13 @@ namespace Kage.Tests
             Directory.CreateDirectory(dir);
             outDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-67", "unity"));
             Directory.CreateDirectory(outDir);
+            UiClock.Skip = true;      // still images: every animation at its end state
         }
 
         [TearDown]
         public void TearDown()
         {
+            UiClock.Reset();
             if (flow != null) Object.DestroyImmediate(flow.gameObject);
             foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
             Time.timeScale = 1f;

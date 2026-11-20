@@ -58,11 +58,11 @@ const STRIPS = {
   title_reveal: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title'); ${U}.runAfterShow();`, action: `${U}.renderTitle(); ${U}.show('title'); ${U}.runAfterShow();`, ms: 1400 },
   // the ink wipe from the title to the campaign map
   wipe: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.action('campaign', document.querySelector('[data-a=campaign]'))`, ms: 1300 },
-  campaign_open: { dev: false, setup: `${FRESH}; ${U}.renderTitle(); ${U}.show('title');`, action: `${U}.selStage = 'prologue.1'; ${U}.renderCampaign(); ${U}.show('campaign');`, ms: 1300 },
-  loadout_open: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.preparePrefight(KAGE.Game.stageConfig('prologue.1')); ${U}.show('prefight'); ${U}.runAfterShow();`, ms: 1400 },
-  results_open: { dev: false, setup: `${FRESH}; ${clearStages(['prologue.1', 'act1.stretch1', 'act1.stretch2'])}`, action: fakeResult('act1.sub1', true), ms: 3200 },
-  armory_open: { dev: false, mid: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: showAr('weapons', 'onikiri'), ms: 1500 },
-  pause_open: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.openHelp()`, ms: 900 },
+  campaign_open: { dev: false, setup: `${FRESH}; ${U}.renderTitle(); ${U}.show('title');`, action: `${U}.action('campaign', document.querySelector('[data-a=campaign]'))`, ms: 1500 },
+  loadout_open: { dev: true, setup: `${U}.selStage = 'prologue.1'; ${U}.renderCampaign(); ${U}.show('campaign');`, action: `${U}.action('fight-stage', document.body)`, ms: 1600 },
+  results_open: { dev: false, setup: `${FRESH}; ${clearStages(['prologue.1', 'act1.stretch1', 'act1.stretch2'])}`, action: fakeResult('act1.sub1', true).replace(`${U}.showResult(o); ${U}.show('result'); ${U}.runAfterShow();`, `${U}.go('result', () => ${U}.showResult(o));`), ms: 3000 },
+  armory_open: { dev: false, mid: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.action('armory', document.querySelector('[data-a=armory]'))`, ms: 1700 },
+  controls_open: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.openHelp()`, ms: 900 },
   toast: { dev: true, setup: `${U}.renderTitle(); ${U}.show('title');`, action: `${U}.toast('Acquired', 'Onikiri')`, ms: 3300 },
 };
 
