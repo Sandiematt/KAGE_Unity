@@ -334,6 +334,18 @@ namespace Kage
         float _time;
         Vector2 _bodyVel;
         public float groundY = float.MinValue;
+        /// <summary>
+        /// World wind on top of the part's breeze (SAN-76): it pushes every particle along it, by the part's drag (light cloth more,
+        /// heavy plates less) times <see cref="WindPush"/>, more towards the free end, gusts and all. Calm by default: the chain then
+        /// runs exactly the code it ran before wind existed.
+        /// </summary>
+        public Wind wind;
+
+        /// <summary>
+        /// How hard a wind pushes, per m/s and unit of drag. Stronger than the breeze's trailing drag because a hanging part catches
+        /// the wind like a sail, and the shape matching would otherwise hold its drawn shape against anything short of a gale.
+        /// </summary>
+        public const float WindPush = 6f;
 
         /// <param name="mesh">the part's mesh, in the bone's local space</param>
         /// <param name="bone">the bone the part (and every chain root) is pinned to</param>
@@ -427,6 +439,8 @@ namespace Kage
                 float gust = _feel.breeze * (0.6f + Mathf.PerlinNoise(_time * 0.8f + k * 3.1f, 1.9f) * 0.9f);
                 Vector2 air = back * gust;
                 c.p[0] = c.prev[0] = _bone.TransformPoint(c.rest[0]);
+                bool windy = !wind.IsCalm;
+                Vector2 blow = windy ? wind.At(_time, c.p[0].x) * (_feel.drag * WindPush) : Vector2.zero;
                 for (int i = 1; i < n; i++)
                 {
                     float u = i / (float)(n - 1);
@@ -435,6 +449,7 @@ namespace Kage
                     float flutter = Mathf.Sin(_time * 5.7f - i * 1.1f + k * 2.3f) * (1.5f + 5f * freedom) * u * u;
                     Vector2 acc = new Vector2(0f, -_feel.gravity) + Vector2.ClampMagnitude((air - v) * _feel.drag * Mathf.Lerp(0.5f, 1.5f, u), 60f)
                                   + new Vector2(0f, flutter);
+                    if (windy) acc += Vector2.ClampMagnitude(blow * Mathf.Lerp(0.5f, 1.5f, u), 160f);
                     Vector2 vel = (c.p[i] - c.prev[i]) * 0.985f;
                     c.prev[i] = c.p[i];
                     c.p[i] += vel + acc * h * h;
