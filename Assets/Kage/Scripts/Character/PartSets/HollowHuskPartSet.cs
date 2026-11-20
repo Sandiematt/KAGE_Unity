@@ -167,7 +167,7 @@ namespace Kage
             // the huge bandaged fist: an oval along the forearm, wrap lines across it, a glowing crack over the knuckles
             {
                 Vector2 u = (ha - el).normalized;
-                float Rf = 6.6f * Ua, ang = Mathf.Atan2(u.y, u.x) * Mathf.Rad2Deg;
+                float Rf = 6.6f * Ua * 1.25f, ang = Mathf.Atan2(u.y, u.x) * Mathf.Rad2Deg;
                 Vector2 c = ha + u * Rf * 0.3f;
                 var fist = Oval(c.x, c.y, Rf * 1.12f, Rf * 0.94f, ang);
                 var fr = new Frame(c, u * Rf, new Vector2(-u.y, u.x) * Rf);
@@ -311,8 +311,8 @@ namespace Kage
         {
             // JS robe: back [5 links, 11 px, 30 -> 46 wide, 6 teeth], flap [5, 10.5, 22 -> 34, 5 teeth], rag 7, hung from the hip
             int links = 5, teeth = back ? 6 : 5, seed = back ? 0 : 3;
-            float w0 = (back ? 30f : 22f) * U * 1.2f, w1 = (back ? 46f : 34f) * U * 1.2f;
-            Vector2 top = back ? new Vector2(908f, 412f) : new Vector2(852f, 404f), hem = back ? new Vector2(940f, 700f) : new Vector2(842f, 690f);
+            float w0 = (back ? 30f : 22f) * U * 0.8f, w1 = (back ? 46f : 34f) * U * 0.8f;
+            Vector2 top = back ? new Vector2(918f, 412f) : new Vector2(850f, 404f), hem = back ? new Vector2(958f, 622f) : new Vector2(840f, 598f);
             var left = new float[(links + 1) * 2];
             var right = new float[(links + 1) * 2];
             var mid = new float[(links + 1) * 2];
@@ -395,25 +395,25 @@ namespace Kage
         {
             // shide: zigzag papers hanging from the rope, swinging
             Vector2 down = (Sp.Px(0f, 0f) - Sp.Px(1f, 0f)).normalized, nf = Sp.ay.normalized;
-            float k = 4.2f * U;
+            float k = 4.2f * U * 0.62f, pw = U * 0.7f;
             int i = 0;
             foreach (float w in new[] { -8f, 1f, 9f })
             {
                 Vector2 a = Sp.Px(0.02f, w);
-                var zz = new List<Vector2> { a, a + nf * 3f * U };
+                var zz = new List<Vector2> { a, a + nf * 3f * pw };
                 foreach (var (x, y) in new[] { (3f, 1f), (0.6f, 1f), (3.4f, 2f), (1f, 2f), (3.6f, 3f), (1.4f, 3.6f), (0f, 2.3f), (2.4f, 2.3f), (-0.2f, 1.3f), (2.2f, 1.3f), (0f, 0.4f) })
-                    zz.Add(a + nf * x * U + down * y * k);
+                    zz.Add(a + nf * x * pw + down * y * k);
                 var paper = V(Xy(zz.ToArray()));
-                AddCloth(d, "Shide_" + (i + 1), B.Chest, Slot.Belt, paper, Paper, 1.2f * U, 0.4f * U,
+                AddCloth(d, "Shide_" + (i + 1), B.Chest, Slot.Belt, paper, Paper, 1.2f * pw, 0.4f * pw,
                     new ChainFeel { stiffRoot = 0.4f, stiffTip = 0.1f, drag = 2.4f, gravity = 4f, breeze = 0.6f },
-                    new[] { Xy(a + nf * 1.6f * U, a + nf * 1.6f * U + down * 1.8f * k, a + nf * 1.6f * U + down * 3.6f * k) }, 0, rim: false);
+                    new[] { Xy(a + nf * 1.6f * pw, a + nf * 1.6f * pw + down * 1.8f * k, a + nf * 1.6f * pw + down * 3.6f * k) }, 0, rim: false);
                 i++;
             }
 
             // the rope: a thick twisted band across the waist, the twist of its strands, a knot at the front
-            Vector2 r0 = Sp.Px(0.085f, -14.6f + 1.4f), r1 = Sp.Px(0.085f, 13.6f - 1.4f);
-            float rr = 0.085f * Sp.ax.magnitude + 1f;
-            var rope = Capsule(r0.x, r0.y, r1.x, r1.y, rr, rr);
+            // the JS band (u 0 to 0.17 across the waist) with its corners eased, as a thick rope's ends are
+            var rope = RoundedAll(Sp, 0f, -12.2f, 0f, -13.4f, 0.05f, -13.6f, 0.12f, -13.6f, 0.17f, -13.4f, 0.17f, -12.2f,
+                0.17f, 11.4f, 0.17f, 12.6f, 0.12f, 12.9f, 0.05f, 12.9f, 0f, 12.6f, 0f, 11.4f);
             var strands = new List<(Vector2[] pts, Color col)>();
             for (int j = 1; j < 14; j++)
             {
@@ -459,7 +459,7 @@ namespace Kage
             });
 
             // the far horn stub, behind the cowl
-            AddCel(d, "Horn_Far", B.Head, Slot.Head, Rounded(Hd, -0.36f, -0.86f, 1, -0.74f, -1.42f, 1, -0.5f, -1.46f, 1, -0.14f, -0.98f, 1), MaskFar, R * 0.2f, 0f, 1, true, null, PartRole.Metal);
+            AddCel(d, "Horn_Far", B.Head, Slot.Head, Rounded(Hd, -0.36f, -0.86f, 0, -0.66f, -1.2f, 0, -0.74f, -1.42f, 1, -0.62f, -1.36f, 1, -0.5f, -1.46f, 1, -0.34f, -1.16f, 0, -0.14f, -0.98f, 0), MaskFar, R * 0.2f, 0f, 1, true, null, PartRole.Metal);
 
             // the heavy cowl, open at the face, a dashed violet seam over it
             var cowl = RoundedAll(Hd, 0.6f, -0.84f, 0.1f, -1.2f, -0.7f, -1.12f, -1.24f, -0.5f, -1.34f, 0.4f, -1.2f, 1.1f, -0.4f, 1.3f, 0.1f, 1.22f,
@@ -497,7 +497,7 @@ namespace Kage
             d.parts.Add(new PartDef { name = "Mask", bone = B.Head, order = Slot.HeadTop * 4, role = PartRole.Body, polys = maskPolys, rim = false, rimPts = mask });
 
             // the near horn stub over it
-            AddCel(d, "Horn_Near", B.Head, Slot.HeadTop, Rounded(Hd, 0.2f, -0.92f, 1, 0.08f, -1.54f, 1, 0.32f, -1.62f, 1, 0.38f, -1.36f, 1, 0.54f, -0.96f, 1), Mask, R * 0.2f, R * 0.07f, 1, true, null, PartRole.Metal);
+            AddCel(d, "Horn_Near", B.Head, Slot.HeadTop, Rounded(Hd, 0.2f, -0.92f, 0, 0.1f, -1.24f, 0, 0.08f, -1.54f, 1, 0.2f, -1.5f, 1, 0.32f, -1.62f, 1, 0.38f, -1.36f, 0, 0.54f, -0.96f, 0), Mask, R * 0.2f, R * 0.07f, 1, true, null, PartRole.Metal);
 
             // the eye: the JS angry triangle, white fading to violet at the inner corner
             {
