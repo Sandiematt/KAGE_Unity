@@ -168,7 +168,6 @@ namespace Kage
                 _stats = new FightStatsRecorder(Fight.Events, Player);
                 Match = new FightSession(Fight, FightFormat.Boss, Player, new[] { Foe }, stageId);
                 Match.RoundStarting += PlaceFighters;
-                Match.IntroBeat += () => Hud.Announce(FoeName.ToUpperInvariant(), Color.white, 1.0f);
                 Match.FightBegan += OnMatchFightBegan;
                 Match.MatchEnded += _ => OnMatchEnded();
                 Hud.SetFormat(FightFormat.Boss);        // one round, no clock: the campaign's single fight
