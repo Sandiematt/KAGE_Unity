@@ -90,7 +90,8 @@ namespace Kage.Tests
             var d = CharacterCatalog.Get(id);
             var rig = CharacterCatalog.PartSet(d.partSet).Build(d);
             var part = rig.parts.Single(p => p.name == "Do");
-            var pts = part.polys != null ? part.polys.SelectMany(q => q.pts).ToArray() : part.pts;
+            // a smooth cel part (SAN-100 rework) carries its outline as rimPts; the Footman's multi-polygon dō is its plate
+            var pts = part.rimPts ?? (part.polys != null && part.pts == null ? part.polys.SelectMany(q => q.pts).ToArray() : part.pts);
             return pts.Max(v => v.x) - pts.Min(v => v.x);
         }
 

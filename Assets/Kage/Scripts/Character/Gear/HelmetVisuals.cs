@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace Kage
 {
-    /// <summary>What Kage's own head hair does under a helmet (JS: <c>drawKageHair</c> under the kabuto, nothing under a hood).</summary>
+    /// <summary>What Kage's own head hair does under a helmet. The JS draws it under a band and the open oni mask, nothing under a hood; SAN-72 rework: also nothing under the closed kabuto, where the port's larger hair poked through the visor and the neck guard.</summary>
     public enum HairUnderHelmet
     {
-        /// <summary>Covered: a hood or cap hides it, a plain bare head shows below.</summary>
+        /// <summary>Covered: a hood, a cap or a closed kabuto hides it, a plain bare head shows below.</summary>
         Hidden,
-        /// <summary>Kept and still moving under a kabuto or a band.</summary>
+        /// <summary>Kept and still moving under a band or the open oni mask.</summary>
         Kept,
         /// <summary>Only the hair that hangs below the brim shows (the straw hat).</summary>
         BelowBrim,
@@ -37,11 +37,11 @@ namespace Kage
             ["sugegasa"] = new Look { name = "straw_kasa", hair = HairUnderHelmet.BelowBrim, draw = HelmetLooks.StrawKasa },
             ["hachigane"] = new Look { name = "storm_band", hair = HairUnderHelmet.Kept, draw = HelmetLooks.StormBand },
             ["kasumi_men"] = new Look { name = "veil", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.Veil },
-            ["tetsu_kabuto"] = new Look { name = "iron_kabuto", hair = HairUnderHelmet.Kept, draw = HelmetLooks.IronKabuto },
+            ["tetsu_kabuto"] = new Look { name = "iron_kabuto", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.IronKabuto },
             ["oni_menpo"] = new Look { name = "oni_mask", hair = HairUnderHelmet.Kept, draw = HelmetLooks.OniMask },
             ["hoshi_kabuto"] = new Look { name = "sentinel_helm", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.SentinelHelm },
-            ["shika_kabuto"] = new Look { name = "sage_antlers", hair = HairUnderHelmet.Kept, draw = HelmetLooks.SageAntlers },
-            ["utsuro_kabuto"] = new Look { name = "hollow_crest", hair = HairUnderHelmet.Kept, draw = HelmetLooks.HollowCrest },
+            ["shika_kabuto"] = new Look { name = "sage_antlers", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.SageAntlers },
+            ["utsuro_kabuto"] = new Look { name = "hollow_crest", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.HollowCrest },
             ["shikko_zukin"] = new Look { name = "executioner", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.Executioner },
             ["raijin_kabuto"] = new Look { name = "raijin_kabuto", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.RaijinKabuto },
             ["sumi_eboshi"] = new Look { name = "sumi_eboshi", hair = HairUnderHelmet.Hidden, draw = HelmetLooks.SumiEboshi },
