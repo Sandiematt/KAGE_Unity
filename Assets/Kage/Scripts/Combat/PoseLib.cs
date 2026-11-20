@@ -24,9 +24,12 @@ namespace Kage
         public static Pose Crouch() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-20f).Head(14f)
             .FootN(0.24f, 0.13f).FootF(-0.26f, 0.16f, -25f).HandF(0.27f, 0.74f).Blade(-18f).Grip();
 
-        /// <summary>High guard: both hands raised in front of the chest, the blade held straight up across the line of attack.</summary>
+        /// <summary>
+        /// High guard: both hands raised in front of the chest, the blade upright across the line of attack and leaning a little back
+        /// (SAN-118: like uke-nagashi, a blow slides off it backwards instead of being stopped dead).
+        /// </summary>
         public static Pose Block() => new Pose().Hip(-0.03f, -0.1f, -2f).Chest(-2f).Head(-6f)
-            .Feet(0.2f, -0.28f).HandF(0.24f, 1.2f, 0f).Blade(84f).Grip();
+            .Feet(0.2f, -0.28f).HandF(0.24f, 1.26f, 0f).Blade(97f).Grip();
 
         /// <summary>Low guard (Gedan): crouched, both hands low in front, the blade lowered straight across the legs.</summary>
         public static Pose CrouchBlock() => new Pose().Hip(-0.02f, -0.3f, 0f).Chest(-16f).Head(8f)

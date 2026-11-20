@@ -84,8 +84,9 @@ are root space, 0 = forward, 90 = up.
    recovery blends to chūdan. Iai and Shadow Step finish with a chiburi-like flick.
 9. **Parries deflect, they do not stop.** Uke-nagashi raises the blade overhead slanted so the incoming cut slides off
    the shinogi while the hips turn off the line; suriage rides up the opponent's blade. Both flow straight into a cut.
-   *Changes:* the high guard slants the blade back over the head like an uke-nagashi; Mirror Guard (Kasumi) answers
-   with the Kage Counter thrust out of the same hands.
+   *Changes:* the high guard raises the hands a little and leans the upright blade back (97 degrees, was 84), so a blow
+   would slide off it backwards as in uke-nagashi (a full overhead slant would stop covering the body against Mid
+   blows, which the stand guard blocks); Mirror Guard (Kasumi) answers with the Kage Counter thrust out of the same hands.
 10. **Tsuki is linear.** A thrust travels along the blade's own line, driven by the hips and the rear hand, the hands
     turning in at the end; it is not an arc. *Changes:* Kage Counter drops from Kasumi into a level thrust whose tip
     travels along the blade during the active frames (tested).
