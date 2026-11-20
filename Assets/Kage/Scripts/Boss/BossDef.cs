@@ -98,6 +98,7 @@ namespace Kage
             // ---- one line per tuned boss ----
             Register(FootmanBoss.Boss());          // the test boss (SAN-102)
             Register(Garan.Boss());                // Garan: the JS phases with his clinch in both (SAN-104)
+            Register(Shiden.Boss());               // Shiden: the JS phases with his charging thrust in both (SAN-106)
         }
 
         /// <summary>Adds or replaces a boss (validated).</summary>

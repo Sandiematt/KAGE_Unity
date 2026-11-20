@@ -2114,6 +2114,7 @@ namespace Kage.Rules
             {
                 Id = "kuroe",
                 Art = "B\u014djutsu \u00b7 Kukishin-ry\u016b",
+                Poise = 1,
                 Strings = new JsStyleString[]
                 {
                     new JsStyleString
@@ -2174,6 +2175,7 @@ namespace Kage.Rules
             {
                 Id = "garan",
                 Art = "Karate \u00b7 Sum\u014d",
+                Poise = 0.85,
                 Strings = new JsStyleString[]
                 {
                     new JsStyleString
@@ -2236,6 +2238,7 @@ namespace Kage.Rules
             {
                 Id = "hisame",
                 Art = "Tessenjutsu",
+                Poise = 1.15,
                 Strings = new JsStyleString[]
                 {
                     new JsStyleString
@@ -2290,6 +2293,7 @@ namespace Kage.Rules
             {
                 Id = "shiden",
                 Art = "S\u014djutsu \u00b7 H\u014dz\u014din-ry\u016b",
+                Poise = 0.9,
                 Strings = new JsStyleString[]
                 {
                     new JsStyleString
@@ -2357,6 +2361,7 @@ namespace Kage.Rules
             {
                 Id = "raikon",
                 Art = "Jigen-ry\u016b",
+                Poise = 0.75,
                 Strings = new JsStyleString[]
                 {
                     new JsStyleString
@@ -2410,6 +2415,15 @@ namespace Kage.Rules
                     }
                 }
             }
+        };
+
+        public static readonly JsBrace ShidenBrace = new JsBrace
+        {
+            Hold = 1.25,
+            Reach = 280,
+            Trigger = 215,
+            Dmg = 15,
+            Open = 0.55
         };
 
         public static readonly JsAiProfile[] AiProfiles = new JsAiProfile[]

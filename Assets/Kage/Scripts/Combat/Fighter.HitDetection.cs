@@ -198,7 +198,7 @@ namespace Kage
             }
             if (!t.HittableBy(w)) return;
             _hitLog.Add((w, t));
-            if (RollCrit())
+            if (w.critical || RollCrit())
             {
                 info.crit = true;
                 info.dmg = DamageCalc.For(this, t, w.dmg, true, true);
@@ -226,7 +226,7 @@ namespace Kage
             {
                 if (!t.Overlap(p, w.radius, w, out var zone, out var contact)) continue;
                 _hitLog.Add((w, t));
-                bool crit = RollCrit();
+                bool crit = w.critical || RollCrit();
                 int dmg = DamageCalc.For(this, t, w.dmg, crit, true);
                 var info = new HitInfo
                 {

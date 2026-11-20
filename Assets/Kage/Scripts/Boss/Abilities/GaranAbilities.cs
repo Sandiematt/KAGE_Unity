@@ -40,15 +40,16 @@ namespace Kage
         public const string ShockCue = "VFX_Anime_Ground_Crack";
 
         // ---- constants of the JS ability code (not data, so not in the generated tables) ----
-        const double StormBreakDmg = 19;            // 40-ai.js stormBreak: the strike is 19 x the variant's dmg
-        const double StormBreakGb = 110;            //   ...and leans gb 110 on a guard
-        const double StormBreakRecovery = 0.75;     //   ...the ability lasts the wind-up + 0.75 s
-        const double ShockStartPx = 120;            //   ...the shockwave starts 120 px x the build scale in front
+        public const double StormBreakDmg = 19;            // 40-ai.js stormBreak: the strike is 19 x the variant's dmg
+        public const double StormBreakGb = 110;            //   ...and leans gb 110 on a guard
+        public const double StormBreakRecovery = 0.75;     //   ...the ability lasts the wind-up + 0.75 s
+        public const double ShockStartPx = 120;            //   ...the shockwave starts 120 px x the build scale in front
         const double TsuppariTell = 0.5, PalmGap = 0.17, PalmWalkPx = 170, TsuppariRecovery = 0.5;   // 41-styles/garan.js garanTsuppari
         const int Palms = 4;
         const double PalmDmg = 6, LastPalmDmg = 10, PalmGb = 24;
-        const double ChargeTell = 0.6, ChargeDur = 3.2, ChargeRunPx = 1050, ChargeBackPx = 40;      // 40-ai.js charge
-        const double ChargeDmg = 22, ChargeGb = 120, ChargeStop = 0.6, ChargeWallStun = 1.7;
+        public const double ChargeTell = 0.6, ChargeWallStun = 1.7;                                   // 40-ai.js charge (Shiden's charging thrust reads these, SAN-106)
+        const double ChargeDur = 3.2, ChargeRunPx = 1050, ChargeBackPx = 40;
+        const double ChargeDmg = 22, ChargeGb = 120, ChargeStop = 0.6;
         const double ThrowDmg = 16, ThrowCarry = 0.5, ThrowReachPx = 70, ThrowLiftPx = 120;         // 30-combat.js applyThrow, 20-fighter.js updateThrow
         const double ThrowVxPx = 360, ThrowVyPx = 380;
         const float ClinchChance = 0.55f;           // 41-styles/garan.js decide(): a guard within 115 px, chance(0.55)
