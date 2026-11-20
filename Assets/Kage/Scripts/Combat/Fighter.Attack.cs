@@ -157,7 +157,9 @@ namespace Kage
                 else if (IsKunaiThrow(m)) ThrowKunai();
                 else SpawnCrescent();
             }
+            foreach (var t in m.extraThrows) if (Passed(t.frame)) SpawnMoveProjectile(t.def, t.from);      // a second wave (SAN-107)
             if (m.hazard != null && Passed(m.hazardFrame)) SpawnMoveHazard(m);
+            if (m.selfPosture.Count > 0) ApplySelfPosture(m);
             if (m.isThrow) ThrowUpdate();
 
             if (m.airborne && m.endsOnLanding && f > 4 && Grounded) { Landed(); return; }

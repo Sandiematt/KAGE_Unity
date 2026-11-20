@@ -121,7 +121,7 @@ namespace Kage
         {
             Vector2 b = def.bladeBaseLocal, t = def.bladeTipLocal;
             float drawn = (t - b).magnitude;
-            float want = Family.bladeLength * Weapon.reach;
+            float want = Character != null && Character.bladeLength > 0f ? Character.bladeLength : Family.bladeLength * Weapon.reach;     // a character's own blade, Raikon's painted tachi (SAN-107)
             bool polearm = Family.grip == GripPose.Polearm;
             _bladeSet = Family.HasBlade && drawn > 0f && (polearm || Mathf.Abs(want - drawn) > 1e-3f);
             // a polearm's line is its straight shaft (the katana's blade is drawn with a slight curve)
