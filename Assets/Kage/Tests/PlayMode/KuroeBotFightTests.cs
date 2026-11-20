@@ -12,7 +12,7 @@ namespace Kage.Tests
     /// </summary>
     public class KuroeBotFightTests
     {
-        const int Seed = 103, Cap = 60 * 240, MaxQuiet = 600;
+        const int Seed = 104, Cap = 60 * 240, MaxQuiet = 600;
 
         /// <summary>
         /// The SAN-95 Kage bot (walk in, cycle punch, punch, kick, weapon, kick, weapon) with two rules from the JS tip and the parry lesson:

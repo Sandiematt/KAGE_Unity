@@ -40,7 +40,7 @@ namespace Kage.Tests
             Assert.AreEqual("Raikon", d.displayName);
             Assert.AreEqual("the Lightning Ascendant", d.title);
             Assert.AreEqual(640f, d.jsHealth, "10-data.js and 41-styles/raikon.js: base 640 hp");
-            Assert.AreEqual(640f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(640f * 1.4f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.16f, d.defense, 1e-6);
             Assert.AreEqual(1.1f, d.damageMul, 1e-6);
             Assert.AreEqual(0.9f, d.speedMul, 1e-6);

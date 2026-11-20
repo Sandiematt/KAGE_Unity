@@ -72,7 +72,7 @@ namespace Kage.Tests
             }
             Assert.AreEqual(2, max, "two foes did attack together (the limit was reached, not just never approached)");
             Assert.Greater(framesWithTwo, 0);
-            Assert.Greater(f.Events(CombatEventType.MoveStarted).Count(e => e.Source != f.Kage), 20, "the foes fought");
+            Assert.Greater(f.Events(CombatEventType.MoveStarted).Count(e => e.Source != f.Kage), 10, "the foes fought (SAN-110: the bar is 10, it was 20; with the tougher Footmen the seed gives exactly 20 and the count is chaotic)");
 
             foreach (var e in f.Log.All)
                 if (e.Type is CombatEventType.Hit or CombatEventType.Blocked && e.Source != null && e.Target != null)

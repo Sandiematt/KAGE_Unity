@@ -21,7 +21,7 @@ namespace Kage.Tests
             Assert.AreEqual("Order Ironclad", d.displayName);
             Assert.AreEqual("Order of Silence", d.title);
             Assert.AreEqual(280f, d.jsHealth);
-            Assert.AreEqual(280f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(280f * 1.35f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.14f, d.defense, 1e-6);
             Assert.AreEqual(1.15f, d.damageMul, 1e-6);
             Assert.AreEqual(0.9f, d.speedMul, 1e-6);

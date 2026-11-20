@@ -21,7 +21,7 @@ namespace Kage.Tests
             Assert.AreEqual("Hollow Husk", d.displayName);
             Assert.AreEqual("Memory echo", d.title);
             Assert.AreEqual(270f, d.jsHealth);
-            Assert.AreEqual(270f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(270f * 1.4f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.1f, d.defense, 1e-6);
             Assert.AreEqual(1.15f, d.damageMul, 1e-6);
             Assert.AreEqual(0.88f, d.speedMul, 1e-6);
