@@ -190,7 +190,7 @@ namespace Kage
         public void ToggleMoveList() => _moveListPanel.SetActive(!_moveListPanel.activeSelf);
 
         /// <summary>The posture bar's fill (0..1) on the left (Kage's) or right (the opponent's) side, as last drawn.</summary>
-        public float PostureBar(bool right) => (right ? _r : _l).posture.fill;
+        public float PostureBar(bool right) => (right ? _model.Foe : _model.Player).Posture;
         public bool MoveListOpen => _moveListPanel.activeSelf;
 
         static Sprite CircleSprite()

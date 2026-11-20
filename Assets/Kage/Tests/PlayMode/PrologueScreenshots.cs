@@ -62,6 +62,8 @@ namespace Kage.Tests
             hud.Bind(f.Kage);
             hud.SetNames("KAGE  影", "");
             hud.SetFormat(FightFormat.Stretch);
+            hud.BindEvents(f.Ctx.Events);
+            hud.BindStretch(f.Session);
             f.Ctx.Hud = hud;
             f.Ctx.Camera = rig;
 

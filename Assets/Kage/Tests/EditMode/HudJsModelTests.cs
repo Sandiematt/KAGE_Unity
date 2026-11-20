@@ -32,7 +32,12 @@ namespace Kage.Tests
             ClockShown = true, ClockRuns = true, RoundsShown = true, RoundsToWin = 2,
         };
 
-        static HudFrame Boss() => new HudFrame { Layout = HudLayout.Boss, Player = Kage(), Foe = Foe("raikon", 640f), HasFoe = true, RoundsToWin = 1 };
+        static HudFrame Boss()
+        {
+            var raikon = Foe("raikon", 640f);
+            raikon.MaxHealth = 640f;
+            return new HudFrame { Layout = HudLayout.Boss, Player = Kage(), Foe = raikon, HasFoe = true, RoundsToWin = 1 };
+        }
 
         static HudFrame Road(float progress = 0f) => new HudFrame
         {
