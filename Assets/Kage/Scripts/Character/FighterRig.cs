@@ -238,6 +238,15 @@ namespace Kage
                 if (b == B.CoatN || b == B.CoatF) continue;
                 bones[i].localRotation = Quaternion.Euler(0f, 0f, p.a[i]);
             }
+            // the katana turned over (Pose.edgeUp, SAN-118): the sword bone mirrored across the blade's own line, so the edge is
+            // drawn on the other side while the blade's line (and its hit points) stays put: a turn of 2 x the bind angle and a flip
+            var sw = bones[(int)B.Sword];
+            if (p.edgeUp)
+            {
+                sw.localRotation = Quaternion.Euler(0f, 0f, p.a[(int)B.Sword] + 2f * def.bladeBindAngle);
+                sw.localScale = new Vector3(1f, -1f, 1f);
+            }
+            else if (sw.localScale.y < 0f) sw.localScale = Vector3.one;
             bones[(int)B.Hips].localPosition = _bindLocal[(int)B.Hips] + (Vector3)p.hip;
         }
 
