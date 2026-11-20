@@ -121,7 +121,7 @@ namespace Kage.Tests
             Assert.AreEqual("districts", BossArena.EnvFor("garan"), "act1.sub2");
             Assert.AreEqual("districts", BossArena.EnvFor("shiden"), "act1.sub4");
             Assert.IsNull(BossArena.EnvFor("order_footman"), "a regular foe has no arena of its own");
-            Assert.IsNull(BossArena.EnvFor("raikon"), "the boss stage is not a sub-boss arena");
+            Assert.AreEqual("rooftops", BossArena.EnvFor("raikon"), "the boss stage (SAN-107) has no env of its own: Act I's");
             Assert.AreEqual("rooftops", EnvLook.For("rooftops").id);
             Assert.AreEqual("districts", EnvLook.For("districts").id);
             Assert.AreEqual("rooftops", EnvLook.For("hoshimura").id, "an env with no look of its own paints as the rooftops");

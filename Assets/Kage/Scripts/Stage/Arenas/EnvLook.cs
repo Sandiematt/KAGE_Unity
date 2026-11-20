@@ -59,6 +59,23 @@ namespace Kage
             wash = KMath.Hex("#344252").WithA(0.28f),
         };
 
+        /// <summary>
+        /// Raikon's arena (SAN-107): Act I's rooftops (act1.boss has no env of its own) under his storm, as the JS <c>StormDirector</c> gives him "a heavier
+        /// sky": a blood-dark sky, a dim bone moon behind red cloud, a red haze and a red wash. Placeholder paint like the rest; no JS number reads it.
+        /// </summary>
+        public static readonly EnvLook RaikonStorm = new()
+        {
+            id = "rooftops_storm", name = "The Forgotten Rooftops (Raikon's storm)",
+            skyTop = KMath.Hex("#0C0506"), skyMid = KMath.Hex("#2A1013"), skyLow = KMath.Hex("#140A0B"),
+            star = Rooftops.star.WithA(0.15f), moon = KMath.Hex("#C4A79E"), moonHalo = KMath.Hex("#B3382E").WithA(0.3f), cloud = KMath.Hex("#1C0A0D").WithA(0.88f),
+            far = KMath.Hex("#1B1214"), farWindow = Rooftops.farWindow,
+            fog = KMath.Hex("#5A1C1C").WithA(0.32f),
+            rope = Rooftops.rope, lantern = Rooftops.lantern, lanternGlow = Rooftops.lanternGlow,
+            roofs = KMath.Hex("#100A0C"), roofLines = Rooftops.roofLines,
+            floorTop = KMath.Hex("#1A1013"), floorBottom = Rooftops.floorBottom, floorLines = Rooftops.floorLines, floorEdge = KMath.Hex("#4A2A26"),
+            wash = KMath.Hex("#6A1210").WithA(0.2f),
+        };
+
         /// <summary>The look of a JS env id; the rooftops for an env with no look of its own.</summary>
         public static EnvLook For(string env) => env switch
         {

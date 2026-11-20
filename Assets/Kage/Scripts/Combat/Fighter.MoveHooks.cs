@@ -23,7 +23,25 @@ namespace Kage
         void SpawnMoveHazard(MoveDef m)
         {
             if (ctx == null) return;
-            Hazard.Spawn(ctx, this, m.hazard, new Vector2(Pos.x + facing * m.hazardAhead, Pos.y));
+            float x = Pos.x + facing * m.hazardAhead;
+            if (m.hazardOnTarget && opponent != null) x = Mathf.Clamp(opponent.Pos.x, StageMin, StageMax);       // Skyfall's mark opens under Kage (SAN-107)
+            Hazard.Spawn(ctx, this, m.hazard, new Vector2(x, Pos.y));
+        }
+
+        /// <summary>The x a hazard of this fighter follows to: the current target's, inside the stage (SAN-107). False when there is no target.</summary>
+        public bool TryHazardFollowX(out float x)
+        {
+            x = 0f;
+            if (opponent == null) return false;
+            x = Mathf.Clamp(opponent.Pos.x, StageMin, StageMax);
+            return true;
+        }
+
+        /// <summary>Posture the move's own bar takes on a frame it passes (SAN-107: Redline's spent stance).</summary>
+        void ApplySelfPosture(MoveDef m)
+        {
+            foreach (var p in m.selfPosture)
+                if (Passed(p.frame)) AddPosture(PostureMax * p.fraction, null, m.id);
         }
 
         /// <summary>Called for every resolved blow of this fighter: a hit or a block by a move with an onContact follow-up marks it.</summary>
@@ -92,12 +110,13 @@ namespace Kage
         }
 
         /// <summary>Throws the move's projectile (Smoke Bomb): a speed in the def's band from the fighter's own "throw/" stream.</summary>
-        void SpawnMoveProjectile(MoveDef m)
+        void SpawnMoveProjectile(MoveDef m) => SpawnMoveProjectile(m.projectile, m.projectileFrom);
+
+        void SpawnMoveProjectile(ProjectileDef d, Vector2 from)
         {
             if (ctx == null) return;
-            var d = m.projectile;
             float speed = d.speedMax > d.speed ? ctx.Random.Stream("throw/" + FighterId).Range(d.speed, d.speedMax) : d.speed;
-            var at = new Vector2(Pos.x + facing * m.projectileFrom.x, Pos.y + m.projectileFrom.y);
+            var at = new Vector2(Pos.x + facing * from.x, Pos.y + from.y);
             Projectile.Spawn(ctx, this, d, at, facing, speed);
         }
 

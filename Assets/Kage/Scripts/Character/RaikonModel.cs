@@ -20,6 +20,32 @@ namespace Kage
         static readonly Vector2 Grip = new(545, 665), BladeTip = new(105, 1005);                // tachi: grip in the hand, tip
         static readonly Vector2 HipN = new(505, 800), KneeN = new(518, 1000), AnkleN = new(520, 1118);
 
+        /// <summary>The blade's guard on the skeleton's sword bone (<c>KageModel.Skeleton</c>'s blade base): the length is measured from here, as the hit line is.</summary>
+        const float BladeGuard = 0.08f;
+
+        static float? _paintedBlade;
+
+        /// <summary>
+        /// The painted tachi's blade, guard to tip, in Sword-bone units (SAN-107): how far the painting's <c>Tachi_Blade</c> runs along the drawn blade's axis
+        /// from the sword bone's pivot (the grip), less the guard. This is Raikon's <see cref="CharacterDef.bladeLength"/>, so his hit line ends where his
+        /// painted blade does; the tachi family's 1.5 m would put it more than a metre beyond. Computed from the traced regions, so it follows the art.
+        /// </summary>
+        public static float PaintedBladeLength => _paintedBlade ??= MeasurePaintedBlade();
+
+        static float MeasurePaintedBlade()
+        {
+            Vector2 axis = (G(BladeTip) - G(Grip)).normalized;
+            float tip = 0f;
+            foreach (var r in RaikonRegions.Parts)
+            {
+                if (r.name != "Tachi_Blade") continue;
+                foreach (var xy in r.polygons)
+                    for (int i = 0; i + 1 < xy.Length; i += 2)
+                        tip = Mathf.Max(tip, Vector2.Dot(G(new Vector2(xy[i], xy[i + 1])) - G(Grip), axis));
+            }
+            return tip - BladeGuard;
+        }
+
         // ---- palette of the trace ----
         static readonly Color Ink = new Color32(1, 0, 0, 255);
 

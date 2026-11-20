@@ -183,7 +183,7 @@ namespace Kage
         {
             var info = new HitInfo
             {
-                attacker = this, w = w, dmg = DamageCalc.For(this, t, w.dmg, false, true), kb = new Vector2(w.kb.x * facing, w.kb.y),
+                attacker = this, w = w, dmg = DamageCalc.For(this, t, w.dmg, false, !w.fixedDamage), kb = new Vector2(w.kb.x * facing, w.kb.y),
                 zone = zone, contact = contact, moveId = move != null ? move.id : null, window = move != null ? move.hits.IndexOf(w) : -1,
             };
             if (t is Fighter tf)
@@ -201,7 +201,7 @@ namespace Kage
             if (w.critical || RollCrit())
             {
                 info.crit = true;
-                info.dmg = DamageCalc.For(this, t, w.dmg, true, true);
+                info.dmg = DamageCalc.For(this, t, w.dmg, true, !w.fixedDamage);
             }
             var res = t.ReceiveHit(info);
             OnHitResolved(t, info, res);
@@ -227,7 +227,7 @@ namespace Kage
                 if (!t.Overlap(p, w.radius, w, out var zone, out var contact)) continue;
                 _hitLog.Add((w, t));
                 bool crit = w.critical || RollCrit();
-                int dmg = DamageCalc.For(this, t, w.dmg, crit, true);
+                int dmg = DamageCalc.For(this, t, w.dmg, crit, !w.fixedDamage);
                 var info = new HitInfo
                 {
                     attacker = this, w = w, dmg = dmg, kb = new Vector2(w.kb.x * facing, w.kb.y), zone = zone, contact = contact, crit = crit,

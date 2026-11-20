@@ -107,6 +107,30 @@ namespace Kage.Rules
         public double Hold, Reach, Trigger, Dmg, Open;
     }
 
+    /// <summary>
+    /// Raikon's Skyfall (JS <c>RAIKON_SKYFALL</c>, 10-data.js; SAN-107): its cooldown (s), the distance band he calls it from (px), the chance, how
+    /// long the mark follows his foe while the storm gathers (s, x the mode's wind-up), how long from the lock to the bolt (s: the dodge window), the
+    /// strike's width (px), its damage, how long a struck foe stays electrified (s) and the lightning's colour.
+    /// </summary>
+    public sealed class JsSkyfall
+    {
+        public double Cd, Chance, Charge, Fall, Width, Dmg, Zap;
+        public double[] Range;
+        public string Color;
+    }
+
+    /// <summary>
+    /// Raikon's Redline Counter stance (JS <c>RAIKON_STYLE.redline</c>, 41-styles/raikon.js; SAN-107): its cooldown (s), how long before the stance can
+    /// catch a blow (s), how long it is held in phase two and in phase three (s), the punish's delay (s x the mode's wind-up) and damage, how long he
+    /// stands open once the stance is spent (s), the share of the JS guard (out of 100) the spent stance costs him, and what each blow into the spent
+    /// stance costs him on top.
+    /// </summary>
+    public sealed class JsRaikonRedline
+    {
+        public double Cd, Settle, Punish, Dmg, Spent, SpentPosture, HurtPosture;
+        public double[] Stance;
+    }
+
     /// <summary>A foe role's multipliers on its AI tuning (JS BUDO.roles: regular, sub, boss), e.g. the wind-up of its tells (SAN-104).</summary>
     public sealed class JsAiRole
     {

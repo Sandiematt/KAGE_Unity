@@ -83,7 +83,8 @@ namespace Kage.Tests
                 case "garan": return new GaranBotFightTests.StormwiseBot();
                 case "hisame": return new HisameBotFightTests.RainwiseBot();
                 case "shiden": return new ShidenBotFightTests.SpearwiseBot();
-                default: return new ProfileAiTestKit.KageBot();       // Raikon's own JS-tip bot is SAN-107's
+                case "raikon": return new RaikonFightBotTests.StormBot();
+                default: return new ProfileAiTestKit.KageBot();
             }
         }
 
@@ -93,6 +94,7 @@ namespace Kage.Tests
             var kind = GameRules.WorldKindOf(stage);
             var bot = BossBot(st.Enemy);
             using var f = new HeadlessFight(seed, Foe.Ai, -1.2f, 1.2f, foeDef: CharacterCatalog.Get(st.Enemy), kageDef: KageDef(false));
+            if (bot is RaikonFightBotTests.StormBot storm) storm.Fight = f;       // Raikon's bot reads his waves and hazards from the fight
             f.Ai.level = level ?? StageWorld.FoeLevel(kind);
             using var stats = new FightStatsRecorder(f.Ctx.Events, f.Kage);
             stats.MarkFightStart(0);
@@ -194,9 +196,8 @@ namespace Kage.Tests
                 var saved = store.Load();
                 for (int i = 0; i < runs.Count; i++)
                     Assert.AreEqual(runs[i].Won, GameRules.IsStageComplete(saved, Order[i]), Order[i] + " on disk");
-                // Raikon is the one stage whose bot is not his own yet (SAN-107): until it is, every stage before him must clear, in order
-                int mustClear = Order.Length - 1;
-                Assert.GreaterOrEqual(runs.Count(r => r.Won), mustClear, "every stage before Raikon cleared by its bot, in order:\n" + sb);
+                // Raikon's own JS-tip bot (SAN-107) clears him on a retry (1 of 3 first attempts on the seeds of the table above): every stage clears, in order
+                Assert.AreEqual(Order.Length, runs.Count(r => r.Won), "every stage cleared by its bot, in order:\n" + sb);
             }
             finally { try { Directory.Delete(dir, true); } catch { } }
         }

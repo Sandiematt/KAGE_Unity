@@ -324,7 +324,8 @@ namespace Kage.Tests
             Assert.AreEqual(0, r.rig.FamilyPartCount, "his painted Tachi_Hilt / Tachi_Blade stay; the family adds no blade of its own");
             Assert.IsTrue(r.rig.HasOwnPart("Tachi_Blade"));
             Assert.IsFalse(r.rig.BaseSwordHidden);
-            Assert.AreEqual(TachiMoves.BladeLength * r.Weapon.reach, r.BladeReach, 1e-3f, "the family's blade length drives his Blade hit points");
+            Assert.AreEqual(def.bladeLength, r.BladeReach, 1e-3f, "his own blade length (SAN-107: his painted tachi), not the family's 1.5 m x reach, drives his Blade hit points");
+            Assert.Less(r.BladeReach, TachiMoves.BladeLength * r.Weapon.reach * 0.6f);
             Debug.Log($"Raikon: hit line {r.BladeReach:0.00} m, painted blade {(r.def.bladeTipLocal - r.def.bladeBaseLocal).magnitude:0.00} m, body scale {r.Character.bodyScale:0.00}");
         }
 

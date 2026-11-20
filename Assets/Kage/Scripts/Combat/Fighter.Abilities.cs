@@ -74,6 +74,7 @@ namespace Kage
             if (slot < 1 || !AbilityReady(slot)) return false;
             var id = AbilityIds[slot - 1];
             var m = AbilityMove(id);
+            if (m?.variantFor != null) m = m.variantFor(this) ?? m;       // the last phase's two-wave swing, the shorter stance (SAN-107)
             m = Armed(m);                                         // a blade ability with the sword broken does nothing
             if (m == null) return false;
             var a = AbilityCatalog.Get(id);

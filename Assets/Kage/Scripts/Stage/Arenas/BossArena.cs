@@ -11,12 +11,15 @@ namespace Kage
     /// </summary>
     public static class BossArena
     {
-        /// <summary>The JS env id of the sub-boss stage whose enemy is <paramref name="characterId"/>, or null.</summary>
+        /// <summary>
+        /// The JS env id of the sub-boss or boss stage whose enemy is <paramref name="characterId"/>, or null. A stage with no env of its own fights in its
+        /// chapter's (SAN-107: act1.boss, Raikon's, has none, so it is Act I's rooftops, as in the JS <c>st.env || ch.env</c>).
+        /// </summary>
         public static string EnvFor(string characterId)
         {
             if (characterId == null) return null;
             foreach (var st in JsTables.Stages)
-                if (st.Kind == "subboss" && st.Enemy == characterId) return st.Env;
+                if ((st.Kind == "subboss" || st.Kind == "boss") && st.Enemy == characterId) return st.Env ?? JsTables.Chapter(st.Chapter)?.Env;
             return null;
         }
 
@@ -29,7 +32,7 @@ namespace Kage
             var env = EnvFor(foeId);
             if (env == null) return false;
             ArenaBuilder.BuildPhysics(root);
-            EnvBackdrop.Build(root, cam, EnvLook.For(env));
+            EnvBackdrop.Build(root, cam, foeId == Raikon.Id ? EnvLook.RaikonStorm : EnvLook.For(env));      // Raikon fights under his storm (SAN-107)
             return true;
         }
 
@@ -43,7 +46,7 @@ namespace Kage
             var env = GameRules.BossEnvOf(stageId);
             if (env == null) return false;
             ArenaBuilder.BuildPhysics(root);
-            EnvBackdrop.Build(root, cam, EnvLook.For(env));
+            EnvBackdrop.Build(root, cam, GameRules.Stage(stageId)?.Enemy == Raikon.Id ? EnvLook.RaikonStorm : EnvLook.For(env));      // Raikon fights under his storm (SAN-107)
             return true;
         }
     }

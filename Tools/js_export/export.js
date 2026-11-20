@@ -33,7 +33,7 @@ const CHAPTERS = ['prologue', 'act1'];
 
 const { loadSim } = require(path.join(JS_DIR, 'tests', 'helpers', 'load-sim.js'));
 const js = loadSim({ seed: 1, exports: ['HELMETS', 'ARMORS', 'GEAR_MAX', 'GEAR_TIERS', 'CAMPAIGN', 'AI_PROFILES', 'TUTORIAL_STEPS', 'DEV', 'RAIKON_VARIANTS',
-  'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES', 'SHIDEN_BRACE'] });
+  'PROJ', 'BUDO', 'DIFFICULTIES', 'FIGHT_STYLES', 'SHIDEN_BRACE', 'RAIKON_SKYFALL', 'RAIKON_STYLE'] });
 // The basic moves the sub-boss abilities are measured against or built from (SAN-104): the jab (the damage scale) and the grab (the clinch);
 // and the twin blades' first cut (SAN-105: Hisame's Kocho ends in it).
 const MOVE_IDS = ['p1', 'grab', 'tw1'];
@@ -237,6 +237,12 @@ member('JsDifficulty', 'Difficulties', Object.entries(js.DIFFICULTIES).map(([id,
 member('JsFightStyle', 'FightStyles', enemyIds.filter((id) => js.FIGHT_STYLES[id]).map((id) => styleRow(id, js.FIGHT_STYLES[id], L + 1)));
 // Shiden's Braced Spear (SAN-106): its numbers are a const of 41-styles/shiden.js, not a BOSS_ABILITIES field.
 out.push(`        public static readonly JsBrace ShidenBrace = ${obj('JsBrace', pick(js.SHIDEN_BRACE, ['hold', 'reach', 'trigger', 'dmg', 'open']), L)};
+`);
+// Raikon's Skyfall (SAN-107): RAIKON_SKYFALL in 10-data.js (charge, fall, width, damage, zap, and the call's cooldown, range and chance), and his
+// Redline Counter's martial stance, RAIKON_STYLE.redline in 41-styles/raikon.js (the stance length per phase, the settle, the punish).
+out.push(`        public static readonly JsSkyfall RaikonSkyfall = ${obj('JsSkyfall', [...pick(js.RAIKON_SKYFALL, ['cd', 'chance', 'charge', 'fall', 'width', 'dmg', 'zap', 'color']), ['Range', numArray(js.RAIKON_SKYFALL.range, 'double')]], L)};
+`);
+out.push(`        public static readonly JsRaikonRedline RaikonRedline = ${obj('JsRaikonRedline', [...pick(js.RAIKON_STYLE.redline, ['cd', 'settle', 'punish', 'dmg', 'spent', 'spentPosture', 'hurtPosture']), ['Stance', numArray(js.RAIKON_STYLE.redline.stance, 'double')]], L)};
 `);
 member('JsAiProfile', 'AiProfiles', Object.entries(js.AI_PROFILES).map(([id, a]) => aiRow(id, a, L + 1)));
 member('JsTutorialStep', 'TutorialSteps', Object.entries(js.TUTORIAL_STEPS).map(([id, t]) => obj('JsTutorialStep', [['Id', str(id)], ['Verb', str(t.verb)], ['Hint', str(t.hint)]], L + 1)));
