@@ -32,6 +32,11 @@ namespace Kage
         public float postureMul = 1f;
         /// <summary>Every hit of this window is a critical, no roll (SAN-106: Shiden's braced thrust, the JS counter-hit critical).</summary>
         public bool critical;
+        /// <summary>
+        /// The weapon's damage multiplier does not count for this window (SAN-107): a boss ability whose damage is the JS number, not the number times the weapon
+        /// (Raikon's tachi is ×0.78 on his ordinary cuts; his Thunder Swing, Storm Break and Redline hit for the JS damage). Everything else leaves it off.
+        /// </summary>
+        public bool fixedDamage;
     }
 
     /// <summary>A key of a move's blade extension curve (<see cref="MoveDef.Extend"/>).</summary>

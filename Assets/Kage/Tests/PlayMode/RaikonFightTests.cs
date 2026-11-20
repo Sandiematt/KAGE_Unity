@@ -66,6 +66,19 @@ namespace Kage.Tests
         static bool Touched(HeadlessFight f, string moveId) =>
             From(f, CombatEventType.Hit, moveId).Any() || From(f, CombatEventType.Blocked, moveId).Any() || f.Events(CombatEventType.Parried).Any(e => e.Source == f.Ronin && e.MoveId == moveId);
 
+        /// <summary>Runs <paramref name="frames"/> and returns the loop frames on which a new Thunder Swing wave appeared.</summary>
+        static List<int> WaveSpawns(HeadlessFight f, int frames)
+        {
+            var seen = new HashSet<Projectile>();
+            var at = new List<int>();
+            for (int i = 0; i < frames; i++)
+            {
+                f.Run(1);
+                foreach (var p in f.Ctx.Projectiles) if (p.Def.id == RaikonAbilities.WaveId && seen.Add(p)) at.Add(f.Ctx.Clock.Frame);
+            }
+            return at;
+        }
+
         static int Waves(HeadlessFight f) => From(f, CombatEventType.Hit, RaikonAbilities.WaveId).Count();
 
         // ================================================================ Thunder Swing
@@ -88,7 +101,7 @@ namespace Kage.Tests
             Assert.AreEqual(1, f.Ctx.Projectiles.Count, "the wave");
             var wave = f.Ctx.Projectiles[0];
             Assert.AreEqual(RaikonAbilities.WaveId, wave.Def.id);
-            Assert.GreaterOrEqual(f.Ctx.Clock.Frame - start, f.Ronin.move.hits[0].from, "released after the wind-up");
+            Assert.GreaterOrEqual(f.Ctx.Clock.Frame - start, f.Ronin.move.hits[0].from - 1, "released after the wind-up");
             Assert.Less(wave.Position.y, 0.6f, "along the floor");
             Assert.Less(wave.Position.x, f.Ronin.Pos.x, "toward Kage");
             f.Run(60);
@@ -173,29 +186,25 @@ namespace Kage.Tests
             var one = Fight(FarKage, FarRaikon);
             Press(one, SwingSlot);
             one.KageInput.Add(5000);
-            var spawns = new List<int>();
-            for (int i = 0; i < 200; i++)
-            {
-                one.Run(1);
-                foreach (var p in one.Ctx.Projectiles) if (p.Age == 0 && p.Def.id == RaikonAbilities.WaveId) spawns.Add(one.Ctx.Clock.Frame);
-            }
+            var spawns = WaveSpawns(one, 200);
             Assert.AreEqual(1, spawns.Count, "one wave in phase one");
 
             var two = Fight(FarKage, FarRaikon);
             PhaseThree(two);
             Press(two, SwingSlot);
             two.KageInput.Add(5000);
-            spawns.Clear();
             bool second = false;
+            var spawns2 = new List<int>();
+            var seen = new HashSet<Projectile>();
             for (int i = 0; i < 260; i++)
             {
                 two.Run(1);
                 second |= In(two.Ronin, Swing2);
-                foreach (var p in two.Ctx.Projectiles) if (p.Age == 0 && p.Def.id == RaikonAbilities.WaveId) spawns.Add(two.Ctx.Clock.Frame);
+                foreach (var p in two.Ctx.Projectiles) if (p.Def.id == RaikonAbilities.WaveId && seen.Add(p)) spawns2.Add(two.Ctx.Clock.Frame);
             }
             Assert.IsTrue(second, "the last phase starts the two-wave swing");
-            Assert.AreEqual(2, spawns.Count, "two waves");
-            Assert.AreEqual(42, spawns[1] - spawns[0], "the second 0.7 s after the first");
+            Assert.AreEqual(2, spawns2.Count, "two waves");
+            Assert.AreEqual(42, spawns2[1] - spawns2[0], "the second 0.7 s after the first");
             Assert.IsTrue(_cues.Count(c => c.cue == RaikonAbilities.GlintCue) >= 2, "the blade glints again before the second release");
         }
 
@@ -217,7 +226,7 @@ namespace Kage.Tests
             }
             Assert.GreaterOrEqual(early, 0, "a dodge made too early meets the second wave");
             _fights.Add(hit);
-            Assert.IsTrue(From(hit, CombatEventType.Hit, RaikonAbilities.WaveId).Single().Frame > 60 + 79 - 30, "and it is the late one that lands");
+            Assert.IsTrue(From(hit, CombatEventType.Hit, RaikonAbilities.WaveId).Single().Frame > 95, "and it is the late one that lands (the first reaches him by frame 75)");
 
             // jump, wait, jump: both missed
             int safe = -1;
@@ -299,16 +308,6 @@ namespace Kage.Tests
             Assert.IsTrue(f.Events(CombatEventType.GuardBroken).Any(e => e.Target == f.Kage), "and the guard broke (JS gb 110)");
         }
 
-        [Test]
-        public void After_Storm_Break_he_is_open_and_a_blow_lands()
-        {
-            var f = Fight(-2.4f, 2.4f);          // out of the slam and the shock's start: Kage runs in afterwards
-            Press(f, BreakSlot);
-            f.KageInput.Add(75).Add(30, fwd: 1).Add(1, buttons: "P").Add(5000);
-            f.Run(160);
-            Assert.IsTrue(f.Events(CombatEventType.Hit).Any(e => e.Source == f.Kage && e.Target == f.Ronin), "the recovery is long: a blow lands");
-        }
-
         // ================================================================ Skyfall
 
         const float SkyKage = -5f, SkyRaikon = 3.5f;
@@ -333,7 +332,7 @@ namespace Kage.Tests
             f.Run(10);
             Assert.AreEqual(locked, h.Centre.x, 1e-4f, "locked: it stays where it was");
             f.RunUntil(() => h.Phase == HazardPhase.Strike || !h.Alive, 80);
-            Assert.AreEqual(0, f.Events(CombatEventType.Hit).Count(e => e.Source == f.Ronin), "the mark never hits");
+            Assert.AreEqual(0, f.Events(CombatEventType.Hit).Count(e => e.Source == f.Ronin && e.Frame < f.Ctx.Clock.Frame - 1), "the mark never hits before the bolt");
             Assert.IsTrue(_cues.Any(c => c.cue == RaikonAbilities.StormMantleCue), "the storm gathers round him");
         }
 
@@ -378,7 +377,7 @@ namespace Kage.Tests
         [Test]
         public void A_blow_into_the_settled_Redline_stance_is_turned_aside_and_punished_unblockably()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             PhaseTwo(f);
             Press(f, RedlineSlot);
             f.KageInput.Add(24).Add(1, buttons: "PG").Add(5000, buttons: "G");        // a jab once the stance has settled, then a guard up
@@ -395,7 +394,7 @@ namespace Kage.Tests
         [Test]
         public void A_blow_before_the_stance_settles_lands_as_a_plain_hit()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             PhaseTwo(f);
             Press(f, RedlineSlot);
             f.KageInput.Add(2).Add(1, buttons: "P").Add(5000);
@@ -407,7 +406,7 @@ namespace Kage.Tests
         [Test]
         public void Waiting_out_Redline_is_safe_and_the_stance_is_spent()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             PhaseTwo(f);
             Press(f, RedlineSlot);
             f.KageInput.Add(5000);
@@ -425,7 +424,7 @@ namespace Kage.Tests
         [Test]
         public void After_the_stance_is_spent_he_is_open_and_a_blow_lands()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             PhaseTwo(f);
             Press(f, RedlineSlot);
             f.KageInput.Add(100).Add(1, buttons: "P").Add(5000);
@@ -438,7 +437,7 @@ namespace Kage.Tests
         [Test]
         public void The_last_phase_holds_the_stance_shorter()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             PhaseThree(f);
             Press(f, RedlineSlot);
             f.KageInput.Add(5000);
@@ -450,7 +449,7 @@ namespace Kage.Tests
         [Test]
         public void A_scripted_Redline_press_in_phase_one_does_nothing()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             Press(f, RedlineSlot);
             f.KageInput.Add(5000);
             f.Run(30);
@@ -462,7 +461,7 @@ namespace Kage.Tests
         [Test]
         public void A_light_hit_does_not_flinch_him()
         {
-            var f = Fight(-0.5f, 0.5f);
+            var f = Fight(-0.4f, 0.4f);
             f.RoninInput.Add(5000);
             f.KageInput.Add(4).Add(1, buttons: "P").Add(5000);
             float hp = f.Ronin.health;

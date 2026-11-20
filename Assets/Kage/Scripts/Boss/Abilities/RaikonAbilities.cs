@@ -141,7 +141,7 @@ namespace Kage
         public static MoveDef SecondWaveSwing(float secondWaveDelay)
         {
             if (secondWaveDelay <= 0f) return null;
-            int delay = Frames(secondWaveDelay * Mathf.Max(1.0, Windup));         // the JS: secondWave x max(1, tell)
+            int delay = Frames(secondWaveDelay * System.Math.Max(1.0, Windup));         // the JS: secondWave x max(1, tell)
             if (!SwingSecond.TryGetValue(delay, out var m)) SwingSecond[delay] = m = ThunderSwing(delay);
             return m;
         }
@@ -205,6 +205,7 @@ namespace Kage
             m.Hit(at, at + 4, new[] { HitPoint.Blade }, dmg, HitLevel.Mid, new Vector2(Metres(SwingKbPx), Metres(SwingUpPx)), stun: Frames(SwingStun), hitstop: 10,
                     shake: 0.4f, heavy: true, radius: SwingRadius(_scale), postureMul: HisameAbilities.PostureMul(SwingGb, dmg))
                 .Fx(at, at, FxKind.Dust).Fx(at, at, FxKind.Shockwave);
+            m.hits[m.hits.Count - 1].fixedDamage = true;                // the JS damage, not times the tachi's 0.78
             if (m.projectile == null) m.Throw(at, wave, from);
             else m.ThrowAlso(at, wave, from);
         }
@@ -244,6 +245,7 @@ namespace Kage
                 .Hazard(1, hazard, Metres(ShockStartPx * _scale + runPx / 2))
                 .Cue(land - Frames(BreakGlintLead), GlintCue)
                 .Fx(land, land, FxKind.Dust).Fx(land, land, FxKind.Shockwave).Fx(slam - 2, land + 1, FxKind.TrailBlade).Sword();
+            m.hits[0].fixedDamage = true;
             for (int f = 3; f < land; f += 3) m.Cue(f, BladeChargeCue);
             return m;
         }
@@ -338,7 +340,8 @@ namespace Kage
                 .Hit(delay, delay + live, new[] { HitPoint.Blade }, Dmg(r.Dmg), HitLevel.Unblockable, new Vector2(Metres(PunishKbPx), Metres(PunishUpPx)),
                     stun: Frames(PunishStun), hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: SwingRadius(_scale))
                 .Fx(delay - 1, delay + live, FxKind.TrailBlade).Fx(delay, delay + 6, FxKind.AfterImage).Fx(delay, delay, FxKind.Dust).Sword();
-            _punish.hits[0].critical = true;                                     // FIGHT_STYLES.raikon.crit: the Redline punish
+            _punish.hits[0].fixedDamage = true;
+            _punish.hits[0].critical = true;                                    // FIGHT_STYLES.raikon.crit: the Redline punish
             return _punish;
         }
 
