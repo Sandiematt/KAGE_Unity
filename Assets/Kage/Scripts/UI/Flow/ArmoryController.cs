@@ -14,11 +14,13 @@ namespace Kage
         readonly SaveData save;
         readonly Action<SaveData> persist;
         readonly Action changed;
+        readonly Action<string, string> toast;
         string selected;
         ArmorLine? line;
 
-        public ArmoryController(SaveData save, Action<SaveData> persist, Action changed)
+        public ArmoryController(SaveData save, Action<SaveData> persist, Action changed, Action<string, string> toast = null)
         {
+            this.toast = toast ?? ((a, b) => { });
             this.save = save;
             this.persist = persist ?? (_ => { });
             this.changed = changed ?? (() => { });
@@ -72,6 +74,7 @@ namespace Kage
         {
             if (!GameRules.BuyItem(save, ArmoryView.KindOf(Tab), SelectedId)) return false;
             Persist();
+            toast("Acquired", GameRules.Item(ArmoryView.KindOf(Tab), SelectedId).Name);
             return true;
         }
 
@@ -79,6 +82,10 @@ namespace Kage
         {
             if (!GameRules.UpgradeItem(save, ArmoryView.KindOf(Tab), SelectedId)) return false;
             Persist();
+            var kind = ArmoryView.KindOf(Tab);
+            int lvl;
+            GameRules.OwnedOf(save, kind).TryGetValue(SelectedId, out lvl);
+            toast("Level " + lvl, GameRules.Item(kind, SelectedId).Name + " tempered");
             return true;
         }
 

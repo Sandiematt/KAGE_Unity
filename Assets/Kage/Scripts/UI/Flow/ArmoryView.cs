@@ -28,10 +28,21 @@ namespace Kage
         Upgrade,
     }
 
+    /// <summary>What the big preview on the screen shows.</summary>
+    public enum ArmoryPreview
+    {
+        /// <summary>The JS illustration of the selected blade, slowly turning in front of the sun with the faint warrior behind it (Weapons tab).</summary>
+        Illustration,
+        /// <summary>A live Kage wearing the selection (Helmets and Armor tabs).</summary>
+        LiveKage,
+    }
+
     /// <summary>One item in the row of tiles (or cards) at the bottom of the screen.</summary>
     public sealed class ArmoryTile
     {
         public string Id, Name;
+        /// <summary>The drawn item the tile shows: the sword, the helmet or the armour itself.</summary>
+        public TileArt Art;
         public bool Owned, Equipped, Locked, Selected;
         public int Level;
         /// <summary>What it costs (the shop price in coins and in gems); 0 for what the item is not paid in.</summary>
@@ -80,6 +91,9 @@ namespace Kage
         public int TrophyCount;
 
         public string TierId, TierLine, Name, Lore, Desc;
+        public ArmoryPreview Preview;
+        /// <summary>The image under Resources/UI/Img of the weapon illustration (Weapons tab only, else null).</summary>
+        public string PreviewKey;
         /// <summary>The big watermark kanji at the top left (the weapon's name in kanji, 兜 for helmets, 鎧 for armour).</summary>
         public string Kanji;
         public bool Owned, Equipped, Locked;
@@ -195,6 +209,8 @@ namespace Kage
                 LevelText = owned > 0 ? owned + " / " + max : "Not owned",
                 Locked = GameRules.IsLocked(save, kind, id),
                 Kanji = ArmoryText.Kanji(tab, id),
+                Preview = tab == ArmoryTab.Weapons ? ArmoryPreview.Illustration : ArmoryPreview.LiveKage,
+                PreviewKey = tab == ArmoryTab.Weapons ? GearArt.PreviewKey(id) : null,
             };
             string tierLabel = GameRules.TierLabel(kind, id, lv1);
             if (kind == GearKind.Weapons)
@@ -261,6 +277,7 @@ namespace Kage
                     Owned = lvl > 0,
                     Equipped = EquippedId(save, kind) == tid,
                     Locked = it.Exclusive && lvl <= 0,
+                    Art = GearArt.For(kind, tid),
                     Selected = tid == id,
                     Coins = it.Price,
                     Gems = it.Gems,

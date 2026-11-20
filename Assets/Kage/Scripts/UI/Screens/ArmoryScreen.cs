@@ -17,8 +17,14 @@ namespace Kage
         const float TileW = 127f, TileGap = 10f, GridX = 40f, GridY = 748f, GridW = 950f, GridH = 112f;
 
         float scroll, cardScroll, cardMax;
+        // what the last build showed: the entrances (tiles rising, the details fading in) play when the tab, the row or the item changes, like the JS render
+        ArmoryTab? builtTab;
+        ArmorLine? builtLine;
+        string builtSelection;
+        bool enterTiles, enterDetail;
         RectTransform tileContent, cardsFront, cardsBack;
         float tileMax;
+        int tileIndex;
         static readonly Color Violet = Ui.Hex("#a98bff"), Blue = Ui.Hex("#7fb8ff"), Lit = Ui.Hex("#e9c46a");
 
         public ArmoryScreen(GameFlow flow, RectTransform stage) : base(flow, stage, "Armory") { }
@@ -68,7 +74,11 @@ namespace Kage
                 if (armor) ArmorBackdrop(back); else Backdrop(back);
             }
 
+            enterTiles = Fresh || builtTab != v.Tab || builtLine != v.Line;
+            enterDetail = enterTiles || builtSelection != v.SelectedId;
+            builtTab = v.Tab; builtLine = v.Line; builtSelection = v.SelectedId;
             Ui.Label(Root, v.Kanji, UiFont.Brush, armor ? 46 : 64, Ui.A(Ui.Bone, 0.2f), armor ? 44 : 64, armor ? 98 : 150, 400, armor ? 60 : 80, TextAnchor.UpperLeft);
+            if (v.Preview == ArmoryPreview.Illustration) Preview(v);
             Header(v);
             if (armor) ArmorBody(v, save, back);
             else
@@ -88,6 +98,11 @@ namespace Kage
 
         void Fighters(ArmoryWorld world, ArmoryView v, SaveData save)
         {
+            if (v.Preview == ArmoryPreview.Illustration)
+            {
+                world.ShowNone();
+                return;
+            }
             if (v.Tab != ArmoryTab.Armor)
             {
                 world.ShowSingle(ArmoryView.PreviewSave(save, v.Tab, v.SelectedId), v.Tab == ArmoryTab.Helmets);
@@ -103,6 +118,20 @@ namespace Kage
             string key = v.Line + "|" + save.equipped.weapon + ":" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
             // the row scrolls by the camera panning with it, so each Kage stays in his card
             world.ShowRow(saves, xs, key, cardScroll);
+        }
+
+        // ---------------- the Weapons tab's preview: the JS illustration of the blade ----------------
+
+        void Preview(ArmoryView v)
+        {
+            var holder = Ui.Node(Root, "Preview", 0, 96, ArmoryPreviewMotion.Width, ArmoryPreviewMotion.Height);
+            holder.gameObject.AddComponent<RectMask2D>();
+            // the faint warrior behind the blade, then the blade turning slowly in front of the sun
+            Ui.Pic(holder, GearArt.GhostKey, 0, 0, ArmoryPreviewMotion.Width, ArmoryPreviewMotion.Height, new Color(1f, 1f, 1f, 0.32f)).name = "Ghost";
+            var w = JsTables.Weapon(v.SelectedId);
+            var art = Ui.Tex(v.PreviewKey);
+            ArmoryBladeSway.Build(holder, art, w != null ? w.Len : 0);
+            if (enterDetail) UiFx.In(holder, UiAnims.WFade(.35f));
         }
 
         // ---------------- the top bar ----------------
@@ -138,7 +167,9 @@ namespace Kage
                         Ui.Acc, Ui.Deep, Ui.A(Ui.Deep, 0f), true, "Brush");
                 }
                 var t = Ui.Label(rt, names[i].ToUpperInvariant(), UiFont.Title, 20, on ? Ui.Bone : Ui.Muted, 18, 0, widths[i] - 18, 48, TextAnchor.MiddleLeft, 2.4f);
-                UiParts.Make(rt, Nav, "tab:" + i, () => A.SelectTab((ArmoryTab)idx), f => t.color = on || f ? Ui.Bone : Ui.Muted);
+                var tabTween = UiFocusTween.On(rt, .16f, k => t.color = on ? Ui.Bone : Color.Lerp(Ui.Muted, Ui.Bone, k));
+                UiParts.Make(rt, Nav, "tab:" + i, () => A.SelectTab((ArmoryTab)idx), f => tabTween.Set(f));
+                if (on && enterTiles) UiFx.In(rt, UiAnims.WFade(.3f));
                 x += widths[i] + 44f;
             }
             UiParts.Pills(Root, C.Save, 1560f, 26f);
@@ -261,6 +292,7 @@ namespace Kage
         {
             const float PanelX = 1020f, PanelY = 112f, PanelW = 540f, Max = 628f;
             var det = Ui.Node(Root, "Detail", PanelX, PanelY, PanelW, Max);
+            if (enterDetail) UiFx.In(det, UiAnims.WFade(.35f));
             var bg = Ui.Box(det, 0, 0, PanelW, Max, Ui.PanelA(0.86f));
             var clip = Ui.Node(det, "Clip", 0, 0, PanelW, Max);
             clip.gameObject.AddComponent<RectMask2D>();
@@ -383,6 +415,7 @@ namespace Kage
 
         void Tiles(ArmoryView v, SaveData save)
         {
+            tileIndex = 0;
             int n = v.Tiles.Length;
             var viewport = Ui.Node(Root, "Tiles", GridX, GridY - 6f, GridW, GridH + 6f);
             viewport.gameObject.AddComponent<RectMask2D>();
@@ -400,6 +433,8 @@ namespace Kage
         {
             const float Y = 6f, H = 110f;
             var rt = Ui.Node(tileContent, "Tile_" + t.Id, x, Y, TileW, H);
+            if (enterTiles) UiFx.In(rt, UiAnims.WRise(.45f, tileIndex * 0.025f));
+            tileIndex++;
             Ui.Box(rt, 0, 0, TileW, H, Ui.PanelA(0.9f));
             if (t.Selected)
             {
@@ -408,17 +443,17 @@ namespace Kage
             }
             else Ui.Frame(rt, 0, 0, TileW, H, 1f, Ui.GoldDim);
 
-            // the picture
-            float dim = t.Owned ? 1f : 0.45f;
-            if (v.Tab == ArmoryTab.Weapons && Ui.Tex("ui_w_" + t.Id) != null)
+            // the picture: the item drawn the way the JS draws it (the sword, the helmet), dim when it is not owned (JS .locked .art)
+            // the JS drawings of helmets and armour are dark on a dark tile, so a locked one is dimmed less than a weapon render
+            bool drawn = t.Art.Source != ArtSource.WeaponRender;
+            var tint = t.Owned ? Color.white : drawn ? new Color(0.8f, 0.8f, 0.8f, 0.7f) : new Color(0.5f, 0.5f, 0.5f, 0.45f);
+            var picture = t.Art.Texture;
+            if (picture != null)
             {
-                var pic = Ui.Pic(rt, "ui_w_" + t.Id, (TileW - 96f) / 2f, 10f, 96f, 58f, t.Owned ? Color.white : new Color(0.45f, 0.45f, 0.45f, 0.45f));
-                FitPic(pic, 96f, 58f);
-            }
-            else
-            {
-                string glyph = v.Tab == ArmoryTab.Weapons ? (ArmoryText.NameKanji(t.Id) ?? "武器") : "兜";
-                Ui.Label(rt, glyph, UiFont.Mincho, glyph.Length > 1 ? 30 : 40, Ui.A(Ui.Gold, 0.9f * dim), 0, 10, TileW, 58f, TextAnchor.MiddleCenter);
+                bool render = t.Art.Source == ArtSource.WeaponRender;
+                float aw = render ? 96f : 100f, ah = 58f;
+                var pic = Ui.Pic(rt, t.Art.Key, (TileW - aw) / 2f, 10f, aw, ah, tint);
+                FitPic(pic, aw, ah);
             }
             if (t.Equipped) Ui.Diamond(rt, 14f, 14f, 8f, Ui.Gold, Ui.Gold, 0f);
             if (!t.Owned) PadLock(rt, TileW - 8f - 14f, 8f, Ui.Muted);
@@ -451,9 +486,10 @@ namespace Kage
 
             string id = t.Id;
             float tx = x;
+            var lift = UiFocusTween.On(rt, .16f, k => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * k)));
             var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f =>
             {
-                rt.anchoredPosition = new Vector2(tx, -(Y - (f ? 3f : 0f)));
+                lift.Set(f);
                 if (f) KeepVisible(tx);
             });
             item.onUserFocus = () => A.Select(id);
@@ -608,6 +644,7 @@ namespace Kage
                 glow.rectTransform.localScale = new Vector3(1f, 0.43f * H / gr, 1f);
             }
             var rt = Ui.Node(cardsFront, "Card_" + t.Id, x, Y, w, H);
+            if (enterTiles) UiFx.In(rt, UiAnims.WRise(.5f, index * 0.05f));
             bool sel = t.Selected;
             if (sel)
             {
@@ -658,9 +695,10 @@ namespace Kage
             string id = t.Id;
             float cardX = x;
             int idx = index;
+            var lift = UiFocusTween.On(rt, .18f, k => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 4f * k)));
             var item = UiParts.Make(rt, Nav, "tile:" + id, () => A.Select(id), f =>
             {
-                rt.anchoredPosition = new Vector2(cardX, -(Y - (f ? 4f : 0f)));
+                lift.Set(f);
                 if (f) KeepCardVisible(idx);
             });
             item.onUserFocus = () => A.Select(id);
@@ -671,6 +709,7 @@ namespace Kage
             var hue = HueOf(v.SelectedId);
             // the details under the row
             var det = Ui.Node(Root, "Detail", 40f, 600f, 1040f, 262f);
+            if (enterDetail) UiFx.In(det, UiAnims.WFade(.35f));
             Ui.Box(det, 0, 0, 1040f, 262f, Ui.PanelA(0.88f));
             Ui.Grad(det, 0, 0, 416f, 262f, Ui.A(hue, 0.1f), Color.clear, true);
             Ui.Frame(det, 0, 0, 1040f, 262f, 1.5f, Ui.GoldDim);
@@ -730,19 +769,28 @@ namespace Kage
             0, -10, 2, -4, 7, -7, 5, -1, 10, 0, 5, 2, 7, 7, 1, 4, 0.6f, 10, -0.6f, 10, -1, 4, -7, 7, -5, 2, -10, 0, -5, -1, -7, -7, -2, -4,
         };
 
-        static void Leaves(Transform p, float[][] pts)
+        internal static void Leaves(Transform p, float[][] pts)
         {
             var c = Ui.A(Ui.Mix(Ui.Hot, Ui.Acc, 0.5f), 0.9f);
+            int n = 0;
             foreach (var l in pts)
             {
                 float s = l[2], r = l[3] * Mathf.Deg2Rad, cs = Mathf.Cos(r), sn = Mathf.Sin(r);
                 var poly = new Vector2[Leaf.Length / 2];
+                float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
                 for (int i = 0; i < poly.Length; i++)
                 {
                     float px = Leaf[i * 2] * s, py = Leaf[i * 2 + 1] * s;
                     poly[i] = new Vector2(l[0] + px * cs - py * sn, l[1] + px * sn + py * cs);
+                    x0 = Mathf.Min(x0, poly[i].x); y0 = Mathf.Min(y0, poly[i].y); x1 = Mathf.Max(x1, poly[i].x); y1 = Mathf.Max(y1, poly[i].y);
                 }
-                Ui.Shape(p, 0, 0, 1600, 900, poly, c, null, null, false, "Leaf");
+                // a node of its own, so the leaf turns about its centre
+                for (int i = 0; i < poly.Length; i++) poly[i] -= new Vector2(x0, y0);
+                var shape = Ui.Shape(p, x0, y0, x1 - x0, y1 - y0, poly, c, null, null, false, "Leaf");
+                // JS wLeaf: 5.5 s, every second leaf 7 s and every third 6.2 s, back and forth by (6, 10) px and 14 degrees
+                float period = n % 3 == 2 ? 6.2f : n % 2 == 1 ? 7f : 5.5f;
+                UiFx.Loop(shape.transform, new UiAnim("wLeaf", period / 2f).Eased(UiEase.EaseInOut).FromTo(UiProp.X, 0, 6).FromTo(UiProp.Y, 0, 10).FromTo(UiProp.Rot, 0, 14).Repeat(true));
+                n++;
             }
         }
 
@@ -754,7 +802,7 @@ namespace Kage
             Ui.Glow(p, 500, 430, 420, Ui.A(Ui.Acc, 0.45f), 1f);
             Ui.Disc(p, 500, 430, 270, Ui.Mix(Ui.Deep, Ui.Sun2, 0.55f));
             Ui.Glow(p, 457, 365, 192, Ui.A(Ui.Sun1, 0.85f), 1.3f);
-            Ui.Line(p, Ui.Circle(500, 430, 300, 72).Close(), 1.5f, Ui.A(Ui.Gold, 0.3f));
+            UiFx.Loop(Ui.Line(p, Ui.Circle(500, 430, 300, 72).Close(), 1.5f, Ui.A(Ui.Gold, 0.3f)).transform, UiAnims.WGlow(4f));
             Ui.Shape(p, 0, 0, 1600, 900, Poly(0, 640, 1000, 200, 1000, 330, 0, 770), Color.clear, Ui.A(Ui.Bone, 0.07f), Color.clear, true, "Beam");
             Ui.Shape(p, 0, 0, 1600, 900, Poly(0, 700, 160, 650, 320, 680, 480, 630, 640, 670, 820, 640, 1000, 670, 1000, 900, 0, 900), Ground(0.85f), null, null, false, "Hills");
             Ui.Box(p, 20, 96, 12, 804, Ground(0.65f), "Trunk");
@@ -784,7 +832,7 @@ namespace Kage
             Ui.Glow(p, 800, 250, 380, Ui.A(Ui.Acc, 0.5f), 1f);
             Ui.Disc(p, 800, 250, 230, Ui.A(Ui.Mix(Ui.Acc, Ui.Deep, 0.6f), 0.92f));
             Ui.Glow(p, 760, 215, 150, Ui.A(Ui.Sun1, 0.8f), 1.3f);
-            Ui.Line(p, Ellipse(800, 250, 262, 262, 72), 1.5f, Ui.A(Ui.Bone, 0.12f));
+            UiFx.Loop(Ui.Line(p, Ellipse(800, 250, 262, 262, 72), 1.5f, Ui.A(Ui.Bone, 0.12f)).transform, UiAnims.WGlow(4f));
             Ui.Shape(p, 0, 0, 1600, 900, Poly(0, 330, 130, 270, 250, 300, 420, 220, 560, 300, 700, 280, 800, 330, 930, 270, 1080, 300, 1220, 230, 1380, 290, 1600, 250, 1600, 900, 0, 900), Ui.A(Ground(0.55f), 0.8f), null, null, false, "Mountains");
             var torii = Ground(0.72f);
             var beam = new List<Vector2>();

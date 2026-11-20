@@ -330,9 +330,10 @@ namespace Kage
     [AddComponentMenu("")]
     public sealed class ShapeGraphic : MaskableGraphic
     {
-        Vector2[] pts = new Vector2[0];
-        Color c0, c1, c2;
-        bool horizontal;
+        // serialized, so a copy of a screen (the wipe's ghost) draws the same shapes
+        [SerializeField] Vector2[] pts = new Vector2[0];
+        [SerializeField] Color c0, c1, c2;
+        [SerializeField] bool horizontal;
 
         public void Set(Vector2[] points, Color a, Color b, Color c, bool horiz)
         {
@@ -407,8 +408,8 @@ namespace Kage
     [AddComponentMenu("")]
     public sealed class GradRect : MaskableGraphic
     {
-        Color[] stops = { Color.white, Color.white };
-        bool horizontal;
+        [SerializeField] Color[] stops = { Color.white, Color.white };
+        [SerializeField] bool horizontal;
 
         public void Set(bool horiz, Color[] cs) { horizontal = horiz; stops = cs; SetVerticesDirty(); }
 
@@ -487,8 +488,8 @@ namespace Kage
     [AddComponentMenu("")]
     public sealed class DiamondGraphic : MaskableGraphic
     {
-        float side, border;
-        Color fill, edge;
+        [SerializeField] float side, border;
+        [SerializeField] Color fill, edge;
 
         public void Set(float ds, float bw, Color f, Color e) { side = ds; border = bw; fill = f; edge = e; SetVerticesDirty(); }
 
@@ -535,8 +536,8 @@ namespace Kage
     [AddComponentMenu("")]
     public sealed class PolyLine : MaskableGraphic
     {
-        Vector2[] pts = new Vector2[0];
-        float width, dash, gap;
+        [SerializeField] Vector2[] pts = new Vector2[0];
+        [SerializeField] float width, dash, gap, phase;
 
         public void Set(Vector2[] p, float w, Color c, float d, float g)
         {
@@ -544,27 +545,36 @@ namespace Kage
             SetVerticesDirty();
         }
 
+        /// <summary>How far, in px along the path, a dashed line's pattern has moved forward (the JS <c>stroke-dashoffset</c> animation).</summary>
+        public void SetPhase(float px)
+        {
+            if (Mathf.Approximately(px, phase)) return;
+            phase = px;
+            SetVerticesDirty();
+        }
+
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
-            float carry = 0f;
-            bool on = true;
+            float cursor = 0f;
             for (int i = 0; i + 1 < pts.Length; i++)
             {
                 Vector2 a = pts[i], b = pts[i + 1];
                 float len = Vector2.Distance(a, b);
                 if (len < 0.01f) continue;
                 Vector2 dir = (b - a) / len;
-                if (dash <= 0f) { Seg(vh, a, b); continue; }
-                float pos = 0f;
-                while (pos < len)
+                if (dash <= 0f) { Seg(vh, a, b); cursor += len; continue; }
+                // dashes sit at [k period + phase, k period + phase + dash] along the whole path
+                float period = dash + gap;
+                int k = Mathf.FloorToInt((cursor - phase - dash) / period);
+                for (int guard = 0; guard < 400; guard++, k++)
                 {
-                    float lim = on ? dash : gap;
-                    float take = Mathf.Min(len - pos, lim - carry);
-                    if (on) Seg(vh, a + dir * pos, a + dir * (pos + take));
-                    pos += take; carry += take;
-                    if (carry >= lim - 0.001f) { carry = 0f; on = !on; }
+                    float s0 = k * period + phase, s1 = s0 + dash;
+                    if (s0 >= cursor + len) break;
+                    float lo = Mathf.Max(s0, cursor), hi = Mathf.Min(s1, cursor + len);
+                    if (hi > lo) Seg(vh, a + dir * (lo - cursor), a + dir * (hi - cursor));
                 }
+                cursor += len;
             }
         }
 

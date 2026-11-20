@@ -6,10 +6,12 @@ namespace Kage
     /// <summary>Shared look of the JS overlay card (.ov-card): charcoal, a gold line on top, a dimmed screen behind.</summary>
     static class OverlayKit
     {
-        public static RectTransform Card(Transform root, float x, float y, float w, float h)
+        /// <summary>The card of an overlay; when the overlay is opening (<paramref name="enter"/>) it pops in like the JS <c>cardIn2</c> (.45 s, up and in with the pop curve).</summary>
+        public static RectTransform Card(Transform root, float x, float y, float w, float h, bool enter = false)
         {
             Ui.Box(root, 0, 0, 1600, 900, new Color(0f, 0f, 0f, 0.62f), "Dim");
             var card = Ui.Node(root, "Card", x, y, w, h);
+            if (enter) UiFx.In(card, UiAnims.CardIn(.45f));
             Ui.Box(card, 0, 0, w, h, Ui.Charcoal);
             Ui.Box(card, 0, 0, w, 2, Ui.Gold);
             Ui.Frame(card, 0, 0, w, h, 1, Ui.A(Ui.GoldDim, 0.5f));
@@ -38,17 +40,19 @@ namespace Kage
             var s = C.Save;
             var stage = GameRules.Stage(C.StageId);
             string name = stage == null ? "" : (stage.Kind == "boss" || stage.Kind == "subboss") && !string.IsNullOrEmpty(stage.Foe) ? stage.Foe : stage.Name;
-            const float x = 460, y = 60, w = 680, h = 696;
-            var card = OverlayKit.Card(Root, x, y, w, h);
+            const float x = 460, y = 40, w = 680, h = 772;
+            var card = OverlayKit.Card(Root, x, y, w, h, Fresh);
             Ui.Label(card, "PAUSED · NORMAL", UiFont.Cond, 15, Ui.Gold, 48, 34, 560, 22, TextAnchor.MiddleLeft, 3.9f);
             Ui.Label(card, name.ToUpperInvariant(), UiFont.TitleHeavy, 44, Ui.Bone, 48, 62, 600, 60, TextAnchor.MiddleLeft, 1f);
 
             float by = 148;
             UiParts.Plate(card, Nav, "resume", 48, by, 584, 62, "Resume", true, () => C.Resume());
             UiParts.Plate(card, Nav, "retry", 48, by + 76, 584, 62, "Retry", false, () => C.Retry());
-            UiParts.Plate(card, Nav, "quit", 48, by + 152, 584, 62, "Quit to map", false, () => C.QuitToMap());
+            // the JS pause menu has a Controls button between Restart and Quit
+            UiParts.Plate(card, Nav, "controls", 48, by + 152, 584, 62, "Controls", false, () => flow.OpenControls());
+            UiParts.Plate(card, Nav, "quit", 48, by + 228, 584, 62, "Quit to map", false, () => C.QuitToMap());
 
-            float ry = by + 152 + 62 + 30;
+            float ry = by + 228 + 62 + 30;
             Ui.Box(card, 48, ry - 8, 584, 1, Ui.Hair);
             ry += 4;
             SettingRow(card, ref ry, "Screen Shake", "Camera shake on heavy impacts", "shake", new[] { "Full", "Half", "Off" }, Idx(new[] { "full", "half", "off" }, s.settings.shake),
@@ -89,7 +93,7 @@ namespace Kage
         protected override void Build()
         {
             const float x = 480, y = 290, w = 640, h = 320;
-            var card = OverlayKit.Card(Root, x, y, w, h);
+            var card = OverlayKit.Card(Root, x, y, w, h, Fresh);
             Ui.Label(card, "CONFIRM", UiFont.Cond, 15, Ui.Gold, 40, 30, 400, 22, TextAnchor.MiddleLeft, 3.9f);
             Ui.Label(card, "Turn dev mode off?", UiFont.TitleHeavy, 36, Ui.Bone, 40, 54, 560, 50, TextAnchor.MiddleLeft);
             Ui.Label(card, "The real economy starts from a fresh save: the dev save's progress, coins and unlocked items are lost.", UiFont.Body, 17, Ui.Muted, 40, 118, 560, 80, TextAnchor.UpperLeft, 0, true, 1.35f);
@@ -114,7 +118,7 @@ namespace Kage
         protected override void Build()
         {
             const float x = 360, y = 70, w = 880, h = 760;
-            var card = OverlayKit.Card(Root, x, y, w, h);
+            var card = OverlayKit.Card(Root, x, y, w, h, Fresh);
             Ui.Label(card, "CONTROLS GUIDE", UiFont.Cond, 15, Ui.Gold, 48, 30, 400, 22, TextAnchor.MiddleLeft, 3.9f);
             Ui.Label(card, "Every move in one place", UiFont.TitleHeavy, 34, Ui.Bone, 48, 54, 700, 48, TextAnchor.MiddleLeft);
 
