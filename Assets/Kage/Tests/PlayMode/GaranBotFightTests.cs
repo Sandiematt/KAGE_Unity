@@ -25,7 +25,7 @@ namespace Kage.Tests
         /// held otherwise, so the clinch (which takes only a guard) seldom comes.</item>
         /// </list>
         /// </summary>
-        sealed class StormwiseBot : IInputSource
+        internal sealed class StormwiseBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             MoveDef _rolledFor;

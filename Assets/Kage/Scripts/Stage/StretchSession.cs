@@ -22,16 +22,12 @@ namespace Kage
     /// <para>The HUD reads <see cref="Progress"/>, <see cref="EncounterNumber"/>, <see cref="WaveNumber"/> and friends, or just
     /// <see cref="HudText"/>. The camera reads <see cref="CameraLeft"/> and <see cref="CameraRight"/>
     /// (<see cref="CameraRig.SetBounds"/>); the road draws its gates from <see cref="GateChanged"/>.</para>
-    /// <para><b>Foe ids.</b> Each id is resolved through <see cref="CharacterCatalog"/>. An id with no character yet (Runner,
-    /// Shieldbearer, Chainthrower, Ironclad, Flicker, Husk, until their tickets land) is replaced by the Order Footman
-    /// (<see cref="FallbackFoeId"/>) and logged once as a warning; <see cref="Spawned"/> records what was asked for and what came.
-    /// SAN-109 removes the fallback when every foe exists.</para>
+    /// <para><b>Foe ids.</b> Each id is resolved through <see cref="CharacterCatalog"/> (<see cref="ResolveFoe"/>). Every foe of the JS
+    /// campaign exists, so an id with no character is a data error and throws (SAN-109 removed the Footman fallback);
+    /// <see cref="Spawned"/> records what was asked for and what came.</para>
     /// </summary>
     public sealed class StretchSession : ILateTick, ICameraBounds, IDisposable
     {
-        /// <summary>The character that stands in for a foe id that has no character yet.</summary>
-        public const string FallbackFoeId = OrderFootman.Id;
-
         /// <summary>JS: the first wave comes 0.35 s after the gate closes.</summary>
         public const int FirstWaveDelay = 21;
         /// <summary>A pause between a wave's fall and the next wave (JS 0.8 s).</summary>
@@ -39,7 +35,7 @@ namespace Kage
         /// <summary>A fallen foe stays on the road this many frames, then is removed (JS: it fades after 2.2 s), so a long stretch never piles up bodies.</summary>
         public const int CorpseFrames = 132;
 
-        /// <summary>A foe the session spawned: its fighter id, the id the road asked for and the character that came.</summary>
+        /// <summary>A foe the session spawned: its fighter id, the id the road asked for and the character that came (the same id: a foe with no character is an error).</summary>
         public readonly struct SpawnRecord
         {
             public readonly int Frame, Encounter, Wave;
@@ -48,7 +44,6 @@ namespace Kage
             {
                 Frame = frame; Encounter = encounter; Wave = wave; FighterId = fighterId; RequestedId = requestedId; CharacterId = characterId;
             }
-            public bool FellBack => RequestedId != CharacterId;
         }
 
         readonly FightContext _ctx;
@@ -57,7 +52,6 @@ namespace Kage
         readonly Func<CharacterDef, IInputSource> _foeInput;
         readonly List<Foe> _foes = new();
         readonly List<SpawnRecord> _spawned = new();
-        readonly HashSet<string> _warned = new();
 
         sealed class Foe { public Fighter fighter; public int koFrame = -1; public bool extra; }
 
@@ -134,8 +128,6 @@ namespace Kage
         public IEnumerable<Fighter> Foes { get { foreach (var f in _foes) if (f.fighter != null) yield return f.fighter; } }
         /// <summary>Every foe spawned so far, in spawn order, with the id asked for.</summary>
         public IReadOnlyList<SpawnRecord> Spawned => _spawned;
-        /// <summary>The foe ids that fell back to <see cref="FallbackFoeId"/>.</summary>
-        public IEnumerable<string> FallbackIds => _warned;
 
         /// <summary>The walking limit now: the gate of the first uncleared encounter (the arena's right edge while one is on), else the end.</summary>
         public float WalkLimit => (float)Data.Limit(_cleared);
@@ -279,9 +271,7 @@ namespace Kage
 
         void SpawnFoe(string requestedId, float x, float facing)
         {
-            var def = ResolveFoe(requestedId, out bool fellBack);
-            if (fellBack && _warned.Add(requestedId))
-                Debug.LogWarning($"[KAGE] stretch {Data.Id}: foe '{requestedId}' is not built yet; the Order Footman stands in for it (StretchSession.FallbackFoeId).");
+            var def = ResolveFoe(requestedId);
             var f = _builder.Spawn(def, 1, _foeInput(def));
             f.ResetForRound(x, facing);
             f.BeginFight();
@@ -290,14 +280,14 @@ namespace Kage
         }
 
         /// <summary>
-        /// The character for a foe id on a road: the catalog's entry, or, when the id has no character yet, the Order Footman
-        /// (<see cref="FallbackFoeId"/>) with <paramref name="fellBack"/> set. The one place the fallback lives (SAN-109 removes it).
+        /// The character for a foe id on a road: the catalog's entry. An id with no character is a mistake in the road's data, so it throws
+        /// (<see cref="InvalidOperationException"/>) rather than putting some other foe in its place (SAN-109 removed the Footman fallback).
         /// </summary>
-        public static CharacterDef ResolveFoe(string requestedId, out bool fellBack)
+        public static CharacterDef ResolveFoe(string requestedId)
         {
             var def = CharacterCatalog.Get(requestedId);
-            fellBack = def == null;
-            return def ?? CharacterCatalog.Get(FallbackFoeId);
+            if (def == null) throw new InvalidOperationException($"stretch foe '{requestedId}' is not a character of the catalog");
+            return def;
         }
 
         /// <summary>

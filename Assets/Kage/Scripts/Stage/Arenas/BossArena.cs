@@ -32,5 +32,19 @@ namespace Kage
             EnvBackdrop.Build(root, cam, EnvLook.For(env));
             return true;
         }
+
+        /// <summary>
+        /// Builds the arena of a campaign boss stage (SAN-109) under <paramref name="root"/>: the stage's JS environment (its own, else its
+        /// chapter's: <see cref="GameRules.BossEnvOf"/>), so Raikon fights on the Act I rooftops too. False (nothing built) for a stretch or an
+        /// unknown stage, and the caller builds the shrine. The dev arena keeps <see cref="TryBuild"/> (by foe), so it is unchanged.
+        /// </summary>
+        public static bool TryBuildForStage(Transform root, CameraRig cam, string stageId)
+        {
+            var env = GameRules.BossEnvOf(stageId);
+            if (env == null) return false;
+            ArenaBuilder.BuildPhysics(root);
+            EnvBackdrop.Build(root, cam, EnvLook.For(env));
+            return true;
+        }
     }
 }
