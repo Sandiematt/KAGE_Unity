@@ -8,8 +8,7 @@ namespace Kage
     /// <summary>
     /// The dev arena's stretch mode (SAN-89). <b>F10</b> reloads the arena as the test stretch of Footmen
     /// (<see cref="StretchData.DevFootmenId"/>) and F10 again goes back to the duel; <b>Shift+F10</b> reloads it on the next road
-    /// (the test stretch, then the Prologue walk and the four Act I stretches, <see cref="DevStretchIds"/>; foes not built yet are
-    /// Footmen, <see cref="StretchSession.FallbackFoeId"/>). Kage walks right along the road; a gate closes at each encounter and its waves
+    /// (the test stretch, then the Prologue walk and the four Act I stretches, <see cref="DevStretchIds"/>). Kage walks right along the road; a gate closes at each encounter and its waves
     /// arrive one after another (two foes attack at a time, the rest wait). R starts the road again. The HUD's mode line shows the road
     /// progress, the gate and the wave (<see cref="StretchSession.HudText"/>).
     /// <para>Stretch mode builds the road instead of the arena and spawns no foe of its own: <see cref="StretchSession"/> brings them. The

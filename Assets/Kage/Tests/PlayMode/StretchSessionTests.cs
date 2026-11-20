@@ -323,47 +323,31 @@ namespace Kage.Tests
             Assert.Greater(r.hpLeft, 0.0);
         }
 
-        // ---------------- foes that are not built yet ----------------
+        // ---------------- foes ----------------
 
         [Test]
-        public void A_foe_id_with_no_character_falls_back_to_the_Footman_and_logs_a_warning()
+        public void A_foe_id_with_no_character_is_an_error_and_no_other_foe_stands_in()
         {
             var d = new StretchData
             {
-                Id = "dev.fallback", Length = JsUnits.PxToMetres(2000), Start = JsUnits.PxToMetres(160),
+                Id = "dev.nofoe", Length = JsUnits.PxToMetres(2000), Start = JsUnits.PxToMetres(160),
                 Encounters = new[] { new StretchEncounter { X = JsUnits.PxToMetres(600), Gate = JsUnits.PxToMetres(1200), Waves = new[] { new[] { "order_footman", "no_such_foe" } } } },
             };
             var f = Fight(d);
-            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("no_such_foe.*not built yet"));
-            Assert.IsTrue(f.RunUntil(() => f.Log.Count(CombatEventType.WaveStarted) == 1, 1400));
-            Assert.AreEqual(2, f.Session.Spawned.Count);
-            Assert.IsFalse(f.Session.Spawned[0].FellBack);
-            var s = f.Session.Spawned[1];
-            Assert.IsTrue(s.FellBack);
-            Assert.AreEqual("no_such_foe", s.RequestedId);
-            Assert.AreEqual(StretchSession.FallbackFoeId, s.CharacterId);
-            Assert.AreEqual("order_footman#2", s.FighterId, "fighter ids stay unique");
-            CollectionAssert.AreEqual(new[] { "no_such_foe" }, f.Session.FallbackIds.ToArray());
+            var e = Assert.Throws<System.InvalidOperationException>(() => f.RunUntil(() => f.Log.Count(CombatEventType.WaveStarted) == 1, 1400));
+            StringAssert.Contains("no_such_foe", e.Message);
+            Assert.IsFalse(f.Session.Spawned.Any(s => s.RequestedId == "no_such_foe"), "nothing was spawned in its place");
         }
 
         [Test]
-        public void Every_foe_id_the_JS_stretches_name_resolves_to_a_character_or_the_documented_fallback()
+        public void Every_foe_id_the_JS_stretches_name_resolves_to_that_character()
         {
             var ids = new HashSet<string>();
             foreach (var st in JsTables.Stages.Where(s => s.Kind == "stretch"))
                 foreach (var e in StretchData.FromStage(st.Id).Encounters)
                     foreach (var w in e.Waves) foreach (var id in w) ids.Add(id);
             Assert.Contains("order_runner", ids.ToList());
-            foreach (var id in ids)
-            {
-                var def = StretchSession.ResolveFoe(id, out bool fellBack);
-                Assert.IsNotNull(def, id);
-                Assert.AreEqual(fellBack ? StretchSession.FallbackFoeId : id, def.id, id);
-                Assert.AreEqual(CharacterCatalog.Get(id) == null, fellBack, id);
-            }
-            CharacterCatalog.Get("order_footman");
-            StretchSession.ResolveFoe("order_footman", out bool footmanFellBack);
-            Assert.IsFalse(footmanFellBack);
+            foreach (var id in ids) Assert.AreEqual(id, StretchSession.ResolveFoe(id).id, id);
         }
 
         // ---------------- determinism ----------------

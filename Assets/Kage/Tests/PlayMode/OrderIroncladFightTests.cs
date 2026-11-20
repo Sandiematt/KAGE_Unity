@@ -146,8 +146,7 @@ namespace Kage.Tests
         [Test]
         public void StretchWavesResolveTheIroncladToTheRealCharacter()
         {
-            var def = StretchSession.ResolveFoe(Id, out bool fellBack);
-            Assert.IsFalse(fellBack, "no Footman fallback for the Ironclad");
+            var def = StretchSession.ResolveFoe(Id);
             Assert.AreEqual(Id, def.id);
         }
 

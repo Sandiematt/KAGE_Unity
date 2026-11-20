@@ -135,8 +135,7 @@ namespace Kage.Tests
         [Test]
         public void StretchWavesResolveTheHuskToTheRealCharacter()
         {
-            var def = StretchSession.ResolveFoe(Id, out bool fellBack);
-            Assert.IsFalse(fellBack, "no Footman fallback for the Husk");
+            var def = StretchSession.ResolveFoe(Id);
             Assert.AreEqual(Id, def.id);
             Assert.AreEqual(2.5f, def.mass);
         }
@@ -159,9 +158,7 @@ namespace Kage.Tests
             f.RunUntil(() => f.Session.Spawned.Any(s => s.RequestedId == Id) || f.Session.Failed, 30000);
             var husk = f.Session.Spawned.FirstOrDefault(s => s.RequestedId == Id);
             Assert.IsNotNull(husk, "the Husk was spawned by the road's last wave");
-            Assert.IsFalse(husk.FellBack, "as itself, with no fallback");
             Assert.AreEqual(Id, husk.CharacterId);
-            Assert.IsEmpty(f.Session.FallbackIds, "nothing on this road fell back to a Footman");
             Assert.IsTrue(f.Session.Foes.Any(x => x.FighterId == Id), "and it stands on the road");
             Assert.AreEqual(2.5f, f.Session.Foes.First(x => x.FighterId == Id).Mass);
         }
