@@ -133,6 +133,18 @@ namespace Kage
 
         public void Line(B bone, int order, Color col, float width, params float[] xy) => Line(bone, order, col, width, Pts(xy));
 
+        /// <summary>
+        /// A closed outline: one quad per edge. (A closed <see cref="Line"/> would be a ring polygon, which the mesh builder fills in.)
+        /// </summary>
+        public void Outline(B bone, int order, Color col, float width, IList<Vector2> loop, float glow = 1f)
+        {
+            for (int i = 0; i < loop.Count; i++)
+            {
+                Vector2 p = loop[i], q = loop[(i + 1) % loop.Count], d = (q - p).normalized * width * 0.5f;
+                Line(bone, order, col, width, new List<Vector2> { p - d, q + d }, glow);
+            }
+        }
+
         public void Disc(B bone, int order, Color col, float cx, float cy, float r, float glow = 1f)
         {
             var pts = ToBind(Circle(cx, cy, r, 10));
