@@ -52,14 +52,55 @@ namespace Kage
             {
                 float y0 = -1200f + j * step, y1 = y0 + step;
                 Vector2[] q = { new Vector2(-2400f, y0), new Vector2(front + jag[j], y0), new Vector2(front + jag[j + 1], y1), new Vector2(-2400f, y1) };
+                // the revealed strip, cut to the letter image's own rectangle (the JS draws the image inside its frame only)
+                var poly = new List<Vector2>(8);
+                for (int k = 0; k < 4; k++) poly.Add(centre + new Vector2(q[k].x * c - q[k].y * s, q[k].x * s + q[k].y * c));
+                ClipToFrame(poly);
+                if (poly.Count < 3) continue;
                 int b = vh.currentVertCount;
-                for (int k = 0; k < 4; k++)
-                    Vert(vh, centre + new Vector2(q[k].x * c - q[k].y * s, q[k].x * s + q[k].y * c));
-                vh.AddTriangle(b, b + 1, b + 2); vh.AddTriangle(b, b + 2, b + 3);
+                foreach (var pt in poly) Vert(vh, pt);
+                for (int k = 1; k + 1 < poly.Count; k++) vh.AddTriangle(b, b + k, b + k + 1);
             }
         }
 
         void Vert(VertexHelper vh, Vector2 art) { vh.AddVert(P(art), color, Uv(art)); }
+
+        // Sutherland-Hodgman against the four sides of the letter frame
+        void ClipToFrame(List<Vector2> poly)
+        {
+            for (int side = 0; side < 4; side++)
+            {
+                var input = new List<Vector2>(poly);
+                poly.Clear();
+                for (int i = 0; i < input.Count; i++)
+                {
+                    Vector2 a = input[i], b = input[(i + 1) % input.Count];
+                    bool ia = Inside(a, side), ib = Inside(b, side);
+                    if (ia) poly.Add(a);
+                    if (ia != ib) poly.Add(Cross(a, b, side));
+                }
+                if (poly.Count == 0) return;
+            }
+        }
+
+        bool Inside(Vector2 p, int side)
+        {
+            switch (side)
+            {
+                case 0: return p.x >= frame.xMin;
+                case 1: return p.x <= frame.xMax;
+                case 2: return p.y >= frame.yMin;
+                default: return p.y <= frame.yMax;
+            }
+        }
+
+        Vector2 Cross(Vector2 a, Vector2 b, int side)
+        {
+            float edge = side == 0 ? frame.xMin : side == 1 ? frame.xMax : side == 2 ? frame.yMin : frame.yMax;
+            bool vertical = side < 2;
+            float t = vertical ? (edge - a.x) / (b.x - a.x) : (edge - a.y) / (b.y - a.y);
+            return a + (b - a) * t;
+        }
     }
 
     /// <summary>The red blade of light of a splash slash: a body thin at the tail and full at the head, a white core and a soft red glow (JS blade()).</summary>
@@ -201,7 +242,7 @@ namespace Kage
         readonly List<RectTransform> petalNodes = new List<RectTransform>(), sparkNodes = new List<RectTransform>();
         readonly bool[] burst = new bool[5];
         System.Random rng;
-        float startedAt, lastT, dismissedAt = -1f;
+        float startedAt, lastT, dismissedAt = -1f, manualAt = -1f;
         RectTransform canvasRoot;
         bool dismissed;
         Text sub, promptText;
@@ -382,6 +423,8 @@ namespace Kage
             }
             Fit();
             if (AnyPress()) { Dismiss(); return; }
+            // a fixture drew a chosen moment (ShowAt): the splash stays on it
+            if (manualAt >= 0f) return;
             float t = Elapsed();
             float dt = Mathf.Clamp(t - lastT, 0f, 0.05f);
             if (UiClock.Animate) dt = Mathf.Min(0.05f, Time.unscaledDeltaTime);
@@ -418,6 +461,7 @@ namespace Kage
         {
             gameObject.SetActive(true);
             dismissed = false;
+            manualAt = t;
             rootGroup.alpha = 1f;
             Fit();
             ResetSim();
