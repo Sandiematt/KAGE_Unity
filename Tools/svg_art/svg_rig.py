@@ -391,15 +391,33 @@ class Cutter:
             col[:] = 0
         return m
 
-    def layers(self, mask, T, base_tone, eps, soft_seg):
+    def polys_of(self, m, eps, cell):
+        """Simple polygons covering a mask (no holes left in it). With a cell size (soft parts) the mask is cut cell by cell first,
+        so no triangle of the part is bigger than a cell and the piece bends smoothly on its chains instead of its long slivers
+        sweeping across the cloth; neighbouring cells overlap by half a sample, so no seam opens."""
+        min_area = self.cfg.get('speck', 6) * 0.5
+        if not cell:
+            return [p for p in self.contour(m, eps) if abs(poly_area(p)) >= min_area]
+        ys, xs = np.nonzero(m)
+        if len(xs) == 0: return []
+        c = int(cell * self.S)
+        out = []
+        for y0 in range((ys.min() // c) * c, ys.max() + 1, c):
+            for x0 in range((xs.min() // c) * c, xs.max() + 1, c):
+                sub = np.zeros_like(m)
+                sub[y0:y0 + c, x0:x0 + c] = m[y0:y0 + c, x0:x0 + c]
+                if not sub.any(): continue
+                out += [p for p in self.contour(sub, eps) if abs(poly_area(p)) >= min_area]
+        return out
+
+    def layers(self, mask, T, base_tone, eps, soft_seg, cell=0):
         """The region's polygons in paint order: (tone, points). base_tone None: no base layer (a cut of a few tones)."""
         out = []
         outside = (1 - mask).astype(np.uint8)
         if base_tone is not None:
             base = self.open_holes(mask, outside)
-            for p in self.contour(base, eps):
-                if abs(poly_area(p)) >= self.cfg.get('speck', 6) * 0.5:   # a fleck of the region cut off by a neighbour: dropped
-                    out.append((base_tone, p))
+            for p in self.polys_of(base, eps, cell):   # flecks of the region cut off by a neighbour are dropped
+                out.append((base_tone, p))
         comps = []
         for t in range(len(self.tone_names)):
             tm = ((T == t) & (mask == 1)).astype(np.uint8)
@@ -427,9 +445,8 @@ class Cutter:
             if c['tone'] == base_tone and c['depth'] == 0: continue          # the base layer already paints it
             xa, ya, xb, yb = c['box']
             full = np.zeros_like(mask); full[ya:yb, xa:xb] = c['filled']
-            for p in self.contour(full, eps):
-                if abs(poly_area(p)) >= self.cfg.get('speck', 6) * 0.5:
-                    out.append((c['tone'], p))
+            for p in self.polys_of(full, eps, cell):
+                out.append((c['tone'], p))
         if soft_seg:
             out = [(t, resample(p, soft_seg)) for t, p in out]
         return out
@@ -459,7 +476,8 @@ def main(cfg_path):
     for n, r in cfg['regions'].items():
         rb = cut.tone_names.index(r['base']) if 'base' in r else base_tone
         if 'tones' in r and 'base' not in r: rb = None                     # a tone cut (eye, crack): no base layer
-        lay = cut.layers(masks[n], T, rb, r.get('eps', eps), cfg.get('resample', 8) if n in soft_regions else 0)
+        soft = n in soft_regions
+        lay = cut.layers(masks[n], T, rb, r.get('eps', eps), cfg.get('resample', 8) if soft else 0, cfg.get('softCell', 24) if soft else 0)
         outline = cut.contour(fill_holes(masks[n]), max(1.0, eps * 2))
         outline = max(outline, key=lambda p: abs(poly_area(p))) if outline else None
         regions[n] = (outline, lay)
