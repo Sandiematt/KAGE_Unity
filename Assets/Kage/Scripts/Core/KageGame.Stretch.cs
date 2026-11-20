@@ -75,6 +75,7 @@ namespace Kage
             Fight = fight.Build();
             Fight.Camera = Cam;
             Fight.Hud = Hud;
+            Hud.BindEvents(Fight.Events);
             Fight.Events.Published += OnCombatEvent;
             Fight.Begin();
 
@@ -86,6 +87,7 @@ namespace Kage
             player.roundsWon = 0;
             player.meter = 0f;
             Stretch.Begin();
+            Hud.BindStretch(Stretch);       // the road strip reads the session (SAN-108)
             Cam.Snap();
             Hud.SetTraining("");
             // the plain title card opens the stage (SAN-96); a road with prompts keeps Kage still until it has gone
@@ -190,7 +192,7 @@ namespace Kage
             if (kb.tabKey.wasPressedThisFrame || kb.f1Key.wasPressedThisFrame) Hud.ToggleMoveList();
             if (kb.f5Key.wasPressedThisFrame) ReloadWithStretch("");
             if (kb.f6Key.wasPressedThisFrame) { NextGroupSize = GroupFightSize; ReloadWithStretch(""); }
-            if (kb.pKey.wasPressedThisFrame) GameFeel.paused = !GameFeel.paused;
+            if (PausePressed(kb)) TogglePause();
             if (kb.f7Key.wasPressedThisFrame)
             {
                 if (player.SwordBroken) player.RestoreSword(); else player.BreakSword();
