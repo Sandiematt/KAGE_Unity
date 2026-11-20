@@ -127,5 +127,25 @@ namespace Kage.Tests
             Debug.Log(PacingKit.Table($"SAN-110 pacing: sub-bosses, each one's JS-tip bot, foe level {StageWorld.FoeLevel(StageWorldKind.SubBoss)}, {BossSeeds} seeds, helped Kage x{PacingKit.SurvivalHelp} health", rows));
             AssertBands(rows);
         }
+
+        // ---------------- Raikon ----------------
+
+        [Test, Timeout(1800000)]
+        public void PacingReport_Raikon_takes_2_to_3_minutes()
+        {
+            var l = PacingKit.LoadoutOf("act1.boss");
+            var row = new PacingKit.Row { Name = "raikon", Target = PacingKit.Raikon, Gear = "act1.boss; " + l.Text };
+            for (int i = 0; i < BossSeeds; i++)
+            {
+                var h = PacingKit.Boss("act1.boss", FirstSeed + i, PacingKit.Helped(l.Kage));
+                row.HelpedRuns++;
+                if (h.Won) row.Ttk.Add(h.Seconds);
+                var r = PacingKit.Boss("act1.boss", FirstSeed + i, l.Kage.Clone());
+                row.RealRuns++;
+                if (r.Won) { row.RealWins++; row.WonSeeds.Add(FirstSeed + i); }
+            }
+            Debug.Log(PacingKit.Table($"SAN-110 pacing: Raikon, the StormBot (SAN-107), foe level {StageWorld.FoeLevel(StageWorldKind.Boss)}, {BossSeeds} seeds, helped Kage x{PacingKit.SurvivalHelp} health", new[] { row }));
+            AssertBands(new[] { row });
+        }
     }
 }

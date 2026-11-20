@@ -12,6 +12,7 @@
         { "id": "kuroe", "mul": 1.15 },
         { "id": "garan", "mul": 1.25 },
         { "id": "hisame", "mul": 1.2 },
-        { "id": "shiden", "mul": 1.05 }
+        { "id": "shiden", "mul": 1.05 },
+        { "id": "raikon", "mul": 1.4 }
     ]
 }

@@ -139,7 +139,9 @@ namespace Kage.Tests
             var st = GameRules.Stage(stage);
             using var f = new HeadlessFight(seed, Foe.Ai, -1.2f, 1.2f, foeDef: CharacterCatalog.Get(st.Enemy), kageDef: kage);
             f.Ai.level = StageWorld.FoeLevel(GameRules.WorldKindOf(stage));
-            f.KageInput.fallback = SagaBotCampaignTests.BossBot(st.Enemy);
+            var bot = SagaBotCampaignTests.BossBot(st.Enemy);
+            if (bot is RaikonFightBotTests.StormBot storm) storm.Fight = f;       // Raikon's bot reads his waves and hazards from the fight
+            f.KageInput.fallback = bot;
             f.KageInput.Add(1);
             bool Over() => f.Kage.state == FState.KO || f.Ronin.state == FState.KO;
             f.RunUntil(Over, BossCap);

@@ -21,7 +21,7 @@ namespace Kage.Tests
         {
             { "hollow_shade", 1.4f }, { "order_footman", 1.65f }, { "order_runner", 1.35f }, { "order_chainthrower", 1.7f },
             { "order_shieldbearer", 1.1f }, { "hollow_flicker", 2.5f }, { "order_ironclad", 1.35f }, { "hollow_husk", 1.4f },
-            { "kuroe", 1.15f }, { "garan", 1.25f }, { "hisame", 1.2f }, { "shiden", 1.05f },
+            { "kuroe", 1.15f }, { "garan", 1.25f }, { "hisame", 1.2f }, { "shiden", 1.05f }, { "raikon", 1.4f },
         };
 
         static readonly string[] Foes =
@@ -104,7 +104,7 @@ namespace Kage.Tests
             return h.ToString("x16");
         }
 
-        const string DamageHash = "45d469a1710bee54";
+        const string DamageHash = "3e61ce3c33d5b0c6";
 
         [Test]
         public void No_move_damage_changed_in_the_pacing_pass()

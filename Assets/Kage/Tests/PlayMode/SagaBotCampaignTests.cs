@@ -25,7 +25,7 @@ namespace Kage.Tests
     /// </summary>
     public class SagaBotCampaignTests
     {
-        const int Seeds = 3, RoadCap = 60 * 900, BossCap = 60 * 300, RoadQuiet = 60 * 60, BossQuiet = 600;
+        const int Seeds = 3, RoadCap = 60 * 900, BossCap = 60 * 300, RoadQuiet = 60 * 60, BossQuiet = 600, RaikonQuiet = 900;      // SAN-110: Raikon is 1.4 times as long a fight; his own bot test allows 900 too
 
         static readonly string[] Order =
         {
@@ -118,7 +118,7 @@ namespace Kage.Tests
         static void AssertNoSoftlock(Run r)
         {
             Assert.IsTrue(r.Ended, $"{r.Stage}: no end in the cap, a softlock: {r.Line}");
-            Assert.Less(r.Quiet, IsFight(r.Stage) ? BossQuiet : RoadQuiet, $"{r.Stage}: nothing happened for too long: {r.Line}");
+            Assert.Less(r.Quiet, IsFight(r.Stage) ? (r.Stage == "act1.boss" ? RaikonQuiet : BossQuiet) : RoadQuiet, $"{r.Stage}: nothing happened for too long: {r.Line}");
         }
 
         // ---------------- the honest table: each stage on its own ----------------
