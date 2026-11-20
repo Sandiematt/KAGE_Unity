@@ -60,8 +60,8 @@ namespace Kage.Tests
             for (int i = 0; i < 60; i++)
             {
                 f.Run(1);
-                // the sprint (Run) trails the katana in one hand on purpose; the walk holds it in both
-                if (i > 12 && f.Kage.state == FState.Walk)
+                // the walk and the sprint both hold it in both hands (SAN-118: the run carries it in a low chudan)
+                if (i > 12 && (f.Kage.state == FState.Walk || f.Kage.state == FState.Run))
                 {
                     walked++;
                     Assert.Less(NearFistToHandle(f.Kage), OnGrip, $"frame {i} ({f.Kage.state})");
@@ -99,9 +99,8 @@ namespace Kage.Tests
                 Assert.IsNotNull(id);
                 while (f.Kage.state == FState.Attack)
                 {
-                    // Low Reap's low, fully extended cut (its far hand is fixed by the hit geometry) is past the near arm's
-                    // reach: the near fist stays within 13 cm of the handle there (follow-up: re-author it); every other swing keeps it on the handle
-                    Assert.Less(NearFistToHandle(f.Kage), id == "lowReap" ? 0.13f : 0.06f, $"{id} frame {f.Kage.moveFrame}");
+                    // every swing keeps the near fist on the handle, Low Reap too since SAN-118 re-authored its low cut
+                    Assert.Less(NearFistToHandle(f.Kage), 0.06f, $"{id} frame {f.Kage.moveFrame}");
                     f.Run(1);
                 }
                 f.Dispose();

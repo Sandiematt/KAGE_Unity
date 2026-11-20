@@ -258,7 +258,7 @@ namespace Kage
 
             // Rising Moon: kiri-age from a sunk gedan, the legs driving the blade up edge first, finishing in jōdan
             m.risingMoon = new MoveDef("risingMoon", "Rising Moon", 32)
-                .Key(3, P().Hip(0f, -0.3f, -4f).Chest(-28f).Head(16f).Feet(0.28f, -0.24f).Grip().HandF(0.2f, 0.62f).Blade(-100f).EdgeUp(), Ease.InOutQuad)
+                .Key(3, P().Hip(0f, -0.3f, -4f).Chest(-28f).Head(16f).Feet(0.28f, -0.24f).Grip().HandF(0.22f, 0.68f).Blade(-42f).EdgeUp(), Ease.InOutQuad)
                 .Key(5, P().Hip(0.04f, -0.26f, -6f).Chest(-26f).Head(14f).Feet(0.3f, -0.22f).Grip().HandF(0.3f, 0.58f).Blade(-55f).EdgeUp(), Ease.InQuad)
                 .Key(9, P().Hip(0.12f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.36f, 0.13f).FootF(-0.15f, 0.15f, -20f).Grip().HandF(0.36f, 1.42f).Blade(96f).EdgeUp(), Ease.OutQuad)
                 .Key(13, P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f).Grip().HandF(0.26f, 1.52f).Blade(110f).EdgeUp())
@@ -327,8 +327,8 @@ namespace Kage
             // Kage Counter: a tsuki straight out of Kasumi, the point travelling down its own line into the body, then withdrawn
             // to chūdan with the point still on the opponent
             m.counterSlash = new MoveDef("counterSlash", "Kage Counter", 30)
-                .Key(3, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).Grip().HandF(0.56f, 1.22f).Blade(-16f).EdgeUp(), Ease.OutExpo)
-                .Key(10, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.24f).Grip().HandF(0.55f, 1.2f).Blade(-14f).EdgeUp())
+                .Key(3, P().Hip(0.08f, -0.16f, -6f).Chest(-2f).Head(4f).Feet(0.4f, -0.28f).Grip().HandF(0.56f, 1.2f).Blade(-20f).EdgeUp(), Ease.OutExpo)
+                .Key(10, P().Hip(0.08f, -0.16f, -6f).Chest(-3f).Head(4f).Feet(0.4f, -0.24f).Grip().HandF(0.55f, 1.19f).Blade(-17f).EdgeUp())
                 .Key(18, P().Hip(0.03f, -0.12f, -8f).Chest(-16f).Head(9f).Feet(0.3f, -0.25f).Grip().HandF(0.32f, 1.02f).Blade(22f), Ease.InOutQuad)
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Hit(1, 6, Blade, 12, HitLevel.Unblockable, new Vector2(1.6f, 4.5f), stun: 30, hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: 0.12f)
