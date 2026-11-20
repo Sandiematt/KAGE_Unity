@@ -78,6 +78,15 @@ namespace Kage
                 var rt = new PartRT { def = p };
                 Transform parent = bones[(int)p.bone];
                 Vector2 pivot = d.pivot[(int)p.bone];
+                if (p.jigglePivot.HasValue)   // a hanging piece: its own pivot with spring motion (flat parts, and cel parts since SAN-98)
+                {
+                    var j = new GameObject(p.name + "_Pivot").transform;
+                    j.SetParent(parent, false);
+                    j.localPosition = p.jigglePivot.Value - pivot;
+                    pivot = p.jigglePivot.Value;
+                    parent = j;
+                    rt.jiggle = j;
+                }
                 if (p.polys != null || p.mesh != null)
                 {
                     var multi = p.polys != null ? MeshKit.PolyMulti(p.polys, pivot, p.name) : MeshKit.Shifted(p.mesh, -pivot, p.name);
@@ -96,15 +105,6 @@ namespace Kage
                         _all.Add(rt.rim);
                     }
                     continue;
-                }
-                if (p.jigglePivot.HasValue)
-                {
-                    var j = new GameObject(p.name + "_Pivot").transform;
-                    j.SetParent(parent, false);
-                    j.localPosition = p.jigglePivot.Value - pivot;
-                    pivot = p.jigglePivot.Value;
-                    parent = j;
-                    rt.jiggle = j;
                 }
                 var local = new Vector2[p.pts.Length];
                 for (int k = 0; k < local.Length; k++) local[k] = p.pts[k] - pivot;

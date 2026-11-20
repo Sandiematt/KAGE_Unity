@@ -531,6 +531,18 @@ namespace Kage
             return p;
         }
 
+        /// <summary>
+        /// Hangs a part (a cel plate from <see cref="AddCel"/>, or a flat one) from its own pivot at (<paramref name="pivotX"/>,
+        /// <paramref name="pivotY"/>) reference px, swung by the fighter's spring motion like <see cref="AddSwinging"/>: a kusazuri plate
+        /// from the belt. <paramref name="swing"/> is how much (0.3 a little, 1 a lot). The part and its rim swing together.
+        /// </summary>
+        public static PartDef Swing(PartDef p, float pivotX, float pivotY, float swing)
+        {
+            p.jigglePivot = P(pivotX, pivotY);
+            p.jiggle = swing;
+            return p;
+        }
+
         static Vector2[] ShiftBy(Vector2[] pts, Vector2 by)
         {
             var r = new Vector2[pts.Length];
