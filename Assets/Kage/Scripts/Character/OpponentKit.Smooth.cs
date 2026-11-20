@@ -396,6 +396,53 @@ namespace Kage
             return output.Count >= 3 ? Clean(output) : new Vector2[0];
         }
 
+        /// <summary>
+        /// The overlap of two shapes that may both be concave, as long as each is seen whole from <paramref name="centre"/> (every ray
+        /// from it leaves the shape once): a mask sculpted on a face (the face's bridge notch) and broken along a zigzag crack, where
+        /// <see cref="ClipConvex"/> needs one of them convex (SAN-76 rework). Each shape is cast along rays from the centre, a fixed
+        /// number round the circle plus one through every corner of either, and the nearer edge is kept, so both shapes' corners
+        /// stay sharp. All in one space (bind space for a part); empty when the centre is outside either shape.
+        /// </summary>
+        public static Vector2[] ClipStar(IList<Vector2> a, IList<Vector2> b, Vector2 centre, int rays = 360)
+        {
+            var angles = new List<float>(rays + a.Count + b.Count);
+            for (int i = 0; i < rays; i++) angles.Add(i * (2f * Mathf.PI / rays));
+            foreach (var p in a) angles.Add(AngleOf(p - centre));
+            foreach (var p in b) angles.Add(AngleOf(p - centre));
+            angles.Sort();
+            var r = new List<Vector2>(angles.Count);
+            float last = -1f;
+            foreach (float t in angles)
+            {
+                if (t - last < 1e-6f) continue;
+                last = t;
+                var d = new Vector2(Mathf.Cos(t), Mathf.Sin(t));
+                float ra = RayOut(a, centre, d), rb = RayOut(b, centre, d);
+                if (ra <= 0f || rb <= 0f) return new Vector2[0];
+                r.Add(centre + d * Mathf.Min(ra, rb));
+            }
+            return Clean(r);
+        }
+
+        static float AngleOf(Vector2 v) { float t = Mathf.Atan2(v.y, v.x); return t < 0f ? t + 2f * Mathf.PI : t; }
+
+        /// <summary>How far a ray from <paramref name="o"/> along <paramref name="d"/> runs before it first meets the outline (0 if it never does).</summary>
+        static float RayOut(IList<Vector2> pts, Vector2 o, Vector2 d)
+        {
+            int n = pts.Count;
+            float best = float.MaxValue;
+            for (int k = 0; k < n; k++)
+            {
+                Vector2 a = pts[k], e = pts[(k + 1) % n] - a;
+                float den = d.x * e.y - d.y * e.x;
+                if (Mathf.Abs(den) < 1e-12f) continue;
+                Vector2 w = a - o;
+                float t = (w.x * e.y - w.y * e.x) / den, s = (w.x * d.y - w.y * d.x) / den;
+                if (t > 1e-7f && s >= -1e-6f && s <= 1f + 1e-6f && t < best) best = t;
+            }
+            return best == float.MaxValue ? 0f : best;
+        }
+
         // ------------------------------------------------------------------------------------ cel shading
 
         /// <summary>A cel tone: the shadow, the base and the lit edge (the JS <c>tone</c> triple <c>[shadow, base, highlight]</c>).</summary>
@@ -528,6 +575,18 @@ namespace Kage
                 soft = SoftKind.Chain, chains = chains, chainFeel = feel,
             };
             d.parts.Add(p);
+            return p;
+        }
+
+        /// <summary>
+        /// Hangs a part (a cel plate from <see cref="AddCel"/>, or a flat one) from its own pivot at (<paramref name="pivotX"/>,
+        /// <paramref name="pivotY"/>) reference px, swung by the fighter's spring motion like <see cref="AddSwinging"/>: a kusazuri plate
+        /// from the belt. <paramref name="swing"/> is how much (0.3 a little, 1 a lot). The part and its rim swing together.
+        /// </summary>
+        public static PartDef Swing(PartDef p, float pivotX, float pivotY, float swing)
+        {
+            p.jigglePivot = P(pivotX, pivotY);
+            p.jiggle = swing;
             return p;
         }
 
