@@ -44,6 +44,7 @@ namespace Kage
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
             _root = (RectTransform)transform;
+            gameObject.AddComponent<HudRectWatcher>().hud = this;
 
             _flash = MakeImage("Flash", _root, new Color(1, 1, 1, 0));
             Stretch(_flash.rectTransform);

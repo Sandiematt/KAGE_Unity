@@ -133,8 +133,8 @@ namespace Kage
             BuildBossBar();
         }
 
-        /// <summary>Keeps the scaled root exactly over the canvas, whatever its aspect.</summary>
-        void ResizeJs()
+        /// <summary>Keeps the scaled root exactly over the canvas, whatever its aspect (also when a screenshot rig changes the canvas's camera).</summary>
+        internal void ResizeJs()
         {
             if (_js == null) return;
             var size = _root.rect.size / JsScale;
@@ -344,7 +344,7 @@ namespace Kage
             // the bar's own shapes were built for the full width: scale them with the node
             p.rageBarRoot.localScale = new Vector3(barW / p.rageBarW, 1f, 1f);
             p.rageFill.SetFill(v.RageFill);
-            p.rageFill.SetColors(ready ? Hex("#ffe9b0") : Hex("#e8b45a"), ready ? Hex("#ffe9b0") : Hex("#e8b45a"));
+            p.rageFill.SetColors(Hex("#e8b45a"), Hex("#e8b45a"));
             p.rageIcon.color = ready ? Color.Lerp(Gold, Hex("#ffd98f"), Mathf.PingPong(Time.unscaledTime * 1.25f, 1f)) : Gold;
             if (p.readyRoot.gameObject.activeSelf != ready) p.readyRoot.gameObject.SetActive(ready);
             if (ready)
@@ -697,5 +697,16 @@ namespace Kage
         }
 
         void Update() => PollPauseClick();
+    }
+}
+
+namespace Kage
+{
+    /// <summary>Tells the HUD when its canvas changes size, so the scaled JS-style root follows at once.</summary>
+    [UnityEngine.AddComponentMenu("")]
+    sealed class HudRectWatcher : UnityEngine.EventSystems.UIBehaviour
+    {
+        public Hud hud;
+        protected override void OnRectTransformDimensionsChange() { if (hud != null) hud.ResizeJs(); }
     }
 }
