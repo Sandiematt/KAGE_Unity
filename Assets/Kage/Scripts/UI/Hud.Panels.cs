@@ -73,9 +73,10 @@ namespace Kage
 
         JsPanel _pl, _pr;
 
-        const float Medal = 73.6f, MedalGap = 14.4f, BodyW = 384f, PanelW = Medal + MedalGap + BodyW;
-        const float HpH = 18.4f, ValW = 38.4f, ValGap = 9.6f;
-        const float TrackW = BodyW - ValW - ValGap;      // 336
+        // the layout numbers are HudLayoutRects', so a test can check the pieces don't overlap
+        const float Medal = HudLayoutRects.Medal, MedalGap = HudLayoutRects.MedalGap, BodyW = HudLayoutRects.BodyW, PanelW = HudLayoutRects.PanelW;
+        const float HpH = HudLayoutRects.HpH, ValW = HudLayoutRects.ValW, ValGap = HudLayoutRects.ValGap;
+        const float TrackW = HudLayoutRects.TrackW;      // 336
 
         static Vector2[] Slant(float w, float h, float slant, bool rightEnd, float inset = 0f)
         {
@@ -122,8 +123,8 @@ namespace Kage
             _js.localScale = new Vector3(JsScale, JsScale, 1f);
             ResizeJs();
 
-            _left = Container("Left", new Vector2(0f, 1f), new Vector2(28.8f, -22.4f), new Vector2(PanelW, Medal));
-            _right = Container("Right", new Vector2(1f, 1f), new Vector2(-28.8f, -22.4f), new Vector2(PanelW, Medal));
+            _left = Container("Left", new Vector2(0f, 1f), new Vector2(HudLayoutRects.PanelInset, -HudLayoutRects.PanelTop), new Vector2(PanelW, Medal));
+            _right = Container("Right", new Vector2(1f, 1f), new Vector2(-HudLayoutRects.PanelInset, -HudLayoutRects.PanelTop), new Vector2(PanelW, Medal));
             _pl = BuildPanel(_left, false);
             _pr = BuildPanel(_right, true);
             BuildClock();
@@ -169,7 +170,7 @@ namespace Kage
             Ui.Diamond(medal, right ? 3.2f : 70.4f, 63.2f, 14.4f, Crimson, Crimson, 0f);
 
             // body
-            float bodyH = right ? 48.8f : 72.8f, by = (Medal - bodyH) / 2f;
+            float bodyH = right ? HudLayoutRects.FoeBodyH : HudLayoutRects.KageBodyH, by = (Medal - bodyH) / 2f;
             var body = Ui.Node(root, "Body", bodyX, by, BodyW, bodyH);
             var al = right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
             p.name = Lbl(body, "", UiFont.Teko, 25, NameCream, right ? 0f : 0f, 0f, BodyW, 24.8f, al, 3.5f);
@@ -177,7 +178,7 @@ namespace Kage
 
             // health: value beside a slanted track with its bone-coloured trail
             float trackX = right ? ValW + ValGap : 0f, valX = right ? 0f : TrackW + ValGap;
-            float hy = 30.4f;
+            float hy = HudLayoutRects.HpY;
             var track = Ui.Node(body, "HpTrack", trackX, hy, TrackW, HpH);
             Ui.Shape(track, 0, 0, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right), Bone, null, null, false, "Frame");
             Ui.Shape(track, 0, 0, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right, 2f), TrackInk, null, null, false, "Ink");
@@ -481,7 +482,7 @@ namespace Kage
         // =====================================================================================================
 
         RectTransform _road;
-        const float RoadW = 384f;
+        const float RoadW = HudLayoutRects.RoadW;
         GradRect _roadFill;
         RectTransform _roadKage;
         Text _roadLabel;
@@ -490,7 +491,7 @@ namespace Kage
 
         void BuildRoad()
         {
-            _road = Container("Road", new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(RoadW, 40f));
+            _road = Container("Road", new Vector2(0.5f, 1f), new Vector2(0f, -HudLayoutRects.RoadTop), new Vector2(RoadW, 40f));
             var track = Ui.Node(_road, "Track", 0, 0, RoadW, 8f);
             Ui.Box(track, 0, 0, RoadW, 8f, A(Gold, 0.55f), "Frame");
             Ui.Box(track, 1, 1, RoadW - 2f, 6f, A(Hex("#060303"), 0.85f), "Ink");
@@ -499,7 +500,8 @@ namespace Kage
             _roadKage = kage;
             Ui.Disc(kage, 7.2f, 7.2f, 9f, A(Hex("#f6e6c8"), 0.25f));
             Ui.Disc(kage, 7.2f, 7.2f, 7.2f, Cream);
-            _roadLabel = Lbl(_road, "", UiFont.Teko, 16, Gold, 0f, 17.2f, RoadW, 20f, TextAnchor.UpperLeft, 3.2f);
+            // centred under the strip: a label starting at the strip's left edge ran over Kage's health number
+            _roadLabel = Lbl(_road, "", UiFont.Teko, 16, Gold, (RoadW - HudLayoutRects.RoadLabelW) / 2f, HudLayoutRects.RoadLabelY, HudLayoutRects.RoadLabelW, HudLayoutRects.RoadLabelH, TextAnchor.UpperCenter, 3.2f);
         }
 
         void ApplyRoad(HudRoadView v)
