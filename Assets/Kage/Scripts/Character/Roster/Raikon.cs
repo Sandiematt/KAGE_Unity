@@ -6,7 +6,8 @@ namespace Kage
     /// <summary>
     /// Raikon (id "raikon"), the Act I boss: his JS stats (health 640, defence 0.16, damage ×1.1, speed ×0.9, build
     /// scale 1.24, heavy armour, no-grab) and his look, cut from the owner's painting (<see cref="RaikonPartSet"/>, SAN-71).
-    /// His fight (moves, phases, abilities, mass, posture) is SAN-81 / SAN-107.
+    /// His fight (SAN-107): the tachi set, the four JS abilities (<see cref="RaikonAbilities"/>), the three JS phases (<c>BossDef.FromJs</c>, unchanged),
+    /// mass, posture, and a hit line that is his painted blade (<see cref="CharacterDef.bladeLength"/>). ADR-0008's SAN-107 notes have the numbers.
     /// </summary>
     public static class Raikon
     {
