@@ -239,29 +239,44 @@ namespace Kage
                 .Invuln(0, 30).Fx(15, 15, FxKind.Dust);
 
             // ===================== KATANA =====================
+            // Two-handed kenjutsu (SAN-118, docs/research/sword-mechanics.md). Every cut: the hips load, then lead; the arms deliver on
+            // the impact key; the edge leads along the cut (a rising cut or a draw turns the blade over, EdgeUp); the blade follows
+            // through on its line; the point comes back onto the opponent (zanshin) before the recovery blends to chūdan. The hit
+            // frames, root motion and every number are as before: only the keys between them changed.
+
+            // Iai Draw: a rising diagonal draw (gyaku-kesa nukitsuke) out of waki, the edge leading up, then a chiburi flick
             m.iai = new MoveDef("iai", "Iai Draw", 30)
-                .Key(6, P().Hip(-0.03f, -0.11f, -4f).Chest(4f).Head(4f).Feet(0.22f, -0.26f).Grip().HandF(-0.04f, 0.84f).Blade(-158f))
-                .Key(9, P().Hip(0.08f, -0.11f, -10f).Chest(-16f).Head(10f).Feet(0.32f, -0.22f).Grip().HandF(0.42f, 1.08f).Blade(8f), Ease.OutExpo)
-                .Key(12, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).Grip().HandF(0.36f, 1.26f).Blade(62f))
-                .Key(18, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.22f).Grip().HandF(0.36f, 1.26f).Blade(70f))
+                .Key(4, Waki(P().Hip(-0.04f, -0.14f, -2f).Chest(6f).Head(2f).Feet(0.22f, -0.27f)).EdgeUp(), Ease.InOutQuad)
+                .Key(6, P().Hip(0.02f, -0.13f, -6f).Chest(-4f).Head(6f).Feet(0.27f, -0.26f).Grip().HandF(0.04f, 0.84f).Blade(-150f).EdgeUp(), Ease.InQuad)
+                .Key(9, P().Hip(0.08f, -0.11f, -10f).Chest(-16f).Head(10f).Feet(0.32f, -0.22f).Grip().HandF(0.42f, 1.08f).Blade(8f).EdgeUp(), Ease.OutExpo)
+                .Key(12, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.18f).Grip().HandF(0.36f, 1.26f).Blade(62f).EdgeUp())
+                .Key(16, P().Hip(0.1f, -0.1f, -12f).Chest(-20f).Head(12f).Feet(0.32f, -0.18f).Grip().HandF(0.32f, 1.32f).Blade(76f).EdgeUp())
+                .Key(21, P().Hip(0.06f, -0.12f, -8f).Chest(-14f).Head(8f).Feet(0.3f, -0.2f).Grip().HandF(0.42f, 0.98f).Blade(-24f), Ease.OutCubic)
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Hit(8, 12, Blade, 9, HitLevel.Mid, new Vector2(1.8f, 0.3f), stun: 18, hitstop: 6, shake: 0.12f, radius: 0.07f)
                 .Fx(6, 14, FxKind.TrailBlade).Sword().Cancel(12);
 
+            // Rising Moon: kiri-age from a sunk gedan, the legs driving the blade up edge first, finishing in jōdan
             m.risingMoon = new MoveDef("risingMoon", "Rising Moon", 32)
-                .Key(5, P().Hip(0.04f, -0.26f, -6f).Chest(-26f).Head(14f).Feet(0.3f, -0.22f).Grip().HandF(0.3f, 0.58f).Blade(-55f))
-                .Key(9, P().Hip(0.12f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.36f, 0.13f).FootF(-0.15f, 0.15f, -20f).Grip().HandF(0.36f, 1.42f).Blade(96f), Ease.OutQuad)
-                .Key(13, P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f).Grip().HandF(0.26f, 1.52f).Blade(110f))
+                .Key(3, P().Hip(0f, -0.3f, -4f).Chest(-28f).Head(16f).Feet(0.28f, -0.24f).Grip().HandF(0.22f, 0.68f).Blade(-42f).EdgeUp(), Ease.InOutQuad)
+                .Key(5, P().Hip(0.04f, -0.26f, -6f).Chest(-26f).Head(14f).Feet(0.3f, -0.22f).Grip().HandF(0.3f, 0.58f).Blade(-55f).EdgeUp(), Ease.InQuad)
+                .Key(9, P().Hip(0.12f, -0.04f, 2f).Chest(8f).Head(-6f).FootN(0.36f, 0.13f).FootF(-0.15f, 0.15f, -20f).Grip().HandF(0.36f, 1.42f).Blade(96f).EdgeUp(), Ease.OutQuad)
+                .Key(13, P().Hip(0.1f, -0.04f, 2f).Chest(10f).Head(-6f).FootN(0.32f, 0.13f).FootF(-0.18f, 0.15f, -20f).Grip().HandF(0.26f, 1.52f).Blade(110f).EdgeUp())
+                .Key(20, Jodan(P().Hip(0.06f, -0.06f, 0f).Chest(6f).Head(-4f).FootN(0.3f, 0.13f).FootF(-0.22f, 0.13f, -8f)), Ease.InOutQuad)
                 .Key(32, Stance(), Ease.InOutQuad)
                 .Hit(5, 10, Blade, 8, HitLevel.Mid, new Vector2(0.4f, 7.2f), stun: 30, hitstop: 7, shake: 0.2f, launch: true, heavy: true, radius: 0.09f)
                 .Move(1, 7, 2.4f).JumpCancel(14)
                 .Fx(4, 13, FxKind.TrailBlade).Sword().Cancel(12);
 
+            // Kage Cleave: furikaburi into jōdan at the top of the leap, kiri-oroshi stopped just below level (tenouchi), the body
+            // dropping under the follow-through, then the point raised back onto the opponent from gedan
             m.cleave = new MoveDef("cleave", "Kage Cleave", 46)
                 .Key(6, Jodan(P().Hip(0f, -0.22f, 0f).Chest(8f).Head(-6f).Feet(0.24f, -0.26f)))
-                .Key(14, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).Grip().HandF(0.02f, 1.78f).Blade(98f))
-                .Key(20, P().Hip(0f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).Grip().HandF(0.52f, 1.02f).Blade(-48f), Ease.InCubic)
-                .Key(26, P().Hip(0.04f, -0.32f, -6f).Chest(-34f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.24f, 0.15f, -25f).Grip().HandF(0.52f, 0.5f).Blade(-28f))
+                .Key(14, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).Grip().HandF(0f, 1.8f).Blade(106f))
+                .Key(20, P().Hip(0.02f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).Grip().HandF(0.54f, 1.04f).Blade(-30f), Ease.InCubic)
+                .Key(23, P().Hip(0.03f, -0.12f, -8f).Chest(-31f).Head(15f).LegN(50f, -50f).LegF(22f, -50f).Grip().HandF(0.54f, 0.84f).Blade(-36f), Ease.OutQuad)
+                .Key(26, P().Hip(0.04f, -0.32f, -6f).Chest(-34f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.24f, 0.15f, -25f).Grip().HandF(0.5f, 0.52f).Blade(-34f))
+                .Key(36, P().Hip(0.02f, -0.2f, -4f).Chest(-18f).Head(10f).FootN(0.28f, 0.13f).FootF(-0.25f, 0.14f, -15f).Grip().HandF(0.34f, 0.8f).Blade(-10f), Ease.InOutQuad)
                 .Key(46, Stance(), Ease.InOutQuad)
                 .Move(7, 7, 2.6f, 5.0f, true)
                 .Hit(18, 25, Blade, 12, HitLevel.Overhead, new Vector2(1.4f, -3.0f), stun: 30, hitstop: 10, shake: 0.42f, knockdown: true, heavy: true, radius: 0.08f)
@@ -272,50 +287,65 @@ namespace Kage
             m.jab.chain[Btn.S] = m.iai;
             m.kick1.chain[Btn.S] = m.iai;
 
+            // Shadow Step: the dash-through draw (the JS iai dash strike): sunk into waki, the hips go first, the blade comes out
+            // level and edge leading as Kage passes, then chiburi and the point back on the line
             m.shadowStep = new MoveDef("shadowStep", "Shadow Step", 34)
-                .Key(4, P().Hip(0f, -0.2f, -10f).Chest(-30f).Head(18f).Feet(0.26f, -0.26f).Grip().HandF(-0.02f, 0.78f).Blade(-170f))
-                .Key(8, P().Hip(0.12f, -0.2f, -18f).Chest(-38f).Head(22f).Feet(0.4f, -0.3f).Grip().HandF(0.55f, 1.0f).Blade(0f), Ease.OutExpo)
-                .Key(14, P().Hip(0.1f, -0.22f, -16f).Chest(-34f).Head(20f).Feet(0.38f, -0.3f).Grip().HandF(0.5f, 1.04f).Blade(8f))
-                .Key(22, P().Hip(0.06f, -0.18f, -12f).Chest(-26f).Head(14f).Feet(0.34f, -0.28f).Grip().HandF(0.42f, 0.98f).Blade(-150f))
+                .Key(3, Waki(P().Hip(-0.02f, -0.22f, -6f).Chest(-22f).Head(14f).Feet(0.26f, -0.27f)).HandF(0f, 0.82f).Blade(-165f).EdgeUp(), Ease.InOutQuad)
+                .Key(5, P().Hip(0.08f, -0.22f, -12f).Chest(-30f).Head(18f).Feet(0.34f, -0.29f).Grip().HandF(0.12f, 0.84f).Blade(-150f).EdgeUp(), Ease.InQuad)
+                .Key(8, P().Hip(0.12f, -0.2f, -18f).Chest(-38f).Head(22f).Feet(0.4f, -0.3f).Grip().HandF(0.55f, 1.0f).Blade(0f).EdgeUp(), Ease.OutExpo)
+                .Key(14, P().Hip(0.1f, -0.22f, -16f).Chest(-34f).Head(20f).Feet(0.38f, -0.26f).Grip().HandF(0.5f, 1.06f).Blade(10f).EdgeUp())
+                .Key(20, P().Hip(0.08f, -0.2f, -14f).Chest(-30f).Head(18f).Feet(0.36f, -0.24f).Grip().HandF(0.46f, 0.9f).Blade(-38f), Ease.OutCubic)
+                .Key(26, P().Hip(0.04f, -0.14f, -8f).Chest(-16f).Head(9f).Feet(0.3f, -0.25f).Grip().HandF(0.34f, 0.94f).Blade(14f), Ease.InOutQuad)
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Move(5, 13, 10.5f).Move(14, 16, 1.0f)
                 .Hit(6, 13, Blade, 10, HitLevel.Mid, new Vector2(0.6f, 0.6f), stun: 26, hitstop: 8, shake: 0.25f, heavy: true, radius: 0.09f)
                 .Invuln(5, 13).NoPush(4, 18)
                 .Fx(5, 14, FxKind.AfterImage).Fx(6, 14, FxKind.TrailBlade).Fx(9, 9, FxKind.SlashLine).Fx(5, 5, FxKind.Dust).Sword();
 
+            // Low Reap: the hands drawn back to the rear hip in a deep sink, then a low sweep (ashi-barai) edge first at the shins,
+            // the chest folded over the lead knee so the rear hand stays on the tsuka, and zanshin in gedan
             m.lowReap = new MoveDef("lowReap", "Low Reap", 32)
-                .Key(6, P().Hip(-0.03f, -0.4f, 0f).Chest(-28f).Head(16f).FootN(0.24f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(-0.12f, 0.45f).Blade(-178f))
-                .Key(10, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.42f, 0.36f).Blade(-6f), Ease.OutExpo)
-                .Key(14, P().Hip(0.06f, -0.42f, -6f).Chest(-34f).Head(18f).FootN(0.3f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.42f, 0.36f).Blade(4f))
+                .Key(3, P().Hip(-0.02f, -0.3f, 0f).Chest(-22f).Head(14f).FootN(0.24f, 0.13f).FootF(-0.27f, 0.15f, -20f).Grip().HandF(0.06f, 0.82f).Blade(-115f).EdgeUp(), Ease.InOutQuad)
+                .Key(6, P().Hip(-0.03f, -0.4f, 0f).Chest(-26f).Head(16f).FootN(0.24f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(-0.06f, 0.56f).Blade(-172f).EdgeUp(), Ease.OutQuad)
+                .Key(8, P().Hip(0.03f, -0.42f, -4f).Chest(-32f).Head(18f).FootN(0.28f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.06f, 0.5f).Blade(-150f).EdgeUp(), Ease.InQuad)
+                .Key(10, P().Hip(0.06f, -0.42f, -6f).Chest(-38f).Head(20f).FootN(0.32f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.38f, 0.42f).Blade(-10f).EdgeUp(), Ease.OutExpo)
+                .Key(14, P().Hip(0.06f, -0.42f, -6f).Chest(-38f).Head(20f).FootN(0.32f, 0.13f).FootF(-0.26f, 0.15f, -30f).Grip().HandF(0.4f, 0.43f).Blade(2f).EdgeUp())
+                .Key(21, P().Hip(0.04f, -0.36f, -4f).Chest(-30f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.26f, 0.15f, -25f).Grip().HandF(0.32f, 0.62f).Blade(-14f), Ease.InOutQuad)
                 .Key(32, Stance(), Ease.InOutQuad)
                 .Hit(9, 13, Blade, 9, HitLevel.Low, new Vector2(0.5f, 3.0f), stun: 20, hitstop: 6, shake: 0.15f, knockdown: true, otg: true, radius: 0.08f)
                 .Fx(7, 14, FxKind.TrailBlade).Fx(10, 10, FxKind.Dust).Sword();
 
+            // Mirror Guard: Kasumi-no-kamae at head height, the blade level over the eyes, edge up, waiting to receive
             m.counterStance = new MoveDef("counterStance", "Mirror Guard", 34)
-                .Key(5, P().Hip(-0.04f, -0.14f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).Grip().HandF(0.08f, 1.18f).Blade(-8f))
-                .Key(26, P().Hip(-0.04f, -0.15f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f).Grip().HandF(0.08f, 1.17f).Blade(-8f))
+                .Key(5, Kasumi(P().Hip(-0.04f, -0.14f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f)))
+                .Key(26, Kasumi(P().Hip(-0.04f, -0.15f, -2f).Chest(4f).Head(-2f).Feet(0.2f, -0.3f)).HandF(KasumiX, KasumiY - 0.01f))
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Fx(4, 4, FxKind.Glint).Sword();
             m.counterStance.counterFrom = 4;
             m.counterStance.counterTo = 24;
 
+            // Kage Counter: a tsuki straight out of Kasumi, the point travelling down its own line into the body, then withdrawn
+            // to chūdan with the point still on the opponent
             m.counterSlash = new MoveDef("counterSlash", "Kage Counter", 30)
-                .Key(3, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).Grip().HandF(0.55f, 1.0f).Blade(2f), Ease.OutExpo)
-                .Key(10, P().Hip(0.08f, -0.2f, -14f).Chest(-34f).Head(20f).Feet(0.38f, -0.28f).Grip().HandF(0.55f, 1.0f).Blade(6f))
+                .Key(3, P().Hip(0.08f, -0.16f, -6f).Chest(-2f).Head(4f).Feet(0.4f, -0.28f).Grip().HandF(0.56f, 1.2f).Blade(-20f).EdgeUp(), Ease.OutExpo)
+                .Key(10, P().Hip(0.08f, -0.16f, -6f).Chest(-3f).Head(4f).Feet(0.4f, -0.24f).Grip().HandF(0.55f, 1.19f).Blade(-17f).EdgeUp())
+                .Key(18, P().Hip(0.03f, -0.12f, -8f).Chest(-16f).Head(9f).Feet(0.3f, -0.25f).Grip().HandF(0.32f, 1.02f).Blade(22f), Ease.InOutQuad)
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Hit(1, 6, Blade, 12, HitLevel.Unblockable, new Vector2(1.6f, 4.5f), stun: 30, hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: 0.12f)
                 .Invuln(0, 12).Fx(0, 8, FxKind.TrailBlade).Fx(2, 2, FxKind.SlashLine).Sword();
 
             // ===================== SHADOW ART =====================
+            // Crimson Crescent: the charge held in hassō, the hips turn in first, then kesa-giri down through the front knee
             m.crescent = new MoveDef("crescent", "Crimson Crescent", 34)
-                .Key(9, P().Hip(-0.06f, -0.14f, -2f).Chest(10f).Head(-6f).Feet(0.22f, -0.28f).Grip().HandF(-0.18f, 1.32f).Blade(150f))
+                .Key(9, Hasso(P().Hip(-0.06f, -0.14f, -2f).Chest(10f).Head(-6f).Feet(0.22f, -0.28f)), Ease.InOutQuad)
+                .Key(11, P().Hip(0.04f, -0.14f, -8f).Chest(-6f).Head(4f).Feet(0.28f, -0.26f).Grip().HandF(0.04f, 1.4f).Blade(102f), Ease.InQuad)
                 .Key(13, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).Grip().HandF(0.56f, 1.02f).Blade(-12f), Ease.OutExpo)
-                .Key(18, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).Grip().HandF(0.55f, 1.0f).Blade(-14f))
+                .Key(18, P().Hip(0.1f, -0.14f, -12f).Chest(-26f).Head(13f).Feet(0.33f, -0.2f).Grip().HandF(0.5f, 0.88f).Blade(-30f))
+                .Key(25, P().Hip(0.05f, -0.12f, -8f).Chest(-16f).Head(9f).Feet(0.3f, -0.23f).Grip().HandF(0.36f, 0.96f).Blade(12f), Ease.InOutQuad)
                 .Key(34, Stance(), Ease.InOutQuad)
                 .Fx(1, 12, FxKind.ChargeDark).Fx(10, 15, FxKind.TrailBlade).Sword();
             m.crescent.projectileFrame = 12;
             m.crescent.meterCost = 35;
-
             return m;
         }
 

@@ -30,6 +30,12 @@ namespace Kage
         public float swNAbs;
         /// <summary>Where the near hand sits on the handle (sword-axis metres behind the far hand) and how far back it can slide (SAN-78: a polearm holds its hands further apart).</summary>
         public float gripSpacing = GripSpacing, gripPommel = GripPommel;
+        /// <summary>
+        /// The katana turned over on its own axis (SAN-118, hasuji): its edge on the side its spine is drawn on. A rising cut
+        /// (kiri-age, gyaku-kesa), a draw from the hip and Kasumi lead with the edge this way; the rig mirrors the sword bone
+        /// across the blade's line, so the blade's line and its hit points stay where they were.
+        /// </summary>
+        public bool edgeUp;
         bool _resolved;
 
         // ----- builder API used by the pose library -----
@@ -71,6 +77,18 @@ namespace Kage
         public Pose Sword(float rel) { a[(int)B.Sword] = rel; hasSwAbs = false; return this; }
         /// <summary>Blade direction in root space, degrees (0 = pointing forward, 90 = up).</summary>
         public Pose Blade(float worldDeg) { hasSwAbs = true; swAbs = worldDeg; return this; }
+        /// <summary>Turns the katana over so its edge faces the other way (<see cref="edgeUp"/>): edge up when the blade points forward.</summary>
+        public Pose EdgeUp(bool up = true) { edgeUp = up; return this; }
+
+        /// <summary>
+        /// A sword-bone local point mirrored across the blade's line (<paramref name="bladeBindAngle"/>): where it lies on a
+        /// katana turned over (<see cref="edgeUp"/>). Points on the line itself don't move.
+        /// </summary>
+        public static Vector2 TurnOver(Vector2 local, float bladeBindAngle)
+        {
+            Vector2 v = KMath.Rot(local, -bladeBindAngle);
+            return KMath.Rot(new Vector2(v.x, -v.y), bladeBindAngle);
+        }
         /// <summary>Marks the pose as dual wield: the near hand holds a second blade.</summary>
         public Pose Dual() { dual = true; return this; }
         /// <summary>Second (near hand) blade direction in root space, degrees (0 = forward, 90 = up). Dual wield only.</summary>
@@ -115,6 +133,7 @@ namespace Kage
             swNAbs = o.swNAbs;
             gripSpacing = o.gripSpacing;
             gripPommel = o.gripPommel;
+            edgeUp = o.edgeUp;
             _resolved = o._resolved;
         }
 
@@ -289,6 +308,8 @@ namespace Kage
             output.grip = (p.grip && q.grip) || (t >= 1f && q.grip) || (t <= 0f && p.grip);
             output.gripSpacing = Mathf.LerpUnclamped(p.gripSpacing, q.gripSpacing, t);
             output.gripPommel = Mathf.LerpUnclamped(p.gripPommel, q.gripPommel, t);
+            // the blade turns over half way through a blend (te-gaeshi): a quick roll of the wrists, drawn as one flip
+            output.edgeUp = t >= 0.5f ? q.edgeUp : p.edgeUp;
             output._resolved = false;
         }
     }
