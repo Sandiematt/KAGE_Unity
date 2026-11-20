@@ -444,7 +444,9 @@ namespace Kage
             else Ui.Frame(rt, 0, 0, TileW, H, 1f, Ui.GoldDim);
 
             // the picture: the item drawn the way the JS draws it (the sword, the helmet), dim when it is not owned (JS .locked .art)
-            var tint = t.Owned ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.45f);
+            // the JS drawings of helmets and armour are dark on a dark tile, so a locked one is dimmed less than a weapon render
+            bool drawn = t.Art.Source != ArtSource.WeaponRender;
+            var tint = t.Owned ? Color.white : drawn ? new Color(0.8f, 0.8f, 0.8f, 0.7f) : new Color(0.5f, 0.5f, 0.5f, 0.45f);
             var picture = t.Art.Texture;
             if (picture != null)
             {
@@ -767,7 +769,7 @@ namespace Kage
             0, -10, 2, -4, 7, -7, 5, -1, 10, 0, 5, 2, 7, 7, 1, 4, 0.6f, 10, -0.6f, 10, -1, 4, -7, 7, -5, 2, -10, 0, -5, -1, -7, -7, -2, -4,
         };
 
-        static void Leaves(Transform p, float[][] pts)
+        internal static void Leaves(Transform p, float[][] pts)
         {
             var c = Ui.A(Ui.Mix(Ui.Hot, Ui.Acc, 0.5f), 0.9f);
             int n = 0;

@@ -95,6 +95,24 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void A_trophy_won_on_the_results_screen_is_shown_as_the_item_itself()
+        {
+            var save = GameRules.DefaultSave(false);
+            foreach (var st in GameRules.Stages)
+            {
+                if (st.Id == "act1.sub1") break;
+                GameRules.MarkStageCleared(save, st.Id);
+            }
+            var r = new FightResult { win = true, hpLeft = 0.8, time = 50, maxCombo = 5 };
+            var v = ResultsView.Build(save, GameRules.CompleteStage(save, "act1.sub1", r), r);
+            Assert.IsTrue(v.Items.Count > 0, "the first sub-boss drops a trophy");
+            Assert.AreEqual(v.Items.Count, v.ItemArt.Count, "one picture per item");
+            Assert.AreEqual(ArtSource.HelmetIcon, v.ItemArt[0].Source, "Sumi Eboshi is a helmet");
+            Assert.AreEqual("icon_h_sumi_eboshi", v.ItemArt[0].Key);
+            Assert.IsNotNull(v.ItemArt[0].Texture);
+        }
+
+        [Test]
         public void An_item_the_player_does_not_own_still_shows_its_picture()
         {
             var v = ArmoryView.Build(GameRules.DefaultSave(false), ArmoryTab.Helmets);

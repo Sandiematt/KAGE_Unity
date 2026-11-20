@@ -16,6 +16,9 @@ namespace Kage
 
         ResultsView view;
         float shownAt;
+        int toastsShown;
+        /// <summary>The JS afterShow toasts: the first at .9 s, then one every .7 s (unlocks, a new chapter, a level up).</summary>
+        public const float ToastFirst = 0.9f, ToastGap = 0.7f;
         Text coinText;
         RectTransform barGain;
         float barBase, barGainW;
@@ -40,7 +43,8 @@ namespace Kage
             barGain = null;
             if (o == null || C.LastResult == null) { view = null; return; }
             view = ResultsView.Build(C.Save, o, C.LastResult);
-            shownAt = Time.unscaledTime;
+            shownAt = UiClock.Now + UiClock.EntranceDelay;
+            toastsShown = 0;
             var v = view;
             var accent = v.Win ? Hex("#f3d48f") : Hex("#e8443a");
 
@@ -51,48 +55,71 @@ namespace Kage
             float y = ColY;
             Ui.Label(Root, v.Eyebrow.ToUpperInvariant(), UiFont.Cond, 13, Ui.Muted, ColX, y, ColW, 18, TextAnchor.MiddleLeft, 3.1f);
             y += 18 + 6;
-            Ui.Label(Root, v.Title, UiFont.Mincho, 100, Ui.A(Color.black, 0.5f), ColX + 0, y + 4, ColW, 108, TextAnchor.MiddleLeft);
-            Ui.Label(Root, v.Title, UiFont.Mincho, 100, accent, ColX, y, ColW, 108, TextAnchor.MiddleLeft);
+            var titleNode = Ui.Node(Root, "Title", ColX, y, ColW, 112);
+            Ui.Label(titleNode, v.Title, UiFont.Mincho, 100, Ui.A(Color.black, 0.5f), 0, 4, ColW, 108, TextAnchor.MiddleLeft);
+            Ui.Label(titleNode, v.Title, UiFont.Mincho, 100, accent, 0, 0, ColW, 108, TextAnchor.MiddleLeft);
+            Enter(titleNode, UiAnims.TitleRise());
             y += 108 + 4;
             Ui.Label(Root, v.Line, UiFont.Mincho, 23, Ui.Bone, ColX, y, ColW, 60, TextAnchor.UpperLeft, 0, true, 1.1f);
             y += 62 + 24;
 
             if (v.ShowRewards)
             {
-                // seals and rating
+                // seals and rating: each seal pops in 120 ms after the one before (cardIn2, .5 s), the rating drops in large and turned (.6 s after .6 s)
                 for (int i = 0; i < 3; i++)
                 {
                     float cx = ColX + 29 + i * 128;
                     bool on = v.Seals[i];
-                    var d = Ui.Diamond(Root, cx, y + 32, 40, on ? Ui.Acc : Color.clear, on ? Hex("#e05a4f") : Ui.Hex("#3a342b"), 2f);
-                    if (on) Ui.Diamond(Root, cx, y + 32, 12, Ui.Bone, Ui.Bone, 0);
-                    Ui.Label(Root, v.SealNames[i].ToUpperInvariant(), UiFont.Cond, 13, on ? Ui.Bone : Ui.Muted, cx - 60, y + 74, 120, 18, TextAnchor.MiddleCenter, 2.6f);
+                    var sealNode = Ui.Node(Root, "Seal" + i, cx - 60, y, 120, 100);
+                    Enter(sealNode, UiAnims.CardIn(.5f, .25f + i * .12f));
+                    Ui.Diamond(sealNode, 60, 32, 40, on ? Ui.Acc : Color.clear, on ? Hex("#e05a4f") : Ui.Hex("#3a342b"), 2f);
+                    if (on) Ui.Diamond(sealNode, 60, 32, 12, Ui.Bone, Ui.Bone, 0);
+                    Ui.Label(sealNode, v.SealNames[i].ToUpperInvariant(), UiFont.Cond, 13, on ? Ui.Bone : Ui.Muted, 0, 74, 120, 18, TextAnchor.MiddleCenter, 2.6f);
                 }
-                Ui.Label(Root, v.Rating, UiFont.Mincho, 56, Ui.Gold, ColX + ColW - 110, y + 2, 110, 66, TextAnchor.MiddleCenter);
-                Ui.Label(Root, "RATING", UiFont.Cond, 12, Ui.Muted, ColX + ColW - 110, y + 70, 110, 18, TextAnchor.MiddleCenter, 2.8f);
+                var ratingNode = Ui.Node(Root, "Rating", ColX + ColW - 110, y + 2, 110, 90);
+                Enter(ratingNode, UiAnims.VsPop(.6f, .6f, 2.4f, -8f));
+                Ui.Label(ratingNode, v.Rating, UiFont.Mincho, 56, Ui.Gold, 0, 0, 110, 66, TextAnchor.MiddleCenter);
+                Ui.Label(ratingNode, "RATING", UiFont.Cond, 12, Ui.Muted, 0, 68, 110, 18, TextAnchor.MiddleCenter, 2.8f);
                 y += 100 + 28;
 
-                // rewards
+                // rewards: the coins, the gems and each item pop in (cardIn2, .45 s; the first two after .5 and .62 s)
                 Ui.Box(Root, ColX, y, ColW, 1, Ui.Hair);
                 float rx = ColX, ry = y + 20;
-                Ui.Disc(Root, rx + 10, ry + 20, 10, Ui.Gold);
-                Ui.Disc(Root, rx + 10, ry + 20, 6, Ui.Mix(Ui.Gold, Ui.Panel, 0.45f));
-                Ui.Disc(Root, rx + 10, ry + 20, 3.2f, Ui.Gold);
-                coinText = Ui.Label(Root, "+0", UiFont.Cond, 27, Ui.Bone, rx + 30, ry, 140, 40, TextAnchor.MiddleLeft);
+                var coinNode = Ui.Node(Root, "Coins", rx, ry - 2, 150, 44);
+                Enter(coinNode, UiAnims.CardIn(.45f, .5f));
+                Ui.Disc(coinNode, 10, 22, 10, Ui.Gold);
+                Ui.Disc(coinNode, 10, 22, 6, Ui.Mix(Ui.Gold, Ui.Panel, 0.45f));
+                Ui.Disc(coinNode, 10, 22, 3.2f, Ui.Gold);
+                coinText = Ui.Label(coinNode, "+0", UiFont.Cond, 27, Ui.Bone, 30, 2, 120, 40, TextAnchor.MiddleLeft);
                 rx += 30 + 120;
                 if (v.Gems > 0)
                 {
-                    Ui.Diamond(Root, rx + 9, ry + 20, 13, Ui.Ruby, Ui.Ruby, 0);
-                    Ui.Label(Root, "+" + v.Gems, UiFont.Cond, 27, Ui.Bone, rx + 26, ry, 80, 40, TextAnchor.MiddleLeft);
+                    var gemNode = Ui.Node(Root, "Gems", rx, ry - 2, 90, 44);
+                    Enter(gemNode, UiAnims.CardIn(.45f, .62f));
+                    Ui.Diamond(gemNode, 9, 22, 13, Ui.Ruby, Ui.Ruby, 0);
+                    Ui.Label(gemNode, "+" + v.Gems, UiFont.Cond, 27, Ui.Bone, 26, 2, 60, 40, TextAnchor.MiddleLeft);
                     rx += 26 + 62;
                 }
-                foreach (var name in v.Items)
+                for (int n = 0; n < v.Items.Count; n++)
                 {
-                    Ui.Box(Root, rx, ry - 2, 44, 44, Ui.Charcoal);
-                    Ui.Frame(Root, rx, ry - 2, 44, 44, 1, Ui.Gold);
-                    Ui.Diamond(Root, rx + 22, ry + 20, 14, Ui.Gold, Ui.Gold, 0);
-                    var t = Ui.Label(Root, name.ToUpperInvariant(), UiFont.Cond, 16, Ui.Bone, rx + 56, ry, 220, 40, TextAnchor.MiddleLeft, 2.5f);
-                    rx += 56 + UiParts.Width(t, 2.5f) + 24;
+                    string name = v.Items[n];
+                    var label = Ui.Label(Root, name.ToUpperInvariant(), UiFont.Cond, 16, Ui.Bone, 0, 0, 220, 40, TextAnchor.MiddleLeft, 2.5f);
+                    float lw = UiParts.Width(label, 2.5f);
+                    var chip = Ui.Node(Root, "Item" + n, rx, ry - 2, 56 + lw + 8, 44);
+                    Enter(chip, UiAnims.CardIn(.45f));
+                    Ui.Box(chip, 0, 0, 44, 44, Ui.Charcoal);
+                    // the item itself, drawn (JS paintIcon into the 44 px canvas)
+                    var art = n < v.ItemArt.Count ? v.ItemArt[n] : null;
+                    if (art != null && art.Texture != null)
+                    {
+                        var pic = Ui.Pic(chip, art.Key, 2, 2, 40, 40);
+                        FitPic(pic, 40, 40);
+                    }
+                    else Ui.Diamond(chip, 22, 22, 14, Ui.Gold, Ui.Gold, 0);
+                    Ui.Frame(chip, 0, 0, 44, 44, 1, Ui.Gold);
+                    label.transform.SetParent(chip, false);
+                    label.rectTransform.anchoredPosition = new Vector2(56, -2);
+                    rx += 56 + lw + 24;
                 }
                 y += 80;
                 Ui.Box(Root, ColX, y, ColW, 1, Ui.Hair);
@@ -152,11 +179,26 @@ namespace Kage
 
         static Color Hex(string h) { return Ui.Hex(h); }
 
+        static void FitPic(UnityEngine.UI.RawImage pic, float w, float h)
+        {
+            var t = pic.texture;
+            if (t == null) return;
+            float k = Mathf.Min(w / t.width, h / t.height);
+            float iw = t.width * k, ih = t.height * k;
+            pic.rectTransform.anchoredPosition += new Vector2((w - iw) / 2f, -(h - ih) / 2f);
+            pic.rectTransform.sizeDelta = new Vector2(iw, ih);
+        }
+
         /// <summary>The coin count-up and the experience bar fill (JS afterShow), from the moment the screen was built.</summary>
         public override void Tick()
         {
             if (view == null) return;
-            float t = Time.unscaledTime - shownAt;
+            float t = UiClock.Now - shownAt;
+            while (toastsShown < view.Toasts.Count && t >= ToastFirst + toastsShown * ToastGap)
+            {
+                var toast = view.Toasts[toastsShown++];
+                C.Toast(toast.Title, toast.Text);
+            }
             if (coinText != null)
             {
                 float k = Mathf.Clamp01((t - CountDelay) / CountSeconds);
