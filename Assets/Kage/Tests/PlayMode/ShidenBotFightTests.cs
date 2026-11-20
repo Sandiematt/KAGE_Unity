@@ -28,7 +28,7 @@ namespace Kage.Tests
         /// <item>Outside the spear's reach and with nothing coming, dash in to close the distance (he fights at the end of the point).</item>
         /// </list>
         /// </summary>
-        sealed class SpearwiseBot : IInputSource
+        internal sealed class SpearwiseBot : IInputSource
         {
             readonly ProfileAiTestKit.KageBot _bot = new();
             public int GuardedShock, BackedOff, WaitedBrace, HeldBlade, GuardedCharge, Guarded;
