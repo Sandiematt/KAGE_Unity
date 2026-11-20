@@ -127,6 +127,35 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void ClippingTwoConcaveShapesSeenFromInsideBothKeepsTheirOverlapAndBothNotches()
+        {
+            // a square with a notch cut into its right side (a face's bridge), clipped to a region with a zigzag bottom edge
+            // (a mask broken along a crack): both are concave, both are seen whole from the centre (SAN-76 rework)
+            var notched = V(0, 0, 100, 0, 100, 40, 80, 50, 100, 60, 100, 100, 0, 100);
+            var zig = V(-20, -20, 120, -20, 120, 70, 90, 80, 60, 60, 30, 80, 0, 60, -20, 70);
+            var c = ClipStar(notched, zig, P(50, 45));
+            AssertGoodOutline(c, "star clip");
+            // the area: the square above y = 60, less the notch (a triangle of 20 x 20 / 2 = 200), plus the zigzag's teeth below 60
+            // (three triangles 30 wide and 20 deep over 0..90: 3 x 300 = 900) and the start of the next (a 10-wide trapezoid between
+            // y 60 and the edge from 80 to 76.7: (20 + 16.7) / 2 * 10, about 183)
+            float want = 100f * 60f - 200f + 900f + 183f;
+            Assert.AreEqual(want * Px * Px, Mathf.Abs(MeshKit.SignedArea(c)), want * Px * Px * 0.03f);
+            // the notch is still cut in, the teeth still hang
+            Assert.IsFalse(Contains(c, P(95, 50)), "the notch is kept");
+            Assert.IsTrue(Contains(c, P(30, 75)), "a tooth hangs below 60");
+            Assert.IsFalse(Contains(c, P(60, 70)), "between the teeth is cut away");
+        }
+
+        static bool Contains(Vector2[] poly, Vector2 p)
+        {
+            bool inside = false;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+                if ((poly[i].y > p.y) != (poly[j].y > p.y) && p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
+                    inside = !inside;
+            return inside;
+        }
+
+        [Test]
         public void CelShadingPaintsInsideTheOutlineWithTheShadowAwayFromTheLight()
         {
             var shape = Capsule(0, 0, 0, 200, 40, 30, 6f, 0.4f);
