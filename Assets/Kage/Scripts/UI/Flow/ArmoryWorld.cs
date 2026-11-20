@@ -136,6 +136,15 @@ namespace Kage
             if (Signature == null) Flush();
         }
 
+        /// <summary>Nothing stands on the stage: the Weapons tab shows the weapon's illustration, not a fighter.</summary>
+        public void ShowNone()
+        {
+            SetFrame(BodyFrame);
+            pendingBuild = null;
+            pendingSig = null;
+            if (Signature != null || fighters.Count > 0) Clear();
+        }
+
         /// <summary>
         /// Puts a row of Kages on the stage, one per save, centred at the given stage px (their feet on the card baseline).
         /// </summary>
