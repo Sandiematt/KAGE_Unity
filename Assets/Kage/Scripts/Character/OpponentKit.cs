@@ -30,7 +30,7 @@ namespace Kage
     /// with the fighter's spring motion. Soft cloth (coat, hair, scarf) is Kage's own rig and is not part of this kit.
     /// </para>
     /// </summary>
-    public static class OpponentKit
+    public static partial class OpponentKit
     {
         /// <summary>The depth slots Kage's own parts use, back to front. A part set uses the same numbers so Kage and foes stack alike.</summary>
         public static class Slot
