@@ -286,6 +286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Kage.Runtime::Kage.GameFlow
   saveDirectory: 
+  showSplash: 1
 --- !u!4 &625068595
 Transform:
   m_ObjectHideFlags: 0

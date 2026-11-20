@@ -165,3 +165,13 @@ The words the tickets, code, tests and docs use. Use these terms. Don't drift to
 
 - **Owner sign-off**: the two points (after the physics pass, after the defence layer) where the owner plays a build and approves it before work continues.
 - **Screenshot sheet**: the review images under `Screenshots/review/<ticket>/`.
+
+## UI motion (SAN-67 rework)
+
+- **UI clock** (`UiClock`): the one clock every menu animation reads (unscaled time). A fixture can freeze and step it; `Skip` puts every animation at its end; **reduced motion** is Windows' "Show animations" setting and does the same for entrances. *Avoid:* tween time, Time.time (for menu motion).
+- **Animation** (`UiAnim`): one JS CSS keyframe animation as data; `Sample(t)` gives the pose (opacity, move, scale, turn). *Avoid:* tween, transition (for a keyframe animation).
+- **Entrance**: an animation that plays when a screen or card opens (`FlowPanel.Fresh`), not on every redraw. **Ambient loop**: one that never ends (the breathing moon, drifting clouds and petals).
+- **Wipe** (`ScreenWipe`): the JS ink brush stroke that slides over a change of screen. **Ghost**: the copy of the old screen that stays under the stroke until it covers the screen.
+- **Splash** (`SplashPanel`): the opening, the JS boot screen (K-A-G-E written stroke by stroke). *Avoid:* intro, boot (in UI text).
+- **Toast** (`ToastLayer`): the small card at the top centre that announces a purchase, an unlock or a level-up.
+- **Tile art** (`GearArt`, `TileArt`): the drawn picture of an item on an Armory tile, a results chip or the profile: the sword, the helmet or the armour itself. **Weapon illustration**: the big JS drawing of the blade on the Weapons tab's preview.

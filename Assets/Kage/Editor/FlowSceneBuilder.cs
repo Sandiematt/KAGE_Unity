@@ -31,7 +31,7 @@ namespace KageEditor
             var data = camGo.AddComponent<UniversalAdditionalCameraData>();
             data.renderPostProcessing = true;
 
-            new GameObject("KAGE Campaign").AddComponent<GameFlow>();
+            new GameObject("KAGE Campaign").AddComponent<GameFlow>().showSplash = true;
 
             EditorSceneManager.SaveScene(scene, ScenePath);
 

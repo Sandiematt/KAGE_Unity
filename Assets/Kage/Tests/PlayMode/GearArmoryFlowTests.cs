@@ -64,7 +64,7 @@ namespace Kage.Tests
         // ---- the way in and out ----
 
         [UnityTest]
-        public IEnumerator The_title_menu_opens_the_Armory_with_Kage_standing_in_it_and_Back_returns()
+        public IEnumerator The_title_menu_opens_the_Armory_with_the_blade_on_show_and_Back_returns()
         {
             StartFlow(false);
             yield return null;
@@ -76,8 +76,10 @@ namespace Kage.Tests
             Assert.IsTrue(flow.Panel(FlowScreen.Armory).Visible);
             Assert.IsFalse(flow.Panel(FlowScreen.Title).Visible);
             Assert.IsNotNull(flow.ArmoryWorld);
-            Assert.AreEqual(1, flow.ArmoryWorld.Fighters.Count);
-            Assert.AreEqual("kagetsu", Preview.Character.weaponId);
+            // SAN-67 rework: the Weapons tab shows the JS illustration of the blade, not Kage holding it
+            Assert.AreEqual(0, flow.ArmoryWorld.Fighters.Count, "no fighter on the Weapons tab");
+            Assert.AreEqual(ArmoryPreview.Illustration, Armory.View.Preview);
+            Assert.AreEqual("big_w_kagetsu", Armory.View.PreviewKey);
             Assert.AreEqual("tile:kagetsu", Focus, "the worn weapon has the focus");
 
             flow.Send(MenuCommand.Back);
@@ -98,7 +100,7 @@ namespace Kage.Tests
         // ---- browsing ----
 
         [UnityTest]
-        public IEnumerator Moving_across_the_tiles_selects_each_item_and_Kage_takes_up_the_weapon()
+        public IEnumerator Moving_across_the_tiles_selects_each_item_and_the_preview_shows_each_blade()
         {
             StartFlow(false, s => { s.owned.weapons["tsubame"] = 1; });
             yield return null;
@@ -108,15 +110,13 @@ namespace Kage.Tests
             flow.Send(MenuCommand.Right);
             Assert.AreEqual("tile:tsubame", Focus);
             Assert.AreEqual("tsubame", Armory.SelectedId, "browsing selects, like pointing at it");
-            yield return Until(() => Preview != null && Preview.Character.weaponId == "tsubame", 3f, "the preview to take up Tsubame");
-            Assert.AreEqual(FightBuilderFamily("tsubame"), Preview.Character.family);
+            Assert.AreEqual("big_w_tsubame", Armory.View.PreviewKey, "the preview shows the selected blade");
+            Assert.IsNotNull(Ui.Tex(Armory.View.PreviewKey));
             Assert.AreEqual("kagetsu", flow.Controller.Save.equipped.weapon, "only equipping changes the save");
         }
 
-        static string FightBuilderFamily(string weapon) { return WeaponFamilies.FamilyIdOf(weapon); }
-
         [UnityTest]
-        public IEnumerator Every_family_of_weapon_can_be_previewed_on_Kage()
+        public IEnumerator Every_weapon_has_its_illustration_on_the_preview()
         {
             StartFlow(true);
             yield return null;
@@ -125,9 +125,9 @@ namespace Kage.Tests
             foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" })
             {
                 Armory.Select(id);
-                string want = id;
-                yield return Until(() => Preview != null && Preview.Character.weaponId == want, 3f, "the preview of " + id);
-                Assert.AreEqual(WeaponFamilies.FamilyIdOf(id), Preview.Character.family, id);
+                Assert.AreEqual("big_w_" + id, Armory.View.PreviewKey, id);
+                Assert.IsNotNull(Ui.Tex(Armory.View.PreviewKey), id);
+                yield return null;
             }
         }
 

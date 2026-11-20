@@ -18,6 +18,7 @@ namespace Kage
 
         float scroll;
         RectTransform content;
+        int cellIndex;
 
         static readonly Dictionary<string, string> WeaponKanji = new Dictionary<string, string>
         {
@@ -43,7 +44,9 @@ namespace Kage
             Ui.Glow(Root, 1300, 500, 420, Ui.A(Ui.Acc, 0.22f), 1.2f);
             Ui.Grad(Root, 799, 120, 1.5f, 640, Color.clear, Color.clear, false, Ui.A(Ui.Bone, 0.35f));
             // the versus mark
+            Ripples();
             var vs = Ui.Node(Root, "Vs", 720, 400, 160, 160);
+            Enter(vs, UiAnims.VsPop(.7f, .15f, 2f, -12f));
             Ui.Glow(vs, 80, 80, 90, Ui.A(Ui.Acc, 0.3f), 1.5f);
             Ui.Diamond(vs, 80, 80, 92, Ui.PanelA(0.85f), Ui.Gold, 2f);
             Ui.Label(vs, "対", UiFont.Brush, 64, Ui.Acc, 0, 0, 160, 160, TextAnchor.MiddleCenter);
@@ -54,8 +57,9 @@ namespace Kage
             UiParts.Pills(Root, save, 1560f);
 
             // Kage
-            Ui.Label(Root, "KAGE", UiFont.Title, 60, Ui.Bone, 64, 104, 320, 70, TextAnchor.MiddleLeft, 2.4f);
+            Enter(Ui.Label(Root, "KAGE", UiFont.Title, 60, Ui.Bone, 64, 104, 320, 70, TextAnchor.MiddleLeft, 2.4f).transform, UiAnims.WRise(.6f));
             var stats = Ui.Node(Root, "Stats", 64 + 210, 112, 220, 52);
+            Enter(stats, UiAnims.WRise(.6f));
             Ui.Box(stats, 0, 0, 220, 52, Ui.PanelA(0.82f));
             Ui.Frame(stats, 0, 0, 220, 52, 1, Ui.GoldDim);
             Ui.Label(stats, "LV", UiFont.Title, 14, Ui.Gold, 18, 0, 40, 52, TextAnchor.MiddleLeft, 2f);
@@ -67,6 +71,7 @@ namespace Kage
             var helm = JsTables.Helmet(save.equipped.helmet);
             var armor = JsTables.Armor(save.equipped.armor);
             float cx = 64;
+            cellIndex = 0;
             cx += Cell(cx, 182, "Helm", helm != null ? helm.Name : "-") + 10;
             cx += Cell(cx, 182, "Armor", armor != null ? armor.Name : "-") + 10;
             cx += Cell(cx, 182, "Mode", "Normal") + 10;
@@ -80,15 +85,23 @@ namespace Kage
             string eyeText = (ch.Name + " · " + kind + " · " + labels[dl]).ToUpperInvariant();
             var eye = Ui.Label(Root, eyeText, UiFont.Title, 15, Ui.Hot, 956, 108, 580, 24, TextAnchor.MiddleRight, 3.6f);
             Soften(eye);
-            UiParts.Pips(Root, 1536 - UiParts.Width(eye, 3.6f) - 14 - 76, 118, lit);
+            Enter(eye.transform, UiAnims.WRise(.6f, .08f));
+            var pipsHolder = Ui.Node(Root, "PipsRow", 0, 0, 1600, 900);
+            UiParts.Pips(pipsHolder, 1536 - UiParts.Width(eye, 3.6f) - 14 - 76, 118, lit);
+            Enter(pipsHolder, UiAnims.WRise(.6f, .08f));
             string title = stretch ? stage.Name : (stage.Foe ?? (foe != null ? foe.Name : stage.Name));
             string sub = stretch ? ch.Place : (stage.FoeTitle ?? (foe != null ? foe.Title : ""));
-            Soften(Ui.Label(Root, title, UiFont.Mincho, 50, Ui.Bone, 856, 136, 680, 66, TextAnchor.MiddleRight));
-            Soften(Ui.Label(Root, sub, UiFont.Title, 16, Ui.Bone, 956, 206, 580, 24, TextAnchor.MiddleRight, 1.28f));
+            var titleLabel = Ui.Label(Root, title, UiFont.Mincho, 50, Ui.Bone, 856, 136, 680, 66, TextAnchor.MiddleRight);
+            Soften(titleLabel);
+            Enter(titleLabel.transform, UiAnims.WRise(.6f, .08f));
+            var subLabel = Ui.Label(Root, sub, UiFont.Title, 16, Ui.Bone, 956, 206, 580, 24, TextAnchor.MiddleRight, 1.28f);
+            Soften(subLabel);
+            Enter(subLabel.transform, UiAnims.WRise(.6f, .08f));
             // chips, right aligned
             var reward = GameRules.StageRewardPreview(save, stage.Id);
             string kindChip = stretch ? (stage.Stretch.Encounters.Length + " encounter" + (stage.Stretch.Encounters.Length == 1 ? "" : "s")) : kind;
             var chipRow = Ui.Node(Root, "Chips", 956, 244, 580, 38);
+            Enter(chipRow, UiAnims.WRise(.6f, .08f));
             string coinChip = "+" + reward.Coins;
             float w2 = UiParts.ChipWidth(null, coinChip, true);
             float w1 = UiParts.ChipWidth(null, kindChip, true);
@@ -98,12 +111,44 @@ namespace Kage
             Dock(save, stage);
         }
 
+        // JS .pf-ripple: a thin ellipse of water under each fighter that breathes (pfRipple, 3.2 s, the foe's half a cycle later)
+        void Ripples()
+        {
+            var w = flow.World;
+            var cam = Camera.main;
+            if (w == null || cam == null || w.Player == null) return;
+            for (int i = 0; i < 2; i++)
+            {
+                var f = i == 0 ? w.Player : w.Foe;
+                if (f == null) continue;
+                Vector3 feet = f.transform.position;
+                Vector2 sp = cam.WorldToScreenPoint(feet);
+                Vector2 local;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(flow.Stage, sp, null, out local)) continue;
+                float cx = local.x + 800f, cy = 450f - local.y;
+                const float rw = 380f;
+                var ring = Ui.Node(Root, i == 0 ? "Ripple" : "RippleFoe", cx - rw / 2f, cy - 8f, rw, 36);
+                var line = Ui.Line(ring, Ui.Circle(rw / 2f, 18f, 1f, 40), 1f, i == 0 ? new Color(0.925f, 0.898f, 0.827f, 0.2f) : Ui.A(Ui.Acc, 0.3f));
+                line.rectTransform.sizeDelta = new Vector2(rw, 36f);
+                // an ellipse: the circle's points stretched to the box
+                var pts = new Vector2[41];
+                for (int k = 0; k <= 40; k++)
+                {
+                    float a = k / 40f * Mathf.PI * 2f;
+                    pts[k] = new Vector2(rw / 2f + Mathf.Cos(a) * (rw / 2f - 1f), 18f + Mathf.Sin(a) * 17f);
+                }
+                line.Set(pts, 1f, i == 0 ? new Color(0.925f, 0.898f, 0.827f, 0.2f) : Ui.A(Ui.Acc, 0.3f), 0f, 0f);
+                UiFx.Loop(ring, UiAnims.PfRipple(i == 0 ? 0f : -1.6f));
+            }
+        }
+
         // JS .pf-gear: a gold-edged button that opens the Armory (a Change gear tile after the Mode cell)
         void ChangeGear(float x, float y)
         {
             var label = Ui.Label(Root, "CHANGE GEAR", UiFont.Title, 14, Ui.Gold, 0, 0, 300, 58, TextAnchor.MiddleLeft, 1.68f);
             float w = 18f + 20f + 10f + UiParts.Width(label, 1.68f) + 1.68f + 18f;
             var rt = Ui.Node(Root, "ChangeGear", x, y, w, 58);
+            Enter(rt, UiAnims.WRise(.6f));
             Ui.Box(rt, 0, 0, w, 58, Ui.PanelA(0.7f)).transform.SetAsFirstSibling();
             var hl = Ui.Box(rt, 0, 0, w, 58, Color.clear, "Light");
             Ui.Frame(rt, 0, 0, w, 58, 1, Ui.Gold);
@@ -130,6 +175,8 @@ namespace Kage
             var val = Ui.Label(Root, v, UiFont.Title, 17, Ui.Bone, 0, 0, 400, 26, TextAnchor.MiddleLeft);
             float w = Mathf.Max(128f, UiParts.Width(val) + 16 + 16 + 3);
             var rt = Ui.Node(Root, "Cell_" + k, x, y + 0, w, 58);
+            Enter(rt, UiAnims.WRise(.6f));
+            cellIndex++;
             Ui.Box(rt, 0, 0, w, 58, Ui.PanelA(0.82f)).transform.SetAsFirstSibling();
             Ui.Frame(rt, 0, 0, w, 58, 1, Ui.Hair);
             Ui.Box(rt, 0, 0, 3, 58, Ui.Acc);
@@ -222,9 +269,10 @@ namespace Kage
             Ui.Label(rt, Clean(w.Name).ToUpperInvariant(), UiFont.Title, 13, selected ? Ui.Gold : Ui.Bone, 4, 48, CardW - 8, 18, TextAnchor.MiddleCenter, 0.78f);
             string id = w.Id;
             float cardX = x;
+            var lift = UiFocusTween.On(rt, .16f, v => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * v)));
             UiParts.Make(rt, Nav, "weapon:" + id, () => C.EquipWeapon(id), f =>
             {
-                rt.anchoredPosition = new Vector2(x, -(y - (f ? 3f : 0f)));
+                lift.Set(f);
                 if (f) KeepVisible(cardX, maxScroll);
             });
         }

@@ -29,6 +29,8 @@ namespace Kage
         public string Rating;
         public int Coins, Gems;
         public List<string> Items = new List<string>();
+        /// <summary>The drawing of each item in <see cref="Items"/> (the sword, helmet or armour itself).</summary>
+        public List<TileArt> ItemArt = new List<TileArt>();
         public List<ResultToast> Toasts = new List<ResultToast>();
         public int Level, Xp, XpNeed, XpGain;
         public bool LevelUp;
@@ -91,6 +93,7 @@ namespace Kage
                     var item = GameRules.Item(GameRules.KindFromName(u.Kind), u.Id);
                     string name = item != null ? Clean(item.Name) : u.Id;
                     v.Items.Add(name);
+                    v.ItemArt.Add(GearArt.For(GameRules.KindFromName(u.Kind), u.Id));
                     v.Toasts.Add(new ResultToast { Title = u.Kind == "weapons" ? "Boss weapon" : "Trophy", Text = name });
                 }
             }
