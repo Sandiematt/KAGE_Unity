@@ -455,8 +455,8 @@ namespace Kage
         static void Halo(ArmorArt a, ArmorTheme t)
         {
             float R = HaloRadius;
-            a.Fill(B.Head, HaloOrder, t.redLo, false, HaloBand(R, R * 0.87f));
-            a.Fill(B.Head, HaloOrder + 1, t.red, false, HaloBand(R * 0.975f, R * 0.895f), 1.5f);
+            a.Fill(B.Head, HaloOrder, t.redLo, false, HaloBand(R, R * 0.85f));
+            a.Fill(B.Head, HaloOrder + 1, t.red, false, HaloBand(R * 0.98f, R * 0.88f), 1.5f);
         }
 
         // ---------------------------------------------------------------- the chest piece
