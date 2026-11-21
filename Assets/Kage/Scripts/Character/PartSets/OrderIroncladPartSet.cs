@@ -24,6 +24,8 @@ namespace Kage
     {
         public string Id => "order_ironclad";
 
+        public const string Resource = "Art/SvgRig/OrderIronclad";
+
         /// <summary>Reference px per JS design unit on the limbs (the JS body's clothing unit 1.95 at its 1.39 scale), on the sleeves (the JS sleeve 1.1) and on the trunk.</summary>
         const float U = 4.3f, Ua = U * 1.1f, Uw = 6.3f;
 
