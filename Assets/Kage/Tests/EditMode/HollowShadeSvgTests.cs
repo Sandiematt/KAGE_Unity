@@ -177,6 +177,77 @@ namespace Kage.Tests
             Assert.Less(Width(Part(shade, "LegN_Thigh")), Width(Part(husk, "LegN_Hakama")) * 0.85f, "thin legs");
         }
 
+        // ---- on a real rig: the limbs stay joined in every pose ----
+
+        static readonly (string a, string b, B joint)[] Joints =
+        {
+            ("LegN_Thigh", "LegN_Shin", B.LegNL), ("LegN_Shin", "LegN_Boot", B.FootN),
+            ("LegF_Thigh", "LegF_Shin", B.LegFL), ("LegF_Shin", "LegF_Boot", B.FootF),
+            ("ArmN_Upper", "ArmN_Fore", B.ArmNL), ("ArmN_Fore", "HandN", B.HandN),
+            ("ArmF_Upper", "ArmF_Fore", B.ArmFL), ("ArmF_Fore", "HandF", B.HandF),
+        };
+
+        static readonly (string name, System.Func<Pose> make)[] Poses =
+        {
+            ("bind", PoseLib.Ref), ("stance", PoseLib.Stance), ("crouch", PoseLib.Crouch), ("guard", PoseLib.Block),
+            ("hurt high", PoseLib.HurtHigh), ("hurt body", PoseLib.HurtBody), ("deep landing", PoseLib.LandDeep),
+            ("dash", PoseLib.DashFwd), ("tumble", PoseLib.Tumble), ("lying", PoseLib.Lie),
+        };
+
+        /// <summary>The world triangles a part's renderer draws.</summary>
+        static Vector2[] Triangles(GameObject rig, string part)
+        {
+            var mf = rig.GetComponentsInChildren<MeshFilter>().First(m => m.name == part);
+            var v = mf.sharedMesh.vertices;
+            var t = mf.sharedMesh.triangles;
+            var r = new Vector2[t.Length];
+            for (int i = 0; i < t.Length; i++) r[i] = mf.transform.TransformPoint(v[t[i]]);
+            return r;
+        }
+
+        static bool Covered(Vector2[] tris, Vector2 q)
+        {
+            for (int i = 0; i + 2 < tris.Length; i += 3)
+            {
+                Vector2 a = tris[i], b = tris[i + 1], c = tris[i + 2];
+                float d1 = (b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x);
+                float d2 = (c.x - b.x) * (q.y - b.y) - (c.y - b.y) * (q.x - b.x);
+                float d3 = (a.x - c.x) * (q.y - c.y) - (a.y - c.y) * (q.x - c.x);
+                if (!((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0))) return true;
+            }
+            return false;
+        }
+
+        [Test]
+        public void NeighbouringLimbPiecesOverlapAtEveryJointInEveryPose()
+        {
+            var go = new GameObject("ShadeRig");
+            try
+            {
+                var rig = go.AddComponent<FighterRig>();
+                rig.Build(Rig(), 1000);
+                const float R = 0.025f;      // 10 reference px round the joint: no background may show there
+                var gaps = new System.Collections.Generic.List<string>();
+                foreach (var (pose, make) in Poses)
+                {
+                    rig.Apply(make());
+                    foreach (var (a, b, joint) in Joints)
+                    {
+                        var ta = Triangles(go, a);
+                        var tb = Triangles(go, b);
+                        Vector2 j = rig.Bone(joint).position;
+                        for (int k = 0; k <= 16; k++)
+                        {
+                            Vector2 q = k == 16 ? j : j + R * new Vector2(Mathf.Cos(k * Mathf.PI / 8f), Mathf.Sin(k * Mathf.PI / 8f));
+                            if (!Covered(ta, q) && !Covered(tb, q)) { gaps.Add($"{pose}: {a} / {b} (sample {k})"); break; }
+                        }
+                    }
+                }
+                Assert.IsEmpty(gaps, "background shows at a joint:\n" + string.Join("\n", gaps));
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         // ---- on a real rig: the soft parts in the wind ----
 
         static Vector2 Mean(GameObject go, string part)
