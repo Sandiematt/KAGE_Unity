@@ -439,3 +439,71 @@ Not fixed, and not for this ticket: the game renders without MSAA (`UniversalRP.
   - `soft_motion.png`: a walk, stop and swing, a gusty head wind, a gusty tail wind;
   - `lineup_sheet.png`, with the tiles alone in `lineup/`;
   - the cut previews in `cut/`.
+
+## Implementation notes (SAN-112 SVG redesign)
+
+The owner reviewed the smooth Husk (the SAN-112 rework above) and sent an SVG, a VTracer trace titled "Dark Purple Hooded Warrior Profile": "use the svg to design the character take still elements from svg and use it and other movable elements to respons according to physcis and wind". The Husk is now cut from that trace with the SAN-76 pipeline, the second Hollow drawn this way. Its part set is the Shade's three lines. Nothing of it is drawn in code.
+
+**Source.** `Tools/hollow_art/husk/original/`: `husk_hooded_warrior.svg` (823 paths, unchanged) and `husk_ref.png`, its 1536 x 1024 render by headless Edge. There was no painting this time: the render stands in as the painting, so the tool and the tests read the same inputs as the Shade's.
+
+**Config** (`Tools/hollow_art/husk/rig.json`).
+- The Shade's 12 tones, plus three rope tones for the shimenawa (`RopeDark`, `Rope`, `RopeLit`, added to `HollowArt`, so the Shade's colours are unchanged).
+- The background is `#0E0814`, and the trace paints the cloak's inside and the far leg in that same colour. One silhouette `add` polygon fills the cloak in `Ink`. The painted far boot and the ground shadow are figure that no region draws.
+- Fit k 0.8. The trunk, belt, tassets, shide and pelvis share one `line` map, the painted neck (720, 235) and hips (750, 560) onto Kage's neck and hips. The cloak is `pin`ned on the hips at k 0.8, so its hem stays above the ground.
+- Limbs are `seg` joint to joint, with painted joints at the shoulder (785, 285), elbow (695, 425), wrist (648, 345), hip (668, 588), knee (582, 790) and ankle (614, 903). The ankle is set so the boot's sole lands on Kage's ground line. The fists are `attach`ed on their forearms. The head is one `pin` of the painted neck top (700, 228) on the head bone.
+- Underlays (capsules) run on every limb segment. The thigh's stops inside the painted knee (596, 760), and the ankle disc is small: at full size their round ends bulged past the knee and heel. The torso has a big ink underlay and the face an ink disc, so the bites left by the fist and forearm painted over the chest and jaw never show the background when the arm moves.
+
+**The Husk.**
+- Rigid parts:
+  - on the head: the hood, two horns, the horned brow mask, the black face and the eye (glow 2.6);
+  - on the chest: the torso;
+  - on the hips: the pelvis and the shimenawa;
+  - on the arm bones: the upper arm with its pauldron (one piece on `ArmNU`), the forearm with its bracer, and the huge banded fist;
+  - on the leg bones: the hakama thigh, the boot and the foot.
+- Far side: the far arm (with its pauldron), the far fist and the far leg are the near regions in the far tones, as on the Shade.
+- Soft parts:
+  - the long torn cloak from the hips (`Cape`, 4 chains);
+  - the mantle humped over the shoulders (`Cape`, 3);
+  - the skirt of pointed tassets (`Plates`, 3);
+  - three white paper shide (`Tassel`, 2 each);
+  - the torn bandage ends under the near forearm (`Strip`, 3).
+- Unchanged: the skeleton, hurt circles, hit points, scale 1.16, mass 2.5, the Armour flag, the stats and the heavy fists set.
+
+**Pipeline addition: `across` on `seg` and `line`.**
+- `seg ax ay bx by FROM TO [across]` and `line ... [across]` take an optional factor across the segment. The default is 1, so every existing map gives the same numbers: the Shade's line-up tile is pixel-identical.
+- The Husk's thighs use 1.12. Mapped joint to joint at the fit's scale, the painting's baggy hakama came out only 1.18 times the Shade's thigh. The heavy Hollow should read clearly heavier, and the Shade's own "thin legs" test sat on its threshold.
+- The cutter passes maps through unchanged, so `svg_rig.py` did not change and the Shade's cut stays fresh.
+
+**Where it differs from the art, and why.**
+- The trace is a wide, knee-bent stance with one fist up at the chin. In the game the skeleton stands Kage's way: the legs are mapped joint to joint, the thighs squashed to about 0.77 of their painted length, the shins to about 0.8, and the trunk stretched about 1.14 along. The fists family's idle happens to hold the near fist at the chin, as painted.
+- The far arm, far fist and far leg are not in the trace (hidden, or merged into the canvas-black cloak), so they are the near ones in the far colours. The painted far boot is not used.
+- The cloak's inside is canvas colour in the trace, so it is one flat ink with the trace's violet edge strokes. The torn tongues between the legs are part of the cloak and swing with it.
+- The spiky strokes under the near forearm are read as torn bandage ends and hang from the forearm. In the trace they might be fur or a torn sleeve.
+- The trace has no glowing chest cracks, which the JS Husk and the rework had.
+
+**Tests.**
+- EditMode `HollowHuskSvgTests`, the Shade's set with the Husk's table:
+  - the cut is fresh;
+  - every polygon is closed, simple, triangulates and is bigger than half a speck;
+  - every part is on its bone;
+  - the belt sits at the waist;
+  - the soft parts are on chains with their presets, and they are exactly the soft parts;
+  - the palette, the eye glow, the rope and the white shide;
+  - the Husk is bulkier than the Shade (torso, upper arm and fist by 1.25 to 1.5, thigh by 1.2);
+  - `NeighbouringLimbPiecesOverlapAtEveryJointInEveryPose`: the Shade's eight joints plus shoulder and hip, in ten poses;
+  - a walk and a stop swing the cloak, mantle, bandage ends and tassets (the tassets least);
+  - a head wind streams the cloak, mantle and shide back and only stirs the tassets, and calm repeats;
+  - the `across` factor of a `seg` map.
+- PlayMode `HuskSvgScreenshots`, a copy of `ShadeSvgScreenshots` with the Husk's framing.
+- Retired: `HollowHuskShapeTests`, whose five cases read the JS port's part names and cel outlines.
+- Changed:
+  - `HollowHuskTests.ItReadsAsAHollowNotAnOrderSoldier` asks for the horned mask and the glowing white eye where it asked for `Chest_Cracks` in `HollowPalette.Violet`;
+  - `HollowShadeSvgTests.TheShadeIsLeanBesideTheHusk` compares against the Husk's `ArmN_Upper` and `LegN_Thigh` (it read `ArmN_Sleeve` and `LegN_Hakama`).
+- The `HollowHuskTests` width checks are unchanged and pass.
+- Review images are in `Screenshots/review/SAN-112/svg/`:
+  - `side_by_side.png`;
+  - `kage_vs_hollow_husk_sheet.png`;
+  - `hollow_husk_closeup.png` and `hollow_husk_head.png`;
+  - `soft_motion.png`;
+  - `lineup_sheet.png`, with the tiles in `lineup/`;
+  - the cut previews in `cut/`.
