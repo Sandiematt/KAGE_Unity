@@ -173,8 +173,8 @@ namespace Kage.Tests
             var shade = Rig();
             var husk = Rig("hollow_husk");
             Assert.Less(Width(Part(shade, "Torso")), Width(Part(husk, "Torso")) * 0.8f, "a narrow trunk");
-            Assert.Less(Width(Part(shade, "ArmN_Upper")), Width(Part(husk, "ArmN_Sleeve")) * 0.8f, "thin arms");
-            Assert.Less(Width(Part(shade, "LegN_Thigh")), Width(Part(husk, "LegN_Hakama")) * 0.85f, "thin legs");
+            Assert.Less(Width(Part(shade, "ArmN_Upper")), Width(Part(husk, "ArmN_Upper")) * 0.8f, "thin arms");
+            Assert.Less(Width(Part(shade, "LegN_Thigh")), Width(Part(husk, "LegN_Thigh")) * 0.85f, "thin legs");
         }
 
         // ---- on a real rig: the limbs stay joined in every pose ----

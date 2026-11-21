@@ -8,7 +8,7 @@ namespace Kage
     /// It fights with the fists family's move set (<c>iron_fists</c>, the heavy fists, ADR-0006) with no move set of its own. The
     /// <see cref="CharacterFlags.Armour"/> flag and a mass of 2.5 are Unity values from the spec (the JS Husk is only "slow and hard to
     /// stagger"): light hits land without a flinch or a push, heavy hits and a guard-break stagger it, and the same blow moves it less than
-    /// half as far as a Footman. Its look is <see cref="HollowHuskPartSet"/> in the shared <see cref="HollowPalette"/>.
+    /// half as far as a Footman. Its look is <see cref="HollowHuskPartSet"/>, cut from the owner's SVG in the shared <see cref="HollowArt"/> tones.
     /// </summary>
     public static class HollowHusk
     {

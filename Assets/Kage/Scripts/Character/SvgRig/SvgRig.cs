@@ -31,9 +31,10 @@ namespace Kage
     /// <item><c>trunk</c>: that fit alone.</item>
     /// <item><c>pin sx sy TARGET k deg</c>: the SVG point s on TARGET (a bone's pivot, or <c>rx ry</c> in reference px), scaled by k and
     /// turned by deg (clockwise on screen); a rigid piece placed by one point (a head, a boot, a plate column).</item>
-    /// <item><c>seg ax ay bx by FROM TO</c>: the drawn joints a and b on the pivots of FROM and TO (turned, stretched along the segment,
-    /// the fit's scale across): a limb segment (SAN-71's method).</item>
-    /// <item><c>line ax ay bx by rax ray rbx rby</c>: the same onto two reference points: a cape or coat tails hung from the body.</item>
+    /// <item><c>seg ax ay bx by FROM TO [across]</c>: the drawn joints a and b on the pivots of FROM and TO (turned, stretched along the
+    /// segment, the fit's scale across): a limb segment (SAN-71's method). The optional <c>across</c> (default 1) widens or narrows the
+    /// piece across the segment, so a heavy Hollow's limbs can be thicker than the painting's proportion (SAN-112).</item>
+    /// <item><c>line ax ay bx by rax ray rbx rby [across]</c>: the same onto two reference points: a cape or coat tails hung from the body.</item>
     /// <item><c>attach ax ay d0x d0y d1x d1y BONE TO0 TO1</c>: a turned onto BONE's pivot, the drawn direction d0 to d1 along TO0 to TO1 (a hand
     /// on its forearm).</item>
     /// <item><c>blade gx gy tx ty len</c>: the grip g on the sword bone's pivot and the tip t along Kage's blade, scaled so the tip is
@@ -105,7 +106,7 @@ namespace Kage
             if (m == null || m.Length == 0) throw new ArgumentException(who + ": no map");
             Vector2 Pivot(string bone) => d.pivot[(int)(B)Enum.Parse(typeof(B), bone)];
             Func<Vector2, Vector2> G = s => Fit(data, s);
-            Func<Vector2, Vector2> Segment(Vector2 a, Vector2 b, Vector2 pa, Vector2 pb)
+            Func<Vector2, Vector2> Segment(Vector2 a, Vector2 b, Vector2 pa, Vector2 pb, float across)
             {
                 Vector2 ga = G(a), gb = G(b);
                 Vector2 u = (gb - ga).normalized, w = (pb - pa).normalized;
@@ -114,7 +115,7 @@ namespace Kage
                 return x =>
                 {
                     Vector2 r = G(x) - ga;
-                    return pa + w * (Vector2.Dot(r, u) * s) + wn * Vector2.Dot(r, un);
+                    return pa + w * (Vector2.Dot(r, u) * s) + wn * (Vector2.Dot(r, un) * across);
                 };
             }
             switch (m[0])
@@ -132,10 +133,10 @@ namespace Kage
                     return x => target + KMath.Rot(-(x - s) * k / RefScale, -deg);
                 }
                 case "seg":
-                    return Segment(new Vector2(N(m[1]), N(m[2])), new Vector2(N(m[3]), N(m[4])), Pivot(m[5]), Pivot(m[6]));
+                    return Segment(new Vector2(N(m[1]), N(m[2])), new Vector2(N(m[3]), N(m[4])), Pivot(m[5]), Pivot(m[6]), m.Length > 7 ? N(m[7]) : 1f);
                 case "line":
                     return Segment(new Vector2(N(m[1]), N(m[2])), new Vector2(N(m[3]), N(m[4])),
-                        KageModel.P(N(m[5]), N(m[6])), KageModel.P(N(m[7]), N(m[8])));
+                        KageModel.P(N(m[5]), N(m[6])), KageModel.P(N(m[7]), N(m[8])), m.Length > 9 ? N(m[9]) : 1f);
                 case "attach":
                 {
                     Vector2 at = new(N(m[1]), N(m[2])), d0 = new(N(m[3]), N(m[4])), d1 = new(N(m[5]), N(m[6]));

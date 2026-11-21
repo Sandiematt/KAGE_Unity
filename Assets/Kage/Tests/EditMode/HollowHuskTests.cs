@@ -112,9 +112,9 @@ namespace Kage.Tests
             Assert.Greater(rig.bodyColor.b, rig.bodyColor.g * 1.2f, "violet-black cloth");
             Assert.AreEqual(HollowPalette.Glow, d.colors.main, "the Hollow effect colour");
             var names = rig.parts.Select(p => p.name).ToHashSet();
-            Assert.IsTrue(names.Contains("Mask") && names.Contains("Eye") && names.Contains("Chest_Cracks"), "a cracked mask, a cold eye, a chest of glowing cracks");
+            Assert.IsTrue(names.Contains("Mask") && names.Contains("Eye") && names.Contains("Horn_1") && names.Contains("Horn_2"), "a horned mask and a cold eye");
             Assert.IsTrue(names.Contains("Mantle") && names.Contains("Shimenawa"), "the brute's mantle and rope belt");
-            Assert.IsTrue(rig.parts.Any(p => p.name == "Chest_Cracks" && p.polys.Any(q => q.col == HollowPalette.Violet)), "the cracks glow violet");
+            Assert.IsTrue(rig.parts.Any(p => p.name == "Eye" && p.glow > 1.5f && p.polys.Any(q => q.col == HollowArt.Style.tones["White"])), "the eye glows cold white");
             foreach (var p in rig.parts)
             {
                 Assert.AreNotEqual(Palette.Trim, p.color, p.name);
