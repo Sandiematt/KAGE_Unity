@@ -324,3 +324,118 @@ The owner sent the Hollow Shade and the tutorial Hollow back for refinement: lik
 - **Kit addition: `OpponentKit.ClipStar(a, b, centre)`.** The overlap of two shapes that may both be concave, as long as each is seen whole from the centre: rays from it (a fixed 360 plus one through every corner of either shape) keep the nearer edge. The Shade's half-mask is its own face grown 1.06 (concave at the bridge of the nose) cut along `HOLLOW_HALF_CUT` (a zigzag break), which `ClipConvex` cannot do without filling the bridge or straightening the break. No existing helper changed.
 - **Where it still differs from the JS, on purpose.** As on the Husk: the lower leg is laid knee to sole, a hakama seat bridges Kage's long waist-to-hip, the rim is the rig's back-light outline per part and the crack glow a translucent band. The robe panels hang from the waist with their JS links, widths, teeth and rag, their lengths taken as a share of waist-to-ground (the Shade's back panel to the calf, its flap over the knee, the tutorial Hollow's both above the knee); the Shade's flap is 0.65 of the JS width and its back panel the full width, so the near leg shows beside the flap as it does in the JS, where the leg steps out ahead of it. The tutorial Hollow's plank is wood (the JS paints the board in the mask lacquer and only its grain in wood), so the training husk reads as a board at fighting distance. The Shade's saya cord is the Hollow deep violet (the JS keeps the crimson cord of every saya), so no Kage crimson shows on a Hollow; the saya is 175 px long. The tutorial Hollow has no saya (the JS skin gives it none; the first Unity art gave it the Shade's). The katana is still `HollowBody.Sword` (the echo of a blade on the hit line); the shards drift on the part swing, not the JS sine.
 - **Tests.** EditMode `HollowShapeTests` (both Hollows: closed simple outlines, polygons with an area, each part on its bone, curves not boxes and no flat blocks, the robe panels, the sash ends and the sack's rope ends on chains, the Shade leaner than the Husk, the Shade's shard crown, rip and haori to the calf, the tutorial Hollow's straw, sack, plank, crossed ropes and rope sash) and `SmoothShapeTests` (`ClipStar`); `HollowTests`, `HollowHuskTests` and `HollowFlickerTests` unchanged. Review images in `Screenshots/review/SAN-76/` and `rework/` (`side_by_side_shade.png`, `side_by_side_tutorial.png`: JS left, Unity right, idle, walk, attack and hit; `before_after_<shade|tutorial>_<head|torso|skirt|body>.png`).
+
+## Implementation notes (SAN-76 SVG redesign)
+
+The owner reviewed the smooth Shade and sent their own painting and a VTracer trace of it: "use unmovable parts from svg and movable parts design it so that it responds to physics and wind", built as reusable parts for the other Hollow mini-bosses. The Shade is now cut from that art. Nothing of it is drawn in code. The pipeline is generic: the next Hollow (the Husk, SAN-112, then later ones) adds its own SVG and a config, and no new C#.
+
+**The pipeline.**
+
+1. **Source art**: the owner's files, unchanged, in `Tools/hollow_art/<name>/original/` (the Shade: `shade_ref.png`, the 1536 x 1024 painting, and `shade_cloaked_miniboss.svg`, a stacked VTracer trace of 346 single-path shapes in 340 colours). The painting is an input too: the trace merged the cape's black inside with the canvas, so the silhouette is taken from the painting.
+2. **Config** `Tools/hollow_art/<name>/rig.json` (data only): the crop, the trace's background colours, the **tones** (each a name from the shared Hollow palette and the trace colours that snap to it), the silhouette settings (painting threshold, hole size, hand-marked `add`/`cut` polygons), the speck size, the **fit** of the painting onto Kage's reference frame, the **regions** (a rough polygon per piece, and the pieces that cover it, `minus`; `tones` for a piece cut by colour, like the eye and the mask's crack) and the **parts** (region, bone, depth slot, map, flags, soft preset, chains, swing pivot).
+3. **Cut** `python Tools/svg_art/svg_rig.py Tools/hollow_art/<name>/rig.json` (Python 3, numpy, opencv; no Unity). It rasterises the trace at 4x in paint order, snaps every colour to its nearest tone (CIELAB), adds the painting's silhouette (dark cloth takes the fill tone), turns islands under `speck` px² into the tone around them, cuts the regions, and writes each region as simple polygons in paint order. First a base layer (the region's outline in `Ink`), then every island of every other tone with its holes filled, outermost first. An island inside another's hole is painted after it, so no polygon has a hole and a seam shows the base, not the background. Holes that open onto the outside are slit open. Outlines are traced half a sample outside each island, simplified by `eps` (0.45 px) and checked simple. **Soft** regions are cut cell by cell (`softCell`, 24 px) and resampled (`resample`, 8 px), so no triangle is bigger than a cell. The first cut was one triangulation per polygon: when the cape bent, the long slivers of its rim stroke swept across the cloth as a violet sail. It writes `Assets/Kage/Resources/Art/SvgRig/<Name>.txt` (regions, the parts passed through, the sources and an FNV-1a hash of the SVG, the config, the tool and the painting) and the previews `regions.png` (each region tinted, magenta = figure no region draws), `tones.png` and `rebuilt.png` (the polygons painted back) in the config's `preview` folder.
+4. **Build** (`Scripts/Character/SvgRig/`): `SvgRigData` reads the text (cached per run). `SvgRig.Build(rig, data, style)` puts each part on its bone in the style's colours. Map kinds:
+   - `trunk`: the fit alone;
+   - `pin`: one SVG point on a bone's pivot or a reference point, with a scale and a turn; for rigid pieces (head, boots, plate column, saya);
+   - `seg`: two drawn joints on two bones' pivots, stretched along and kept across; SAN-71's limb method;
+   - `line`: the same onto two reference points; for a cape or coat tails hung from the body;
+   - `attach`: a hand turned with its forearm;
+   - `blade`: the grip on the sword bone and the tip along Kage's blade at a given length, so the painted point is where the hit line ends.
+
+   Flags:
+   - `rim`: the rig's world-fixed back-light rim round the region's outline;
+   - `far`: the style's far colours;
+   - `sword`: the sword layer;
+   - `glow`, `role`;
+   - `swing`: its own spring pivot;
+   - `soft`: a `SoftPresets` feel, with the chains mapped like the part.
+
+   The part set is three lines: `Skeleton`, `HollowArt.Dress`, `SvgRig.Build`.
+5. **Shared Hollow parts**:
+   - `PartSets/HollowArt.cs`: the 12 tones in their game colours (`Ink`, `Shadow`, `Cloth`, `ClothMid`, `ClothLit`; the violet light `VioletDeep`, `Rim`, `RimBright`, `RimHot`; `SteelDark`, `Steel`, `White`), the far-side colour (half way to the deepest ink: the painting's far limbs are near-black silhouettes), the violet rim (`HollowPalette.Rim`), the eye and crack glows. It is new beside `HollowPalette` and changes nothing drawn in code.
+   - `SvgRig/SoftPresets.cs`: soft-part presets `Cape`, `Tails`, `Strip`, `Plates`, `Tassel`. Cloth is loose at the tip with high drag. Plates are heavy, stiff and low in drag. A tassel is thin and falls straight.
+6. **Tests to copy** (`HollowShadeSvgTests`):
+   - the cut is fresh (it recomputes the hash);
+   - every cut polygon is closed, simple, triangulates whole and is bigger than half a speck;
+   - every part is on its bone (a table) and near it;
+   - the cloth and plates are on chains with their presets and carry no fixed rim;
+   - every colour is in the Hollow palette, the eye and crack glow, the spikes swing;
+   - the blade ends at the hit line;
+   - the foe's width beside the others;
+   - the soft parts bend in the wind on a real `FighterRig`, and calm repeats.
+
+**Steps for the next Hollow** (the Husk: `Tools/hollow_art/husk/`; the owner's `husk_hooded_warrior.svg` is in the main checkout's `.claude/owner_art/`):
+
+1. Copy the SVG and painting into `Tools/hollow_art/husk/original/`.
+2. Copy the Shade's `rig.json`. Set `svg`, `painting`, `out` (`Art/SvgRig/HollowHusk`), `preview`, `crop` and `background`, and the tones' trace colours (list the trace's colours by lightness, Lab `a`/`b` for violet against grey).
+3. Run the tool with one catch-all region and look at `tones.png` against the painting. Adjust the tones, `speck` and the silhouette until it reads clean.
+4. Draw the regions on a gridded view of `tones.png`. Re-run until `regions.png` has no magenta worth a part and `rebuilt.png` matches `tones.png`.
+5. Write the parts: rigid pieces `pin`/`seg`/`attach` on their bones (Kage's slots, ADR-0005 SAN-69), the far limbs as the near regions with `far` and `rim`, hanging pieces with a preset and two or three chains root first, the weapon with `blade` (the Husk has none: fists).
+6. Replace the part set's body with `SvgRig.Build(d, SvgRigData.Load(<resource>), HollowArt.Style)`.
+7. Copy `HollowShadeSvgTests` with the Husk's table, then copy `ShadeSvgScreenshots` and look at the images.
+8. After any change to the SVG, the config, the painting or the tool, re-run the tool: the freshness test fails until you do.
+
+**Wind** (`Scripts/Character/Wind.cs`):
+- `Wind` is a steady world wind (m/s) with gusts on top: smooth value noise from the seed, two octaves at `gustRate` a second, travelling along the wind with x, pushing 0 to `gust` m/s along it with a third of that sideways. It is a pure function of the seed, the time and x, with no random draws.
+- `SoftChains.wind` adds it as a push on every particle, by the part's drag times `SoftChains.WindPush` (6), more towards the free end. The trailing breeze alone could not bend a shape-matched part: the first try moved the cape 7 mm in a 6 m/s wind.
+- `FighterRig.wind` hands it to every chain each frame. Calm (the default) skips the code entirely, so no character moved: a golden of Raikon's cape measured on main before the change still matches, and the line-up of every Order and Hollow foe, Raikon's chains and Kage's coat in motion are pixel-identical before and after.
+- Kage's own coat (`CoatCloth`), hair and scarf do not read the wind yet. Nothing sets a wind in the game yet. A stage or arena wanting weather sets `rig.wind` on its fighters.
+
+**The Shade.**
+- Rigid parts from the SVG:
+  - on the head: the head (dome, mask, band, ear disc), the crack (glow 1.6), the eye (glow 2.6) and three crown spikes on their own swing pivots;
+  - the neck/hood, the torso, the pelvis and the saya;
+  - the near arm (upper, fore, the fist on its forearm) and the hilt and blade on the sword bone;
+  - the near leg (thigh, shin with the boot shaft, boot).
+- Far side: the far arm, the sword hand and the far leg are the near regions in the far colours, with the rig's violet rim. They are not darker copies of drawn detail, so they read as the painting's dark far limbs.
+- Soft parts on chains:
+  - the cape from the shoulders (`Cape`, 3 chains);
+  - the torn shoulder strips (`Strip`, 2);
+  - the coat tails and the rear hem from the waist (`Tails`, 3);
+  - the sash of hanging plates (`Plates`, 2).
+- Unchanged: the skeleton, the hurt circles, scale, mass, stats, the katana family and the attack rate.
+- The rig's world-fixed rim is only on the far parts: on the near parts it doubled the painted rim strokes into a fringe.
+
+**Where it differs from the painting, and why.**
+- The painting is a deep low stance. The game skeleton stands Kage's way, so every limb is mapped joint to joint and the fight idle is Kage's chūdan, not the painted crouch. The thigh is squashed to about 0.8 of its painted length and the trunk turned upright by about 15 degrees.
+- The coat tails and cape are stretched along about 1.16 to reach the calf of a standing figure.
+- The far arm, the sword hand and the far leg are not in the painting (hidden or merged in black), so they are the near ones in the far colours.
+- The rear boot area of the painting (black, merged with the hem) is part of the coat tails, so it swings.
+- The painting's soft gradients are flattened to 12 tones, so the cape's inside is one ink.
+- The trace's hands and arms are a tangle of small planes. They are cut as painted, so they read as a dark fist rather than separate fingers.
+
+**Polish pass (definition).** After review, two things looked like the low definition the owner rejected in SAN-71.
+
+*Joints.* The thigh, shin and boot floated apart, and the far leg read as fragments. The causes were:
+- the painting leaves the boot, the knee, the fist and the forearm hollow inside their rim strokes (canvas colour);
+- the cut lines did not meet at the bones' pivots.
+
+The fixes:
+- **Tone fills**: the silhouette's `add` polygons can carry their own tone (`{"poly": [...], "tone": "Shadow"}`), so those areas are filled solid in the painting's dark tones.
+- **Underlays**: a part's `under` (capsules `[ax, ay, bx, by, r, tone]`) are drawn first in its mesh, from drawn joint to drawn joint. The joints are now the painted limbs' centrelines, which `seg` puts exactly on the bones' pivots. Neighbouring pieces therefore overlap round every pivot in any pose, as Kage's capsule limbs do.
+- **Far hand**: the far hand is placed on its forearm (`attach`) like the near one, a clean fist rather than a smaller copy at the blade's scale.
+- **No rig rim**: the rig's world-fixed rim is off on every piece. On the far limbs it drew a line across each joint; the painted rim strokes carry the light.
+
+`NeighbouringLimbPiecesOverlapAtEveryJointInEveryPose` (EditMode) poses a real `FighterRig` in bind, stance, crouch, guard, two hurts, a deep landing, a dash, a tumble and lying. For every joint (knees, ankles, elbows, wrists, near and far), it checks that a 10 reference px disc round the pivot is covered by the two pieces' rendered triangles. It failed on the first cut in every pose.
+
+*Edges.* The cutter now:
+- softens the 1x painting's silhouette (a Gaussian of 1 px, then a cubic upsample) before it joins the trace;
+- simplifies every outline by Douglas-Peucker (`eps` 0.6 px);
+- rounds it by two rounds of Chaikin, except at real corners (a turn over `corner`, 40 degrees).
+
+So straight painted edges stay straight, curves come out smooth, and spike tips and plate corners stay sharp. Cloth cells are smoothed the same way.
+
+Not fixed, and not for this ticket: the game renders without MSAA (`UniversalRP.asset`, MSAA 1). Every character's polygon edges therefore step at screen pixels, Kage's included.
+
+**Tests changed.** `HollowShapeTests` lost its Shade cases (they tested the JS port's part names, `Cowl`, `Shard_`, `Robe_Back`, ...). The tutorial Hollow's cases are unchanged; the Shade's are in `HollowShadeSvgTests`. `HollowHuskTests.Width` also reads a torso cut from an SVG (its polygons) where it read `pts ?? rimPts`; the expectation is the same.
+
+**Tests.**
+- EditMode: `SoftChainWindTests` (a rope sags under gravity, trails the body and settles, bends with the wind either way, the same seed repeats and another differs, calm changes nothing, the wind's bounds, every preset hangs and bends by its weight, the Raikon cape golden) and `HollowShadeSvgTests`.
+- PlayMode: `ShadeSvgScreenshots`.
+- Review images in `Screenshots/review/SAN-76/svg/`:
+  - `side_by_side.png`: the painting, the bind pose, the fight idle;
+  - `kage_vs_hollow_shade_sheet.png`: idle, walk, attack, hit;
+  - `hollow_shade_closeup.png` and `hollow_shade_head.png`;
+  - `soft_motion.png`: a walk, stop and swing, a gusty head wind, a gusty tail wind;
+  - `lineup_sheet.png`, with the tiles alone in `lineup/`;
+  - the cut previews in `cut/`.

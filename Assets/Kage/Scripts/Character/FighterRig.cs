@@ -42,6 +42,8 @@ namespace Kage
         readonly List<SoftChains> _chains = new();
         public bool autoSecondary;          // gallery / preview rigs animate themselves
         public float groundY;
+        /// <summary>The wind on this fighter's spring chains (SAN-76; <see cref="Kage.Wind"/>). Calm by default: nothing moves differently.</summary>
+        public Wind wind;
         float _vis = 1f;                    // visual facing, tweened through 0 for a paper-flip turn
         float _sq, _sqVel;                  // squash (+) / stretch (-) spring
         Vector3 _baseScale = Vector3.one;
@@ -298,6 +300,7 @@ namespace Kage
             foreach (var c in _chains)
             {
                 c.groundY = groundY;
+                c.wind = wind;
                 c.Tick(dt, facing, hv);
             }
 

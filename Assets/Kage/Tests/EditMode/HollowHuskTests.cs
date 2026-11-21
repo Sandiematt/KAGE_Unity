@@ -89,7 +89,7 @@ namespace Kage.Tests
         {
             var d = CharacterCatalog.Get(id);
             var rig = CharacterCatalog.PartSet(d.partSet).Build(d);
-            var pts = rig.parts.Where(p => p.name == "Torso").SelectMany(p => p.pts ?? p.rimPts).ToArray();   // a flat part, or a cel part's outline (SAN-112 rework)
+            var pts = rig.parts.Where(p => p.name == "Torso").SelectMany(p => p.pts ?? p.rimPts ?? p.polys.SelectMany(q => q.pts).ToArray()).ToArray();   // a flat part, a cel part's outline (SAN-112 rework), or a part cut from an SVG (SAN-76)
             return pts.Max(v => v.x) - pts.Min(v => v.x);
         }
 

@@ -5,15 +5,15 @@ using UnityEngine;
 namespace Kage.Tests
 {
     /// <summary>
-    /// The Hollow Shade and the tutorial Hollow redrawn with smooth shapes (SAN-76 rework, on the SAN-112 kit): every part's
-    /// outline is a closed, simple polygon that triangulates whole; every part rides the bone its piece moves with (art never
-    /// moves a joint, ADR-0005); the body is curves, not boxes; the hanging cloth is on spring chains; and the two still read
-    /// apart: the Shade a lean cutter with a shard crown, a cracked half-mask and a torn haori to the calf, the tutorial Hollow
-    /// a straw-stuffed training husk with a sack hood, a plank over the eyes, crossed ropes and a short rag skirt.
+    /// The tutorial Hollow redrawn with smooth shapes (SAN-76 rework, on the SAN-112 kit): every part's outline is a closed,
+    /// simple polygon that triangulates whole; every part rides the bone its piece moves with (art never moves a joint, ADR-0005);
+    /// the body is curves, not boxes; the hanging cloth is on spring chains; and it reads as a straw-stuffed training husk with a
+    /// sack hood, a plank over the eyes, crossed ropes and a short rag skirt, apart from the Shade. (The Shade was redrawn again
+    /// from the owner's painting in the SAN-76 SVG redesign: its own tests are <see cref="HollowShadeSvgTests"/>.)
     /// </summary>
     public class HollowShapeTests
     {
-        const string Shade = "hollow_shade", Tutorial = "hollow_tutorial";
+        const string Tutorial = "hollow_tutorial";
 
         static RigDef Rig(string id)
         {
@@ -37,7 +37,6 @@ namespace Kage.Tests
 
         static float Width(PartDef p) { var o = Outline(p); return o.Max(v => v.x) - o.Min(v => v.x); }
 
-        [TestCase(Shade)]
         [TestCase(Tutorial)]
         public void EveryPartOutlineIsClosedSimpleAndTriangulatesWhole(string id)
         {
@@ -45,7 +44,6 @@ namespace Kage.Tests
                 SmoothShapeTests.AssertGoodOutline(Outline(p), id + " " + p.name);
         }
 
-        [TestCase(Shade)]
         [TestCase(Tutorial)]
         public void EveryPaintedPolygonHasAnArea(string id)
         {
@@ -68,24 +66,17 @@ namespace Kage.Tests
             ("Blade", B.Sword), ("Tsuka", B.Sword), ("Tsuba", B.Sword), ("Habaki", B.Sword),
         };
 
-        static readonly (string prefix, B bone)[] ShadeOwn =
-        {
-            ("ArmF_Fray", B.ArmFL), ("ArmN_Fray", B.ArmNL), ("Chest_Rip", B.Chest), ("Saya", B.Hips),
-            ("Cowl", B.Head), ("Shard_", B.Head), ("Mask", B.Head),
-        };
-
         static readonly (string prefix, B bone)[] TutorialOwn =
         {
             ("ArmF_Straw", B.ArmFL), ("ArmN_Straw", B.ArmNL), ("Rope_Cross", B.Chest),
             ("Straw_", B.Head), ("Sack", B.Head), ("Throat_Rope", B.Head), ("Plank", B.Head),
         };
 
-        [TestCase(Shade)]
         [TestCase(Tutorial)]
         public void EveryPartRidesTheBoneItsPieceMovesWith(string id)
         {
             var rig = Rig(id);
-            var table = Body.Concat(id == Shade ? ShadeOwn : TutorialOwn).ToArray();
+            var table = Body.Concat(TutorialOwn).ToArray();
             foreach (var p in rig.parts)
             {
                 var hit = table.Where(b => p.name.StartsWith(b.prefix)).ToArray();
@@ -102,7 +93,6 @@ namespace Kage.Tests
             }
         }
 
-        [TestCase(Shade, "Cowl")]
         [TestCase(Tutorial, "Sack")]
         public void TheBodyIsDrawnInCurvesNotBlocks(string id, string hood)
         {
@@ -126,7 +116,6 @@ namespace Kage.Tests
                 Assert.IsTrue(p.rimPts != null || p.polys != null, id + " " + p.name + " is a flat block, not a cel part");
         }
 
-        [TestCase(Shade, new[] { "Robe_Back", "Robe_Flap", "Sash_Tail" })]
         [TestCase(Tutorial, new[] { "Robe_Back", "Robe_Flap", "Sash_Tail", "Sack_Tail" })]
         public void TheHangingClothIsOnChains(string id, string[] names)
         {
@@ -142,27 +131,10 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void TheShadeIsLeanBesideTheHusk()
+        public void TheTutorialHollowsRagSkirtIsShort()
         {
-            var shade = Rig(Shade);
-            var husk = Rig("hollow_husk");
-            Assert.Less(Width(Part(shade, "Torso")), Width(Part(husk, "Torso")) * 0.75f, "a narrow trunk");
-            Assert.Less(Width(Part(shade, "ArmN_Sleeve")), Width(Part(husk, "ArmN_Sleeve")) * 0.8f, "thin sleeves");
-            Assert.Less(Width(Part(shade, "LegN_Hakama")), Width(Part(husk, "LegN_Hakama")) * 0.8f, "thin legs");
-        }
-
-        [Test]
-        public void TheShadeKeepsItsCutterSilhouette()
-        {
-            var shade = Rig(Shade);
-            var tut = Rig(Tutorial);
-            Assert.AreEqual(3, shade.parts.Count(p => p.name.StartsWith("Shard_")), "a crown of three floating mask shards");
-            Assert.IsTrue(shade.parts.Where(p => p.name.StartsWith("Shard_")).All(p => p.jiggle > 0f), "the shards drift");
-            Assert.IsTrue(Part(shade, "Chest_Rip").polys.Any(q => q.col == HollowPalette.Violet), "a rip across the chest lit violet");
-            // the torn haori hangs to the calf, below the knees (680); the training husk's rag skirt stops above them
-            Assert.Greater(LowestRefY(Part(shade, "Robe_Back")), 700f, "the Shade's haori reaches the calf");
-            Assert.Less(LowestRefY(Part(tut, "Robe_Back")), 640f, "the tutorial Hollow's rag skirt is short");
-            Assert.Greater(LowestRefY(Part(shade, "Robe_Back")) - LowestRefY(Part(tut, "Robe_Back")), 80f);
+            // the training husk's rag skirt stops above the knees (680)
+            Assert.Less(LowestRefY(Part(Rig(Tutorial), "Robe_Back")), 640f, "the tutorial Hollow's rag skirt is short");
         }
 
         [Test]
