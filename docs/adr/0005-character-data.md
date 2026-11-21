@@ -404,6 +404,29 @@ The owner reviewed the smooth Shade and sent their own painting and a VTracer tr
 - The painting's soft gradients are flattened to 12 tones, so the cape's inside is one ink.
 - The trace's hands and arms are a tangle of small planes. They are cut as painted, so they read as a dark fist rather than separate fingers.
 
+**Polish pass (definition).** After review, two things looked like the low definition the owner rejected in SAN-71.
+
+*Joints.* The thigh, shin and boot floated apart, and the far leg read as fragments. The causes were:
+- the painting leaves the boot, the knee, the fist and the forearm hollow inside their rim strokes (canvas colour);
+- the cut lines did not meet at the bones' pivots.
+
+The fixes:
+- **Tone fills**: the silhouette's `add` polygons can carry their own tone (`{"poly": [...], "tone": "Shadow"}`), so those areas are filled solid in the painting's dark tones.
+- **Underlays**: a part's `under` (capsules `[ax, ay, bx, by, r, tone]`) are drawn first in its mesh, from drawn joint to drawn joint. The joints are now the painted limbs' centrelines, which `seg` puts exactly on the bones' pivots. Neighbouring pieces therefore overlap round every pivot in any pose, as Kage's capsule limbs do.
+- **Far hand**: the far hand is placed on its forearm (`attach`) like the near one, a clean fist rather than a smaller copy at the blade's scale.
+- **No rig rim**: the rig's world-fixed rim is off on every piece. On the far limbs it drew a line across each joint; the painted rim strokes carry the light.
+
+`NeighbouringLimbPiecesOverlapAtEveryJointInEveryPose` (EditMode) poses a real `FighterRig` in bind, stance, crouch, guard, two hurts, a deep landing, a dash, a tumble and lying. For every joint (knees, ankles, elbows, wrists, near and far), it checks that a 10 reference px disc round the pivot is covered by the two pieces' rendered triangles. It failed on the first cut in every pose.
+
+*Edges.* The cutter now:
+- softens the 1x painting's silhouette (a Gaussian of 1 px, then a cubic upsample) before it joins the trace;
+- simplifies every outline by Douglas-Peucker (`eps` 0.6 px);
+- rounds it by two rounds of Chaikin, except at real corners (a turn over `corner`, 40 degrees).
+
+So straight painted edges stay straight, curves come out smooth, and spike tips and plate corners stay sharp. Cloth cells are smoothed the same way.
+
+Not fixed, and not for this ticket: the game renders without MSAA (`UniversalRP.asset`, MSAA 1). Every character's polygon edges therefore step at screen pixels, Kage's included.
+
 **Tests changed.** `HollowShapeTests` lost its Shade cases (they tested the JS port's part names, `Cowl`, `Shard_`, `Robe_Back`, ...). The tutorial Hollow's cases are unchanged; the Shade's are in `HollowShadeSvgTests`. `HollowHuskTests.Width` also reads a torso cut from an SVG (its polygons) where it read `pts ?? rimPts`; the expectation is the same.
 
 **Tests.**
