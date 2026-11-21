@@ -197,6 +197,29 @@ def clean(p, min_len):
     return np.array(out)
 
 
+def smooth(p, corner_deg, rounds):
+    """Chaikin corner cutting on a closed outline, except at real corners (where it turns more than corner_deg): the steps the
+    raster left along a straight painted edge are gone after Douglas-Peucker and stay gone (points on a line stay on it), gentle
+    turns become curves, and a spike's tip or a plate's corner stays sharp. A fixed number of rounds."""
+    cos_lim = np.cos(np.radians(corner_deg))
+    for _ in range(int(rounds)):
+        n = len(p)
+        if n < 4: return p
+        keep = np.zeros(n, bool)
+        for k in range(n):
+            u, v = p[k] - p[k - 1], p[(k + 1) % n] - p[k]
+            nu, nv = np.hypot(*u), np.hypot(*v)
+            keep[k] = nu > 0 and nv > 0 and np.dot(u, v) / (nu * nv) < cos_lim
+        out = []
+        for k in range(n):
+            a, b = p[k], p[(k + 1) % n]
+            if keep[k]: out.append(a)
+            out.append(a * 0.75 + b * 0.25 if not keep[k] else a * 0.85 + b * 0.15)
+            out.append(a * 0.25 + b * 0.75 if not keep[(k + 1) % n] else a * 0.15 + b * 0.85)
+        p = np.array(out)
+    return p
+
+
 def resample(p, seg):
     out = []
     n = len(p)
@@ -288,10 +311,18 @@ class Cutter:
                 if st[k, cv2.CC_STAT_AREA] >= sc.get('minArea', 400): keep[cc == k] = 1
             x0, y0 = self.x0, self.y0
             crop = keep[int(y0):int(y0) + self.h // S + 2, int(x0):int(x0) + self.w // S + 2].astype(np.float32)
-            up = cv2.resize(crop, (crop.shape[1] * S, crop.shape[0] * S), interpolation=cv2.INTER_LINEAR)[:self.h, :self.w]
+            crop = cv2.GaussianBlur(crop, (0, 0), sc.get('soften', 1.0))     # the painting is 1x: soften its pixel steps before upsampling
+            up = cv2.resize(crop, (crop.shape[1] * S, crop.shape[0] * S), interpolation=cv2.INTER_CUBIC)[:self.h, :self.w]
             sil |= (up > 0.5).astype(np.uint8)
-        for poly in sc.get('add', []):                      # hand-marked dark cloth the painting barely parts from its canvas
-            cv2.fillPoly(sil, [np.round(self.px(poly) * 4).astype(np.int32)], 1, shift=2)
+        # hand-marked figure the painting barely parts from its canvas: dark cloth, and the parts it leaves hollow inside their rim
+        # strokes (a boot, a fist), each optionally in its own tone ({"poly": [...], "tone": "Shadow"}); the default is the fill tone
+        added = []
+        for a in sc.get('add', []):
+            poly, tone = (a['poly'], a.get('tone')) if isinstance(a, dict) else (a, None)
+            m = np.zeros_like(sil)
+            cv2.fillPoly(m, [np.round(self.px(poly) * 4).astype(np.int32)], 1, shift=2)
+            sil |= m
+            if tone: added.append((m, self.tone_names.index(tone)))
         # holes: small ones are the figure's own dark lines, big ones (between the legs, in a torn hem) stay holes
         filled = fill_holes(sil)
         holes = filled & (1 - sil)
@@ -303,6 +334,7 @@ class Cutter:
             cv2.fillPoly(sil, [np.round(self.px(poly) * 4).astype(np.int32)], 0, shift=2)
         fill = self.tone_names.index(sc.get('fill', self.tone_names[0]))
         T = T.copy()
+        for m, t in added: T[(m == 1) & (T < 0)] = t
         T[(sil == 1) & (T < 0)] = fill
         T[sil == 0] = -1
         return sil, T
@@ -372,6 +404,7 @@ class Cutter:
                 a = c if e == 0 else cv2.approxPolyDP(c, e * S, True)
                 p = (a.reshape(-1, 2).astype(np.float64) - 1 + 0.5) / S + (self.x0, self.y0)
                 p = clean(p, 0.04)
+                if e > 0 and len(p) >= 4: p = clean(smooth(p, self.cfg.get('corner', 40), self.cfg.get('smooth', 2)), 0.04)
                 if len(p) >= 3 and not self_crosses(p): break
             if len(p) >= 3 and not self_crosses(p): out.append(p)
         return out
@@ -395,7 +428,7 @@ class Cutter:
         """Simple polygons covering a mask (no holes left in it). With a cell size (soft parts) the mask is cut cell by cell first,
         so no triangle of the part is bigger than a cell and the piece bends smoothly on its chains instead of its long slivers
         sweeping across the cloth; neighbouring cells overlap by half a sample, so no seam opens."""
-        min_area = self.cfg.get('speck', 6) * 0.5
+        min_area = self.cfg.get('speck', 6) * 0.5 * 1.05      # (a margin for the coordinates rounded to 0.01 px on output)
         if not cell:
             return [p for p in self.contour(m, eps) if abs(poly_area(p)) >= min_area]
         ys, xs = np.nonzero(m)
@@ -450,6 +483,21 @@ class Cutter:
         if soft_seg:
             out = [(t, resample(p, soft_seg)) for t, p in out]
         return out
+
+
+def capsule(ax, ay, bx, by, r, seg=10):
+    """A capsule from a to b with radius r (a disc when a == b), as a closed polygon in SVG px."""
+    a, b = np.array([ax, ay], float), np.array([bx, by], float)
+    d = b - a
+    ang = np.arctan2(d[1], d[0]) if np.hypot(*d) > 1e-6 else 0.0
+    pts = []
+    for k in range(seg + 1):
+        t = ang + np.pi / 2 + np.pi * k / seg
+        pts.append(a + r * np.array([np.cos(t), np.sin(t)]))
+    for k in range(seg + 1):
+        t = ang - np.pi / 2 + np.pi * k / seg
+        pts.append(b + r * np.array([np.cos(t), np.sin(t)]))
+    return clean(np.array(pts), 0.04)
 
 
 def fmt(p):
@@ -516,6 +564,8 @@ def main(cfg_path):
             if 'role' in p: f.write(f'role {p["role"]}\n')
             if 'swing' in p: f.write('swing ' + ' '.join(str(v) for v in p['swing']) + '\n')
             if 'soft' in p: f.write(f'soft {p["soft"]}\n')
+            for u in p.get('under', []):      # underlays: capsules joint to joint (or a disc) drawn first, so a bent joint shows no gap
+                f.write(f'under {u[5]} {fmt(capsule(*u[:5]))}\n')
             for ch in p.get('chains', []): f.write('chain ' + ' '.join(str(v) for v in ch) + '\n')
             f.write('end\n')
     print('wrote', rel(out_path), 'hash', h)

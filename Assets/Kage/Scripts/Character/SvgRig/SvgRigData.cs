@@ -39,6 +39,8 @@ namespace Kage
             public Vector2? swingPivot;
             public float swing;
             public readonly List<Vector2[]> chains = new();
+            /// <summary>Underlays drawn before the region (capsules joint to joint): a bent joint shows the limb, not the background.</summary>
+            public readonly List<(string tone, Vector2[] pts)> under = new();
         }
 
         public int version;
@@ -101,6 +103,7 @@ namespace Kage
                             case "swing": part.swingPivot = new Vector2(F(t[1]), F(t[2])); part.swing = F(t[3]); break;
                             case "soft": part.soft = t[1]; break;
                             case "chain": part.chains.Add(Pts(t, 1)); break;
+                            case "under": part.under.Add((t[1], Pts(t, 2))); break;
                             case "end": d.parts.Add(part); part = null; break;
                             default: throw new FormatException("unknown part field " + t[0]);
                         }

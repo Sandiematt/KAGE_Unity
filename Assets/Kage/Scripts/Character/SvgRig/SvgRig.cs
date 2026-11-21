@@ -41,7 +41,8 @@ namespace Kage
     /// </list>
     /// </para>
     /// <para>
-    /// <b>Parts</b>: every polygon of the region in paint order in one mesh (<see cref="PartDef.polys"/>); a <c>rim</c> part gets the
+    /// <b>Parts</b>: the part's underlays (capsules from joint to joint in a tone, so a bent knee or wrist shows the limb and not
+    /// the background), then every polygon of the region in paint order, in one mesh (<see cref="PartDef.polys"/>); a <c>rim</c> part gets the
     /// rig's world-fixed back-light rim round the region's outline; a <c>far</c> part is painted in the style's far colours; a
     /// <c>soft</c> part hangs on its spring chains with its <see cref="SoftPresets"/> feel; a <c>swing</c> part hangs from its own
     /// pivot (spikes, shards).
@@ -57,7 +58,8 @@ namespace Kage
             {
                 if (!data.regions.TryGetValue(spec.region, out var region)) throw new ArgumentException($"{spec.name}: no region {spec.region}");
                 var map = Map(d, data, spec.map, spec.name);
-                var polys = new List<(Vector2[] pts, Color col)>(region.polys.Count);
+                var polys = new List<(Vector2[] pts, Color col)>(region.polys.Count + spec.under.Count);
+                foreach (var (tone, pts) in spec.under) polys.Add((Apply(map, pts), style.Of(tone, spec.far)));
                 foreach (var (tone, pts) in region.polys) polys.Add((Apply(map, pts), style.Of(tone, spec.far)));
                 var p = new PartDef
                 {

@@ -8,7 +8,7 @@
   "crop": [240, 170, 1200, 860],
   "supersample": 4,
   "speck": 8,
-  "eps": 0.45,
+  "eps": 0.6,
   "resample": 8,
   "background": ["#120F15", "#151217"],
   "tones": [
@@ -26,7 +26,7 @@
     ["White", ["#E4E2E7", "#EEE9F1"], "#E4E2E7"]
   ],
   "base": "Ink",
-  "silhouette": {"threshold": 10, "open": 1.5, "close": 2, "minArea": 400, "holeArea": 250, "fill": "Ink", "add": [[[872, 470], [960, 500], [986, 590], [1060, 680], [1130, 770], [1150, 800], [1060, 800], [990, 790], [940, 700], [900, 620]]]},
+  "silhouette": {"threshold": 10, "open": 1.5, "close": 2, "minArea": 400, "holeArea": 250, "fill": "Ink", "add": [[[872, 470], [960, 500], [986, 590], [1060, 680], [1130, 770], [1150, 800], [1060, 800], [990, 790], [940, 700], [900, 620]], {"poly": [[680, 736], [736, 738], [764, 744], [786, 806], [792, 853], [652, 852], [720, 805], [700, 780]], "tone": "Shadow"}, {"poly": [[668, 714], [742, 700], [764, 742], [704, 742], [684, 736]], "tone": "Shadow"}, {"poly": [[680, 518], [700, 516], [744, 518], [752, 540], [748, 568], [690, 572], [676, 552]], "tone": "Ink"}, {"poly": [[736, 516], [772, 506], [800, 520], [796, 548], [762, 562], [736, 558]], "tone": "Shadow"}], "soften": 1.0},
   "fit": {"k": 0.9, "svg": [810, 845], "ref": [878, 815]},
   "regions": {
     "Spike_1": {"poly": [[610, 238], [632, 228], [700, 278], [690, 304], [672, 300]], "minus": ["Head"]},
@@ -55,20 +55,20 @@
   "parts": [
     {"name": "Cape", "bone": "Chest", "order": [0, 0], "map": "line 880 470 1080 850 922 280 1062 762", "soft": "Cape", "chains": [[890, 480, 950, 560, 1020, 650, 1090, 740, 1160, 830], [884, 520, 932, 604, 982, 694, 1030, 780, 1060, 850], [900, 562, 930, 646, 960, 736, 990, 850]]},
     {"name": "Flaps", "bone": "Chest", "order": [0, 1], "map": "seg 755 395 830 560 Neck Chest", "soft": "Strip", "chains": [[858, 448, 910, 476, 962, 500], [874, 500, 936, 530, 1004, 566]]},
-    {"name": "ArmF_Upper", "region": "ArmN_Upper", "bone": "ArmFU", "order": [1, 0], "map": "seg 786 424 776 526 ArmFU ArmFL", "far": true, "sword": true, "rim": true},
-    {"name": "ArmF_Fore", "region": "ArmN_Fore", "bone": "ArmFL", "order": [2, 0], "map": "seg 776 526 736 540 ArmFL HandF", "far": true, "sword": true, "rim": true},
+    {"name": "ArmF_Upper", "region": "ArmN_Upper", "bone": "ArmFU", "order": [1, 0], "map": "seg 786 424 776 526 ArmFU ArmFL", "far": true, "sword": true, "under": [[786, 424, 776, 526, 17, "Cloth"]]},
+    {"name": "ArmF_Fore", "region": "ArmN_Fore", "bone": "ArmFL", "order": [2, 0], "map": "seg 776 526 738 540 ArmFL HandF", "far": true, "sword": true, "under": [[776, 526, 738, 540, 15, "Shadow"]]},
     {"name": "Blade", "bone": "Sword", "order": [4, 0], "map": "blade 688 544 241 456 0.8", "sword": true, "glow": 1.25, "role": "Metal"},
     {"name": "Hilt", "bone": "Sword", "order": [4, 1], "map": "blade 688 544 241 456 0.8", "sword": true, "role": "Metal"},
-    {"name": "HandF", "region": "HandN", "bone": "HandF", "order": [4, 3], "map": "blade 688 544 241 456 0.8", "far": true, "sword": true},
-    {"name": "LegF_Thigh", "region": "ThighN", "bone": "LegFU", "order": [5, 0], "map": "seg 800 604 656 712 LegFU LegFL", "far": true, "rim": true},
-    {"name": "LegF_Shin", "region": "ShinN", "bone": "LegFL", "order": [6, 0], "map": "seg 656 712 726 800 LegFL FootF", "far": true, "rim": true},
-    {"name": "LegF_Boot", "region": "BootN", "bone": "FootF", "order": [7, 0], "map": "pin 726 800 FootF 0.9 0", "rim": true, "far": true},
+    {"name": "HandF", "region": "HandN", "bone": "HandF", "order": [4, 3], "map": "attach 738 540 776 526 738 540 HandF ArmFL HandF", "far": true, "under": [[738, 540, 712, 545, 20, "Ink"]], "sword": true},
+    {"name": "LegF_Thigh", "region": "ThighN", "bone": "LegFU", "order": [5, 0], "map": "seg 805 622 672 718 LegFU LegFL", "far": true, "under": [[805, 622, 672, 718, 28, "Cloth"]]},
+    {"name": "LegF_Shin", "region": "ShinN", "bone": "LegFL", "order": [6, 0], "map": "seg 672 718 738 805 LegFL FootF", "far": true, "under": [[672, 718, 738, 805, 24, "Shadow"]]},
+    {"name": "LegF_Boot", "region": "BootN", "bone": "FootF", "order": [7, 0], "map": "pin 738 805 FootF 0.9 0", "far": true, "under": [[738, 805, 738, 805, 24, "Shadow"]]},
     {"name": "Tails", "bone": "Hips", "order": [7, 3], "map": "line 840 600 930 850 890 420 950 742", "soft": "Tails", "chains": [[820, 650, 830, 730, 840, 800, 846, 852], [880, 616, 906, 700, 930, 780, 950, 852], [930, 640, 950, 720, 972, 800, 984, 852]]},
     {"name": "Pelvis", "bone": "Hips", "order": [8, 0], "map": "pin 820 590 875 420 0.9 0"},
     {"name": "Torso", "bone": "Chest", "order": [11, 0], "map": "seg 755 395 830 560 Neck Chest"},
-    {"name": "LegN_Thigh", "region": "ThighN", "bone": "LegNU", "order": [13, 0], "map": "seg 800 604 656 712 LegNU LegNL"},
-    {"name": "LegN_Shin", "region": "ShinN", "bone": "LegNL", "order": [14, 0], "map": "seg 656 712 726 800 LegNL FootN"},
-    {"name": "LegN_Boot", "region": "BootN", "bone": "FootN", "order": [15, 0], "map": "pin 726 800 FootN 0.9 0"},
+    {"name": "LegN_Thigh", "region": "ThighN", "bone": "LegNU", "order": [13, 0], "map": "seg 805 622 672 718 LegNU LegNL", "under": [[805, 622, 672, 718, 28, "Cloth"]]},
+    {"name": "LegN_Shin", "region": "ShinN", "bone": "LegNL", "order": [14, 0], "map": "seg 672 718 738 805 LegNL FootN", "under": [[672, 718, 738, 805, 24, "Shadow"]]},
+    {"name": "LegN_Boot", "region": "BootN", "bone": "FootN", "order": [15, 0], "map": "pin 738 805 FootN 0.9 0", "under": [[738, 805, 738, 805, 24, "Shadow"]]},
     {"name": "Plates", "bone": "Hips", "order": [16, 0], "map": "pin 852 572 888 400 0.9 0", "soft": "Plates", "chains": [[836, 580, 844, 650, 852, 720, 860, 794], [868, 580, 884, 650, 896, 720, 904, 790]]},
     {"name": "Saya", "bone": "Hips", "order": [18, 0], "map": "pin 866 550 902 396 0.9 0", "role": "Detail"},
     {"name": "Neck", "bone": "Neck", "order": [20, 0], "map": "seg 755 395 830 560 Neck Chest"},
@@ -78,9 +78,11 @@
     {"name": "Head", "bone": "Head", "order": [21, 1], "map": "pin 725 325 852 168 0.86 0"},
     {"name": "Crack", "bone": "Head", "order": [21, 2], "map": "pin 725 325 852 168 0.86 0", "glow": 1.6, "role": "Detail"},
     {"name": "Eye", "bone": "Head", "order": [21, 3], "map": "pin 725 325 852 168 0.86 0", "glow": 2.6, "role": "Eye"},
-    {"name": "ArmN_Upper", "bone": "ArmNU", "order": [26, 0], "map": "seg 786 424 776 526 ArmNU ArmNL"},
-    {"name": "ArmN_Fore", "bone": "ArmNL", "order": [27, 0], "map": "seg 776 526 736 540 ArmNL HandN"},
-    {"name": "HandN", "bone": "HandN", "order": [28, 0], "map": "attach 736 540 776 526 736 540 HandN ArmNL HandN"}
+    {"name": "ArmN_Upper", "bone": "ArmNU", "order": [26, 0], "map": "seg 786 424 776 526 ArmNU ArmNL", "under": [[786, 424, 776, 526, 17, "Cloth"]]},
+    {"name": "ArmN_Fore", "bone": "ArmNL", "order": [27, 0], "map": "seg 776 526 738 540 ArmNL HandN", "under": [[776, 526, 738, 540, 15, "Shadow"]]},
+    {"name": "HandN", "bone": "HandN", "order": [28, 0], "map": "attach 738 540 776 526 738 540 HandN ArmNL HandN", "under": [[738, 540, 712, 545, 20, "Ink"]]}
   ],
-  "softCell": 24
+  "softCell": 24,
+  "corner": 40,
+  "smooth": 2
 }
