@@ -22,46 +22,45 @@ namespace Kage.Tests
             return s;
         }
 
-        static ArmoryView View(SaveData save, ArmoryTab tab, string id = null, ArmorLine? line = null)
+        static ArmoryView View(SaveData save, ArmoryTab tab, string id = null)
         {
-            return ArmoryView.Build(save, tab, id, line);
+            return ArmoryView.Build(save, tab, id);
         }
 
         // ---- the listing ----
 
         [Test]
-        public void Weapons_are_listed_cheapest_tier_first_and_boss_weapons_last_without_enemy_gear_or_fists()
+        public void Weapons_are_listed_cheapest_tier_first_and_the_boss_weapon_last_without_enemy_gear_fists_or_later_act_weapons()
         {
             var v = View(MidGame(), ArmoryTab.Weapons);
             CollectionAssert.AreEqual(
-                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki", "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha" },
+                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "raiko_no_tachi" },
                 v.Tiles.Select(t => t.Id).ToArray());
         }
 
         [Test]
-        public void The_armor_tab_shows_one_row_at_a_time_the_armour_line_or_the_trophies()
+        public void The_armor_tab_is_one_list_with_the_shop_armours_first_and_an_owned_reward_after_them()
         {
             var save = MidGame();
-            var line = View(save, ArmoryTab.Armor, null, ArmorLine.Line);
-            Assert.AreEqual(8, line.Tiles.Length);
-            Assert.AreEqual("tachibana_yoroi", line.Tiles[0].Id);
-            Assert.AreEqual("mugen_yoroi", line.Tiles[7].Id);
-            var trophy = View(save, ArmoryTab.Armor, null, ArmorLine.Trophy);
-            Assert.AreEqual(10, trophy.Tiles.Length);
-            Assert.AreEqual(10, trophy.TrophyCount);
-            Assert.IsTrue(trophy.Tiles.All(t => JsTables.Armor(t.Id).Tier == "trophy"));
+            var v = View(save, ArmoryTab.Armor);
+            Assert.AreEqual(8, v.Tiles.Length);
+            Assert.AreEqual("tachibana_yoroi", v.Tiles[0].Id);
+            Assert.AreEqual("mugen_yoroi", v.Tiles[7].Id);
+            save.owned.armors["ikazuchi_do"] = 1;
+            var withReward = View(save, ArmoryTab.Armor);
+            Assert.AreEqual(9, withReward.Tiles.Length);
+            Assert.AreEqual("ikazuchi_do", withReward.Tiles[8].Id);
         }
 
         [Test]
-        public void The_armor_tab_opens_on_the_row_of_the_armour_worn()
+        public void The_armor_tab_opens_on_the_armour_worn_even_a_reward_armour()
         {
             var save = MidGame();
-            Assert.AreEqual(ArmorLine.Line, View(save, ArmoryTab.Armor).Line);
             save.owned.armors["ikazuchi_do"] = 1;
             save.equipped.armor = "ikazuchi_do";
             var v = View(save, ArmoryTab.Armor);
-            Assert.AreEqual(ArmorLine.Trophy, v.Line);
             Assert.AreEqual("ikazuchi_do", v.SelectedId);
+            Assert.IsTrue(v.Tiles.Single(t => t.Id == "ikazuchi_do").Equipped);
         }
 
         [Test]
@@ -71,8 +70,9 @@ namespace Kage.Tests
             save.equipped.weapon = "tsubame";
             Assert.AreEqual("tsubame", View(save, ArmoryTab.Weapons).SelectedId);
             Assert.AreEqual("kuro_zukin", View(save, ArmoryTab.Helmets, "kuro_zukin").SelectedId);
-            // the worn armour is not in the other row: the row's first item is selected
-            Assert.AreEqual("ikazuchi_do", View(save, ArmoryTab.Armor, null, ArmorLine.Trophy).SelectedId);
+            // a worn armour the Armory does not list (a later-act one dev mode wore): the list's first item is selected
+            save.equipped.armor = "shirabe_do";
+            Assert.AreEqual("tachibana_yoroi", View(save, ArmoryTab.Armor).SelectedId);
             Assert.AreEqual("tsubame", View(save, ArmoryTab.Weapons, "no_such_weapon").SelectedId, "an id the row does not hold falls back to what is worn");
         }
 
@@ -88,9 +88,9 @@ namespace Kage.Tests
             Assert.IsTrue(onikiri.Selected);
             Assert.AreEqual(1400, onikiri.Coins);
             Assert.AreEqual(0, onikiri.Gems);
-            var shinsen = v.Tiles.Single(t => t.Id == "shinsen");
-            Assert.IsTrue(shinsen.Locked);
-            Assert.AreEqual("Boss weapon", shinsen.LockLabel);
+            var raiko = v.Tiles.Single(t => t.Id == "raiko_no_tachi");
+            Assert.IsTrue(raiko.Locked);
+            Assert.AreEqual("Boss weapon", raiko.LockLabel);
             var helmets = View(MidGame(), ArmoryTab.Helmets);
             Assert.AreEqual(12, helmets.Tiles.Single(t => t.Id == "oni_menpo").Gems);
         }
@@ -172,12 +172,12 @@ namespace Kage.Tests
             Assert.IsFalse(View(save, ArmoryTab.Helmets, "oni_menpo").Primary.Enabled);
 
             save.coins = 4200; save.gems = 24;
-            var mugen = View(save, ArmoryTab.Armor, "mugen_yoroi", ArmorLine.Line);
+            var mugen = View(save, ArmoryTab.Armor, "mugen_yoroi");
             Assert.AreEqual(4200, mugen.Primary.Coins);
             Assert.AreEqual(25, mugen.Primary.Gems);
             Assert.IsFalse(mugen.Primary.Enabled, "one gem short");
             save.gems = 25;
-            Assert.IsTrue(View(save, ArmoryTab.Armor, "mugen_yoroi", ArmorLine.Line).Primary.Enabled);
+            Assert.IsTrue(View(save, ArmoryTab.Armor, "mugen_yoroi").Primary.Enabled);
         }
 
         [Test]
@@ -214,7 +214,7 @@ namespace Kage.Tests
         [Test]
         public void A_locked_item_says_how_to_unlock_it_and_cannot_be_bought()
         {
-            var v = View(MidGame(), ArmoryTab.Weapons, "shinsen");
+            var v = View(MidGame(), ArmoryTab.Weapons, "raiko_no_tachi");
             Assert.AreEqual("Boss weapon · Odachi", v.TierLine);
             Assert.AreEqual("Locked", v.Primary.Label);
             Assert.AreEqual(ArmoryAction.None, v.Primary.Action);
@@ -222,10 +222,10 @@ namespace Kage.Tests
             Assert.IsFalse(v.Equip.Enabled);
             var warn = v.Boxes.Single(b => b.Warn);
             Assert.AreEqual("LOCKED", warn.Title);
-            Assert.AreEqual("Defeat Akari", warn.Text);
+            Assert.AreEqual("Defeat Raikon", warn.Text);
 
-            var trophy = View(MidGame(), ArmoryTab.Armor, "ikazuchi_do", ArmorLine.Trophy);
-            Assert.AreEqual("Defeat Garan, the Stormbroken", trophy.Boxes.Single(b => b.Warn).Text);
+            var trophy = View(MidGame(), ArmoryTab.Helmets, "sumi_eboshi");
+            Assert.AreEqual("Defeat Kuroe, the Ink Censor", trophy.Boxes.Single(b => b.Warn).Text);
         }
 
         [Test]
@@ -233,7 +233,7 @@ namespace Kage.Tests
         {
             var save = MidGame();
             save.owned.armors["ikazuchi_do"] = 1;
-            var v = View(save, ArmoryTab.Armor, "ikazuchi_do", ArmorLine.Trophy);
+            var v = View(save, ArmoryTab.Armor, "ikazuchi_do");
             Assert.IsFalse(v.Boxes.Any(b => b.Warn));
             Assert.AreEqual("Mastered", v.Primary.Label, "trophies stay at level 1");
             Assert.IsTrue(v.Equip.Enabled);
@@ -244,7 +244,7 @@ namespace Kage.Tests
         [Test]
         public void Armour_shows_defence_health_and_mobility_with_the_level_preview_and_its_perks()
         {
-            var v = View(MidGame(), ArmoryTab.Armor, "ronin_yoroi", ArmorLine.Line);
+            var v = View(MidGame(), ArmoryTab.Armor, "ronin_yoroi");
             Assert.AreEqual("Common", v.TierLine);
             Assert.AreEqual("1 / 5", v.LevelText);
             CollectionAssert.AreEqual(new[] { "Defense", "Health", "Mobility" }, v.Stats.Select(s => s.Label).ToArray());
@@ -272,13 +272,13 @@ namespace Kage.Tests
             var save = GameRules.SetDevMode(GameRules.DefaultSave(false), true);
             Assert.AreEqual("+2 kunai", View(save, ArmoryTab.Helmets, "sugegasa").Boxes.Single().Text);
             Assert.AreEqual("+12% dash", View(save, ArmoryTab.Helmets, "kuro_zukin").Boxes.Single().Text);
-            Assert.AreEqual("20% stun resist · +4% damage", View(save, ArmoryTab.Armor, "ikazuchi_do", ArmorLine.Trophy).Boxes.Single().Text);
+            Assert.AreEqual("20% stun resist · +4% damage", View(save, ArmoryTab.Armor, "ikazuchi_do").Boxes.Single().Text);
         }
 
         [Test]
         public void An_armour_without_perks_says_so_on_the_armor_tab_only()
         {
-            var v = View(MidGame(), ArmoryTab.Armor, "tachibana_yoroi", ArmorLine.Line);
+            var v = View(MidGame(), ArmoryTab.Armor, "tachibana_yoroi");
             Assert.AreEqual("None: the plain coat he left home in", v.Boxes.Single().Text);
             Assert.IsFalse(View(MidGame(), ArmoryTab.Helmets, "shiro_maki").Boxes.Any());
         }

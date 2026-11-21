@@ -83,9 +83,10 @@ namespace Kage.Tests
         {
             var save = Money(99999, 999);
             var a = New(save);
-            a.Select("shinsen");
+            a.Select("raiko_no_tachi");
+            Assert.AreEqual("raiko_no_tachi", a.SelectedId);
             Assert.IsFalse(a.Buy());
-            Assert.IsFalse(save.owned.weapons.ContainsKey("shinsen"));
+            Assert.IsFalse(save.owned.weapons.ContainsKey("raiko_no_tachi"));
         }
 
         [Test]
@@ -190,15 +191,17 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void The_Armor_tab_switches_between_its_two_rows()
+        public void The_Armor_tab_is_one_list_and_opens_on_the_armour_worn()
         {
-            var a = New(Money(0, 0));
+            var save = Money(0, 0);
+            save.owned.armors["shiden_yoroi"] = 1;
+            save.equipped.armor = "shiden_yoroi";
+            var a = New(save);
             a.SelectTab(ArmoryTab.Armor);
-            a.SetLine(ArmorLine.Trophy);
-            Assert.AreEqual(ArmorLine.Trophy, a.View.Line);
-            Assert.AreEqual("ikazuchi_do", a.View.SelectedId, "the first trophy: the worn armour is in the other row");
-            a.SetLine(ArmorLine.Line);
-            Assert.AreEqual("tachibana_yoroi", a.View.SelectedId);
+            Assert.AreEqual("shiden_yoroi", a.View.SelectedId, "a reward armour is in the list once owned");
+            a.Select("tachibana_yoroi");
+            Assert.AreEqual("tachibana_yoroi", a.View.SelectedId, "the shop armours are in the same list");
+            Assert.AreEqual(9, a.View.Tiles.Length);
         }
 
         [Test]
@@ -209,6 +212,8 @@ namespace Kage.Tests
             Assert.AreEqual("kagetsu", a.View.SelectedId);
             a.Select("raikon_tachi");
             Assert.AreEqual("kagetsu", a.View.SelectedId);
+            a.Select("shinsen");
+            Assert.AreEqual("kagetsu", a.View.SelectedId, "a later-act weapon is not listed, so it cannot be selected");
         }
     }
 }
