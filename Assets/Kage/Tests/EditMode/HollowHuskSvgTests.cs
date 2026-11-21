@@ -159,6 +159,24 @@ namespace Kage.Tests
                 Assert.IsTrue(Part(rig, "Shide_" + i).polys.Any(q => q.col == HollowArt.Style.tones["White"] || q.col == HollowArt.Style.tones["Steel"]), "white paper shide " + i);
         }
 
+        [Test]
+        public void ASegMapWidensAPieceAcrossByItsOptionalFactorAndKeepsItAlongTheBone()
+        {
+            var data = SvgRigData.Parse("svgrig 1\nfit 0.8 100 100 880 815\n");
+            var rig = OpponentKit.Skeleton("MAP");
+            var plain = SvgRig.Map(rig, data, "seg 100 100 100 300 LegNU LegNL".Split(' '), "plain");
+            var one = SvgRig.Map(rig, data, "seg 100 100 100 300 LegNU LegNL 1".Split(' '), "one");
+            var wide = SvgRig.Map(rig, data, "seg 100 100 100 300 LegNU LegNL 1.5".Split(' '), "wide");
+            Vector2 a = rig.pivot[(int)B.LegNU], b = rig.pivot[(int)B.LegNL], along = (b - a).normalized, across = new Vector2(-along.y, along.x);
+            Assert.AreEqual(a, plain(new Vector2(100, 100)), "the drawn joints land on the pivots");
+            Assert.AreEqual(b, plain(new Vector2(100, 300)));
+            var q = new Vector2(130, 200);       // half way down, 30 px off the line
+            Assert.AreEqual(plain(q), one(q), "1 is the default");
+            Assert.AreEqual(Vector2.Dot(plain(q) - a, along), Vector2.Dot(wide(q) - a, along), 1e-5f, "the same place along the bone");
+            Assert.AreEqual(Vector2.Dot(plain(q) - a, across) * 1.5f, Vector2.Dot(wide(q) - a, across), 1e-5f, "half as wide again across it");
+            Assert.AreEqual(30f * 0.8f / KageModel.RefScale * 1.5f, Mathf.Abs(Vector2.Dot(wide(q) - a, across)), 1e-5f, "the fit's scale times the factor");
+        }
+
         // ---- the heavy Hollow ----
 
         static float Width(PartDef p)
