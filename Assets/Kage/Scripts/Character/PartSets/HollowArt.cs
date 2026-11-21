@@ -52,13 +52,6 @@ namespace Kage
         }
 
         /// <summary>A Hollow's rig settings for an SVG-drawn body: the violet rim, violet-black cloth, no scarf or coat of Kage's.</summary>
-        public static void Dress(RigDef d)
-        {
-            d.rimColor = Style.rim;
-            d.bodyColor = Style.body;
-            d.scarf = false;
-            d.softCoat = false;
-            d.coatTail = false;
-        }
+        public static void Dress(RigDef d) => Style.Dress(d);
     }
 }

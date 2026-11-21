@@ -507,3 +507,74 @@ The owner reviewed the smooth Husk (the SAN-112 rework above) and sent an SVG, a
   - `soft_motion.png`;
   - `lineup_sheet.png`, with the tiles in `lineup/`;
   - the cut previews in `cut/`.
+
+## Implementation notes (SAN-100 SVG redesign)
+
+The owner reviewed the smooth Ironclad (the SAN-100 rework) and sent a painting and its VTracer trace: "take unmovable components from svg and movable components design so that it responds to physics and wind". The Ironclad is now cut from that art with the SAN-76 pipeline, the first Order foe drawn this way. Its part set is three lines: `Skeleton`, `OrderArt.Dress`, `SvgRig.Build`. Nothing of it is drawn in code.
+
+**Source.** `Tools/order_art/ironclad/original/`: `ironclad_ref.png` (the 1536 x 1024 painting) and `ironclad_horned_samurai.svg` (961 paths), both unchanged.
+
+**The pipeline, generalised for the Order.**
+- `svg_rig.py` did not change (the Shade's and the Husk's cuts stay fresh). A config already names its own tones; the faction is the style the part set passes to `SvgRig.Build`.
+- `OrderArt` (new, `PartSets/OrderArt.cs`) is the Order's style beside `HollowArt`: 12 tones (`Ink`, `Shadow`, `Lacquer`, `LacquerMid`, `LacquerLit`, the cold plate edges `Edge` and `EdgeLit`, the lacing `CrimsonDeep`, `Crimson`, `CrimsonLit`, `Steel`, `White`), each with a little blue so the lacquer stays the Order's slate; far parts half way to the deepest ink; the painting's crimson rim (`OrderArt.Rim`); the white eye's glow (`EyeGlow` 2.6). Any later Order foe painted in black lacquer and crimson snaps its trace to these names.
+- `SvgRigStyle.Dress(d)` (rim, body colour, no scarf or coat) is shared: `HollowArt.Dress` and `OrderArt.Dress` call it, so the Hollows set exactly what they set before.
+- `blade gx gy tx ty len [across]`: an optional factor across the weapon's axis (default 1, so the Shade's katana gives the same numbers). The painted cleaver is about as broad as it is long; stretched so its point reaches the family's hit line it was 0.45 m broad. At `across` 0.55 it is 0.27 m, close to `CleaverVisual`'s 0.21.
+- `CleaverVisual` leaves a painted cleaver alone: a rig with its own `Cleaver_Blade` part gets no family parts and keeps its own weapon shown (the `TachiVisual` rule for Raikon). Every other cleaver wielder gets the family drawing as before.
+
+**Config** (`Tools/order_art/ironclad/rig.json`).
+- Crop (460, 0)-(1110, 960), background `#0F0B12`, the painting's silhouette with `holeArea` 3000 (the hakama's dark folds sit within 10 of the canvas), two tone fills (the thigh's underside, the hakama between the legs).
+- Fit k 0.85, the painted sole on Kage's ground. The trunk, belt, kusazuri, hakama, tassel, pelvis and wakizashi share one `line` map: painted neck (775, 330) and hips (860, 600) onto (845, 222) and (875, 520).
+- The head pieces (kabuto, horns, shikoro, face, eye, throat guard) are one `pin` of (760, 300) on the head bone at k 0.85.
+- Limbs `seg` joint to joint: shoulder (915, 360) for the sode, (968, 395) for the upper arm behind it, elbow (935, 495), wrist (845, 556), hip (790, 650), knee (655, 738), ankle (712, 872); thighs 1.1 across. The near hand is `attach`ed on its forearm with its grip a fist from the wrist, where the two-handed grip puts the fist; the far hand is the painting's upper hand, attached so its grip lands on the sword pivot.
+- The cleaver is two `blade` maps with the same scale: the blade and guard on the blade's own axis, (715, 507) to (474, 338), and the handle on the painted handle's axis (the painting bends the handle about 15 degrees from the blade). An ink underlay carries the handle back past the near hand's grip (-0.24 m) to a pommel.
+- Underlays on every limb segment, a smaller ink one inside the dō (a big one showed as a hump behind the shoulders once Kage's arm sat forward of the painted one), and ink under the face and both fists.
+
+**The Ironclad.**
+- Rigid: on the head, the two ox horns, the kabuto (crest disc, brim band, visor), the laced shikoro, the black face, the white eye, the throat guard with its crimson rings. On the chest, the dō with the back of the trunk. On the hips, the pelvis, the crimson rope belt and the wakizashi. The upper arm with its big laced sode, the forearm and elbow cop, the fists. The hakama thigh, the boot with its crimson top, the foot.
+- Far side: the far arm, sode and leg are the near regions in the far tones. The far hand is the painted upper hand.
+- Soft: the front and back kusazuri (`Plates`, 3 chains each), the hanging rope and tassel (`Tassel`, 3), the hakama hem (`Tails`, 3).
+- The cleaver: the painting's blade, guard and handle on the Sword bone, its front corner on the hit line. Gameplay is unchanged: skeleton, hurt circles, hit line and reach (the family's 0.9 m past the guard times the raider cleaver's reach of 1), stats, cleaver set, Armour flag, mass 2 and scale 1.14.
+
+**Where it differs from the painting, and why.**
+- The painting is a deep crouch with the front knee far forward. The skeleton stands Kage's way, so the legs are mapped joint to joint: the boot shaft is squashed to about 0.7 of its painted length, and the hakama thigh hangs instead of reaching forward. The trunk is turned upright by about 9 degrees.
+- Kage's shoulder sits further forward on the trunk than the painted one, so the sode hangs over the middle of the dō and the back of the trunk shows behind the arm.
+- The far arm, sode and leg are hidden in the painting (and the painted back boot is not used), so they are the near ones in the far colours.
+- The cleaver is 0.55 times as broad as a straight scale gives (see `blade` above). Its hit line runs just under the spine, along the painted crimson line, to the front corner.
+- The handle is laid along the hands' line: the painting bends it from the blade.
+- The painting's soft gradients are 12 tones, and its lacquer highlights are the two edge greys.
+
+**Steps for the next Order foe.**
+1. Copy the SVG and painting into `Tools/order_art/<name>/original/`.
+2. Copy the Ironclad's `rig.json`. Set `svg`, `painting`, `out` (`Art/SvgRig/Order<Name>`), `preview`, `crop`, `background`, and the trace colours of each `OrderArt` tone (list the trace's colours by lightness; Lab `a` sorts crimson from lacquer).
+3. Run the tool with one catch-all region and compare `tones.png` with the painting. Fill dark cloth with `add` polygons, and raise `holeArea` where the cloth folds are near the canvas colour.
+4. Draw the regions on a gridded view of `tones.png`, until `regions.png` has no magenta worth a part. A rope or lacing cut by colour is a `tones` region (no base layer).
+5. Write the parts: rigid pieces `pin`/`seg`/`attach`; far limbs as the near regions with `far`; kusazuri `Plates`, rope `Tassel`, cloth `Tails` or `Cape`, each with 2 or 3 chains root first. A painted weapon uses `blade`, with `across` if it must be stretched to the family's reach. Name a painted cleaver `Cleaver_Blade` so `CleaverVisual` keeps it. Other families' visuals draw over a painted weapon until they learn the same rule.
+6. The part set is `Skeleton`, `OrderArt.Dress`, `SvgRig.Build(d, SvgRigData.Load(<resource>), OrderArt.Style)`.
+7. Copy `OrderIroncladSvgTests` with the foe's table, and `IroncladSvgScreenshots` with its framing. Render the line-up before your changes and compare tile for tile after.
+8. Re-run the tool after any change to the SVG, the config, the painting or the tool.
+
+**Tests.**
+- EditMode `OrderIroncladSvgTests`:
+  - the cut is fresh; every polygon is closed, simple, triangulates and is bigger than half a speck;
+  - every part on its bone, the belt at the waist, the sode from the shoulder;
+  - the soft parts on chains with their presets, and they are exactly the soft parts;
+  - the Order palette, the crimson rim, lacing, rope and crest, the black face, the glowing white eye;
+  - the `across` factor of a `blade` map;
+  - the painted cleaver's front on the hit line (0.979 m), the hit line's end and middle on the blade, a 0.2 to 0.4 m broad blade, a handle past the near grip;
+  - `CleaverVisual` adds nothing to the Ironclad and still draws for Kage;
+  - bulkier than the Footman (dō a third wider on screen, thighs and boots a fifth);
+  - `NeighbouringLimbPiecesOverlapAtEveryJointInEveryPose` (ten joints, ten poses);
+  - a walk and stop swing the hakama, tassel and lames (lames least); a head wind streams the hakama and tassel and only stirs the lames, and calm repeats.
+- Retired: `IroncladShapeTests`. Its seven cases (`EveryPartOutlineIsClosedSimpleAndTriangulatesWhole`, `EveryPaintedPolygonHasAnArea`, `EveryPartRidesTheBoneItsPieceMovesWith`, `TheBodyArmourAndHeadAreDrawnInCurvesNotBlocks`, `TheKusazuriArePlatesOnSpringChains`, `TheShouldersCarryAPlateEachAndTheHeadHasTwoHorns`, `TheDoAndTrunkAreStillWiderThanTheFootmans`) read the smooth port's part names and cel outlines; the new tests cover the same ground on the cut.
+- Changed:
+  - `OrderIroncladTests.ItsPartSetIsRegisteredAndKeepsKagesSkeleton` expects exactly `Cleaver_Handle` and `Cleaver_Blade` on the Sword bone, where it expected nothing;
+  - PlayMode `OrderIroncladFightTests.ItIsSpawnedFromCharacterDataWithTheCleaverSetAndTheJsStats` expects the painted cleaver shown and no family parts, where it expected family parts over a hidden katana.
+- The `OrderIroncladTests` width checks are unchanged and pass.
+- PlayMode `IroncladSvgScreenshots`. Review images are in `Screenshots/review/SAN-100/svg/`:
+  - `side_by_side.png`;
+  - `kage_vs_order_ironclad_sheet.png`;
+  - `order_ironclad_closeup.png`, `order_ironclad_head.png` and `order_ironclad_cleaver.png`;
+  - `soft_motion.png`;
+  - `lineup_sheet.png`, with the tiles in `lineup/`;
+  - the cut previews in `cut/`.
+- Pixel check: every other line-up tile (the four other Order foes, the four Hollows), Raikon and Kage in motion, and Kage holding Onikiri and the Raider Cleaver are identical to a render made before the change.

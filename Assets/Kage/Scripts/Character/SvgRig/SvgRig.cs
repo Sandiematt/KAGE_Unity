@@ -13,6 +13,19 @@ namespace Kage
         /// <summary>The rig's back-light rim (<see cref="RigDef.rimColor"/>) and its body colour.</summary>
         public Color rim, body;
 
+        /// <summary>
+        /// The rig settings of a body drawn from an SVG in this style: its rim and body colour, and none of Kage's scarf or coat
+        /// (a painted figure carries its own cloth on soft chains). Shared by the Hollow and Order styles (SAN-100).
+        /// </summary>
+        public void Dress(RigDef d)
+        {
+            d.rimColor = rim;
+            d.bodyColor = body;
+            d.scarf = false;
+            d.softCoat = false;
+            d.coatTail = false;
+        }
+
         public Color Of(string tone, bool farSide)
         {
             if (!tones.TryGetValue(tone, out var c)) throw new ArgumentException("the style has no tone " + tone);
@@ -38,7 +51,8 @@ namespace Kage
     /// <item><c>attach ax ay d0x d0y d1x d1y BONE TO0 TO1</c>: a turned onto BONE's pivot, the drawn direction d0 to d1 along TO0 to TO1 (a hand
     /// on its forearm).</item>
     /// <item><c>blade gx gy tx ty len</c>: the grip g on the sword bone's pivot and the tip t along Kage's blade, scaled so the tip is
-    /// <c>len</c> units out: what you see is what hits.</item>
+    /// <c>len</c> units out: what you see is what hits. The optional <c>[across]</c> after len (default 1) narrows the weapon across its
+    /// axis, so a painting's broad cleaver keeps a playable width once its point is stretched out to the family's reach (SAN-100).</item>
     /// </list>
     /// </para>
     /// <para>
@@ -148,11 +162,17 @@ namespace Kage
                 case "blade":
                 {
                     Vector2 g = new(N(m[1]), N(m[2])), t = new(N(m[3]), N(m[4]));
-                    float len = N(m[5]);
+                    float len = N(m[5]), across = m.Length > 6 ? N(m[6]) : 1f;
                     Vector2 gg = G(g), axis = G(t) - gg;
                     float scale = len / axis.magnitude, turn = d.bladeBindAngle - KMath.Ang(axis);
                     Vector2 pivot = d.pivot[(int)B.Sword];
-                    return x => pivot + KMath.Rot((G(x) - gg) * scale, turn);
+                    if (across == 1f) return x => pivot + KMath.Rot((G(x) - gg) * scale, turn);
+                    Vector2 u = axis.normalized, un = new(-u.y, u.x);
+                    return x =>
+                    {
+                        Vector2 r = G(x) - gg;
+                        return pivot + KMath.Rot((u * Vector2.Dot(r, u) + un * (Vector2.Dot(r, un) * across)) * scale, turn);
+                    };
                 }
                 default:
                     throw new ArgumentException(who + ": unknown map " + m[0]);

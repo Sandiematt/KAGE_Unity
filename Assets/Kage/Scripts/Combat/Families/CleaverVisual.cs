@@ -33,7 +33,10 @@ namespace Kage
             }
         }
 
-        const float Pommel = -0.5f;      // the handle's butt, behind the lead hand
+        /// <summary>The part a part set names its own painted cleaver blade (on the Sword bone); a rig that has one keeps it.</summary>
+        public const string PaintedBlade = "Cleaver_Blade";
+
+        const float Pommel = -0.5f;     // the handle's butt, behind the lead hand
         const float Guard = 0.07f;       // the guard sits just ahead of the lead hand; the blade starts at 0.10
 
         static Vector2[] Rect(float x0, float x1, float y0, float y1) => new[] { new Vector2(x0, y0), new Vector2(x1, y0), new Vector2(x1, y1), new Vector2(x0, y1) };
@@ -41,6 +44,8 @@ namespace Kage
         public void Attach(FighterRig rig, string weaponId)
         {
             rig.ClearFamilyParts();                  // idempotent: never add the parts twice
+            // a character whose part set paints its own cleaver (the Order Ironclad, SAN-100) keeps it: draw nothing
+            if (rig.HasOwnPart(PaintedBlade)) { rig.SetSwordAlwaysFront(false); return; }
             rig.SetBaseSwordHidden(true);
             rig.SetSwordAlwaysFront(false);
             var look = LookOf(weaponId);
