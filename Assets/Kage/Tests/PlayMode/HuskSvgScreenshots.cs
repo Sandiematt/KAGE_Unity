@@ -58,8 +58,8 @@ namespace Kage.Tests
                 f.KageInput.Add(300);
                 f.RoninInput.Add(300);
                 f.Run(20);
-                Save(Path.Combine(Dir, "hollow_husk_closeup.png"), Render(f.Ronin.Pos + new Vector2(0f, 1.0f), 1.05f), W, H);
-                Save(Path.Combine(Dir, "hollow_husk_head.png"), Render(f.Ronin.Pos + new Vector2(-0.05f, 1.62f), 0.38f), W, H);
+                Save(Path.Combine(Dir, "hollow_husk_closeup.png"), Render(f.Ronin.Pos + new Vector2(0f, 1.15f), 1.2f), W, H);     // the Husk stands 1.16 times Kage's height
+                Save(Path.Combine(Dir, "hollow_husk_head.png"), Render(f.Ronin.Pos + new Vector2(-0.05f, 1.8f), 0.42f), W, H);
             }
             SoftMotion(tiles);
             Assert.IsTrue(File.Exists(Path.Combine(Dir, "side_by_side.png")));
@@ -91,7 +91,7 @@ namespace Kage.Tests
             var rig = go.AddComponent<FighterRig>();
             rig.Build(CharacterCatalog.PartSet(Id).Build(CharacterCatalog.Get(Id)), 1000);
             rig.SetFacing(-1f, true);
-            var bind = Render(new Vector2(-0.2f, 1.0f), 1.25f, w, h);
+            var bind = Render(new Vector2(-0.2f, 1.0f), 1.15f, w, h);
             Object.DestroyImmediate(go);
 
             // the fight idle, facing left (the foe faces Kage, who stands to its left)
@@ -171,7 +171,7 @@ namespace Kage.Tests
             f.Ronin.rig.wind = wind;
             script(f.RoninInput);
             f.Run(frames);
-            return Render(f.Ronin.Pos + new Vector2(-0.1f, 1.05f), 1.3f, T, T);
+            return Render(f.Ronin.Pos + new Vector2(-0.1f, 1.15f), 1.35f, T, T);
         }
 
         [Test]
