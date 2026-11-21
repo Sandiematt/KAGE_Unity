@@ -10,7 +10,8 @@ namespace Kage
     /// <list type="bullet">
     /// <item>Cloth, darkest to lit: <c>Ink</c>, <c>Shadow</c>, <c>Cloth</c>, <c>ClothMid</c>, <c>ClothLit</c>.</item>
     /// <item>The violet light painted along edges and cracks, deepest to hottest: <c>VioletDeep</c>, <c>Rim</c>, <c>RimBright</c>, <c>RimHot</c>.</item>
-    /// <item>Mask and steel: <c>SteelDark</c>, <c>Steel</c>, and <c>White</c> (the eye, the blade's edge).</item>
+    /// <item>Mask and steel: <c>SteelDark</c>, <c>Steel</c>, and <c>White</c> (the eye, the blade's edge, paper shide).</item>
+    /// <item>Rope (the Husk's shimenawa, SAN-112): <c>RopeDark</c>, <c>Rope</c>, <c>RopeLit</c>.</item>
     /// </list>
     /// Far-side parts (the far arm and leg, drawn from the near ones) are half way to the deepest ink, as the painting's far limbs are
     /// near-black silhouettes. The rim is <see cref="HollowPalette.Rim"/>, the same back-light as the other Hollows. Glows are part
@@ -43,6 +44,10 @@ namespace Kage
             T("SteelDark", "#6A5E84");
             T("Steel", "#B0A6C4");
             T("White", "#F0ECF6");
+            // the Husk's shimenawa (SAN-112): straw rope gone dark, the only warm tone of a Hollow
+            T("RopeDark", "#2E2222");
+            T("Rope", "#4A3734");
+            T("RopeLit", "#7A6158");
             return s;
         }
 
