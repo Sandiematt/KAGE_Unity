@@ -50,8 +50,10 @@ namespace Kage.Tests
             Assert.AreEqual(0.9f, foe.SpeedMul, 1e-6);
             Assert.AreEqual("cleaver", foe.Family.id);
             Assert.AreEqual("raider_cleaver", foe.WeaponId);
-            Assert.IsTrue(foe.rig.FamilyPartCount > 0, "the cleaver is drawn");
-            Assert.IsTrue(foe.rig.BaseSwordHidden, "no katana drawn over it");
+            // SAN-100 SVG redesign: the cleaver is the painting's, cut onto the Sword bone by the part set; the family draws nothing over it
+            Assert.IsTrue(foe.rig.HasOwnPart("Cleaver_Blade"), "the painted cleaver is drawn");
+            Assert.AreEqual(0, foe.rig.FamilyPartCount, "the family's own cleaver is not drawn over it");
+            Assert.IsFalse(foe.rig.BaseSwordHidden, "and the painted cleaver is not hidden");
             Assert.AreEqual(2f, foe.Mass, 1e-6);
             Assert.IsTrue(foe.Has(CharacterFlags.Armour));
             Assert.AreEqual(1.14f, foe.transform.localScale.x, 1e-4, "the JS build scale");

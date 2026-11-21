@@ -62,7 +62,7 @@ namespace Kage.Tests
                 f.Run(20);
                 // the Ironclad stands 1.14 times Kage's height, and the horns rise above the kabuto
                 Save(Path.Combine(Dir, "order_ironclad_closeup.png"), Render(f.Ronin.Pos + new Vector2(-0.1f, 1.2f), 1.3f), W, H);
-                Save(Path.Combine(Dir, "order_ironclad_head.png"), Render(f.Ronin.Pos + new Vector2(-0.05f, 1.95f), 0.45f), W, H);
+                Save(Path.Combine(Dir, "order_ironclad_head.png"), Render(f.Ronin.Pos + new Vector2(-0.2f, 1.95f), 0.5f), W, H);
                 Save(Path.Combine(Dir, "order_ironclad_cleaver.png"), Render(f.Ronin.Pos + new Vector2(-0.45f, 1.15f), 0.55f), W, H);
             }
             SoftMotion(tiles);

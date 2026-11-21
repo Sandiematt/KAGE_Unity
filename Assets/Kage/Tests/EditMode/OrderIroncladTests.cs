@@ -70,7 +70,9 @@ namespace Kage.Tests
                 if (p.pts != null) Assert.Greater(Mathf.Abs(MeshKit.SignedArea(p.pts)), 1e-6f, "part " + p.name + " is flat");
             }
             Assert.AreEqual(rig.parts.Count, rig.parts.Select(p => p.name).Distinct().Count(), "part names are unique");
-            Assert.IsFalse(rig.parts.Any(p => p.bone == B.Sword), "the cleaver is the family's, not the part set's");
+            // SAN-100 SVG redesign: the painting's cleaver is cut onto the Sword bone (CleaverVisual leaves it alone), and nothing else is
+            CollectionAssert.AreEquivalent(new[] { "Cleaver_Handle", "Cleaver_Blade" }, rig.parts.Where(p => p.bone == B.Sword).Select(p => p.name),
+                "the painted cleaver is the only thing on the sword bone");
 
             var kage = KageModel.Build(KageModel.Look.Kage);
             for (int i = 0; i < (int)B.COUNT; i++)
