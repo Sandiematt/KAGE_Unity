@@ -14,7 +14,7 @@ namespace Kage
     {
         public MoveDef jab, cross, crossFist, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
         public MoveDef airKick, airPunch, airSlash, groundPound;
-        public MoveDef iai, risingMoon, cleave, shadowStep, lowReap, counterStance, crescent;
+        public MoveDef iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, crescent;
 
         /// <summary>Metres from guard to tip of Kage's drawn katana (KageModel's blade base (0.08, 0) to tip (0.80, 0.03)).</summary>
         public const float BladeLength = 0.7206f;
@@ -268,19 +268,33 @@ namespace Kage
                 .Move(1, 7, 2.4f).JumpCancel(14)
                 .Fx(4, 13, FxKind.TrailBlade).Sword().Cancel(12);
 
-            // Kage Cleave: furikaburi into jōdan at the top of the leap, kiri-oroshi stopped just below level (tenouchi), the body
-            // dropping under the follow-through, then the point raised back onto the opponent from gedan
+            // Kage Cleave (on the ground): furikaburi into jōdan, then a kiri-oroshi from top to bottom on a stepping lead foot
+            // (fumikomi), stopped just below level (tenouchi), the body sinking under the follow-through, then the point raised
+            // back onto the opponent from gedan. Kage stays on the ground (SAN-118 rework: it no longer leaps by itself); the
+            // leaping style is the air version below, for a jump the player makes. Hit frames and numbers are the old cleave's.
             m.cleave = new MoveDef("cleave", "Kage Cleave", 46)
-                .Key(6, Jodan(P().Hip(0f, -0.22f, 0f).Chest(8f).Head(-6f).Feet(0.24f, -0.26f)))
-                .Key(14, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).Grip().HandF(0f, 1.8f).Blade(106f))
-                .Key(20, P().Hip(0.02f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).Grip().HandF(0.54f, 1.04f).Blade(-30f), Ease.InCubic)
-                .Key(23, P().Hip(0.03f, -0.12f, -8f).Chest(-31f).Head(15f).LegN(50f, -50f).LegF(22f, -50f).Grip().HandF(0.54f, 0.84f).Blade(-36f), Ease.OutQuad)
+                .Key(6, Jodan(P().Hip(-0.02f, -0.14f, 2f).Chest(8f).Head(-6f).Feet(0.24f, -0.26f)))
+                .Key(14, P().Hip(-0.02f, -0.04f, 4f).Chest(16f).Head(-10f).Feet(0.26f, -0.27f).Grip().HandF(0f, 1.8f).Blade(106f))
+                .Key(20, P().Hip(0.06f, -0.16f, -10f).Chest(-28f).Head(14f).Feet(0.36f, -0.24f).Grip().HandF(0.54f, 1.04f).Blade(-30f), Ease.InCubic)
+                .Key(23, P().Hip(0.06f, -0.24f, -8f).Chest(-31f).Head(15f).Feet(0.36f, -0.24f).Grip().HandF(0.54f, 0.84f).Blade(-36f), Ease.OutQuad)
                 .Key(26, P().Hip(0.04f, -0.32f, -6f).Chest(-34f).Head(16f).FootN(0.3f, 0.13f).FootF(-0.24f, 0.15f, -25f).Grip().HandF(0.5f, 0.52f).Blade(-34f))
-                .Key(36, P().Hip(0.02f, -0.2f, -4f).Chest(-18f).Head(10f).FootN(0.28f, 0.13f).FootF(-0.25f, 0.14f, -15f).Grip().HandF(0.34f, 0.8f).Blade(-10f), Ease.InOutQuad)
+                .Key(36, P().Hip(0.02f, -0.2f, -4f).Chest(-18f).Head(10f).FootN(0.28f, 0.13f).FootF(-0.25f, 0.15f, -15f).Grip().HandF(0.34f, 0.8f).Blade(-10f), Ease.InOutQuad)
                 .Key(46, Stance(), Ease.InOutQuad)
-                .Move(7, 7, 2.6f, 5.0f, true)
+                .Move(15, 20, 2.6f)
                 .Hit(18, 25, Blade, 12, HitLevel.Overhead, new Vector2(1.4f, -3.0f), stun: 30, hitstop: 10, shake: 0.42f, knockdown: true, heavy: true, radius: 0.08f)
                 .Fx(16, 26, FxKind.TrailBlade).Fx(26, 26, FxKind.Shockwave).Fx(26, 26, FxKind.Dust).Sword();
+
+            // Kage Cleave in the air (Down + S after a jump the player made): the old leaping style. Furikaburi into jōdan with
+            // the legs tucked at the top of the jump, then the kiri-oroshi falls through the foe, stopped just below level, held
+            // with the legs reaching for the floor until Kage lands. The cut's numbers are the ground cleave's.
+            m.airCleave = new MoveDef("airCleave", "Kage Cleave", 40)
+                .Key(6, P().Hip(0f, 0f, 0f).Chest(18f).Head(-10f).LegN(70f, -100f).LegF(40f, -90f).Grip().HandF(0f, 1.8f).Blade(106f), Ease.OutQuad)
+                .Key(8, P().Hip(0f, 0f, 2f).Chest(19f).Head(-10f).LegN(72f, -102f).LegF(42f, -92f).Grip().HandF(-0.01f, 1.8f).Blade(108f))
+                .Key(12, P().Hip(0.02f, 0f, -10f).Chest(-28f).Head(14f).LegN(60f, -70f).LegF(30f, -60f).Grip().HandF(0.54f, 1.04f).Blade(-30f), Ease.InCubic)
+                .Key(15, P().Hip(0.03f, 0f, -8f).Chest(-31f).Head(15f).LegN(50f, -50f).LegF(22f, -50f).Grip().HandF(0.54f, 0.84f).Blade(-36f), Ease.OutQuad)
+                .Key(40, P().Hip(0.03f, 0f, -6f).Chest(-28f).Head(14f).LegN(40f, -40f).LegF(18f, -42f).Grip().HandF(0.52f, 0.86f).Blade(-32f), Ease.InOutQuad)
+                .Hit(10, 17, Blade, 12, HitLevel.Overhead, new Vector2(1.4f, -3.0f), stun: 30, hitstop: 10, shake: 0.42f, knockdown: true, heavy: true, radius: 0.08f)
+                .Fx(8, 18, FxKind.TrailBlade).Sword().Air();
 
             m.iai.chain[Btn.S] = m.risingMoon;
             m.risingMoon.chain[Btn.S] = m.cleave;
@@ -357,7 +371,7 @@ namespace Kage
             bool oppDown = opp != null && opp.state == FState.Down;
             if (air)
             {
-                return b switch { Btn.P => airPunch, Btn.K => airKick, Btn.S => airSlash, _ => null };
+                return b switch { Btn.P => airPunch, Btn.K => airKick, Btn.S => dy < 0 ? airCleave : airSlash, _ => null };   // Down + S: Kage Cleave from the jump
             }
             switch (b)
             {
@@ -388,7 +402,7 @@ namespace Kage
         {
             jab, cross, crossFist, uppercut, crouchPunch, lunge, kick1, kick2, axeKick, sweep, pushKick,
             throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront,
-            iai, risingMoon, cleave, shadowStep, lowReap, counterStance, counterSlash, crescent,
+            iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, counterSlash, crescent,
         };
     }
 }

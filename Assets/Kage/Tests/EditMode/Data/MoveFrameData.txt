@@ -1,3 +1,6 @@
+katana.airCleave total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..17 pts=Blade r=0.08 dmg=12 lvl=Overhead kb=1.4,-3 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.42 posture=1 crit=False fixed=False
+  fx 8..18 TrailBlade
 katana.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..30 pts=FootN+ShinN r=0.11 dmg=8 lvl=Overhead kb=2.4,1.8 stun=20 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
@@ -18,7 +21,7 @@ katana.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 arm
   fx 4..14 AfterImage
 katana.cleave total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 18..25 pts=Blade r=0.08 dmg=12 lvl=Overhead kb=1.4,-3 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.42 posture=1 crit=False fixed=False
-  move 7..7 v=2.6,5 setY=True
+  move 15..20 v=2.6,0 setY=False
   fx 16..26 TrailBlade
   fx 26..26 Shockwave
   fx 26..26 Dust

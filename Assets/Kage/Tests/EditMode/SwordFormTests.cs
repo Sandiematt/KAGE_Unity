@@ -76,7 +76,7 @@ namespace Kage.Tests
         static Vector2 Monouchi(PoseFK k) => k.OnBlade(0.08f + 0.72f * 0.75f);
 
         /// <summary>The cuts (every katana blade move but the thrust and the pommel strike).</summary>
-        static string[] Cuts => new[] { "iai", "risingMoon", "cleave", "shadowStep", "lowReap", "crescent", "airSlash" };
+        static string[] Cuts => new[] { "iai", "risingMoon", "cleave", "shadowStep", "lowReap", "crescent", "airSlash", "airCleave" };
 
         [Test]
         public void EveryCutTravelsEdgeFirstThroughItsLiveFrames()

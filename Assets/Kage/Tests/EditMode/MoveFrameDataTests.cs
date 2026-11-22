@@ -12,7 +12,8 @@ namespace Kage.Tests
     /// Gameplay timing is frozen while the poses are reworked (SAN-118): every move of every registered weapon family keeps
     /// its frame data (length, hit windows and their numbers and flags, root motion, cancels, invulnerability, armour,
     /// counter, spin, throw and effect frames). The expected text is a snapshot of main before SAN-118
-    /// (<c>Data/MoveFrameData.txt</c>, generated from 0cf7534); a pose-only change leaves it equal.
+    /// (<c>Data/MoveFrameData.txt</c>, generated from 0cf7534); a pose-only change leaves it equal. Intended changes since: the SAN-118 cleave rework (Kage Cleave stays
+    /// on the ground, its leap replaced by a stepping root motion at frames 15-20; the leaping style became <c>airCleave</c>, Down + S in the air).
     /// </summary>
     public class MoveFrameDataTests
     {

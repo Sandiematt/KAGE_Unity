@@ -72,7 +72,12 @@ are root space, 0 = forward, 90 = up.
 6. **Footwork: suri-ashi, okuri-ashi, fumikomi.** Feet slide; the lead foot moves first and the rear foot is drawn up
    after (it never passes the front foot); a long strike stamps the lead foot (fumikomi) as the arms reach full
    extension. *Changes:* strike keys plant the lead foot further forward on the impact frame and draw the rear
-   foot up after it in the follow-through. Root motion is unchanged.
+   foot up after it in the follow-through. Root motion is unchanged, except Kage Cleave (below).
+   *Kage Cleave, second round:* a swordsman does not leap to cut, so the cleave no longer jumps by itself (it was a
+   2.6 m/s, 5 m/s up impulse at frame 7). On the ground it is a plain kiri-oroshi from jōdan with a fumikomi step
+   (2.6 m/s forward over frames 15-20), same hit frames and numbers. The leaping style stays for a jump the player
+   makes: Down + S in the air is the air Kage Cleave (`airCleave`), jōdan with the legs tucked, the cut falling past
+   the apex (40 frames, hit 10-17, 12 damage, Overhead, knockdown; ends on landing).
 7. **Wind-ups are compact at speed.** Big swings are a training tool; a fast real cut has a short, sharp furikaburi and
    loses no time; the anticipation reads from the body (hips sinking, weight back) more than from a huge arm swing.
    *Changes:* wind-ups load the hips and pull the hands in rather than flinging the blade far behind; Iai, Shadow Step

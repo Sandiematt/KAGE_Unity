@@ -171,7 +171,8 @@ namespace Kage
                 "<b><color=#F06F6E>KATANA</color></b>\n" +
                 "  L · L · L ............ Iai Draw → Rising Moon (launcher) → Kage Cleave (overhead)\n" +
                 "  → + L ................ Shadow Step (dash through)   ↓ + L .... Low Reap\n" +
-                "  ← + L ................ Mirror Guard (parry → Kage Counter)   air L .. Crescent Spin\n\n" +
+                "  ← + L ................ Mirror Guard (parry → Kage Counter)   air L .. Crescent Spin\n" +
+                "  air ↓ + L ............ Kage Cleave from a jump (overhead, knockdown)\n\n" +
                 "<b><color=#F06F6E>GUARD</color></b>  (O or B · gamepad RB / RT)\n" +
                 "  hold O ............... Guard: blocks high and mid hits; overheads too   O + ↓ .. Low guard: blocks lows, not overheads\n" +
                 "  Guarding fills POSTURE; a full bar breaks the guard (helpless, next hit is a CRITICAL). It drains after a second.\n" +

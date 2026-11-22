@@ -99,12 +99,103 @@ namespace Kage.Tests
             }
         }
 
-        static Color32[] Render(Vector2 centre)
+        // ---------------------------------------------------------------------------------------
+        // SAN-118 cleave rework: Kage Cleave on the ground (no leap of its own) and from a jump the player makes (Down + S in the
+        // air). Played live in a fight, so the jump and the root motion show; a fixed camera and a floor line. A tile's border is
+        // red while the cut's hit window is live. Writes Screenshots/review/SAN-118/cleave/: the tiles and one strip per version.
+
+        const float CleaveView = 1.85f;
+        const int StripCols = 12;
+
+        static string CleaveDir => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-118", "cleave"));
+
+        [Test]
+        public void RenderTheCleaveStrips()
+        {
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            Directory.CreateDirectory(CleaveDir);
+
+            // on the ground: the chain's third hit (Iai, Rising Moon, Cleave) started straight from chūdan
+            var ground = new List<Color32[]>();
+            using (var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f))
+            {
+                f.Run(2);
+                Vector2 centre = new(f.Kage.Pos.x + 0.45f, 1.6f);
+                var cleave = ((KatanaMoves)f.Kage.moves).cleave;
+                f.Kage.StartMove(cleave);
+                for (int tick = 0; tick <= cleave.total + 2; tick++)     // capped by the move's length
+                {
+                    if (tick % 2 == 0) ground.Add(CleaveTile(f, centre, $"ground_t{tick:00}"));
+                    f.Run(1);
+                }
+            }
+            SaveStrip(Path.Combine(CleaveDir, "san118_cleave_ground_strip.png"), ground);
+
+            // from a jump: hold up to jump, then Down + S on the way up; the cut falls past the apex and Kage lands
+            var air = new List<Color32[]>();
+            using (var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, 0f))
+            {
+                f.Run(2);
+                Vector2 centre = new(f.Kage.Pos.x + 0.45f, 1.6f);
+                f.KageInput.Add(12, dy: 1).Add(1, dy: -1, buttons: "S");
+                bool started = false;
+                int after = 0;
+                for (int tick = 0; tick < 120; tick++)                    // capped: a jump and a landing take well under 120 frames
+                {
+                    if (f.Kage.move != null && f.Kage.move.id == "airCleave") started = true;
+                    if (started && f.Kage.Grounded && f.Kage.state != FState.Attack) after++;
+                    if (after > 12) break;
+                    if (tick % 2 == 0) air.Add(CleaveTile(f, centre, $"air_t{tick:00}"));
+                    f.Run(1);
+                }
+                Assert.IsTrue(started, "Down + S in the air starts the air Kage Cleave");
+            }
+            SaveStrip(Path.Combine(CleaveDir, "san118_cleave_air_strip.png"), air);
+        }
+
+        static Color32[] CleaveTile(HeadlessFight f, Vector2 centre, string name)
+        {
+            var k = f.Kage;
+            var px = Render(centre, CleaveView);
+            // the floor: world y 0
+            int floor = Mathf.RoundToInt(T * 0.5f + (0f - centre.y) / CleaveView * T * 0.5f);
+            if (floor >= 0 && floor < T)
+                for (int x = 0; x < T; x++) px[floor * T + x] = new Color32(150, 140, 120, 255);
+            bool live = k.state == FState.Attack && k.move != null && k.move.hits.Any(h => k.moveFrame >= h.from && k.moveFrame <= h.to);
+            if (live)
+            {
+                var red = new Color32(220, 60, 60, 255);
+                for (int i = 0; i < T; i++)
+                    for (int b = 0; b < 4; b++)
+                    {
+                        px[b * T + i] = red; px[(T - 1 - b) * T + i] = red; px[i * T + b] = red; px[i * T + T - 1 - b] = red;
+                    }
+            }
+            string label = k.state == FState.Attack && k.move != null ? $"{k.move.id}_f{k.moveFrame:00}" : k.state.ToString();
+            SavePng(Path.Combine(CleaveDir, $"{name}_{label}.png"), px);
+            return px;
+        }
+
+        static void SaveStrip(string path, List<Color32[]> tiles)
+        {
+            int cols = Mathf.Min(StripCols, tiles.Count), rows = (tiles.Count + StripCols - 1) / StripCols;
+            var sheet = new Texture2D(cols * T, rows * T, TextureFormat.RGBA32, false);
+            var bg = new Color32[cols * T * rows * T];
+            for (int i = 0; i < bg.Length; i++) bg[i] = new Color32(30, 26, 28, 255);
+            sheet.SetPixels32(bg);
+            for (int i = 0; i < tiles.Count; i++)
+                sheet.SetPixels32(i % StripCols * T, (rows - 1 - i / StripCols) * T, T, T, tiles[i]);
+            sheet.Apply();
+            File.WriteAllBytes(path, sheet.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(sheet);
+        }
+
+        static Color32[] Render(Vector2 centre, float view = 1.15f)
         {
             var go = new GameObject("ShotCam");
             var cam = go.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 1.15f;
+            cam.orthographicSize = view;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.16f, 0.13f, 0.14f, 1f);
             cam.nearClipPlane = 0.1f;
