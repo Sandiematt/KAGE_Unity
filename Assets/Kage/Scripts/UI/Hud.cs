@@ -272,6 +272,7 @@ namespace Kage
             else _announce.text = "";
 
             UpdateCutIn(dt);
+            TickInk(dt);
 
             _bannerT += dt;
             if (_bannerT < _bannerDur)
