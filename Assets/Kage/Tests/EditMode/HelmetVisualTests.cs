@@ -14,19 +14,20 @@ namespace Kage.Tests
     /// </summary>
     public class HelmetVisualTests
     {
-        // the 13 helmets with a drawing (the 14th, Shiro Maki, is Kage's bare head + scarf: no extra parts)
+        // the 13 helmets with a design (the 14th, Shiro Maki, is Kage's bare head + crimson scarf: no extra parts). SAN-72 tier redesign.
         static readonly string[] Drawn =
         {
             "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
             "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "raijin_kabuto", "sumi_eboshi", "hisame_zukin",
         };
 
-        // worn with the head hair gone (hoods, caps and the closed kabuto) / hair kept with a band or the open oni mask / hair only below the brim (SAN-72 rework)
+        // worn with the head hair gone (every hood, cap, hat and kabuto) / hair kept under a brow band (SAN-72 tier redesign)
         static readonly string[] HairHidden =
         {
-            "kuro_zukin", "kasumi_men", "tetsu_kabuto", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "raijin_kabuto", "sumi_eboshi", "hisame_zukin",
+            "kuro_zukin", "sugegasa", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin",
+            "raijin_kabuto", "sumi_eboshi", "hisame_zukin",
         };
-        static readonly string[] HairKept = { "hachigane", "oni_menpo" };
+        static readonly string[] HairKept = { "hachigane" };
 
         // later-act helmets: in the data, no drawing yet
         static readonly string[] NoDrawing = { "shiro_maki", "hakobi_gasa", "utsushi_men", "deshi_tenugui", "mokushi_kabuto", "kasa", "no_such_helmet", "", null };
@@ -104,7 +105,10 @@ namespace Kage.Tests
                 Assert.IsTrue(HelmetVisuals.Has(id), id);
                 var added = Added(Kage(id), bare);
                 Assert.IsNotEmpty(added, $"{id} draws nothing");
-                foreach (var p in added) Assert.AreEqual(B.Head, p.bone, $"{id}: part {p.name} is not on the head bone");
+                Assert.IsTrue(added.Any(p => p.bone == B.Head && p.name.StartsWith("Helmet_")), $"{id}: nothing on the head");
+                // the head bone, or the chest for the neck wrap (it winds round the neck like the scarf wrap)
+                foreach (var p in added.Where(p => p.name.StartsWith("Helmet_")))
+                    Assert.IsTrue(p.bone == B.Head || (p.bone == B.Chest && p.name.Contains("_Wrap")), $"{id}: part {p.name} on {p.bone}");
             }
         }
 
@@ -156,7 +160,7 @@ namespace Kage.Tests
                     foreach (var v in Vertices(p))
                     {
                         Assert.That(Mathf.Abs(v.x - head.x), Is.LessThan(1.0f), $"{id}/{p.name} x");
-                        Assert.That(v.y - head.y, Is.InRange(-0.45f, 1.05f), $"{id}/{p.name} y");
+                        Assert.That(v.y - head.y, Is.InRange(-0.45f, 0.8f), $"{id}/{p.name} y");
                     }
             }
         }
@@ -176,7 +180,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void BandsAndTheOpenOniMaskKeepTheHairMovingUnderThem()
+        public void ABrowBandKeepsTheHairMovingUnderIt()
         {
             var bare = Bare();
             var hair = bare.parts.First(p => p.soft == SoftKind.Hair);
@@ -187,23 +191,10 @@ namespace Kage.Tests
                 Assert.IsNotNull(h, $"{id}: hair is kept");
                 Assert.AreEqual(Fingerprint(hair), Fingerprint(h), $"{id}: the hair is drawn as before");
                 Assert.AreEqual(bare.hairCentre, d.hairCentre, id);
-                // the helmet is drawn over the hair, the eye over the helmet
-                foreach (var p in Added(d, bare).Where(p => p.polys != null || p.pts != null))
+                // the band is drawn over the hair, the eye over the band (the knot tails hang behind the head)
+                foreach (var p in Added(d, bare).Where(p => (p.polys != null || p.pts != null) && p.soft != SoftKind.Chain && p.bone == B.Head))
                     Assert.Greater(p.order, h.order, $"{id}/{p.name} must be over the hair");
             }
-        }
-
-        [Test]
-        public void TheSugegasaShowsOnlyTheHairBelowItsBrim()
-        {
-            var bare = Bare();
-            var full = bare.parts.First(p => p.soft == SoftKind.Hair);
-            var d = Kage("sugegasa");
-            var h = d.parts.FirstOrDefault(p => p.soft == SoftKind.Hair);
-            Assert.IsNotNull(h, "hair below the brim still moves");
-            float Top(PartDef p) => Vertices(p).Max(v => v.y);
-            Assert.Less(Top(h), Top(full) - 0.15f, "the crown hair is under the hat");
-            Assert.Greater(h.polys.Count, 3);
         }
 
         [Test]
@@ -220,11 +211,93 @@ namespace Kage.Tests
                 Assert.AreEqual(bare.scarfAnchorA, d.scarfAnchorA, id);
                 Assert.AreEqual(bare.scarfAnchorB, d.scarfAnchorB, id);
                 CollectionAssert.AreEqual(scarfParts, d.parts.Where(p => p.name.StartsWith("Scarf")).Select(Fingerprint).ToList(), id);
-                // helmet art never covers the scarf wrap or knot
+                // only the neck wrap (and Kasumi's face veil) is drawn over the scarf wrap, and under the near arm
                 int wrap = d.parts.First(p => p.name == "Scarf_Wrap").order;
-                foreach (var p in Added(d, bare)) Assert.Less(p.order, wrap, $"{id}/{p.name} is drawn over the scarf");
+                int arm = d.parts.First(p => p.name == "ArmN_Upper").order;
+                foreach (var p in Added(d, bare).Where(p => p.order >= wrap))
+                {
+                    Assert.IsTrue(p.name.Contains("_Wrap") || p.name.EndsWith("_Veil"), $"{id}/{p.name} is drawn over the scarf");
+                    Assert.Less(p.order, arm, $"{id}/{p.name} is drawn over the arm");
+                }
+                // the knot and the two tails still show: the wrap stops short of the knot
+                var knot = d.parts.First(p => p.name == "Scarf_Knot");
+                Vector2 knotCentre = knot.pts.Aggregate(Vector2.zero, (a, v) => a + v) / knot.pts.Length;
+                foreach (var p in Added(d, bare).Where(p => p.order >= wrap))
+                    foreach (var poly in Polys(p)) Assert.IsFalse(Inside(poly, knotCentre), $"{id}/{p.name} hides the scarf's knot");
+            }
+        }
+
+        // ---------------------------------------------------------------- the eye, the tiers and the soft pieces
+
+        static IEnumerable<Vector2[]> Polys(PartDef p)
+        {
+            if (p.pts != null) yield return p.pts;
+            if (p.polys != null) foreach (var (pts, _) in p.polys) yield return pts;
+        }
+
+        static bool Inside(Vector2[] poly, Vector2 q)
+        {
+            bool c = false;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+                if ((poly[i].y > q.y) != (poly[j].y > q.y) && q.x < (poly[j].x - poly[i].x) * (q.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x) c = !c;
+            return c;
+        }
+
+        [Test]
+        public void TheWhiteEyeStaysOnTopUnderEveryHelmet()
+        {
+            var bare = Bare();
+            var eye0 = bare.parts.First(p => p.name == "Eye");
+            foreach (var id in Drawn)
+            {
+                var d = Kage(id);
                 var eye = d.parts.First(p => p.name == "Eye");
-                foreach (var p in Added(d, bare)) Assert.Less(p.order, eye.order, $"{id}/{p.name} hides the eye");
+                Assert.AreEqual(Fingerprint(eye0), Fingerprint(eye), $"{id}: the eye is drawn as before");
+                Assert.AreEqual(HelmetVisuals.EyeOrder, eye.order);
+                foreach (var p in Added(d, bare).Where(p => p.order >= eye.order))
+                    foreach (var poly in Polys(p))
+                        foreach (var v in eye.pts) Assert.IsFalse(Inside(poly, v), $"{id}/{p.name} is drawn over the eye");
+            }
+        }
+
+        [Test]
+        public void EveryHelmetIsPaintedInItsTiersPalette()
+        {
+            var bare = Bare();
+            foreach (var id in Drawn)
+            {
+                var pal = HelmetTiers.Palette(HelmetDesigns.Get(id).tier);
+                var allowed = new HashSet<Color> { pal.rim, OpponentKit.Seam };
+                foreach (var t in pal.ToneNames) for (int k = 0; k < 3; k++) allowed.Add(pal.Colour(t, k));
+                foreach (var p in Added(Kage(id), bare).Where(p => p.name.StartsWith("Helmet_")))
+                {
+                    var cols = new List<Color>();
+                    if (p.pts != null) cols.Add(p.color);
+                    if (p.polys != null) cols.AddRange(p.polys.Select(x => x.col));
+                    if (p.rimColor.HasValue) cols.Add(p.rimColor.Value);
+                    foreach (var c in cols)
+                        Assert.IsTrue(allowed.Contains(new Color(c.r, c.g, c.b, 1f)), $"{id}/{p.name}: colour {c} is not in the {HelmetDesigns.Get(id).tier} palette");
+                }
+            }
+        }
+
+        [Test]
+        public void SoftPiecesBecomeChainPartsAndGlowCarriesOver()
+        {
+            var bare = Bare();
+            foreach (var id in Drawn)
+            {
+                var design = HelmetDesigns.Get(id);
+                var added = Added(Kage(id), bare);
+                foreach (var piece in design.pieces.Where(p => p.kind == PieceKind.Cloth))
+                {
+                    var part = added.Single(p => p.name == $"Helmet_{design.look}_{piece.name}");
+                    Assert.AreEqual(SoftKind.Chain, part.soft, $"{id}/{piece.name}");
+                    Assert.AreEqual(piece.chains.Length, part.chains.Count, $"{id}/{piece.name}");
+                    Assert.Greater(part.chainFeel.drag, 0f, $"{id}/{piece.name}");
+                }
+                foreach (var piece in design.pieces.Where(p => p.glow > 1f))
+                    Assert.AreEqual(piece.glow, added.Single(p => p.name == $"Helmet_{design.look}_{piece.name}").glow, $"{id}/{piece.name}");
             }
         }
 
