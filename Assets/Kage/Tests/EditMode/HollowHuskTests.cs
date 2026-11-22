@@ -114,7 +114,7 @@ namespace Kage.Tests
             var names = rig.parts.Select(p => p.name).ToHashSet();
             Assert.IsTrue(names.Contains("Mask") && names.Contains("Eye") && names.Contains("Horn_1") && names.Contains("Horn_2"), "a horned mask and a cold eye");
             Assert.IsTrue(names.Contains("Mantle") && names.Contains("Shimenawa"), "the brute's mantle and rope belt");
-            Assert.IsTrue(rig.parts.Any(p => p.name == "Eye" && p.glow > 1.5f && p.polys.Any(q => q.col == HollowArt.Style.tones["White"])), "the eye glows cold white");
+            Assert.IsTrue(rig.parts.Any(p => p.name == "Eye" && p.glow > 1.5f && p.polys.Any(q => q.col == HollowArt.Husk.tones["White"])), "the eye glows cold white");
             foreach (var p in rig.parts)
             {
                 Assert.AreNotEqual(Palette.Trim, p.color, p.name);

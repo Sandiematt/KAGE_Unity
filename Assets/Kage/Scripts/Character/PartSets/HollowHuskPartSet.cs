@@ -8,10 +8,11 @@ namespace Kage
     /// <para>
     /// Nothing is drawn in code. <c>Tools/svg_art/svg_rig.py</c> cuts the owner's trace (<c>Tools/hollow_art/husk/original/</c>) by the
     /// regions of <c>Tools/hollow_art/husk/rig.json</c> into <see cref="Resource"/>; <see cref="SvgRig"/> puts each piece on its bone in
-    /// the shared Hollow tones (<see cref="HollowArt"/>). Rigid pieces (hood, horns, mask, face, eye, torso, pauldron, arms, fists, belt,
-    /// legs, boots) ride their bones; the cloak, mantle, tassets, shide and bandage ends hang on spring chains (<see cref="SoftPresets"/>)
-    /// that swing with the body and bend in the wind (<see cref="FighterRig.wind"/>). The far arm and leg are the near ones in the far
-    /// tones. The skeleton, hurt circles, hit points, scale and mass are unchanged (<see cref="HollowHusk"/>, ADR-0005).
+    /// the Hollow tone names painted in the SVG's own colours (<see cref="HollowArt.Husk"/>, SAN-112 definition pass). Rigid pieces (hood,
+    /// horns, mask, face, eye, torso, pauldron, arms, fists, belt, legs, boots) ride their bones; the cloak, mantle, tassets, shide and
+    /// bandage ends hang on spring chains (<see cref="SoftPresets"/>) that swing with the body and bend in the wind
+    /// (<see cref="FighterRig.wind"/>). The far arm and thigh are the near ones in the far tones; the far boot is the painted far boot.
+    /// The skeleton, hurt circles, hit points, scale and mass are unchanged (<see cref="HollowHusk"/>, ADR-0005).
     /// </para>
     /// </summary>
     public sealed class HollowHuskPartSet : IPartSet
@@ -23,8 +24,8 @@ namespace Kage
         public RigDef Build(CharacterDef c)
         {
             var d = OpponentKit.Skeleton("HOLLOW HUSK");
-            HollowArt.Dress(d);
-            SvgRig.Build(d, SvgRigData.Load(Resource), HollowArt.Style);
+            HollowArt.Husk.Dress(d);
+            SvgRig.Build(d, SvgRigData.Load(Resource), HollowArt.Husk);
             return d;
         }
     }

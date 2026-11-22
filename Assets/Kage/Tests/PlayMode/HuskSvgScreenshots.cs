@@ -8,12 +8,13 @@ using UnityEngine.Rendering.Universal;
 namespace Kage.Tests
 {
     /// <summary>
-    /// The review images of the Hollow Husk redrawn from the owner's SVG (SAN-112 SVG redesign; a copy of ShadeSvgScreenshots), in
-    /// Screenshots/review/SAN-112/svg/: the owner's art beside the Unity bind pose and fight idle (side_by_side.png), the Husk
-    /// beside Kage in idle, walk, attack and hit (kage_vs_hollow_husk_sheet.png) with a close-up and its head, the soft parts in
-    /// motion and in the wind (soft_motion.png), and the line-up of every Order and Hollow foe (each tile also saved alone in
-    /// lineup/, so the other characters can be compared pixel for pixel before and after). Needs a GPU: it skips itself under
-    /// -nographics.
+    /// The review images of the Hollow Husk cut from the owner's SVG (SAN-112 SVG redesign and its definition pass; a copy of
+    /// ShadeSvgScreenshots), in Screenshots/review/SAN-112/define/: the owner's art beside the Unity rig at the same scale, posed as
+    /// painted (every limb turned to its painted angle), in the bind pose and in the fight idle (side_by_side.png); close-ups of the
+    /// head, torso, arms and fists and legs, the art beside the painted pose at twice that scale (closeups/); the Husk beside Kage in
+    /// idle, walk, attack and hit (kage_vs_hollow_husk_sheet.png) with a close-up and its head; the soft parts in motion and in the
+    /// wind (soft_motion.png); and the line-up of every Order and Hollow foe (each tile also saved alone in lineup/, so the other
+    /// characters can be compared pixel for pixel before and after). Needs a GPU: it skips itself under -nographics.
     /// Run with <c>-testFilter HuskSvgScreenshots</c> and no -nographics.
     /// </summary>
     [Category("Screenshots")]
@@ -28,7 +29,7 @@ namespace Kage.Tests
         /// <summary>Characters off the sheet whose soft parts share the code this ticket touches: rendered alone for the pixel check.</summary>
         static readonly string[] Others = { "raikon", "kage" };
 
-        static string Dir => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-112", "svg"));
+        static string Dir => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-112", "define"));
         static string Painting => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tools", "hollow_art", "husk", "original", "husk_ref.png"));
         const string Id = "hollow_husk";
 
@@ -78,42 +79,132 @@ namespace Kage.Tests
 
         // ---- the painting, the bind pose and the fight idle ----
 
+        /// <summary>The art's canvas colour (#0E0814): the side-by-side tiles render the rig on it, so art and rig read alike.</summary>
+        static readonly Color Canvas = new Color32(0x0E, 0x08, 0x14, 0xFF);
+
+        /// <summary>The side-by-side: the whole figure (SVG px) at 0.9 tile px per SVG px.</summary>
+        static readonly Rect Figure = new(512, 6, 560, 1000);
+        const float FigureScale = 0.9f;
+
+        /// <summary>The close-ups: a rectangle of the art (SVG px), the part whose bone carries it, at 2 tile px per SVG px.</summary>
+        static readonly (string name, Rect crop, string part)[] CloseUps =
+        {
+            ("head", new Rect(560, 10, 260, 290), "Hood"),
+            ("torso", new Rect(640, 150, 320, 400), "Torso"),
+            ("arms_fists", new Rect(560, 200, 300, 300), "HandN"),
+            ("legs", new Rect(520, 520, 520, 460), "Pelvis"),
+        };
+        const float CloseUpScale = 2f;
+
         static void SideBySide(string tiles)
         {
-            const int w = 560, h = 600;
+            int w = Mathf.RoundToInt(Figure.width * FigureScale), h = Mathf.RoundToInt(Figure.height * FigureScale);
             var painting = new Texture2D(2, 2);
             painting.LoadImage(File.ReadAllBytes(Painting));
-            var left = FitCrop(painting, new Rect(440, 10, 660, 980), w, h);
-            Object.DestroyImmediate(painting);
+            var art = FitCrop(painting, Figure, w, h);
 
-            // bind pose: the rig straight from the part set, facing left like the painting
+            var def = CharacterCatalog.PartSet(Id).Build(CharacterCatalog.Get(Id));
+            var data = SvgRigData.Load(HollowHuskPartSet.Resource);
             var go = new GameObject("HuskBind");
             var rig = go.AddComponent<FighterRig>();
-            rig.Build(CharacterCatalog.PartSet(Id).Build(CharacterCatalog.Get(Id)), 1000);
+            rig.Build(def, 1000);
             rig.SetFacing(-1f, true);
-            var bind = Render(new Vector2(-0.2f, 1.0f), 1.15f, w, h);
-            Object.DestroyImmediate(go);
+            var fit = SvgRig.Map(def, data, new[] { "trunk" }, "fit");
+            Vector2 World(Vector2 svg) => rig.transform.TransformPoint(fit(svg));
+            float worldPerSvgPx = (World(new Vector2(0f, 0f)) - World(new Vector2(100f, 0f))).magnitude / 100f;
 
-            // the fight idle, facing left (the foe faces Kage, who stands to its left)
+            // the same scale as the art, centred on the same SVG point by the fit (the painted sole is on Kage's ground)
+            Color32[] Same(Rect crop, float tileScale, int tw, int th, Vector2 centre) =>
+                Render(centre, th * 0.5f / tileScale * worldPerSvgPx, tw, th, Canvas);
+
+            // the rig posed as painted: every limb turned so its drawn joints lie along the painted ones
+            rig.Apply(PaintedPose(def, data));
+            var painted = Same(Figure, FigureScale, w, h, World(Figure.center));
+            rig.Apply(PoseLib.Ref());
+            var bind = Same(Figure, FigureScale, w, h, World(Figure.center));
+
+            // the close-ups: the art and the painted pose at twice the scale, centred by the part that carries the piece
+            rig.Apply(PaintedPose(def, data));
+            Directory.CreateDirectory(Path.Combine(Dir, "closeups"));
+            foreach (var (name, crop, part) in CloseUps)
+            {
+                int cw = Mathf.RoundToInt(crop.width * CloseUpScale), ch = Mathf.RoundToInt(crop.height * CloseUpScale);
+                var spec = data.parts.Find(p => p.name == part);
+                var map = SvgRig.Map(def, data, spec.map, part);
+                // the crop's centre on the part's bone: bind space through the bone's bind transform, then where the bone is now
+                rig.Apply(PoseLib.Ref());
+                var bone = rig.Bone(spec.bone);
+                Vector3 local = bone.InverseTransformPoint(rig.transform.TransformPoint(map(crop.center)));
+                rig.Apply(PaintedPose(def, data));
+                Vector2 centre = bone.TransformPoint(local);
+                var unity = Render(centre, ch * 0.5f / CloseUpScale * worldPerSvgPx, cw, ch, Canvas);
+                var svg = FitCrop(painting, crop, cw, ch);
+                Save(Path.Combine(Dir, "closeups", name + "_svg.png"), svg, cw, ch);
+                Save(Path.Combine(Dir, "closeups", name + "_unity.png"), unity, cw, ch);
+                var pair = new Texture2D(cw * 2, ch, TextureFormat.RGBA32, false);
+                pair.SetPixels32(0, 0, cw, ch, svg);
+                pair.SetPixels32(cw, 0, cw, ch, unity);
+                pair.Apply();
+                File.WriteAllBytes(Path.Combine(Dir, "closeup_" + name + ".png"), pair.EncodeToPNG());
+                Object.DestroyImmediate(pair);
+            }
+            float bindScale = Mathf.Abs(go.transform.lossyScale.y);
+            Object.DestroyImmediate(go);
+            Object.DestroyImmediate(painting);
+
+            // the fight idle, facing left (the foe faces Kage, who stands to its left), at the same scale: the fighter carries the
+            // Husk's build scale, which the bare rig above does not, so the camera widens by the same factor; the ground sits where
+            // the painted sole does in the art's tile
             Color32[] idle;
             using (var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -3f, 0.3f, foeDef: CharacterCatalog.Get(Id)))
             {
                 f.KageInput.Add(300);
                 f.RoninInput.Add(300);
                 f.Run(40);
-                idle = Render(f.Ronin.Pos + new Vector2(-0.2f, 1.0f), 1.25f, w, h);
+                float wpp = worldPerSvgPx * Mathf.Abs(f.Ronin.rig.transform.lossyScale.y) / bindScale;
+                float ortho = h * 0.5f / FigureScale * wpp;
+                idle = Render(f.Ronin.Pos + new Vector2(-0.1f, ortho - (Figure.yMax - 965f) * wpp), ortho, w, h, Canvas);
             }
-            Save(Path.Combine(tiles, "side_painting.png"), left, w, h);
+            Save(Path.Combine(tiles, "side_svg.png"), art, w, h);
+            Save(Path.Combine(tiles, "side_unity_painted_pose.png"), painted, w, h);
             Save(Path.Combine(tiles, "side_unity_bind.png"), bind, w, h);
             Save(Path.Combine(tiles, "side_unity_idle.png"), idle, w, h);
-            var sheet = new Texture2D(w * 3, h, TextureFormat.RGBA32, false);
-            sheet.SetPixels32(0, 0, w, h, left);
-            sheet.SetPixels32(w, 0, w, h, bind);
-            sheet.SetPixels32(w * 2, 0, w, h, idle);
+            var sheet = new Texture2D(w * 4, h, TextureFormat.RGBA32, false);
+            sheet.SetPixels32(0, 0, w, h, art);
+            sheet.SetPixels32(w, 0, w, h, painted);
+            sheet.SetPixels32(w * 2, 0, w, h, bind);
+            sheet.SetPixels32(w * 3, 0, w, h, idle);
             sheet.Apply();
             File.WriteAllBytes(Path.Combine(Dir, "side_by_side.png"), sheet.EncodeToPNG());
             Object.DestroyImmediate(sheet);
         }
+
+        /// <summary>
+        /// The rig posed as the art is drawn: each limb segment turned so its drawn joints (the part's <c>seg</c> map) lie along the
+        /// painted ones, the hands and feet kept as painted, the trunk and head as bound (the trunk's map already puts the painted neck
+        /// and hips on Kage's). The far leg reaches back to the painted far boot; the far arm, hidden in the art, hangs behind the trunk.
+        /// </summary>
+        static Pose PaintedPose(RigDef d, SvgRigData data)
+        {
+            var fit = SvgRig.Map(d, data, new[] { "trunk" }, "fit");
+            float Turn(string part)
+            {
+                var m = data.parts.Find(p => p.name == part).map;
+                Vector2 a = new(F(m[1]), F(m[2])), b = new(F(m[3]), F(m[4]));
+                B from = (B)System.Enum.Parse(typeof(B), m[5]), to = (B)System.Enum.Parse(typeof(B), m[6]);
+                return KMath.Ang(fit(b) - fit(a)) - KMath.Ang(d.pivot[(int)to] - d.pivot[(int)from]);
+            }
+            float armU = Turn("ArmN_Upper"), armL = Turn("ArmN_Fore");
+            float legU = Turn("LegN_Thigh"), legL = Turn("LegN_Shin");
+            var farAnkle = fit(new Vector2(872f, 930f));
+            return new Pose()
+                .ArmN(armU, KMath.Wrap(armL - armU))
+                .ArmF(-35f, -10f)
+                .LegN(legU, KMath.Wrap(legL - legU), KMath.Wrap(-legL))
+                .FootF(farAnkle.x, farAnkle.y, 0f);
+        }
+
+        static float F(string s) => float.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>A rectangle of the painting (its pixels, y down) scaled to fit a w x h tile.</summary>
         static Color32[] FitCrop(Texture2D src, Rect crop, int w, int h)
@@ -224,14 +315,14 @@ namespace Kage.Tests
             Object.DestroyImmediate(tex);
         }
 
-        internal static Color32[] Render(Vector2 centre, float orthoSize, int w = W, int h = H)
+        internal static Color32[] Render(Vector2 centre, float orthoSize, int w = W, int h = H, Color? background = null)
         {
             var go = new GameObject("ShotCam");
             var cam = go.AddComponent<Camera>();
             cam.orthographic = true;
             cam.orthographicSize = orthoSize;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.16f, 0.13f, 0.14f, 1f);
+            cam.backgroundColor = background ?? new Color(0.16f, 0.13f, 0.14f, 1f);
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = 100f;
             cam.transform.position = new Vector3(centre.x, centre.y, -10f);

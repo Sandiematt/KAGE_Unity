@@ -53,5 +53,38 @@ namespace Kage
 
         /// <summary>A Hollow's rig settings for an SVG-drawn body: the violet rim, violet-black cloth, no scarf or coat of Kage's.</summary>
         public static void Dress(RigDef d) => Style.Dress(d);
+
+        static SvgRigStyle _husk;
+
+        /// <summary>
+        /// The Hollow Husk's own colours (SAN-112 definition pass): the same tone names as <see cref="Style"/>, each painted in the
+        /// colour the owner's SVG uses for it, so the Husk reads in its art's plum and lavender rather than the shared palette's cooler
+        /// blue-violet. Each is the area-weighted mean of the trace colours the cut snaps to that tone (measured over the figure, see
+        /// ADR-0005, SAN-112 definition notes). The far side, the rim and the glows are the shared ones; the Shade keeps
+        /// <see cref="Style"/>.
+        /// </summary>
+        public static SvgRigStyle Husk => _husk ??= MakeHusk();
+
+        static SvgRigStyle MakeHusk()
+        {
+            var s = new SvgRigStyle { rim = HollowPalette.Rim, body = KMath.Hex("#1F132A"), far = c => Color.Lerp(c, FarInk, 0.5f) };
+            void T(string name, string hex) => s.tones[name] = KMath.Hex(hex);
+            T("Ink", "#0F0914");
+            T("Shadow", "#150D1E");
+            T("Cloth", "#1F132A");
+            T("ClothMid", "#2A193D");
+            T("ClothLit", "#3A284C");
+            T("VioletDeep", "#5B3D7A");
+            T("Rim", "#6D4999");
+            T("RimBright", "#8B65B4");
+            T("RimHot", "#A87BDC");
+            T("SteelDark", "#7E6A8A");
+            T("Steel", "#CBB3DA");
+            T("White", "#EBE8EC");
+            T("RopeDark", "#3B2B31");
+            T("Rope", "#513E3D");
+            T("RopeLit", "#806761");
+            return s;
+        }
     }
 }
