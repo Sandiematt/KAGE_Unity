@@ -522,6 +522,42 @@ The owner reviewed the smooth Husk (the SAN-112 rework above) and sent an SVG, a
   - `lineup_sheet.png`, with the tiles in `lineup/`;
   - the cut previews in `cut/`.
 
+## Implementation notes (SAN-112 definition pass)
+
+The owner, on the SVG Husk: "use opus high to define this character bit more use svg as reference". The pass compared the rig with the SVG at the same scale and fixed what read differently. The skeleton, hurt circles, scale, mass, stats and moves are unchanged, and `svg_rig.py` did not change, so the Shade's and the Ironclad's cuts stay fresh.
+
+**How it was compared.** `HuskSvgScreenshots` now poses the rig *as painted*: each limb segment turned so its drawn joints (its `seg` map) lie along the painted ones, the hands and feet as painted, the far leg reaching back to the painted far boot (IK), the far arm (hidden in the art) behind the trunk. It renders that beside the art at the art's own scale, on the art's canvas colour, from the fit (the painted sole on Kage's ground), and four close-ups at twice the scale, each centred through the bone that carries the piece. The cut itself (`tones.png`, `rebuilt.png`) already matched the trace closely. The differences were in the game:
+
+- **Colour.** The shared Hollow palette is a cooler blue-violet than the trace's plum and lavender. Every rim stroke and cloth plane read bluer and brighter than the art. `HollowArt.Husk` is the Husk's own style: the same 15 tone names, each painted in the area-weighted mean of the trace colours the cut snaps to it (measured over the figure: `Ink` #0F0914, `Shadow` #150D1E, `Cloth` #1F132A, `ClothMid` #2A193D, `ClothLit` #3A284C, `VioletDeep` #5B3D7A, `Rim` #6D4999, `RimBright` #8B65B4, `RimHot` #A87BDC, `SteelDark` #7E6A8A, `Steel` #CBB3DA, `White` #EBE8EC, rope #3B2B31 / #513E3D / #806761). The far colours, rim and glows are the shared ones. The Shade keeps `HollowArt.Style`, so it is pixel-identical.
+- **Ink blobs.** The torso's and the fists' underlays were `Ink`, darker than the cloth round them. They showed as black discs under the fist and a black hump in the chest wherever the arm moved off its painted place. The torso's is now `Shadow`, the torso's own colour. The fists' are smaller (r 22) and `Shadow`, and sit inside the fist.
+- **Doubled and cut edges.** The hood's region took a strip of the mantle and the top of the pauldron. When the head turned from the chest, the pauldron's arc showed twice and a straight edge of mantle rode on the head. The hood's region now stops at its back rim stroke (x 786) and leaves the pauldron (`minus ArmN_Upper`, the face too). The pauldron's region follows its arc instead of a chord. The mantle has two `ClothMid` underlays: under the hood's back edge, and under the pauldron's top. When the arm or head moves, the bites they leave in the mantle show mantle, not canvas.
+- **The far boot is the painted one.** The trace draws a far boot, smaller and darker (rim strokes round a canvas-dark inside). The far shin and foot are now cut from it (`ShinF`, `FootF`: an `add` fill in `Ink` for its inside, `seg 872 800 872 930`, `pin 872 930`) and painted as drawn, not darkened. The far thigh is hidden behind the cloak in the art, so it stays the near thigh in the far colours.
+- **The hakama keeps its length.** The painted thigh is long (a crouch). Mapped hip to knee onto Kage's thigh it came out at 0.77 of its painted length and lost its bulk. Its drawn knee is now 0.8 of the way down (`seg 668 588 599.2 749.6`), so the thigh is drawn at about 0.96 of its painted length and runs on past the knee pivot under the boot's cuff (the shin is drawn after it), as the painted hakama tucks into the boot.
+- **Finer cut.** `eps` 0.6 to 0.45 and `speck` 8 to 6: the outlines follow the trace more closely and small shading planes survive (Wraps 105 polygons, Plates 359).
+- **Soles.** The feet were cut to y 970 and 976, which took a strip of the ground shadow as a dark bar under each boot. They now stop at the painted sole (969).
+
+**Open questions, with the choices made.**
+- The spiky strokes under the forearm are kept as torn bandage ends on chains. The trace draws them as loose, hanging spikes in the bracer's colour.
+- No chest glow: the SVG has none.
+- Fist size is as painted. It does not break a pose: the joint-overlap test passes in all ten poses.
+- Stance: the fists family's idle (Kage's skeleton) is unchanged. The painted crouch is only in the review pose.
+
+**Tests.**
+- EditMode `HollowHuskSvgTests` gains three:
+  - `TheHuskIsPaintedInItsSvgsOwnPlumNotTheSharedBlueViolet`: the same tone names and rim as the shared style; the cloth and violet tones redder; two anchors from the trace; the Shade still painted only in the shared palette.
+  - `TheFarBootIsThePaintedFarBootNotADarkCopyOfTheNearOne`.
+  - `TheHakamaThighRunsOnPastTheKneeUnderTheBootCuff`.
+- Changed: `ItIsDrawnInTheHollowPaletteFromTheTrace` and `HollowHuskTests.ItReadsAsAHollowNotAnOrderSoldier` read `HollowArt.Husk` where they read `HollowArt.Style`. Their expectations are the same.
+- PlayMode `HuskSvgScreenshots`: writes to `Screenshots/review/SAN-112/define/`. It adds the painted pose and the same-scale side-by-side, and the close-ups (`closeups/`, `closeup_*.png`). `Render` takes an optional background colour; the default is unchanged, so `IroncladSvgScreenshots` and `HelmetTierScreenshots` render as before.
+- Review images in `Screenshots/review/SAN-112/define/`:
+  - `side_by_side.png`: the SVG, the painted pose, the bind pose, the fight idle, all at the SVG's scale;
+  - `before_after_painted_pose.png` and `before_after_<head|torso|arms_fists|legs>.png`: the SVG, the SVG round and this pass at twice the scale (the "before" is the previous cut rendered by this fixture);
+  - `kage_vs_hollow_husk_sheet.png` (idle, walk, attack, hit), `hollow_husk_closeup.png`, `hollow_husk_head.png`;
+  - `soft_motion.png`;
+  - `lineup_sheet.png` and `lineup/`;
+  - `cut/`.
+- Pixel check: every other line-up tile (the five Order foes, the Shade, the tutorial Hollow, Flicker) and Raikon and Kage in motion are identical to a render of the same fixture made before the change.
+
 ## Implementation notes (SAN-100 SVG redesign)
 
 The owner reviewed the smooth Ironclad (the SAN-100 rework) and sent a painting and its VTracer trace: "take unmovable components from svg and movable components design so that it responds to physics and wind". The Ironclad is now cut from that art with the SAN-76 pipeline, the first Order foe drawn this way. Its part set is three lines: `Skeleton`, `OrderArt.Dress`, `SvgRig.Build`. Nothing of it is drawn in code.
