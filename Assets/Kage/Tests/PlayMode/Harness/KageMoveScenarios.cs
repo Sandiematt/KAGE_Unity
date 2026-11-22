@@ -41,7 +41,7 @@ namespace Kage.Tests
         {
             "jab", "cross", "uppercut", "crouchPunch", "lunge", "kick1", "kick2", "axe", "sweep", "push",
             "throwWhiff", "throw", "airKick", "airPunch", "airSlash", "roll", "backflip", "groundPound", "getUp", "getUpFront",
-            "iai", "risingMoon", "cleave", "shadowStep", "lowReap", "counterStance", "counterSlash", "crescent", Fighter.CrimsonMoon,
+            "iai", "risingMoon", "cleave", "airCleave", "shadowStep", "lowReap", "counterStance", "counterSlash", "crescent", Fighter.CrimsonMoon,
         };
 
         static readonly (string name, float x, int frames, Action<ScriptedInput> script)[] Moves =
@@ -59,6 +59,7 @@ namespace Kage.Tests
             ("airKick", 0f, 120, s => s.Add(10, fwd: 1, dy: 1).Add(1, buttons: "K")),
             ("airPunch", 0f, 120, s => s.Add(10, fwd: 1, dy: 1).Add(1, buttons: "P")),
             ("airSlash", 0f, 120, s => s.Add(10, fwd: 1, dy: 1).Add(1, buttons: "S")),
+            ("airCleave", 0f, 120, s => s.Add(10, fwd: 1, dy: 1).Add(1, dy: -1, buttons: "S")),
             ("roll", -0.4f, 90, s => s.Add(1, tapFwd: true)),
             ("backflip", 0f, 100, s => s.Add(1, tapBack: true)),
             ("iai_risingMoon_cleave", 0f, 160, s => s.Add(1, buttons: "S").Add(10).Add(1, buttons: "S").Add(10).Add(1, buttons: "S")),

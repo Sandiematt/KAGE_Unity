@@ -40,7 +40,7 @@ namespace Kage
             {
                 m.jab, m.cross, m.uppercut, m.crouchPunch, m.lunge, m.kick1, m.kick2, m.axeKick, m.sweep, m.pushKick,
                 m.throwGrab, m.airKick, m.airPunch, m.airSlash, m.roll, m.backflip, m.groundPound, m.getUp,
-                m.iai, m.risingMoon, m.cleave, m.shadowStep, m.lowReap, m.counterStance, m.counterSlash, m.crescent,
+                m.iai, m.risingMoon, m.cleave, m.airCleave, m.shadowStep, m.lowReap, m.counterStance, m.counterSlash, m.crescent,
             };
             var start = PoseLib.Stance();
             foreach (var mv in all)

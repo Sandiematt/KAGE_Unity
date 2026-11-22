@@ -104,7 +104,8 @@ namespace Kage.Tests
             return h.ToString("x16");
         }
 
-        const string DamageHash = "3e61ce3c33d5b0c6";
+        // SAN-118 cleave rework: + katana|airCleave|10-17:12 (the air Kage Cleave, the ground cleave's 12 damage); nothing else changed
+        const string DamageHash = "d907a57a64f42077";
 
         [Test]
         public void No_move_damage_changed_in_the_pacing_pass()
