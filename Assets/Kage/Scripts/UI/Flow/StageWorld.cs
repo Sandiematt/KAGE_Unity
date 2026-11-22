@@ -327,7 +327,8 @@ namespace Kage
             if (phase == Phase.Over) return;
             _winner = cleared ? Player : null;
             Player.controlEnabled = false;
-            Hud.Announce(cleared ? "STRETCH CLEARED" : "FALLEN", cleared ? Palette.TrimBright : KMath.Hex("#FF4B4B"), 3.2f);
+            if (cleared) Hud.ShowInkBanner("Stretch cleared", FoeName, Ui.Gold);
+            else Hud.ShowInkBanner("Fallen", FoeName, KMath.Hex("#FF4B4B"), "敗");
             SetPhase(Phase.Over);
         }
 
