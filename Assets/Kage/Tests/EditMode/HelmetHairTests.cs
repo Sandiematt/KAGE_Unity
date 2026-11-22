@@ -7,8 +7,8 @@ namespace Kage.Tests
     /// Kage's own hair under each helmet (SAN-72 rework: the owner saw his hair poking through some helmets). Seam: the equipped
     /// helmet and armour on his <see cref="CharacterDef"/> -> the rig his part set builds. A helmet "hides" the hair when no
     /// part of the built rig is hair: neither the soft hair part nor any part named for hair.
-    /// The JS (<c>21-characters/kage/gear/head.js</c>, <c>sub-bosses/*/head.js</c>) draws a closed kabuto, a hood or a cap over the
-    /// head; only a band (Hachigane), the open Oni mask and the straw hat's lower hair leave it showing.
+    /// The SAN-72 tier redesign (the owner: "remove hair if needed") hides it under every hood, cap, hat and kabuto; only the brow
+    /// band (Hachigane) leaves his spiky hair out, as a shinobi's hitai-ate does.
     /// </summary>
     public class HelmetHairTests
     {
@@ -30,11 +30,11 @@ namespace Kage.Tests
 
         [TestCase("shiro_maki", true)]
         [TestCase("kuro_zukin", false)]
-        [TestCase("sugegasa", true)]        // the hair that hangs below the brim
+        [TestCase("sugegasa", false)]       // a grey head cloth under the hat
         [TestCase("hachigane", true)]       // a band round the brow
         [TestCase("kasumi_men", false)]
         [TestCase("tetsu_kabuto", false)]
-        [TestCase("oni_menpo", true)]       // a brow plate and horns; the crown is open
+        [TestCase("oni_menpo", false)]      // the tier redesign: a skull cap under the horns
         [TestCase("hoshi_kabuto", false)]
         [TestCase("shika_kabuto", false)]
         [TestCase("utsuro_kabuto", false)]
@@ -42,7 +42,7 @@ namespace Kage.Tests
         [TestCase("sumi_eboshi", false)]
         [TestCase("hisame_zukin", false)]
         [TestCase("raijin_kabuto", false)]
-        public void EachHelmetHidesOrKeepsKagesHairAsTheJsDraws(string helmet, bool hairShows)
+        public void EachHelmetHidesOrKeepsKagesHair(string helmet, bool hairShows)
         {
             Assert.AreEqual(hairShows, ShowsHair(Kage(helmet)), helmet);
         }

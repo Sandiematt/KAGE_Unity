@@ -31,6 +31,7 @@ PALETTES = {
         'steel': ('#4c4f55', '#868990', '#c4c7cc'),
         'straw': ('#3b3833', '#5e5a52', '#8a857a'),
         'ink': ('#141316', '#1d1c20', '#2a292e'),
+        'gauze': ('#6a6a72', '#9a9aa2', '#c6c6cc'),
     },
     'epic': {
         'rim': '#9a62f2',
@@ -237,18 +238,26 @@ class Helmet:
         self.id, self.look, self.tier, self.hair, self.summary = hid, look, tier, hair, summary
         self.pieces = []
 
+    def _name(self, name):
+        """Piece names are part names in the rig: a repeated name gets a number."""
+        taken = {p.name for p in self.pieces}
+        if name not in taken: return name
+        k = 2
+        while name + str(k) in taken: k += 1
+        return name + str(k)
+
     def cel(self, name, order, outline, tone, sd=5.0, hd=2.4, rim=True, glow=1.0, seam=1.6):
-        p = Piece(name, 'cel', order, outline, tone, sd, hd, rim, glow, seam=seam); self.pieces.append(p); return p
+        p = Piece(self._name(name), 'cel', order, outline, tone, sd, hd, rim, glow, seam=seam); self.pieces.append(p); return p
 
     def flat(self, name, order, outline, tone, which=1, alpha=1.0, glow=1.0):
-        p = Piece(name, 'flat', order, outline, tone, alpha=alpha, glow=glow, rim=False, which=which); self.pieces.append(p); return p
+        p = Piece(self._name(name), 'flat', order, outline, tone, alpha=alpha, glow=glow, rim=False, which=which); self.pieces.append(p); return p
 
     def cloth(self, name, order, outline, tone, chains, feel, sd=4.0, hd=2.0, rim=True, glow=1.0):
-        p = Piece(name, 'cloth', order, outline, tone, sd, hd, rim, glow, chains=chains, feel=feel); self.pieces.append(p); return p
+        p = Piece(self._name(name), 'cloth', order, outline, tone, sd, hd, rim, glow, chains=chains, feel=feel); self.pieces.append(p); return p
 
     def wrap(self, name, outline, tone, sd=6.0, hd=2.6, folds=()):
         """The tier-coloured neck wrap: on the chest, over the scarf wrap (order 103), outline in head-frame numbers at bind."""
-        p = Piece(name, 'cel', 103, outline, tone, sd, hd, True, bone='Chest')
+        p = Piece(self._name(name), 'cel', 103, outline, tone, sd, hd, True, bone='Chest')
         for f in folds: p.add(f, tone, 0)
         self.pieces.append(p); return p
 
@@ -452,6 +461,63 @@ def render(helmet, centre_uv=(0.0, 0.05), half=1.9, size=400, ss=3, bg=(42, 34, 
             img = Image.alpha_composite(img, layer)
     return img.resize((size, size), Image.LANCZOS)
 
+def _cross(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+
+def _hits(a, b, c, d):
+    d1, d2, d3, d4 = _cross(c, d, a), _cross(c, d, b), _cross(a, b, c), _cross(a, b, d)
+    return ((d1 > 0) != (d2 > 0)) and ((d3 > 0) != (d4 > 0)) and abs(d1) > 1e-12 and abs(d2) > 1e-12 and abs(d3) > 1e-12 and abs(d4) > 1e-12
+
+
+def problem(pts):
+    """Why an outline would not triangulate (None when it is fine): too few points, no area, or edges that cross."""
+    n = len(pts)
+    if n < 3: return 'fewer than 3 points'
+    if abs(signed_area(pts)) * R * R < 4.0: return 'area under 4 px2'
+    for i in range(n):
+        a, b = pts[i], pts[(i + 1) % n]
+        for j in range(i + 2, n):
+            if i == 0 and j == n - 1: continue
+            c, d = pts[j], pts[(j + 1) % n]
+            if _hits(a, b, c, d): return 'edges %d and %d cross' % (i, j)
+    return None
+
+def triangulate(pts):
+    """MeshKit.Triangulate (ear clipping), to check an outline before Unity sees it."""
+    n = len(pts)
+    if n < 3: return []
+    ccw = signed_area(pts) > 0
+    idx = list(range(n)) if ccw else list(range(n - 1, -1, -1))
+    tris = []
+    def cr(a, b): return a[0] * b[1] - a[1] * b[0]
+    def intri(p, a, b, c):
+        d1 = cr((b[0] - a[0], b[1] - a[1]), (p[0] - a[0], p[1] - a[1])); d2 = cr((c[0] - b[0], c[1] - b[1]), (p[0] - b[0], p[1] - b[1]))
+        d3 = cr((a[0] - c[0], a[1] - c[1]), (p[0] - c[0], p[1] - c[1]))
+        neg = d1 < 0 or d2 < 0 or d3 < 0; pos = d1 > 0 or d2 > 0 or d3 > 0
+        return not (neg and pos)
+    guard = 0
+    while len(idx) > 3 and guard < 4000:
+        guard += 1
+        clipped = False
+        for i in range(len(idx)):
+            ia, ib, ic = idx[(i - 1) % len(idx)], idx[i], idx[(i + 1) % len(idx)]
+            a, b, c = pts[ia], pts[ib], pts[ic]
+            if cr((b[0] - a[0], b[1] - a[1]), (c[0] - b[0], c[1] - b[1])) <= 1e-9: continue
+            if any(intri(pts[q], a, b, c) for q in idx if q not in (ia, ib, ic)): continue
+            tris.append((ia, ib, ic)); idx.pop(i); clipped = True; break
+        if not clipped: break
+    for i in range(1, len(idx) - 1): tris.append((idx[0], idx[i], idx[i + 1]))
+    return tris
+
+
+def tiles(ref):
+    """True when MeshKit's triangulation of a ref-px outline covers exactly its area."""
+    tris = triangulate(ref)
+    A = abs(signed_area(ref))
+    S = sum(abs(signed_area([ref[a], ref[b], ref[c]])) for a, b, c in tris)
+    return abs(A - S) <= A * 0.01 + 0.5, A, S
+
 # ------------------------------------------------------------------------------------------------ C# export
 
 def cs_floats(ref):
@@ -460,18 +526,20 @@ def cs_floats(ref):
 
 def export_cs(helmets, path):
     tiers = {'common': 'Common', 'epic': 'Epic', 'trophy': 'Trophy', 'legendary': 'Legendary', 'god': 'GodMode'}
-    hairs = {'hidden': 'Hidden', 'kept': 'Kept', 'below': 'BelowBrim'}
+    hairs = {'hidden': 'Hidden', 'kept': 'Kept'}
     L = []
     L.append('// GENERATED by Tools/helmet_art/build.py from Tools/helmet_art/helmets.py (SAN-72 tier redesign). Do not edit by hand:')
     L.append('// change the design there, run `python Tools/helmet_art/build.py export`, and re-render the tiles (HelmetTierScreenshots).')
     L.append('// Outlines and chains are in reference px (KageModel.P); tones name an entry of the tier palette (HelmetTiers.Palette).')
+    L.append('// The design notes behind each helmet: docs/research/helmet-design.md.')
     L.append('namespace Kage')
     L.append('{')
-    L.append('    static partial class HelmetDesigns')
+    L.append('    public static partial class HelmetDesigns')
     L.append('    {')
     L.append('        static readonly HelmetDesign[] Generated =')
     L.append('        {')
     for h in helmets:
+        L.append(f'            // {h.id} ({h.tier}): {h.summary}')
         L.append(f'            new HelmetDesign("{h.id}", "{h.look}", HelmetTier.{tiers[h.tier]}, HairUnderHelmet.{hairs[h.hair]}, new[]')
         L.append('            {')
         for p in h.pieces:

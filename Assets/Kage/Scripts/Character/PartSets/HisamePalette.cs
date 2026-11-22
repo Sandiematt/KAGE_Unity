@@ -15,7 +15,7 @@ namespace Kage
         public static readonly Color RainDeep = KMath.Hex("#07090C");        // RAIN[0]
         public static readonly Color RainLit = KMath.Hex("#212A35");         // RAIN[2]: a lit fold, the strand rows
         public static readonly Color RainFar = KMath.Hex("#0B0F14");         // the same on the far side of the body
-        public static readonly Color Hood = KMath.Hex("#18202B");            // the rain hood (HelmetLooks.RainHood)
+        public static readonly Color Hood = KMath.Hex("#18202B");            // the rain hood (SAN-72 Hisame Zukin, before the tier redesign)
         public static readonly Color Cape = KMath.Hex("#202A36");            // the mino's strands
         public static readonly Color CapeDeep = KMath.Hex("#141B24");
         public static readonly Color Lacquer = KMath.Hex("#060607");         // SUB_LACQ: the visor, the tube
