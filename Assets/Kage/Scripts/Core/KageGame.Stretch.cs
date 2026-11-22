@@ -132,8 +132,8 @@ namespace Kage
             {
                 _stretchEnded = true;
                 player.controlEnabled = false;
-                if (s.Cleared) Hud.Announce("STRETCH CLEARED", Palette.TrimBright, 3.2f);
-                else Hud.Announce("FALLEN", KMath.Hex("#FF4B4B"), 3.2f);
+                if (s.Cleared) Hud.ShowInkBanner("Stretch cleared", s.Data.Name, Ui.Gold);
+                else Hud.ShowInkBanner("Fallen", s.Data.Name, KMath.Hex("#FF4B4B"), "敗");
                 Hud.Banner("PRESS  R  TO PLAY THE ROAD AGAIN", Color.white, 30f);
             }
             if (_stretchEnded && s.Cleared && player.state != FState.Victory && player.Grounded && !player.Busy) player.Win();
