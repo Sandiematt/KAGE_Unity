@@ -140,8 +140,8 @@ namespace Kage.Tests
         public void ItIsDrawnInTheHollowPaletteFromTheTrace()
         {
             var rig = Rig();
-            var palette = HollowArt.Style.tones.Values.ToList();
-            var far = palette.Select(c => HollowArt.Style.far(c)).ToList();
+            var palette = HollowArt.Husk.tones.Values.ToList();
+            var far = palette.Select(c => HollowArt.Husk.far(c)).ToList();
             foreach (var p in rig.parts)
             {
                 Assert.IsNotNull(p.polys, p.name + " is cut from the trace");
@@ -152,11 +152,11 @@ namespace Kage.Tests
             Assert.AreEqual(HollowPalette.Rim, rig.rimColor, "the Hollows' violet back-light");
             Assert.AreEqual(HollowArt.EyeGlow, Part(rig, "Eye").glow, 1e-6f, "the cold white eye glows");
             Assert.AreEqual(PartRole.Eye, Part(rig, "Eye").role);
-            Assert.IsTrue(Part(rig, "Eye").polys.All(q => q.col == HollowArt.Style.tones["White"] || q.col == HollowArt.Style.tones["Steel"]), "the eye is the trace's white");
-            var rope = new[] { "RopeDark", "Rope", "RopeLit" }.Select(t => HollowArt.Style.tones[t]).ToList();
+            Assert.IsTrue(Part(rig, "Eye").polys.All(q => q.col == HollowArt.Husk.tones["White"] || q.col == HollowArt.Husk.tones["Steel"]), "the eye is the trace's white");
+            var rope = new[] { "RopeDark", "Rope", "RopeLit" }.Select(t => HollowArt.Husk.tones[t]).ToList();
             Assert.Greater(Part(rig, "Shimenawa").polys.Count(q => rope.Contains(q.col)), 10, "the shimenawa is the trace's twisted rope");
             for (int i = 1; i <= 3; i++)
-                Assert.IsTrue(Part(rig, "Shide_" + i).polys.Any(q => q.col == HollowArt.Style.tones["White"] || q.col == HollowArt.Style.tones["Steel"]), "white paper shide " + i);
+                Assert.IsTrue(Part(rig, "Shide_" + i).polys.Any(q => q.col == HollowArt.Husk.tones["White"] || q.col == HollowArt.Husk.tones["Steel"]), "white paper shide " + i);
         }
 
         [Test]
@@ -175,6 +175,57 @@ namespace Kage.Tests
             Assert.AreEqual(Vector2.Dot(plain(q) - a, along), Vector2.Dot(wide(q) - a, along), 1e-5f, "the same place along the bone");
             Assert.AreEqual(Vector2.Dot(plain(q) - a, across) * 1.5f, Vector2.Dot(wide(q) - a, across), 1e-5f, "half as wide again across it");
             Assert.AreEqual(30f * 0.8f / KageModel.RefScale * 1.5f, Mathf.Abs(Vector2.Dot(wide(q) - a, across)), 1e-5f, "the fit's scale times the factor");
+        }
+
+        // ---- the definition pass: closer to the SVG ----
+
+        [Test]
+        public void TheHuskIsPaintedInItsSvgsOwnPlumNotTheSharedBlueViolet()
+        {
+            var husk = HollowArt.Husk;
+            var shared = HollowArt.Style;
+            CollectionAssert.AreEquivalent(shared.tones.Keys, husk.tones.Keys, "the same tone names: the config's tones need no change");
+            Assert.AreEqual(shared.rim, husk.rim, "the Hollows' shared back-light");
+            // the trace's cloth and violet light lean to red beside the shared palette's blue-violet
+            foreach (var t in new[] { "Ink", "Shadow", "Cloth", "ClothMid", "ClothLit", "VioletDeep", "Rim", "RimBright", "RimHot" })
+                Assert.Less(husk.tones[t].b - husk.tones[t].r, shared.tones[t].b - shared.tones[t].r, t + " is the SVG's warmer violet");
+            Assert.AreEqual(KMath.Hex("#2A193D"), husk.tones["ClothMid"], "the hood's plum, the trace's most used cloth");
+            Assert.AreEqual(KMath.Hex("#A87BDC"), husk.tones["RimHot"], "the lavender rim strokes");
+            var shade = CharacterCatalog.PartSet(CharacterCatalog.Get("hollow_shade").partSet).Build(CharacterCatalog.Get("hollow_shade"));
+            var sharedCols = shared.tones.Values.Concat(shared.tones.Values.Select(shared.far)).ToList();
+            foreach (var p in shade.parts)
+                foreach (var (_, col) in p.polys)
+                    Assert.IsTrue(sharedCols.Contains(col), "the Shade keeps the shared palette: " + p.name);
+        }
+
+        [Test]
+        public void TheFarBootIsThePaintedFarBootNotADarkCopyOfTheNearOne()
+        {
+            var rig = Rig();
+            var data = Data;
+            foreach (var (part, region) in new[] { ("LegF_Shin", "ShinF"), ("LegF_Foot", "FootF") })
+            {
+                var spec = data.parts.Single(p => p.name == part);
+                Assert.AreEqual(region, spec.region, part + " is cut from the painted far boot");
+                Assert.IsFalse(spec.far, part + " is painted as the art draws it, not darkened");
+                Assert.Greater(data.regions[region].polys.Count, 5, region + ": the boot's own shading planes and rim strokes");
+            }
+            // the far thigh is hidden in the art (behind the cloak): it stays the near one in the far colours
+            Assert.IsTrue(data.parts.Single(p => p.name == "LegF_Thigh").far);
+            var palette = HollowArt.Husk.tones.Values.ToList();
+            Assert.IsTrue(Part(rig, "LegF_Shin").polys.All(q => palette.Contains(q.col)), "the far boot in the near colours");
+        }
+
+        [Test]
+        public void TheHakamaThighRunsOnPastTheKneeUnderTheBootCuff()
+        {
+            var rig = Rig();
+            Vector2 hip = rig.pivot[(int)B.LegNU], knee = rig.pivot[(int)B.LegNL];
+            Vector2 along = (knee - hip).normalized;
+            float len = (knee - hip).magnitude;
+            float reach = Part(rig, "LegN_Thigh").polys.SelectMany(q => q.pts).Max(v => Vector2.Dot(v - hip, along));
+            Assert.Greater(reach, len * 1.12f, "the painted hakama keeps most of its length: it runs on past the knee pivot");
+            Assert.Greater(Part(rig, "LegN_Shin").order, Part(rig, "LegN_Thigh").order, "and the boot's cuff covers its hem");
         }
 
         // ---- the heavy Hollow ----
