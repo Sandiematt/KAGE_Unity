@@ -11,7 +11,7 @@ namespace Kage
         WeaponRender,
         /// <summary>The weapon the JS draws itself on a canvas (<c>drawWeaponIcon</c>): every other weapon.</summary>
         WeaponIcon,
-        /// <summary>The helmet the JS draws into its tile (<c>paintIcon</c>: a head with the helmet on).</summary>
+        /// <summary>A head with the helmet on: for the 14 Act I helmets rendered from the game's rig (SAN-72 tiers, <c>HelmetTierScreenshots</c>), for later acts the JS <c>paintIcon</c> export.</summary>
         HelmetIcon,
         /// <summary>The armour the JS draws into its card and results chip: Kage wearing it.</summary>
         ArmorIcon,
