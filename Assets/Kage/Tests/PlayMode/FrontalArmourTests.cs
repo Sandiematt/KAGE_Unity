@@ -135,9 +135,15 @@ namespace Kage.Tests
             front.Run(4);
             front.Ronin.ReceiveHit(Incoming(front.Kage, 0f));
             Assert.AreEqual(FState.Idle, front.Ronin.state, "Kage is in front");
+            // SAN-117: disposed before the next fight is built. Left in place, its bodies stand exactly where the next fight's do,
+            // and the physics step pushes the two fights' fighters apart in whatever direction it picks: up to 0.7 m in 4 frames,
+            // sometimes carrying Kage past the foe ("Kage is behind" failed once).
+            front.Dispose();
+            _fights.Remove(front);
 
             var back = Duel();
             back.Run(4);
+            Assert.Less(back.Kage.Pos.x, back.Ronin.Pos.x, "Kage still stands on the foe's left");
             TurnAway(back);
             back.Ronin.ReceiveHit(Incoming(back.Kage, 0f));
             Assert.AreEqual(FState.Hitstun, back.Ronin.state, "Kage is behind");
