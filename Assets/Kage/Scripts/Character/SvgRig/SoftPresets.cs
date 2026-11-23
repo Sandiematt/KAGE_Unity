@@ -21,7 +21,12 @@ namespace Kage
         /// <summary>A thin tassel or cord (Raikon's hat tassels).</summary>
         public static ChainFeel Tassel => new() { stiffRoot = 0.18f, stiffTip = 0.03f, drag = 1.6f, gravity = 9f, breeze = 0.5f };
 
-        public static readonly string[] Names = { "Cape", "Tails", "Strip", "Plates", "Tassel" };
+        /// <summary>A long tail of hair (Raikon's ponytail): a little looser than SAN-71's first ponytail, light, follows the air.</summary>
+        public static ChainFeel Hair => new() { stiffRoot = 0.24f, stiffTip = 0.035f, drag = 2.2f, gravity = 4.5f, breeze = 0.9f };
+        /// <summary>A fur mantle's tufts (Raikon's; SAN-71's first fur, heavier so its tufts hang): stiff, they ruffle rather than swing.</summary>
+        public static ChainFeel Fur => new() { stiffRoot = 0.45f, stiffTip = 0.1f, drag = 2.5f, gravity = 6f, breeze = 0.5f };
+
+        public static readonly string[] Names = { "Cape", "Tails", "Strip", "Plates", "Tassel", "Hair", "Fur" };
 
         public static ChainFeel Get(string name) => name switch
         {
@@ -30,6 +35,8 @@ namespace Kage
             "Strip" => Strip,
             "Plates" => Plates,
             "Tassel" => Tassel,
+            "Hair" => Hair,
+            "Fur" => Fur,
             _ => throw new ArgumentException("no soft-part preset " + name + " (" + string.Join(", ", Names) + ")"),
         };
     }

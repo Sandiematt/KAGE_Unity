@@ -324,7 +324,7 @@ namespace Kage.Tests
         {
             var d = Def();
             Assert.Greater(d.bladeLength, 0f, "a per-character blade length overrides the family's");
-            Assert.AreEqual(RaikonModel.PaintedBladeLength, d.bladeLength, 1e-5f);
+            Assert.AreEqual(RaikonPartSet.PaintedBladeLength, d.bladeLength, 1e-5f);
             Assert.AreEqual(0.875f, d.bladeLength, 0.01f, "his painted blade, guard to tip, in Sword-bone units");
             Assert.Less(d.bladeLength, TachiMoves.BladeLength * 0.7f, "far shorter than the family's blade");
             Assert.AreEqual(0f, CharacterCatalog.Get("order_footman").bladeLength, "every other character keeps its family's blade");

@@ -12,8 +12,14 @@ optionally, the painting it was traced from, and writes one text resource the ga
   3. figure  : the silhouette: the trace's non-background colours, plus (if the config names the painting) every
                pixel of the painting that differs from its background, so dark cloth the trace merged with the
                canvas (a cape's black inside) is kept; such pixels take the config's fill tone;
+               `silhouette.grow` px grows it in the fill tone: the trace's ink outline round the figure where the trace paints
+               canvas and outline in one colour (SAN-71's Raikon);
   4. specks  : islands of a tone smaller than `speck` px^2 take the tone around them (no trace specks);
   5. regions : each region = its rough polygon(s) & figure [& tones] - the regions listed in its `minus`;
+               a region with `painting: [tones]` then takes its tones from the painting (nearest of those tones), where the
+               trace breaks a soft gradient (hair, fur, a face lost in the canvas) into specks; a region with
+               `inpaint: {under, axis, reach}` also covers what the regions `under` hide of it, each sample in the tone of its
+               own nearest sample along the axis, so panels and lames run on under a piece that moves (SAN-71);
   6. polygons: per region, a base layer (the region's outline in the base tone) and then every island of every
                other tone, holes filled, painted outermost first (an island inside another's hole is painted
                after it), so no polygon has a hole and neighbours never leave a crack (the base shows through a
@@ -24,7 +30,10 @@ optionally, the painting it was traced from, and writes one text resource the ga
                input (SVG, config, painting and this tool), which the EditMode test recomputes (stale = red).
 
 Previews go to the config's `preview` folder: regions.png (each region tinted, magenta = figure no region draws),
-tones.png (the cleaned tone image) and rebuilt.png (the polygons painted back, which should match tones.png).
+tones.png (the cleaned tone image) and rebuilt.png (the polygons painted back, which should match tones.png); with
+`previewSvg` also svg.png, the whole trace at 1x as drawn (the review sheets set the rig beside it).
+Every option added after the Shade (SAN-71: grow, painting, inpaint, previewSvg) is off unless a config sets it, so the
+Shade's, the Husk's and the Ironclad's cuts come out the same (only their hash of this file changes).
 Coordinates are SVG px (x right, y down). Every loop over floats has a fixed cap.
 """
 import json, os, re, sys
@@ -335,9 +344,84 @@ class Cutter:
         fill = self.tone_names.index(sc.get('fill', self.tone_names[0]))
         T = T.copy()
         for m, t in added: T[(m == 1) & (T < 0)] = t
+        # the trace's own ink outline round the figure, where it merges with a canvas of the same colour (SAN-71: Raikon's trace
+        # paints canvas and outline in one black): the silhouette grown by `grow` px, in the fill tone. Off (0) by default.
+        if sc.get('grow', 0) > 0:
+            sil = cv2.dilate(sil, disk(sc['grow'] * S))
         T[(sil == 1) & (T < 0)] = fill
         T[sil == 0] = -1
         return sil, T
+
+    def painted_tones(self, T, masks):
+        """Regions with `painting: [tones]` (SAN-71) take their tones from the painting instead of the trace: every sample of the
+        region gets the nearest (CIELAB) of the listed tones to the painting's colour there, so a trace that breaks a soft gradient
+        (hair, fur) into mottled specks reads as the painting's smooth strands, in the same tones. Returns (T, changed)."""
+        regs = [(n, r) for n, r in self.cfg['regions'].items() if r.get('painting')]
+        if not regs: return T, False
+        if not self.painting: raise ValueError('a region takes its tones from the painting, but the config names no painting')
+        S = self.S
+        im = cv2.imread(self.painting)
+        sx, sy = im.shape[1] / self.size[0], im.shape[0] / self.size[1]
+        # the crop's window of the painting, resampled straight to the sample grid (cubic), lightly blurred against its grain
+        M = np.float32([[sx / S, 0, self.x0 * sx + (sx / S - 1) * 0.5], [0, sy / S, self.y0 * sy + (sy / S - 1) * 0.5]])
+        up = cv2.warpAffine(im, M, (self.w, self.h), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
+        up = cv2.GaussianBlur(up, (0, 0), self.cfg.get('paintingBlur', 0.6) * S)
+        img_lab = cv2.cvtColor(up.astype(np.float32) / 255.0, cv2.COLOR_BGR2LAB)
+        refs = {}
+        for name, hexes, *_ in self.cfg['tones']:
+            refs[name] = lab([h.upper() for h in (hexes if isinstance(hexes, list) else [hexes])])
+        T = T.copy()
+        for n, r in regs:
+            m = masks[n] == 1
+            names = r['painting']
+            cand, idx = [], []
+            for t in names:
+                for v in refs[t]: cand.append(v); idx.append(self.tone_names.index(t))
+            cand = np.array(cand, np.float32); idx = np.array(idx, np.int16)
+            px = img_lab[m]
+            best = np.zeros(len(px), np.int16)
+            for a in range(0, len(px), 1 << 20):              # in blocks: a big region holds millions of samples
+                d = ((px[a:a + (1 << 20), None, :] - cand[None, :, :]) ** 2).sum(2)
+                best[a:a + (1 << 20)] = idx[np.argmin(d, 1)]
+            T[m] = best
+        return T, True
+
+    def inpaint(self, T, sil, masks, rough):
+        """What a region's painting hides behind a piece that moves (SAN-71: the skirt under the tachi, the torso under the arm):
+        a region with `inpaint: {"under": [regions], "axis": "y" | "x", "reach": px}` also covers the samples of its rough polygon
+        that those regions draw, each in the tone of the region's own nearest sample straight along the axis (above or below, or
+        left or right) within `reach` px, so panels and lames run on under the piece instead of leaving a hole when it moves.
+        Returns the region's own tone image (the others keep theirs) and grows its mask; samples with no source in reach stay out."""
+        out = {}
+        for n, r in self.cfg['regions'].items():
+            spec = r.get('inpaint')
+            if not spec: continue
+            under = np.zeros_like(sil)
+            for o in spec['under']: under |= masks[o]
+            hole = rough[n] & sil & under & (1 - masks[n])
+            src = masks[n]
+            axis = spec.get('axis', 'y')
+            reach = int(spec.get('reach', 60) * self.S)
+            Th, hl, sr = (T, hole, src) if axis == 'y' else (T.T, hole.T, src.T)
+            got = np.full(Th.shape, -1, np.int16)
+            H_ = Th.shape[0]
+            ys = np.arange(H_)
+            for x in np.nonzero(hl.any(axis=0))[0]:
+                col_h, col_s = hl[:, x].astype(bool), sr[:, x].astype(bool)
+                if not col_s.any(): continue
+                above = np.maximum.accumulate(np.where(col_s, ys, -1))
+                below = np.minimum.accumulate(np.where(col_s, ys, H_ * 2)[::-1])[::-1]
+                da = np.where(above >= 0, ys - above, 10 ** 9)
+                db = np.where(below < H_, below - ys, 10 ** 9)
+                pick = np.where(da <= db, above, below)
+                ok = col_h & (np.minimum(da, db) <= reach)
+                got[ok, x] = Th[pick[ok], x]
+            if axis != 'y': got = got.T
+            ok = got >= 0
+            Tn = T.copy(); Tn[ok] = got[ok]
+            out[n] = Tn
+            masks[n] = (masks[n] | ok).astype(np.uint8)
+        return out
 
     def despeck(self, T):
         S = self.S
@@ -514,6 +598,9 @@ def main(cfg_path):
     sil, T = cut.figure(T)
     T = cut.despeck(T)
     masks, rough = cut.region_masks(sil, T)
+    T, painted = cut.painted_tones(T, masks)
+    if painted: T = cut.despeck(T)
+    Treg = cut.inpaint(T, sil, masks, rough)
 
     eps = cfg.get('eps', 0.45)
     soft_regions = set()
@@ -525,7 +612,7 @@ def main(cfg_path):
         rb = cut.tone_names.index(r['base']) if 'base' in r else base_tone
         if 'tones' in r and 'base' not in r: rb = None                     # a tone cut (eye, crack): no base layer
         soft = n in soft_regions
-        lay = cut.layers(masks[n], T, rb, r.get('eps', eps), cfg.get('resample', 8) if soft else 0, cfg.get('softCell', 24) if soft else 0)
+        lay = cut.layers(masks[n], Treg.get(n, T), rb,r.get('eps', eps), cfg.get('resample', 8) if soft else 0, cfg.get('softCell', 24) if soft else 0)
         outline = cut.contour(fill_holes(masks[n]), max(1.0, eps * 2))
         outline = max(outline, key=lambda p: abs(poly_area(p))) if outline else None
         regions[n] = (outline, lay)
@@ -574,6 +661,16 @@ def main(cfg_path):
     prev = os.path.join(ROOT, cfg['preview']) if cfg.get('preview') else None
     if not prev: return
     os.makedirs(prev, exist_ok=True)
+    if cfg.get('previewSvg'):
+        # the trace itself at 1x, whole, as drawn (the review sheets set the rig beside it)
+        W1, H1 = int(cut.size[0]), int(cut.size[1])
+        art = np.zeros((H1, W1, 3), np.uint8)
+        for d, col in cut.paths:
+            m = np.zeros((H1, W1), np.uint8)
+            for s in parse_path(d):
+                t = np.zeros_like(m); cv2.fillPoly(t, [np.round(s * 4).astype(np.int32)], 1, shift=2); m ^= t
+            art[m == 1] = (int(col[5:7], 16), int(col[3:5], 16), int(col[1:3], 16))
+        cv2.imwrite(os.path.join(prev, 'svg.png'), art)
     tone_bgr = np.array([[int(c[5:7], 16), int(c[3:5], 16), int(c[1:3], 16)] for c in
                          [(t[2] if len(t) > 2 else (t[1][0] if isinstance(t[1], list) else t[1])) for t in cfg['tones']]], np.uint8)
     bgc = np.array([40, 34, 42], np.uint8)
