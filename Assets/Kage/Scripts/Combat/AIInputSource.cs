@@ -198,7 +198,8 @@ namespace Kage
         /// </summary>
         public static bool WallBehind(Fighter self, Fighter opp)
         {
-            return self.AtWall && Mathf.Sign(self.Pos.x) == -Mathf.Sign(opp.Pos.x - self.Pos.x);
+            int wall = self.WallSide;
+            return wall != 0 && wall == -Mathf.Sign(opp.Pos.x - self.Pos.x);
         }
 
         /// <summary>
@@ -207,7 +208,8 @@ namespace Kage
         /// </summary>
         public static bool Cornered(Fighter self, Fighter opp)
         {
-            return self.AtWall && Mathf.Sign(opp.Pos.x - self.Pos.x) != Mathf.Sign(-self.Pos.x);
+            int wall = self.WallSide;
+            return wall != 0 && Mathf.Sign(opp.Pos.x - self.Pos.x) != -wall;
         }
 
         static void Press(ref FrameInput o, Btn b)
