@@ -28,21 +28,22 @@ namespace Kage.Tests
         // ---- weapons ----
 
         [Test]
-        public void Weapons_list_the_shop_and_the_Act_I_boss_weapon_and_nothing_else()
+        public void Weapons_list_the_shop_weapons_and_nothing_else()
         {
             CollectionAssert.AreEqual(
-                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "raiko_no_tachi" },
+                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" },
                 Weapons(Dev()));
             CollectionAssert.AreEqual(Weapons(Dev()), Weapons(Fresh()), "what is owned does not change what is listed");
         }
 
         [TestCase("shinsen")]
+        [TestCase("raiko_no_tachi")]
         [TestCase("kagehira_yurei")]
         [TestCase("mugen_no_ha")]
-        [TestCase("iwakudaki")]
-        public void A_weapon_with_no_Unity_implementation_is_not_listed_even_when_dev_mode_owns_it(string id)
+        public void A_withheld_boss_weapon_is_not_listed_even_when_dev_mode_owns_it(string id)
         {
             Assert.IsNotNull(GameRules.Item(GearKind.Weapons, id), "the table row stays for later acts");
+            Assert.IsTrue(GameRules.IsWithheld(GearKind.Weapons, id));
             Assert.IsTrue(GameRules.Owns(Dev(), GearKind.Weapons, id), "and so does the rules' ownership");
             CollectionAssert.DoesNotContain(Weapons(Dev()), id);
             Assert.AreEqual(ArmoryClass.LaterAct, ArmoryListing.Classify(GearKind.Weapons, id));
@@ -53,15 +54,17 @@ namespace Kage.Tests
         [Test]
         public void Helmets_list_the_starter_the_ten_shop_helmets_and_the_three_Act_I_rewards()
         {
-            var shop = new[] { "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin" };
-            var rewards = new[] { "raijin_kabuto", "sumi_eboshi", "hisame_zukin" };
+            var shop = new[] { "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto" };
+            var rewards = new[] { "sumi_eboshi", "hisame_zukin" };
+            var legendary = new[] { "utsuro_kabuto", "shikko_zukin", "raijin_kabuto" };
             var listed = Helmets(Dev());
             Assert.AreEqual(14, listed.Length);
             Assert.AreEqual("shiro_maki", listed[0], "the starter first");
-            CollectionAssert.AreEquivalent(new[] { "shiro_maki" }.Concat(shop).Concat(rewards).ToArray(), listed);
+            CollectionAssert.AreEquivalent(new[] { "shiro_maki" }.Concat(shop).Concat(rewards).Concat(legendary).ToArray(), listed);
             foreach (var r in rewards)
                 foreach (var s in shop)
                     Assert.Less(System.Array.IndexOf(listed, s), System.Array.IndexOf(listed, r), r + " after " + s);
+            CollectionAssert.AreEquivalent(legendary, listed.Skip(listed.Length - 3).ToArray(), "the legendary helmets last");
         }
 
         [TestCase("hakobi_gasa")]
@@ -179,7 +182,7 @@ namespace Kage.Tests
                     all++;
                     if (ArmoryListing.Listed(kind, it.Id)) listed++;
                 }
-            // 11 weapons + 19 helmets + 18 armours (the shop and the trophies) before; 7 + 14 + 10 now
+            // 11 weapons + 19 helmets + 18 armours (the shop and the trophies) before; 7 + 14 + 10 now (the four boss blades are withheld)
             Assert.AreEqual(48, all);
             Assert.AreEqual(31, listed);
         }

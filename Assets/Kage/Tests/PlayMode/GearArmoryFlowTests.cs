@@ -126,7 +126,7 @@ namespace Kage.Tests
             yield return null;
             flow.Controller.OpenArmory();
             yield return null;
-            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "raiko_no_tachi" })
+            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" })
             {
                 Armory.Select(id);
                 Assert.AreEqual("big_w_" + id, Armory.View.PreviewKey, id);

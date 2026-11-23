@@ -68,6 +68,13 @@ namespace Kage
             if (self.state == FState.Down) { if (!waiting && R() < 0.08f * level) o.p = true; return o; }
             if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; _parryTry = ParryAttempt = false; return o; }
 
+            // a reaction ability (Raikon's Iron Guard vs spam, Sky-Splitter vs a jump) answers the moment its situation holds
+            if (!passive && !waiting && !self.Busy && _guardFrames <= 0)
+            {
+                int slot = ReactiveAbility(self, dist);
+                if (slot > 0) { _plan.Clear(); _curLeft = 0; _comboLeft = 0; o.ability = slot; return o; }
+            }
+
             // react to the opponent's technique: guard high/low (a profile answers once per attack on its own rates, AIInputSource.Profile.cs)
             if (Profiled) { if (!passive) ReactProfiled(self, opp, dist); }
             else if (!passive && _guardFrames <= 0 && opp.IsAttacking && opp.move != null && !self.IsAttacking && self.Grounded)

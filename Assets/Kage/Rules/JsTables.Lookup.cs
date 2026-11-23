@@ -59,10 +59,20 @@ namespace Kage.Rules
             return Find(enemyById, id);
         }
 
-        /// <summary>The tier with this id (starter, common, rare, epic, trophy, boss), or null.</summary>
+        /// <summary>
+        /// A Unity-only tier above every JS tier: the legendary helmets (<see cref="GameRules.LegendaryHelmets"/>) are listed
+        /// last in the Armory, under a rainbow tier line, with the best helmet stats of the tables.
+        /// </summary>
+        public static readonly JsTier Legendary = new JsTier { Id = "legendary", Rank = 6, Label = "Legendary" };
+
+        /// <summary>The tier with this id (starter, common, rare, epic, trophy, boss, and Unity's legendary), or null.</summary>
         public static JsTier Tier(string id)
         {
-            if (tierById == null) tierById = Index(GearTiers, t => t.Id);
+            if (tierById == null)
+            {
+                tierById = Index(GearTiers, t => t.Id);
+                tierById[Legendary.Id] = Legendary;
+            }
             return Find(tierById, id);
         }
 

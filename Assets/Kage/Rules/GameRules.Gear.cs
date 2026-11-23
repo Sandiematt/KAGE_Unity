@@ -48,6 +48,15 @@ namespace Kage.Rules
             }
         }
 
+        /// <summary>
+        /// The legendary helmets (owner's call, after the SAN-72 helmet tiers): Utsuro Kabuto, Shikko Zukin and Raijin Kabuto. Their
+        /// tier is Unity's <see cref="JsTables.Legendary"/> whatever the JS row says, so the Armory lists them last; they give the
+        /// best defence and health of every helmet in the tables (<see cref="GearDef"/>, <see cref="GearHp"/>).
+        /// </summary>
+        public static readonly HashSet<string> LegendaryHelmets = new HashSet<string> { "utsuro_kabuto", "shikko_zukin", "raijin_kabuto" };
+
+        public static bool IsLegendary(GearKind kind, string id) { return kind == GearKind.Helmets && id != null && LegendaryHelmets.Contains(id); }
+
         /// <summary>The table row for an item, or null for an unknown id.</summary>
         public static GearItem Item(GearKind kind, string id)
         {
@@ -65,7 +74,7 @@ namespace Kage.Rules
             if (g == null) return null;
             return new GearItem
             {
-                Kind = kind, Id = g.Id, Name = g.Name, Tier = g.Tier, Hint = g.Hint, Price = g.Price, Gems = g.Gems,
+                Kind = kind, Id = g.Id, Name = g.Name, Tier = IsLegendary(kind, g.Id) ? JsTables.Legendary.Id : g.Tier, Hint = g.Hint, Price = g.Price, Gems = g.Gems,
                 Exclusive = g.Exclusive, Enemy = g.Enemy, NgOnly = g.NgOnly, Retired = g.Retired, Gear = g,
             };
         }

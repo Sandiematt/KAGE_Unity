@@ -280,6 +280,30 @@ namespace Kage
         /// band, pick one, then roll its chance (times <see cref="AiTuning.aggressiveAbilityMul"/> in an aggressive phase). A hit presses
         /// that slot in <see cref="FrameInput.ability"/>, like a button. An ability the catalog doesn't know is never picked.
         /// </summary>
+        /// <summary>
+        /// The reaction abilities (<see cref="AbilityDef.reactive"/>), asked every frame the fighter is free: the first one in slot order that is ready, in
+        /// range, whose situation holds and whose chance rolls. Returns its slot, 0 for none. A failed roll costs the ability a short wait
+        /// (<see cref="ReactiveRetryFrames"/>), so a reaction is not rolled again sixty times a second.
+        /// </summary>
+        int ReactiveAbility(Fighter self, float dist)
+        {
+            var ids = self.AbilityIds;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var a = AbilityCatalog.Get(ids[i]);
+                if (a == null || !a.reactive || !self.AbilityReady(i + 1) || dist < a.range.x || dist > a.range.y) continue;
+                if (a.when != null && !a.when(self, self.opponent)) continue;
+                if (_reactiveWait.TryGetValue(a.id, out var until) && self.ctx != null && self.ctx.Clock.Frame < until) continue;
+                if (R() < a.chance * (aggressive ? T.aggressiveAbilityMul : 1f)) return i + 1;
+                if (self.ctx != null) _reactiveWait[a.id] = self.ctx.Clock.Frame + ReactiveRetryFrames;
+            }
+            return 0;
+        }
+
+        /// <summary>Frames a reaction ability waits after its chance roll failed before it is rolled again.</summary>
+        public const int ReactiveRetryFrames = 20;
+        readonly System.Collections.Generic.Dictionary<string, int> _reactiveWait = new();
+
         bool TryAbility(Fighter self, float dist)
         {
             var ids = self.AbilityIds;
@@ -288,7 +312,7 @@ namespace Kage
             for (int i = 0; i < ids.Count; i++)
             {
                 var a = AbilityCatalog.Get(ids[i]);
-                if (a == null || !self.AbilityReady(i + 1) || dist < a.range.x || dist > a.range.y) continue;
+                if (a == null || a.reactive || a.escapeAfterHits > 0 || !self.AbilityReady(i + 1) || dist < a.range.x || dist > a.range.y) continue;
                 if (a.when != null && !a.when(self, self.opponent)) continue;
                 _abilityPick.Add(i + 1);
             }

@@ -333,6 +333,7 @@ namespace Kage
             rb.linearVelocity = new Vector2(rb.linearVelocity.x * (_landRun ? 0.75f : 0.4f), 0f);
             _airJumpUsed = _airDashUsed = false;
             rig.Squash(Mathf.Lerp(0.08f, 0.17f, _landHard));
+            LandSoftParts(impact, Mathf.Lerp(0.6f, 1.2f, _landHard));
             Vfx.I?.Dust(Pos, Mathf.Lerp(0.6f, 1.1f, _landHard), 0f);
             if (_landHard > 0.5f) GameFeel.Shake(0.04f * _landHard);
             KageGame.I?.Audio?.Play(SfxKind.Land, Mathf.Lerp(0.35f, 0.65f, _landHard));

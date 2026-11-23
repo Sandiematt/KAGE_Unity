@@ -37,6 +37,11 @@ namespace Kage
         /// (Raikon's tachi is ×0.78 on his ordinary cuts; his Thunder Swing, Storm Break and Redline hit for the JS damage). Everything else leaves it off.
         /// </summary>
         public bool fixedDamage;
+        /// <summary>
+        /// A guard does not stop this window, but a parry still does (Raikon's iaijutsu and blinks, the red-eye tell): "dodge it or parry it tight".
+        /// Unlike <see cref="HitLevel.Unblockable"/>, which neither guards nor parries. Everything else leaves it off.
+        /// </summary>
+        public bool unguardable;
     }
 
     /// <summary>A key of a move's blade extension curve (<see cref="MoveDef.Extend"/>).</summary>
@@ -139,7 +144,7 @@ namespace Kage
         /// <summary>The hazard stands on the current target's feet instead of ahead of the fighter (Skyfall's mark); with <see cref="HazardDef.followFrames"/> it follows the target.</summary>
         public bool hazardOnTarget;
         /// <summary>More projectiles the move throws, each on its own frame (Thunder Swing's second wave); <see cref="projectile"/> is the first.</summary>
-        public readonly List<(int frame, ProjectileDef def, Vector2 from)> extraThrows = new();
+        public readonly List<(int frame, ProjectileDef def, Vector2 from, bool back)> extraThrows = new();
         /// <summary>
         /// Another version of this ability to start in place of it, asked of the fighter when the ability is pressed (Thunder Swing's two-wave swing in
         /// the last phase, the shorter Redline stance); null or a null answer starts this move.
@@ -147,6 +152,25 @@ namespace Kage
         public System.Func<Fighter, MoveDef> variantFor;
         /// <summary>Posture the fighter's own bar takes on a frame (<c>fraction</c> of its maximum): Redline's spent stance costs Raikon a share of his posture.</summary>
         public readonly List<(int frame, float fraction)> selfPosture = new();
+
+        // ---- the Lightning Ascendant's hooks (Raikon's three-phase fight; Fighter.MoveHooks.cs). Off by default too. ----
+        /// <summary>
+        /// More hazards the move lays, each on its own frame: <c>ahead</c> metres in front of the fighter's feet, or on the current target's feet when
+        /// <c>onTarget</c> (Heavens' Verdict's three bolts, Blink Flurry's delayed slashes). <see cref="hazard"/> is still the first.
+        /// </summary>
+        public readonly List<(int frame, HazardDef def, float ahead, bool onTarget)> extraHazards = new();
+        /// <summary>Kicks to the fighter's soft parts (<see cref="FighterRig.Impulse"/>) on a frame, world m/s with x forward: dashes, blinks, slams, bursts.</summary>
+        public readonly List<(int frame, Vector2 impulse)> impulses = new();
+        /// <summary>
+        /// From <see cref="pullFrom"/> to <see cref="pullTo"/> the current target is drawn towards the fighter at <see cref="pullSpeed"/> m/s along the floor
+        /// (Final Overload's inward pull). A target that is down, thrown, knocked out or invulnerable is not pulled. -1: no pull.
+        /// </summary>
+        public int pullFrom = -1, pullTo = -1;
+        public float pullSpeed;
+        /// <summary>The move that starts when this one runs out, whatever happened (Blink Flurry's three dashes); null: back to neutral.</summary>
+        public MoveDef then;
+        /// <summary>The counter window catches only light blows: a heavy window or a guard-break lands as an ordinary hit (Iron Guard Counter).</summary>
+        public bool counterLightOnly;
 
         public MoveDef(string id, string display, int total) { this.id = id; this.display = display; this.total = total; }
 
@@ -214,7 +238,21 @@ namespace Kage
         /// <summary>Lays <paramref name="def"/> down on <paramref name="frame"/> on the current target's feet (SAN-107: Skyfall's mark).</summary>
         public MoveDef HazardOnTarget(int frame, HazardDef def) { hazardFrame = frame; hazard = def; hazardOnTarget = true; return this; }
         /// <summary>Throws another <paramref name="def"/> on <paramref name="frame"/> from <paramref name="from"/>, after the first (SAN-107: the second wave).</summary>
-        public MoveDef ThrowAlso(int frame, ProjectileDef def, Vector2 from) { extraThrows.Add((frame, def, from)); return this; }
+        public MoveDef ThrowAlso(int frame, ProjectileDef def, Vector2 from) { extraThrows.Add((frame, def, from, false)); return this; }
+        /// <summary>Throws <paramref name="def"/> on <paramref name="frame"/> <b>behind</b> the fighter: <paramref name="from"/> is metres behind, up, and it flies backwards (Final Overload's twin arcs).</summary>
+        public MoveDef ThrowBack(int frame, ProjectileDef def, Vector2 from) { extraThrows.Add((frame, def, from, true)); return this; }
+        /// <summary>Lays another <paramref name="def"/> on <paramref name="frame"/>, <paramref name="ahead"/> metres in front (see <see cref="extraHazards"/>).</summary>
+        public MoveDef HazardAlso(int frame, HazardDef def, float ahead) { extraHazards.Add((frame, def, ahead, false)); return this; }
+        /// <summary>Lays another <paramref name="def"/> on <paramref name="frame"/> on the current target's feet (see <see cref="extraHazards"/>).</summary>
+        public MoveDef HazardOnTargetAlso(int frame, HazardDef def) { extraHazards.Add((frame, def, 0f, true)); return this; }
+        /// <summary>Kicks the soft parts on <paramref name="frame"/> (see <see cref="impulses"/>).</summary>
+        public MoveDef Impulse(int frame, Vector2 impulse) { impulses.Add((frame, impulse)); return this; }
+        /// <summary>Draws the target in from <paramref name="from"/> to <paramref name="to"/> at <paramref name="speed"/> m/s (see <see cref="pullFrom"/>).</summary>
+        public MoveDef Pull(int from, int to, float speed) { pullFrom = from; pullTo = to; pullSpeed = speed; return this; }
+        /// <summary>Starts <paramref name="next"/> when this move runs out (see <see cref="then"/>).</summary>
+        public MoveDef Then(MoveDef next) { then = next; return this; }
+        /// <summary>The last hit window added cannot be guarded but can be parried (<see cref="HitWindow.unguardable"/>).</summary>
+        public MoveDef Unguardable() { hits[hits.Count - 1].unguardable = true; return this; }
         /// <summary>The fighter's own posture takes <paramref name="fraction"/> of its maximum on <paramref name="frame"/> (SAN-107).</summary>
         public MoveDef SelfPosture(int frame, float fraction) { selfPosture.Add((frame, fraction)); return this; }
         /// <summary>Vaults over the current target from <paramref name="from"/> to <paramref name="to"/> (SAN-105; see <see cref="vaultFrom"/>).</summary>

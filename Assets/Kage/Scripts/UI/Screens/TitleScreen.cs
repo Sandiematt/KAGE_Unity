@@ -143,7 +143,7 @@ namespace Kage
             Enter(rt, UiAnims.WRise(.6f, delay));
             var wedge = Ui.Shape(rt, 18, 8, 320, 48, Ui.Poly(320, 48, 0, 18, 6, 4, 62, 0, 96, 10, 84, 30, 100, 48, 88, 64, 98, 86, 58, 100, 4, 94, 0, 76),
                 Ui.Acc, Ui.Deep, Ui.A(Ui.Deep, 0f), true, "Wedge");
-            var dia = Ui.Diamond(rt, 47, 32, 40, Ui.PanelA(0.8f), Ui.GoldDim, 1.5f);
+            var dia = Ui.Diamond(rt, 47, 32, 40, Ui.PanelA(0.8f), Ui.GoldDim, 1.5f, true);
             Ui.Label(rt, glyph, UiFont.Mincho, 22, Ui.Bone, 18, 0, 58, 64, TextAnchor.MiddleCenter);
             var lb = Ui.Label(rt, label.ToUpperInvariant(), UiFont.Title, 22, Ui.Bone, 106, 0, 260, 64, TextAnchor.MiddleLeft, 0.88f);
             var row = new MenuRow { home = on };
@@ -288,7 +288,7 @@ namespace Kage
                 float cx = 1217 + i * 100f, cy = 856f;
                 string key = keys[i];
                 var rt = Ui.Node(Root, "Util_" + key, cx - 39, cy - 39, 78, 78);
-                var dia = Ui.Diamond(rt, 39, 39, 54, Ui.PanelA(0.82f), Ui.GoldDim, 1.5f);
+                var dia = Ui.Diamond(rt, 39, 39, 54, Ui.PanelA(0.82f), Ui.GoldDim, 1.5f, true);
                 Color ink = Ui.Bone;
                 switch (i)
                 {

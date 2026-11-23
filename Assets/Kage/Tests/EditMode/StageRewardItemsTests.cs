@@ -61,21 +61,21 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Raikon_grants_both_items_weapon_first_and_replaying_grants_nothing_new()
+        public void Raikon_grants_the_helmet_but_not_the_withheld_tachi_and_replaying_grants_nothing_new()
         {
             var s = Fresh();
             ClearUpTo(s, "act1.boss");
             Assert.IsTrue(GameRules.IsLocked(s, GearKind.Weapons, "raiko_no_tachi"));
 
             var clear = GameRules.MarkStageCleared(s, "act1.boss");
-            CollectionAssert.AreEqual(new[] { "raiko_no_tachi", "raijin_kabuto" }, clear.Gear.Select(g => g.Id).ToArray());
-            Assert.AreEqual(1, s.owned.weapons["raiko_no_tachi"]);
+            CollectionAssert.AreEqual(new[] { "raijin_kabuto" }, clear.Gear.Select(g => g.Id).ToArray());
+            Assert.IsFalse(s.owned.weapons.ContainsKey("raiko_no_tachi"));
             Assert.AreEqual(1, s.owned.helmets["raijin_kabuto"]);
 
             var again = GameRules.MarkStageCleared(s, "act1.boss");
             Assert.AreEqual(0, again.Gear.Count);
             Assert.AreEqual(0, again.Unlocks.Count);
-            Assert.AreEqual(1, s.owned.weapons["raiko_no_tachi"]);
+            Assert.IsFalse(s.owned.weapons.ContainsKey("raiko_no_tachi"));
         }
 
         [Test]

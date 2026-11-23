@@ -151,7 +151,7 @@ namespace Kage
                 switch (State)
                 {
                     case StretchState.Cleared: return road + "  ·  STRETCH CLEARED";
-                    case StretchState.Failed: return road + "  ·  FALLEN";
+                    case StretchState.Failed: return road + "  ·  DEFEATED";
                 }
                 if (_enc < 0) return road + (_cleared >= EncounterCount ? "  ·  REACH THE END" : "  ·  NEXT GATE " + (_cleared + 1) + "/" + EncounterCount);
                 return road + "  ·  GATE " + (_enc + 1) + "/" + EncounterCount + "  ·  WAVE " + Mathf.Max(1, _wave + 1) + "/" + WaveCount + "  ·  " + FoesLeft + " FOES";

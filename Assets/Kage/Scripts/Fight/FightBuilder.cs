@@ -53,6 +53,13 @@ namespace Kage
                 Loop.restoreSimulationMode = Physics2D.simulationMode;
                 Physics2D.simulationMode = SimulationMode2D.Script;
             }
+            else if (!manualClock && Physics2D.simulationMode == SimulationMode2D.Script)
+            {
+                // a real-time fight is moved by Unity's own physics step: in Script mode no rigidbody moves, so the fighters read their
+                // input and stand still. Script mode left over from a headless fight that never put it back must not freeze the game.
+                Debug.LogWarning("Kage: 2D physics was in Script mode (left over from a headless fight); a real-time fight needs FixedUpdate.");
+                Physics2D.simulationMode = SimulationMode2D.FixedUpdate;
+            }
             Loop.Bind(Context);
         }
 

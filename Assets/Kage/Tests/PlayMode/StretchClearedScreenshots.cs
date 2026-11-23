@@ -98,18 +98,17 @@ namespace Kage.Tests
         }
 
         [UnityTest]
-        public IEnumerator Capture_the_fallen_banner()
+        public IEnumerator Capture_the_defeated_line()
         {
             Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
             yield return StartRoad();
             var hud = flow.World.Hud;
             flow.World.ForceKnockOut(false);
-            Assert.IsTrue(hud.InkBannerShowing);
+            Assert.IsFalse(hud.InkBannerShowing, "a loss is a plain DEFEATED line, not the brush banner");
             yield return new WaitForSecondsRealtime(0.3f);
             flow.World.Paused = true;
-            hud.HoldInkBanner(0.7f);
             yield return null;
-            yield return Shot("fallen");
+            yield return Shot("defeated");
         }
 
         // ---------------- capture (as in FlowScreenshots) ----------------

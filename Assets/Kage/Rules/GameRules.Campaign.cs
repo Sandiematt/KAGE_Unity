@@ -155,12 +155,23 @@ namespace Kage.Rules
             return got;
         }
 
+        /// <summary>
+        /// Weapons kept out of the game for now (the owner: Shinsen comes only after Act 2 or 3, and the other boss blades wait too).
+        /// The tables keep their rows; a stage reward never grants them and the Armory never lists them. Delete an id to turn it back on.
+        /// </summary>
+        static readonly HashSet<string> WithheldWeapons = new HashSet<string> { "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha" };
+
+        public static bool IsWithheld(GearKind kind, string id)
+        {
+            return kind == GearKind.Weapons && id != null && WithheldWeapons.Contains(id);
+        }
+
         static void Grant(SaveData save, GearKind kind, string[] ids, List<StageUnlock> got)
         {
             foreach (var id in ids)
             {
                 var it = Item(kind, id);
-                if (it == null || Owns(save, kind, id) || (it.NgOnly && save.ng <= 0)) continue;
+                if (it == null || IsWithheld(kind, id) || Owns(save, kind, id) || (it.NgOnly && save.ng <= 0)) continue;
                 OwnedOf(save, kind)[id] = 1;
                 got.Add(new StageUnlock { Kind = KindName(kind), Id = id });
             }

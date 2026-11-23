@@ -42,7 +42,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Beating_Raikon_through_the_flow_grants_Raiko_no_Tachi_and_Raijin_Kabuto_and_saves()
+        public void Beating_Raikon_through_the_flow_grants_Raijin_Kabuto_but_not_the_withheld_tachi_and_saves()
         {
             var f = FlowAtTheBoss(out var persisted);
             Assert.IsFalse(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"), "not owned before the fight");
@@ -51,11 +51,10 @@ namespace Kage.Tests
             f.FinishStage(Win());
             Assert.IsTrue(f.LastOutcome.Win);
             Assert.IsTrue(f.LastOutcome.FirstClear);
-            Assert.IsTrue(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"), "Raikō no Tachi");
+            Assert.IsFalse(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"), "Raikō no Tachi is withheld for now");
             Assert.IsTrue(f.Save.owned.helmets.ContainsKey("raijin_kabuto"), "Raijin Kabuto");
             Assert.IsTrue(GameRules.IsStageComplete(f.Save, Boss));
             Assert.IsNotEmpty(persisted, "the save was written");
-            Assert.IsTrue(GameRules.EquipItem(f.Save, GearKind.Weapons, "raiko_no_tachi"), "and can be wielded");
             Assert.IsTrue(GameRules.EquipItem(f.Save, GearKind.Helmets, "raijin_kabuto"));
         }
 

@@ -128,7 +128,7 @@ namespace Kage.Tests
         {
             Assert.AreEqual("common", GameRules.ItemTier(GearKind.Helmets, "kuro_zukin", 5));
             Assert.AreEqual("starter", GameRules.ItemTier(GearKind.Armors, "tachibana_yoroi", 5));
-            Assert.AreEqual("trophy", GameRules.ItemTier(GearKind.Helmets, "raijin_kabuto", 1));
+            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Helmets, "raijin_kabuto", 1));
             Assert.AreEqual("boss", GameRules.ItemTier(GearKind.Weapons, "raiko_no_tachi", 1));
         }
 
@@ -221,5 +221,22 @@ namespace Kage.Tests
         {
             Assert.AreEqual(0, GameRules.PlayerCombatStats(Fresh()).Perks.Count);
         }
-    }
+    
+        [TestCase("utsuro_kabuto")]
+        [TestCase("shikko_zukin")]
+        [TestCase("raijin_kabuto")]
+        public void A_legendary_helmet_has_the_best_helmet_stats_of_the_tables(string id)
+        {
+            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Helmets, id, 1));
+            Assert.AreEqual("Legendary", GameRules.TierLabel(GearKind.Helmets, id, 1));
+            Assert.AreEqual(0.2, GameRules.GearDef(GearKind.Helmets, id, 1), 1e-9);
+            Assert.AreEqual(40, GameRules.GearHp(GearKind.Helmets, id, 1));
+            foreach (var h in JsTables.Helmets)
+                if (!h.Enemy && !h.Retired)
+                {
+                    Assert.GreaterOrEqual(GameRules.GearDef(GearKind.Helmets, id, 1), GameRules.GearDef(GearKind.Helmets, h.Id, 1), h.Id);
+                    Assert.GreaterOrEqual(GameRules.GearHp(GearKind.Helmets, id, 1), GameRules.GearHp(GearKind.Helmets, h.Id, 1), h.Id);
+                }
+        }
+}
 }

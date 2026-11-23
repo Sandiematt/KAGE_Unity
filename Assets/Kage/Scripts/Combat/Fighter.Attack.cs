@@ -42,7 +42,10 @@ namespace Kage
             if (_bufferAge > 8 || _buffer == Btn.None) return false;
             int dy = inp.dy != 0 ? inp.dy : _bufferDy;
             int f = fwd != 0 ? fwd : _bufferFwd;
-            if (_buffer == Btn.X && dy < 0 && TrySpecialDown()) return true;
+            // Special + Down is the rage art / a kunai; a full Rage bar also spends itself on a plain Special press (the player's I),
+            // all of it at once, instead of bleeding away 35 at a time through the ranged Special
+            bool rageNow = _buffer == Btn.X && Grounded && Has(CharacterFlags.CanRageArt) && meter >= 100f && !(input is AIInputSource);
+            if (_buffer == Btn.X && (dy < 0 || rageNow) && TrySpecialDown()) return true;
             var m = moves.Select(_buffer, f, dy, !Grounded, this);
             if (m == null) return false;
             m = Armed(m);
@@ -70,6 +73,7 @@ namespace Kage
             _hitLog.Clear();
             _sweepPrev.Clear();
             ctx?.Events.Publish(CombatEvent.MoveStarted(ctx.Clock.Frame, this, m.id));
+            NoteMoveStart(m);
             rig.SetSwordFront(m.swordFront);
             rig.SnapFacing();
             if (Grounded && !m.airborne) rb.linearVelocity = new Vector2(rb.linearVelocity.x * 0.3f, rb.linearVelocity.y);
@@ -157,14 +161,19 @@ namespace Kage
                 else if (IsKunaiThrow(m)) ThrowKunai();
                 else SpawnCrescent();
             }
-            foreach (var t in m.extraThrows) if (Passed(t.frame)) SpawnMoveProjectile(t.def, t.from);      // a second wave (SAN-107)
+            foreach (var t in m.extraThrows) if (Passed(t.frame)) SpawnMoveProjectile(t.def, t.from, t.back);      // a second wave (SAN-107), a wave behind
             if (m.hazard != null && Passed(m.hazardFrame)) SpawnMoveHazard(m);
+            foreach (var h in m.extraHazards) if (Passed(h.frame)) SpawnMoveHazard(h.def, h.ahead, h.onTarget);   // more bolts and slashes (Raikon)
+            foreach (var k in m.impulses) if (Passed(k.frame)) rig?.Impulse(new Vector2(k.impulse.x * facing, k.impulse.y));
+            if (m.pullTo >= m.pullFrom && m.pullFrom >= 0 && Touches(m.pullFrom, m.pullTo)) PullTarget(m.pullSpeed);
             if (m.selfPosture.Count > 0) ApplySelfPosture(m);
             if (m.isThrow) ThrowUpdate();
 
             if (m.airborne && m.endsOnLanding && f > 4 && Grounded) { Landed(); return; }
             if (f >= m.total)
             {
+                var link = Armed(m.then);                               // the next link of a chain (Blink Flurry); a blade link with the sword broken ends it
+                if (link != null) { StartMove(link); return; }
                 if (!Grounded) { _airFrame = 0; _jumpDir = 0; _airAttackUsed = true; SetState(FState.Air); }
                 else SetState(FState.Idle);
             }

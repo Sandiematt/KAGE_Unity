@@ -49,6 +49,8 @@ namespace Kage
         Frame frame, target;
         float aspectOverride;
         bool snap = true;
+        // which of the row's fighters stand inside the cards' window (null: all of them); the others are hidden
+        List<bool> rowShown;
 
         public static ArmoryWorld Create(Transform parent)
         {
@@ -127,6 +129,7 @@ namespace Kage
         /// </summary>
         public void ShowSingle(SaveData save, bool head)
         {
+            rowShown = null;
             string sig = (head ? "head|" : "body|") + KageCharacter.LoadoutKey(save);
             SetFrame(head ? HeadFrame : BodyFrame);
             if (sig == Signature || sig == pendingSig) return;
@@ -139,6 +142,7 @@ namespace Kage
         /// <summary>Nothing stands on the stage: the Weapons tab shows the weapon's illustration, not a fighter.</summary>
         public void ShowNone()
         {
+            rowShown = null;
             SetFrame(BodyFrame);
             pendingBuild = null;
             pendingSig = null;
@@ -147,9 +151,12 @@ namespace Kage
 
         /// <summary>
         /// Puts a row of Kages on the stage, one per save, centred at the given stage px (their feet on the card baseline).
+        /// <paramref name="shown"/> says which of them stand in a card inside the row's window: the fighters are in the world, not
+        /// in the clipped card row, so one whose card is scrolled out of the window is hidden rather than left standing past its edge.
         /// </summary>
-        public void ShowRow(IList<SaveData> saves, IList<float> stageX, string key, float panPx = 0f)
+        public void ShowRow(IList<SaveData> saves, IList<float> stageX, string key, float panPx = 0f, IList<bool> shown = null)
         {
+            rowShown = shown != null ? new List<bool>(shown) : null;
             string sig = "row|" + key;
             // a scrolled row: the camera pans along it by as many stage px as the cards moved
             var frameRow = RowFrame;
@@ -197,6 +204,9 @@ namespace Kage
             Signature = sig;
             Builds++;
         }
+
+        /// <summary>True when the fighter at this index is on show (a row fighter whose card is outside the window is not).</summary>
+        public bool IsShown(int i) { return rowShown == null || i >= rowShown.Count || rowShown[i]; }
 
         Transform MakeShadow(Transform parent)
         {
@@ -278,6 +288,12 @@ namespace Kage
             for (int i = 0; i < fighters.Count && i < shadows.Count; i++)
             {
                 if (fighters[i] == null || shadows[i] == null) continue;
+                bool shown = IsShown(i);
+                if (shadows[i].gameObject.activeSelf != shown)
+                {
+                    shadows[i].gameObject.SetActive(shown);
+                    fighters[i].rig.SetVisible(shown);
+                }
                 Vector2 hips = fighters[i].rig.Bone(B.Hips).position;
                 shadows[i].position = new Vector3(hips.x, 0.01f, 0f);
             }

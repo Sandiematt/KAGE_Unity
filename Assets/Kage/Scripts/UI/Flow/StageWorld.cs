@@ -328,7 +328,7 @@ namespace Kage
             _winner = cleared ? Player : null;
             Player.controlEnabled = false;
             if (cleared) Hud.ShowInkBanner("Stretch cleared", FoeName, Ui.Gold);
-            else Hud.ShowInkBanner("Fallen", FoeName, KMath.Hex("#FF4B4B"), "敗");
+            else Hud.Banner("DEFEATED", KMath.Hex("#FF4B4B"), 2.5f);   // a plain line, not the big brush banner
             SetPhase(Phase.Over);
         }
 

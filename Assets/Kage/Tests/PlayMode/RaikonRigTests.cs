@@ -11,7 +11,7 @@ namespace Kage.Tests
     /// </summary>
     public class RaikonRigTests
     {
-        static readonly string[] Soft = { "Cape", "Ponytail", "Tassel1", "Tassel2", "Tassel3", "Fur" };
+        static readonly string[] Soft = { "Cape", "Ponytail", "Tassel1", "Tassel2", "Tassel3", "Fur", "Skirt" };
 
         static HeadlessFight Fight() => new(KageMoveScenarios.Seed, Foe.None, 0f, kageDef: CharacterCatalog.Get(Raikon.Id));
 
@@ -41,7 +41,7 @@ namespace Kage.Tests
         {
             using var f = Fight();
             f.Run(2);
-            var rest = Soft.Concat(new[] { "Torso", "Skirt", "Hat" }).ToDictionary(n => n, n => Part(f.Kage, n).sharedMesh.vertices);
+            var rest = Soft.Concat(new[] { "Torso", "Hat" }).ToDictionary(n => n, n => Part(f.Kage, n).sharedMesh.vertices);
             var moved = Soft.ToDictionary(n => n, n => 0f);
             f.KageInput.Add(30, fwd: 1).Add(1, buttons: "S").Add(30);   // walk, swing, stop
             for (int i = 0; i < 61; i++)
@@ -49,8 +49,8 @@ namespace Kage.Tests
                 f.Run(1);
                 foreach (var n in Soft) moved[n] = Mathf.Max(moved[n], Moved(rest[n], Part(f.Kage, n)));
             }
-            foreach (var n in Soft) Assert.Greater(moved[n], 0.01f, n + " should sway (bone-local units)");
-            foreach (var n in new[] { "Torso", "Skirt", "Hat" }) Assert.AreEqual(0f, Moved(rest[n], Part(f.Kage, n)), 1e-6f, n + " is rigid");
+            foreach (var n in Soft) Assert.Greater(moved[n], n == "Skirt" ? 0.002f : 0.01f, n + " should sway (bone-local units)");   // the plated haidate is heavy: it swings least
+            foreach (var n in new[] { "Torso", "Hat" }) Assert.AreEqual(0f, Moved(rest[n], Part(f.Kage, n)), 1e-6f, n + " is rigid");
             // soft, not loose: nothing flies off its root
             foreach (var n in Soft) Assert.Less(moved[n], 1.0f, n + " stays attached");   // Raikon swings the heavy tachi (SAN-81): its Broad Cut whips the soft parts about twice as far as a katana draw (ponytail 0.81 against 0.57, cape 0.52 against 0.24)
         }

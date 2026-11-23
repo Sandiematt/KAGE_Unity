@@ -93,6 +93,7 @@ namespace Kage
             v.health = Mathf.Max(0f, v.health - info.dmg);
             v.LastDamageTaken = before - v.health;
             v.rig.Flash(Color.white, 0.9f);
+            v.JoltSoftParts(info, 1.3f);
             if (v.health <= 0f) v.KnockOut(info);
             else { v.Launch(info); v._tumbleVel = Mathf.Abs(v._tumbleVel) * 0.5f; }
             v._bounces = -1;

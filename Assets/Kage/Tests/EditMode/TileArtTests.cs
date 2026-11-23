@@ -27,7 +27,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void The_six_listed_shop_swords_use_the_design_renders_and_the_boss_sword_the_JS_canvas_drawing()
+        public void The_six_listed_shop_swords_use_the_design_renders()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Weapons);
             foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" })
@@ -36,9 +36,6 @@ namespace Kage.Tests
                 Assert.AreEqual(ArtSource.WeaponRender, t.Art.Source, id);
                 Assert.AreEqual("ui_w_" + id, t.Art.Key);
             }
-            var raiko = v.Tiles.Single(x => x.Id == "raiko_no_tachi");
-            Assert.AreEqual(ArtSource.WeaponIcon, raiko.Art.Source);
-            Assert.AreEqual("icon_w_raiko_no_tachi", raiko.Art.Key);
         }
 
         [Test]

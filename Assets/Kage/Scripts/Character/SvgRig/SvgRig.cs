@@ -59,7 +59,9 @@ namespace Kage
     /// <b>Parts</b>: the part's underlays (capsules from joint to joint in a tone, so a bent knee or wrist shows the limb and not
     /// the background), then every polygon of the region in paint order, in one mesh (<see cref="PartDef.polys"/>); a <c>rim</c> part gets the
     /// rig's world-fixed back-light rim round the region's outline; a <c>far</c> part is painted in the style's far colours; a
-    /// <c>soft</c> part hangs on its spring chains with its <see cref="SoftPresets"/> feel; a <c>swing</c> part hangs from its own
+    /// <c>soft</c> part with chains hangs on them with its <see cref="SoftPresets"/> feel (<see cref="SoftChains"/>), and one without
+    /// flows as Kage's hair does (<see cref="FlowField"/>), tied on where the part set says or at the top of its region
+    /// (<see cref="TieOf"/>); a <c>swing</c> part hangs from its own
     /// pivot (spikes, shards).
     /// </para>
     /// </summary>
@@ -67,7 +69,12 @@ namespace Kage
     {
         const float RefScale = KageModel.RefScale;
 
-        public static void Build(RigDef d, SvgRigData data, SvgRigStyle style)
+        /// <param name="flowRoots">
+        /// For a soft part with no chains (a <see cref="SoftKind.Flow"/> piece): where it is tied on, in SVG px, by part name (a
+        /// ponytail's knot, as Kage's hair has its skull centre). A part not named hangs from the top middle of its region
+        /// (<see cref="TieOf"/>): a cape's shoulders, a panel's belt, a tassel's cord.
+        /// </param>
+        public static void Build(RigDef d, SvgRigData data, SvgRigStyle style, IReadOnlyDictionary<string, Vector2> flowRoots = null)
         {
             foreach (var spec in data.parts)
             {
@@ -83,13 +90,19 @@ namespace Kage
                     role = spec.role != null ? (PartRole)Enum.Parse(typeof(PartRole), spec.role) : PartRole.Body,
                 };
                 if (spec.rim && spec.soft == null && region.outline != null) p.rimPts = Apply(map, region.outline);
-                if (spec.soft != null)
+                if (spec.soft != null && spec.chains.Count > 0)
                 {
                     p.soft = SoftKind.Chain;
                     p.chainFeel = SoftPresets.Get(spec.soft);
                     p.chains = new List<Vector2[]>();
                     foreach (var ch in spec.chains) p.chains.Add(Apply(map, ch));
-                    if (p.chains.Count == 0) throw new ArgumentException(spec.name + ": a soft part needs chains");
+                }
+                else if (spec.soft != null)
+                {
+                    // no chains drawn: the piece flows as Kage's hair does (FlowField), turning about the point it is tied on at
+                    p.soft = SoftKind.Flow;
+                    p.chainFeel = SoftPresets.Get(spec.soft);
+                    p.flowRoot = map(flowRoots != null && flowRoots.TryGetValue(spec.name, out var at) ? at : TieOf(region));
                 }
                 if (spec.swingPivot.HasValue)
                 {
@@ -98,6 +111,24 @@ namespace Kage
                 }
                 d.parts.Add(p);
             }
+        }
+
+        /// <summary>
+        /// Where a hanging piece is tied on when nothing names it: the middle of its top edge (SVG px, y down), the points of its outline
+        /// within the top 6% of its height.
+        /// </summary>
+        public static Vector2 TieOf(SvgRigData.Region region)
+        {
+            var pts = new List<Vector2>();
+            if (region.outline != null) pts.AddRange(region.outline);
+            else foreach (var (_, q) in region.polys) pts.AddRange(q);
+            if (pts.Count == 0) throw new ArgumentException(region.name + ": an empty region has no tie point");
+            float top = float.MaxValue, bottom = float.MinValue;
+            foreach (var q in pts) { top = Mathf.Min(top, q.y); bottom = Mathf.Max(bottom, q.y); }
+            float band = top + (bottom - top) * 0.06f, sx = 0f;
+            int n = 0;
+            foreach (var q in pts) if (q.y <= band) { sx += q.x; n++; }
+            return new Vector2(sx / n, top);
         }
 
         static Vector2[] Apply(Func<Vector2, Vector2> map, Vector2[] pts)

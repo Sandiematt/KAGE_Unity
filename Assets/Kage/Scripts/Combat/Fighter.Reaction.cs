@@ -69,6 +69,26 @@ namespace Kage
         Vector2 KnockVelocity(Vector2 kb) => LegacyPhysics ? kb : kb * (ReferenceMass / rb.mass * KnockbackTaken);
 
         /// <summary>
+        /// The soft parts' share of a blow (<see cref="FighterRig.Impulse"/>): the body snaps away with the knockback, so hair, cape,
+        /// tassels and cloth are flung back towards the attacker and up, harder for a heavier blow. Held through hit-stop.
+        /// </summary>
+        void JoltSoftParts(HitInfo info, float scale)
+        {
+            if (rig == null) return;
+            Vector2 kb = info.kb;
+            float s = Mathf.Clamp(kb.magnitude, 1.5f, 9f) * scale;
+            float away = Mathf.Abs(kb.x) > 0.01f ? Mathf.Sign(kb.x) : -facing;
+            rig.Impulse(new Vector2(-away * s * 0.9f, s * 0.45f + Mathf.Max(0f, kb.y) * 0.2f));
+        }
+
+        /// <summary>A landing's jolt to the soft parts: they keep falling as the body stops, slap down and drape on the floor.</summary>
+        void LandSoftParts(float impactSpeed, float scale = 1f)
+        {
+            if (rig == null || impactSpeed < 0.5f) return;
+            rig.Impulse(new Vector2(0f, -Mathf.Min(impactSpeed * 0.5f * scale, 8f)), 1.4f);
+        }
+
+        /// <summary>
         /// Gives the body velocity <paramref name="v"/> through a physics impulse. The hit replaces the
         /// current motion, as before: the body is stopped first. Under the legacy switch the velocity is set.
         /// </summary>
@@ -102,7 +122,7 @@ namespace Kage
             // step 4, the counter window. Mirror Guard: parry and teleport-slash behind the attacker; a counter stance (Censure): turn
             // the blow aside and answer it where it stands
             if (state == FState.Attack && move != null && move.counterFrom >= 0 && moveFrame >= move.counterFrom && moveFrame <= move.counterTo && w.level != HitLevel.Unblockable
-                && (!move.counterFrontOnly || CounterCatches(info)))
+                && (!move.counterFrontOnly || CounterCatches(info)) && (!move.counterLightOnly || !(w.heavy || w.breaksWeapon)))
             {
                 if (move.counterAnswer != null) TriggerCounterAnswer(info, move.counterAnswer);
                 else TriggerCounter(info.attacker);
@@ -122,6 +142,7 @@ namespace Kage
                 health = Mathf.Max(0f, health - info.dmg);
                 CleanHitPosture(info);
                 rig.Flash(Color.white, 0.8f, 14f);
+                JoltSoftParts(info, 0.5f);
                 Knock(KnockVelocity(new Vector2(info.kb.x * 0.25f, 0f)));
                 KickFall(info);
                 if (health <= 0f) KnockOut(info);
@@ -132,13 +153,15 @@ namespace Kage
             meter = Mathf.Min(100f, meter + (3f + info.dmg * 0.3f) * RageMul);
             CleanHitPosture(info);
             rig.Flash(Color.white, 0.95f, 14f);
+            JoltSoftParts(info, info.w.heavy || info.w.launch || info.w.knockdown || health <= 0f ? 1.3f : 1f);
 
             // armour (ADR-0004 step 7): the damage and posture land, the flinch doesn't, and a held victim stays held (Fighter.Armour.cs)
             bool resists = health > 0f && ResistsFlinch(info);
             if (_victim != null && !resists) ReleaseVictim(false);
 
             if (health <= 0f) { KnockOut(info); return HitResult.Hit; }
-            if (resists) { rig.Squash(0.03f); return HitResult.Hit; }
+            NoteHitTaken();                         // the run of blows taken (Afterimage Feint, Fighter.Ascendant.cs)
+            if (resists) { rig.Squash(0.03f); TryEscapeAbility(); return HitResult.Hit; }
 
             if (state == FState.Launched || !Grounded || w.launch || w.knockdown) Launch(info);
             else
@@ -148,6 +171,7 @@ namespace Kage
                 _stun = ScaleStun(w.stun);
                 _hurt = w.level == HitLevel.Low || info.zone == HitZone.Legs ? _hurtLow : info.zone == HitZone.Head ? _hurtHigh : _hurtBody;
                 Knock(KnockVelocity(new Vector2(info.kb.x, Mathf.Max(0f, info.kb.y * 0.3f))));
+                TryEscapeAbility();                   // Afterimage Feint: out of a long combo (Fighter.Ascendant.cs)
             }
             return HitResult.Hit;
         }
@@ -191,6 +215,7 @@ namespace Kage
                     KageGame.I?.Audio?.Play(SfxKind.Thud, 0.8f);
                     _tumbleVel *= 0.55f;
                     rig.Squash(0.16f);
+                    LandSoftParts(impact);
                     stateFrame = 0;
                 }
                 else
@@ -199,6 +224,7 @@ namespace Kage
                     float settle = KMath.Wrap(_tumbleAng);
                     _liePose = Mathf.Abs(Mathf.DeltaAngle(settle, 90f)) <= Mathf.Abs(Mathf.DeltaAngle(settle, -90f)) ? _lie : _lieFront;
                     rig.Squash(0.1f);
+                    LandSoftParts(Mathf.Max(impact, 2.5f));
                     SetState(FState.Down);
                     _otgHits = 0;
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x * 0.3f, 0f);

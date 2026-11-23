@@ -161,31 +161,33 @@ namespace Kage.Tests
             Assert.IsTrue(belt.Min(v => v.x) < rig.pivot[(int)B.Chest].x && belt.Max(v => v.x) > rig.pivot[(int)B.Chest].x, "the belt crosses the trunk");
         }
 
-        // ---- rigid from the SVG, moving parts on spring chains ----
+        // ---- rigid from the SVG, moving parts flow as Kage's hair does ----
 
-        static readonly (string name, ChainFeel feel, int chains)[] Soft =
+        static readonly (string name, ChainFeel feel)[] Soft =
         {
-            ("Cape", SoftPresets.Cape, 3), ("Ponytail", SoftPresets.Hair, 2), ("Ribbons", SoftPresets.Strip, 3), ("Fur", SoftPresets.Fur, 6),
-            ("Tassel1", SoftPresets.Tassel, 1), ("Tassel2", SoftPresets.Tassel, 1), ("Tassel3", SoftPresets.Tassel, 1),
-            ("ChestTassel", SoftPresets.Tassel, 1), ("Cord", SoftPresets.Tassel, 1),
-            ("Apron", SoftPresets.Tails, 3), ("Hem", SoftPresets.Tails, 3),
+            ("Cape", SoftPresets.Cape), ("Ponytail", SoftPresets.Hair), ("Ribbons", SoftPresets.Strip), ("Fur", SoftPresets.Fur),
+            ("Tassel1", SoftPresets.Tassel), ("Tassel2", SoftPresets.Tassel), ("Tassel3", SoftPresets.Tassel),
+            ("ChestTassel", SoftPresets.Tassel), ("Cord", SoftPresets.Tassel),
+            ("Apron", SoftPresets.Tails), ("Hem", SoftPresets.Tails), ("Skirt", SoftPresets.Plates),
         };
 
         [Test]
-        public void HairCapeTasselsFurAndHangingClothAreOnSpringChainsAndTheArmourIsRigid()
+        public void HairCapeTasselsFurSkirtAndHangingClothAreOnSpringChainsAndTheArmourIsRigid()
         {
             var rig = Rig();
-            foreach (var (name, feel, chains) in Soft)
+            foreach (var (name, feel) in Soft)
             {
                 var p = Part(rig, name);
-                Assert.AreEqual(SoftKind.Chain, p.soft, name);
-                Assert.AreEqual(chains, p.chains.Count, name + ": its chains");
-                foreach (var ch in p.chains) Assert.GreaterOrEqual(ch.Length, 3, name + ": root, middle and tip");
+                Assert.AreEqual(SoftKind.Flow, p.soft, name + " flows as Kage's hair does");
+                Assert.IsTrue(p.chains == null || p.chains.Count == 0, name + ": no chains drawn by hand");
+                // tied on at the piece itself: its root lies on (or within a hand's width of) what is drawn
+                float near = Drawn(p).Min(v => (v - p.flowRoot).magnitude);
+                Assert.Less(near, 0.12f, name + " is tied on away from its own drawing (" + near + ")");
                 Assert.AreEqual(feel, p.chainFeel, name + " uses its preset");
                 Assert.IsNull(p.rimPts, p.name + ": a soft part carries its painted outline, not a fixed rim that would not bend");
             }
-            CollectionAssert.AreEquivalent(Soft.Select(s => s.name), rig.parts.Where(p => p.soft == SoftKind.Chain).Select(p => p.name),
-                "the hat, head, armour, sode, arms, hands, belt, skirt, legs, boots and tachi do not hang");
+            CollectionAssert.AreEquivalent(Soft.Select(s => s.name), rig.parts.Where(p => p.soft != SoftKind.None).Select(p => p.name),
+                "the hat, head, armour, sode, arms, hands, belt, legs, boots and tachi do not hang");
             Assert.IsFalse(rig.scarf);
             Assert.IsFalse(rig.softCoat, "no Kage coat cloth");
         }
@@ -411,11 +413,13 @@ namespace Kage.Tests
                 Assert.Greater(Moved("Ponytail"), 0.02f, "the ponytail swings");
                 Assert.Greater(Moved("Apron"), 0.01f, "the apron panels swing");
                 Assert.Greater(Moved("Hem"), 0.01f, "the coat panels swing");
+                Assert.Greater(Moved("Skirt"), 0f, "the haidate swings with the hips");
+                Assert.Less(Moved("Skirt"), Moved("Cape"), "the heavy plated haidate swings less than the cape");
                 foreach (var t in new[] { "Tassel1", "Tassel2", "Tassel3", "ChestTassel", "Cord", "Ribbons" })
                     Assert.Greater(Moved(t), 0.003f, t + " swings");
                 Assert.Greater(Moved("Fur"), 0f, "the fur ruffles");
                 Assert.Less(Moved("Fur"), Moved("Cape"), "the stiff fur moves less than the cape");
-                foreach (var r in new[] { "Hat", "Torso", "Skirt", "SodeN", "Tachi_Blade" })
+                foreach (var r in new[] { "Hat", "Torso", "SodeN", "Tachi_Blade" })
                     Assert.AreEqual(0f, Moved(r), 1e-6f, r + " is rigid");
             }
             finally { Object.DestroyImmediate(still); Object.DestroyImmediate(moved); }
@@ -430,7 +434,7 @@ namespace Kage.Tests
             var blow = Run(Wind.Blowing(new Vector2(-8f, 0f)));     // a head wind (the fighter faces right): it streams the cloth back
             try
             {
-                foreach (var (part, _, _) in Soft)
+                foreach (var (part, _) in Soft)
                 {
                     Assert.AreEqual(Mean(calm, part), Mean(calm2, part), part + ": the same every run");
                     Assert.AreEqual(Mean(unset, part), Mean(calm, part), part + ": calm is no wind at all");
@@ -447,6 +451,130 @@ namespace Kage.Tests
             {
                 Object.DestroyImmediate(calm); Object.DestroyImmediate(calm2); Object.DestroyImmediate(unset); Object.DestroyImmediate(blow);
             }
+        }
+
+        [Test]
+        public void NoFlowingRegionIsLeftRigidOrMergedIntoARigidPiece()
+        {
+            // the flowing pieces of the trace: hair, ribbons, tassels, fur, cape, apron, skirt and coat panels
+            var flowing = new[] { "Ponytail", "Ribbons", "Tassel1", "Tassel2", "Tassel3", "Fur", "ChestTassel", "Cord", "Cape", "Apron", "Skirt", "Hem" };
+            var data = Data;
+            foreach (var name in flowing)
+            {
+                var spec = data.parts.SingleOrDefault(p => p.region == name);
+                Assert.IsNotNull(spec, name + " is drawn by a part of its own");
+                Assert.IsNotNull(spec.soft, name + " flows");
+                Assert.IsEmpty(spec.chains, name + ": the config draws no chains, the flow is built in code");
+            }
+            // and no rigid part draws a flowing region (the hat, head, torso and legs cut the hair and cloth out)
+            foreach (var p in data.parts.Where(p => p.soft == null))
+                CollectionAssert.DoesNotContain(flowing, p.region, p.name + " is rigid but draws a flowing region");
+        }
+
+        [Test]
+        public void HangingPiecesAreTiedAtTheTopAndThePonytailAtItsKnot()
+        {
+            var rig = Rig();
+            foreach (var name in new[] { "Cape", "Tassel1", "Tassel2", "Tassel3", "ChestTassel", "Cord", "Apron", "Hem", "Skirt" })
+            {
+                var p = Part(rig, name);
+                float top = Drawn(p).Max(v => v.y), bottom = Drawn(p).Min(v => v.y);
+                Assert.Greater(p.flowRoot.y, top - (top - bottom) * 0.1f, name + " hangs from its top edge");
+            }
+            var tail = Part(rig, "Ponytail");
+            Assert.Less((tail.flowRoot - rig.pivot[(int)B.Head]).magnitude, 0.6f, "the ponytail is tied on at the head");
+        }
+
+        [Test]
+        public void EverySoftPartSwaysAtRestLikeKagesHairAndTheArmourStaysStill()
+        {
+            // a fighter standing still in calm air: Kage's hair never stops waving, nor do Raikon's pieces
+            var go = Stood(out var rig);
+            try
+            {
+                var at = Bones.Select(b => b.part).ToDictionary(n => n, n => go.GetComponentsInChildren<MeshFilter>().First(m => m.name == n).sharedMesh.vertices);
+                for (int i = 0; i < 20; i++) { rig.Apply(PoseLib.Stance()); rig.Secondary(1f / 60f, Vector2.zero); }
+                float Moved(string n)
+                {
+                    var now = go.GetComponentsInChildren<MeshFilter>().First(m => m.name == n).sharedMesh.vertices;
+                    return now.Select((v, k) => (v - at[n][k]).magnitude).Max();
+                }
+                foreach (var (name, _) in Soft) Assert.Greater(Moved(name), 0.002f, name + " sways while he stands still");
+                Assert.Greater(Moved("Cape"), Moved("Skirt"), "the light cape waves more than the heavy haidate");
+                foreach (var r in new[] { "Hat", "Torso", "SodeN", "Tachi_Blade", "BootN" }) Assert.AreEqual(0f, Moved(r), 1e-6f, r + " is rigid");
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        static GameObject Stood(out FighterRig rig)
+        {
+            var go = new GameObject("RaikonRig");
+            rig = go.AddComponent<FighterRig>();
+            rig.Build(Rig(), 1000);
+            rig.Apply(PoseLib.Stance());
+            rig.ResetSoft();
+            for (int i = 0; i < 90; i++) { rig.Apply(PoseLib.Stance()); rig.Secondary(1f / 60f, Vector2.zero); }
+            return go;
+        }
+
+        [Test]
+        public void EverySoftPartWhipsOnAHitAndALandingAndTheArmourDoesNot()
+        {
+            var still = Stood(out var a);
+            var hit = Stood(out var b);
+            try
+            {
+                Assert.AreEqual(Soft.Length, b.SoftPartCount, "every soft part is driven by the rig");
+                b.Impulse(new Vector2(-6f, 3f));       // a blow from the right: flung back towards the attacker and up
+                var most = new Dictionary<string, float>();
+                for (int i = 0; i < 20; i++)
+                {
+                    foreach (var r in new[] { a, b }) { r.Apply(PoseLib.Stance()); r.Secondary(1f / 60f, Vector2.zero); }
+                    foreach (var part in Bones.Select(x => x.part))
+                    {
+                        var va = still.GetComponentsInChildren<MeshFilter>().First(m => m.name == part).sharedMesh.vertices;
+                        var vb = hit.GetComponentsInChildren<MeshFilter>().First(m => m.name == part).sharedMesh.vertices;
+                        float d = va.Select((p, k) => (p - vb[k]).magnitude).Max();
+                        most[part] = Mathf.Max(most.TryGetValue(part, out var m0) ? m0 : 0f, d);
+                    }
+                }
+                foreach (var (name, _) in Soft) Assert.Greater(most[name], 1e-4f, name + " whips on the hit");
+                foreach (var r in new[] { "Hat", "Torso", "SodeN", "Tachi_Blade", "BootN" }) Assert.AreEqual(0f, most[r], 1e-6f, r + " is rigid");
+            }
+            finally { Object.DestroyImmediate(still); Object.DestroyImmediate(hit); }
+        }
+
+        [Test]
+        public void AnImpulseWaitsOutHitStopAndTheClothNeverFallsThroughTheFloor()
+        {
+            var go = Stood(out var rig);
+            try
+            {
+                var before = go.GetComponentsInChildren<MeshFilter>().First(m => m.name == "Cape").sharedMesh.vertices;
+                rig.Impulse(new Vector2(0f, -8f), 1.4f);
+                rig.Secondary(0f, Vector2.zero);         // hit-stop: nothing moves yet
+                var held = go.GetComponentsInChildren<MeshFilter>().First(m => m.name == "Cape").sharedMesh.vertices;
+                CollectionAssert.AreEqual(before, held, "the jolt is held through hit-stop");
+                // lying on the floor with a hard landing: every soft part's chain stays above groundY
+                rig.Apply(PoseLib.Lie());
+                for (int i = 0; i < 120; i++)
+                {
+                    if (i % 30 == 0) rig.Impulse(new Vector2(0f, -8f), 1.4f);
+                    rig.Apply(PoseLib.Lie());
+                    rig.Secondary(1f / 60f, Vector2.zero);
+                }
+                float Low(string part)
+                {
+                    var mf = go.GetComponentsInChildren<MeshFilter>().First(m => m.name == part);
+                    return mf.sharedMesh.vertices.Min(v => mf.transform.TransformPoint(v).y);
+                }
+                // the floor, or the lowest rigid piece if the lying pose itself dips under it; a vertex may hang a cloth's width
+                // off its chain, which is what lies on the floor
+                float floor = Mathf.Min(rig.groundY, Bones.Select(b => b.part).Where(p => Soft.All(s => s.name != p)).Min(Low));
+                foreach (var (name, _) in Soft)
+                    Assert.Greater(Low(name), floor - 0.12f, name + " drapes on the floor, not through it");
+            }
+            finally { Object.DestroyImmediate(go); }
         }
 
         static bool Inside(Vector2[] poly, Vector2 q)

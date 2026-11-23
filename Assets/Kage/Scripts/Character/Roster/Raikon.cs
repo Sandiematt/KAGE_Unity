@@ -6,8 +6,9 @@ namespace Kage
     /// <summary>
     /// Raikon (id "raikon"), the Act I boss: his JS stats (health 640, defence 0.16, damage ×1.1, speed ×0.9, build
     /// scale 1.24, heavy armour, no-grab) and his look, cut from the owner's painting (<see cref="RaikonPartSet"/>, SAN-71).
-    /// His fight (SAN-107): the tachi set, the four JS abilities (<see cref="RaikonAbilities"/>), the three JS phases (<c>BossDef.FromJs</c>, unchanged),
-    /// mass, posture, and a hit line that is his painted blade (<see cref="CharacterDef.bladeLength"/>). ADR-0008's SAN-107 notes have the numbers.
+    /// His fight: the tachi set, mass, posture, a hit line that is his painted blade (<see cref="CharacterDef.bladeLength"/>), and the Lightning Ascendant's
+    /// three phases and fourteen abilities (<see cref="RaikonAscendant"/>, docs/raikon-ascendant-vfx.md). The four SAN-107 abilities
+    /// (<see cref="RaikonAbilities"/>) keep their slots but no phase enables them.
     /// </summary>
     public static class Raikon
     {
@@ -24,7 +25,13 @@ namespace Kage
             d.bladeLength = RaikonPartSet.PaintedBladeLength;             // his hit line is his painted blade, not the family's 1.5 m (SAN-107)
             d.colors = new FighterColors(KMath.Hex("#FF4A3C"), KMath.Hex("#FFE2DC"), KMath.Hex("#7A0E14"));
             RaikonAbilities.Register(d.bodyScale);
+            // the Lightning Ascendant's kit (RaikonAscendant): its slots follow the four SAN-107 ones, which no phase enables any more
+            foreach (var id in RaikonAscendant.AllIds) if (!d.abilities.Contains(id)) d.abilities.Add(id);
+            RaikonAscendant.Register(d.bodyScale);
             return d;
         }
+
+        /// <summary>His boss data: the Lightning Ascendant's three phases and the Final Overload (<see cref="RaikonAscendant.Boss"/>).</summary>
+        public static BossDef Boss() => RaikonAscendant.Boss();
     }
 }

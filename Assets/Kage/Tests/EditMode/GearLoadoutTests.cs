@@ -90,10 +90,10 @@ namespace Kage.Tests
         [Test]
         public void DefenceIsCappedAtHalf()
         {
-            // Raijin Kabuto L5 0.228 + Shinsei Yoroi L5 0.308 = 0.536
+            // Raijin Kabuto (legendary: the best helmet stats, 0.2 / 40) L5 0.248 + Shinsei Yoroi L5 0.308 = 0.556
             var d = KageCharacter.Def(SaveWith(helmet: "raijin_kabuto", helmetLevel: 5, armor: "shinsei_yoroi", armorLevel: 5));
             Assert.AreEqual(0.5f, d.defense, 1e-6f);
-            Assert.AreEqual(220f + 50f + 140f, d.jsHealth);
+            Assert.AreEqual(220f + 56f + 140f, d.jsHealth);
         }
 
         [Test]

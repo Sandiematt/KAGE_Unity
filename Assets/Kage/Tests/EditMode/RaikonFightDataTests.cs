@@ -61,19 +61,19 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void His_abilities_are_the_JS_four_in_slot_order()
+        public void His_first_four_slots_are_the_JS_four_in_slot_order()
         {
             var d = Def();
             Assert.AreEqual(Id, d.bossId);
-            CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, d.abilities);
+            CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, d.abilities.Take(4).ToArray(), "the Lightning Ascendant's kit follows (RaikonAscendantTests)");
         }
 
         // ---------------------------------------------------------------- phases
 
         [Test]
-        public void His_boss_data_is_the_three_JS_phases()
+        public void The_JS_table_has_his_three_phases()
         {
-            var b = BossCatalog.Get(Id);
+            var b = BossDef.FromJs(Id);       // the table; the catalog has the Lightning Ascendant's phases (RaikonAscendantTests)
             Assert.IsNotNull(b);
             Assert.AreEqual("Raikon", b.name);
             Assert.AreEqual("the Lightning Ascendant", b.title);

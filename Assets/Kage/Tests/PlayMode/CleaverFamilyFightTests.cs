@@ -83,8 +83,13 @@ namespace Kage.Tests
             Assert.IsTrue(f.Kage.rig.BaseSwordHidden, "Kage's katana is hidden");
             Assert.IsTrue(f.Kage.rig.SwordVisible);
             f.Kage.EquipWeapon("kagetsu");
-            Assert.AreEqual(0, f.Kage.rig.FamilyPartCount);
-            Assert.IsFalse(f.Kage.rig.BaseSwordHidden);
+            Assert.Greater(f.Kage.rig.FamilyPartCount, 0, "Kagetsu is drawn as the Armory shows it");
+            Assert.IsTrue(f.Kage.rig.BaseSwordHidden, "over the hidden base katana");
+            f.Kage.EquipWeapon("raiko_no_tachi");
+            f.Kage.EquipWeapon("kagetsu");
+            int katana = f.Kage.rig.FamilyPartCount;
+            f.Kage.EquipWeapon("kagetsu");
+            Assert.AreEqual(katana, f.Kage.rig.FamilyPartCount, "attaching Kagetsu again never doubles its parts");
             f.Kage.EquipWeapon("onikiri");
             f.Kage.EquipWeapon("raider_cleaver");
             int parts = f.Kage.rig.FamilyPartCount;

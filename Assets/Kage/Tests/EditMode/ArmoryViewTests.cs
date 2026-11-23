@@ -30,11 +30,11 @@ namespace Kage.Tests
         // ---- the listing ----
 
         [Test]
-        public void Weapons_are_listed_cheapest_tier_first_and_the_boss_weapon_last_without_enemy_gear_fists_or_later_act_weapons()
+        public void Weapons_are_listed_cheapest_tier_first_without_enemy_gear_fists_or_withheld_boss_weapons()
         {
             var v = View(MidGame(), ArmoryTab.Weapons);
             CollectionAssert.AreEqual(
-                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "raiko_no_tachi" },
+                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" },
                 v.Tiles.Select(t => t.Id).ToArray());
         }
 
@@ -88,9 +88,6 @@ namespace Kage.Tests
             Assert.IsTrue(onikiri.Selected);
             Assert.AreEqual(1400, onikiri.Coins);
             Assert.AreEqual(0, onikiri.Gems);
-            var raiko = v.Tiles.Single(t => t.Id == "raiko_no_tachi");
-            Assert.IsTrue(raiko.Locked);
-            Assert.AreEqual("Boss weapon", raiko.LockLabel);
             var helmets = View(MidGame(), ArmoryTab.Helmets);
             Assert.AreEqual(12, helmets.Tiles.Single(t => t.Id == "oni_menpo").Gems);
         }
@@ -214,18 +211,14 @@ namespace Kage.Tests
         [Test]
         public void A_locked_item_says_how_to_unlock_it_and_cannot_be_bought()
         {
-            var v = View(MidGame(), ArmoryTab.Weapons, "raiko_no_tachi");
-            Assert.AreEqual("Boss weapon · Odachi", v.TierLine);
+            var v = View(MidGame(), ArmoryTab.Helmets, "sumi_eboshi");
             Assert.AreEqual("Locked", v.Primary.Label);
             Assert.AreEqual(ArmoryAction.None, v.Primary.Action);
             Assert.IsFalse(v.Primary.Enabled);
             Assert.IsFalse(v.Equip.Enabled);
             var warn = v.Boxes.Single(b => b.Warn);
             Assert.AreEqual("LOCKED", warn.Title);
-            Assert.AreEqual("Defeat Raikon", warn.Text);
-
-            var trophy = View(MidGame(), ArmoryTab.Helmets, "sumi_eboshi");
-            Assert.AreEqual("Defeat Kuroe, the Ink Censor", trophy.Boxes.Single(b => b.Warn).Text);
+            Assert.AreEqual("Defeat Kuroe, the Ink Censor", warn.Text);
         }
 
         [Test]

@@ -23,8 +23,9 @@ namespace Kage
     public static class ArmoryListing
     {
         // A weapon whose family has no Unity implementation: it fights with another family's moves and drawing as a stand-in.
-        // The hammer family (Iwakudaki) is out of scope for the Prologue and Act I (spec, migration plan), so Iwakudaki is a stand-in.
-        static readonly HashSet<string> StandIns = new HashSet<string> { "iwakudaki" };
+        // Iwakudaki has no hammer family yet (it fights with the cleaver's moves) but is drawn as its own hammer (CleaverVisual.Hammer),
+        // so it is listed. None are stand-ins today.
+        static readonly HashSet<string> StandIns = new HashSet<string>();
 
         /// <summary>Every table row of a kind that the player could ever hold (not enemy-only weapons, not bare hands), in table order.</summary>
         public static IEnumerable<GearItem> Candidates(GearKind kind)
@@ -39,7 +40,7 @@ namespace Kage
         {
             var it = GameRules.Item(kind, id);
             if (it == null || it.Enemy || it.Retired) return ArmoryClass.Placeholder;
-            if (!Drawn(it) || !Obtainable(it)) return ArmoryClass.LaterAct;
+            if (GameRules.IsWithheld(kind, id) || !Drawn(it) || !Obtainable(it)) return ArmoryClass.LaterAct;
             return ArmoryClass.Implemented;
         }
 

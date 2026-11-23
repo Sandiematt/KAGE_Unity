@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Kage
@@ -48,6 +49,7 @@ namespace Kage
             if (rig.HasOwnPart(PaintedBlade)) { rig.SetSwordAlwaysFront(false); return; }
             rig.SetBaseSwordHidden(true);
             rig.SetSwordAlwaysFront(false);
+            if (weaponId == "iwakudaki") { Hammer(rig); return; }
             var look = LookOf(weaponId);
             float x0 = 0.1f, tip = 0.08f + CleaverMoves.BladeLength, len = tip - x0;
 
@@ -97,6 +99,50 @@ namespace Kage
                 new Vector2(tip - 0.012f, -0.145f), new Vector2(x0 + 0.5f * len, -0.135f), new Vector2(x0 + 0.18f * len, -0.11f),
             }, look.edge, PartRole.Metal, 1, false, 1.7f);
             rig.AddFamilyPart("Cleaver_Ember", Rect(x0 + 0.1f * len, x0 + 0.6f * len, 0.018f, 0.026f), look.glow, PartRole.Trim, 2, false, 1.6f);
+        }
+
+        /// <summary>
+        /// Iwakudaki as the Armory draws it (JS <c>kb_iwakudaki</c>, src/js/21-characters/kage/weapons.js): a war hammer, its
+        /// hourglass head flared at the two striking faces and pinched at the waist, gold face rims, the far half in shadow, gold
+        /// rune lines down the waist and a crown spike on the hit line; a long gold-banded shaft with a wrapped grip and a
+        /// pommel spike. JS units (150 to the head's centre line at 0.87), the head centred 0.84 m down the shaft.
+        /// </summary>
+        static void Hammer(FighterRig rig)
+        {
+            const float L = 150f, M = 0.84f / (0.87f * L);
+            var p = new BladePen(rig, "Hammer", B.Sword, Vector2.zero, Vector2.right, M);
+            static Vector2 V(float x, float y) => new(x, y);
+            Color gold = KMath.Hex("#C9A45C"), glow = KMath.Hex("#ffb51f"), hot = KMath.Hex("#fff1bf");
+            float cx = L * 0.87f, H = 27f, hw = L * 0.15f, ww = L * 0.085f, back = (Pommel - 0.02f) / M;
+
+            // the shaft, its pommel spike, gold bands and the wrapped grip between the hands
+            p.Fill("Shaft", 0, KMath.Hex("#4a3a28"), PartRole.Body, new[] { V(back, -2.9f), V(cx - ww, -2.9f), V(cx - ww, 2.9f), V(back, 2.9f) }, true);
+            p.Fill("PommelSpike", 1, gold, PartRole.Metal, new[] { V(back, -3.4f), V(back - 8f, 0f), V(back, 3.4f) }, true);
+            foreach (float x in new[] { -0.45f, -0.12f, 0.17f, 0.48f, 0.68f })
+                p.Fill("Band", 1, gold, PartRole.Metal, new[] { V(x / M, -3.2f), V(x / M + 2.6f, -3.2f), V(x / M + 2.6f, 3.2f), V(x / M, 3.2f) });
+            for (float x = -0.4f / M; x < -0.14f / M; x += 0.025f * L)
+                p.Stroke("Wrap", 2, KMath.Hex("#2a1e14"), PartRole.TrimDeep, new[] { V(x, -2.9f), V(x + 0.02f * L, 2.9f) }, 0.8f);
+
+            // the head: wide at the two striking faces (+-H), pinched at the waist
+            float Half(float t) => Mathf.Lerp(ww, hw, 1f - Mathf.Pow(Mathf.Sin(t * Mathf.PI), 1.6f));
+            var head = new List<Vector2>();
+            var far = new List<Vector2> { V(cx, -H) };
+            for (int i = 0; i <= 12; i++) { float t = i / 12f; head.Add(V(cx - Half(t), Mathf.Lerp(-H, H, t))); }
+            for (int i = 12; i >= 0; i--) { float t = i / 12f; head.Add(V(cx + Half(t), Mathf.Lerp(-H, H, t))); }
+            for (int i = 0; i <= 12; i++) { float t = i / 12f; far.Add(V(cx + Half(t), Mathf.Lerp(-H, H, t))); }
+            far.Add(V(cx, H));
+            p.Fill("Head", 0, KMath.Hex("#7a6a52"), PartRole.Metal, head, true);
+            p.Fill("HeadShadow", 1, KMath.Hex("#5d4f3c"), PartRole.Metal, far);              // the far half in shadow
+            float rim = 3.4f, inner = Half(rim / (2f * H));
+            p.Fill("RimTop", 2, gold, PartRole.Metal, new[] { V(cx - hw, -H), V(cx + hw, -H), V(cx + inner, -H + rim), V(cx - inner, -H + rim) });
+            p.Fill("RimBottom", 2, gold, PartRole.Metal, new[] { V(cx - inner, H - rim), V(cx + inner, H - rim), V(cx + hw, H), V(cx - hw, H) });
+            p.Fill("Crown", 3, gold, PartRole.Metal, new[] { V(cx + ww + 0.45f, -4f), V(cx + ww + 10f, 0f), V(cx + ww + 0.45f, 4f) });   // crown spike, on the hit line
+
+            // rune lines down the waist, lit gold
+            p.Glow("RuneTop", new[] { V(cx - ww * 0.4f, -H * 0.62f), V(cx, -H * 0.42f), V(cx + ww * 0.4f, -H * 0.62f) }, 0.55f, glow, hot, 2, 3);
+            p.Glow("Rune", new[] { V(cx, -H * 0.3f), V(cx, H * 0.3f) }, 0.55f, glow, hot, 2, 3);
+            p.Glow("RuneBottom", new[] { V(cx - ww * 0.4f, H * 0.62f), V(cx, H * 0.42f), V(cx + ww * 0.4f, H * 0.62f) }, 0.55f, glow, hot, 2, 3);
+            p.Ellipse("RuneEye", 3, hot, PartRole.Trim, cx, 0f, 1.5f, 1.5f, false, 1.8f, 10);
         }
 
         public void Detach(FighterRig rig)

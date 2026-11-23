@@ -31,6 +31,21 @@ namespace Kage
             PoseOutput(Mathf.Clamp01((Time.time - Time.fixedTime) / Time.fixedDeltaTime), Time.deltaTime, Time.time);
         }
 
+        float _koVyPrev;
+
+        /// <summary>
+        /// The KO ragdoll has no landing of its own: when its hips stop falling fast (they hit the floor), the soft parts get the
+        /// landing's jolt and drape on the floor (<see cref="FighterRig.groundY"/>).
+        /// </summary>
+        void KoLandingJolt()
+        {
+            var hips = FallBody(B.Hips);
+            if (hips == null) { _koVyPrev = 0f; return; }
+            float vy = hips.linearVelocity.y;
+            if (_koVyPrev < -2.5f && vy > _koVyPrev * 0.4f) LandSoftParts(-_koVyPrev);
+            _koVyPrev = vy;
+        }
+
         /// <summary>
         /// Poses the rig: <paramref name="alpha"/> is how far the rendered frame is past the last logic
         /// frame, <paramref name="dt"/> the time since the last pose and <paramref name="time"/> the clock
@@ -46,7 +61,12 @@ namespace Kage
                 if (!Headless && ctx != null) alpha = Mathf.Clamp01(ctx.Clock.WorldPhase + alpha * _worldApplied);
                 dt *= _worldApplied;
             }
-            if (state == FState.KO || FallingPhysically) { rig.Secondary(dt, Vector2.zero); return; }
+            if (state == FState.KO || FallingPhysically)
+            {
+                if (state == FState.KO) KoLandingJolt();
+                rig.Secondary(dt, Vector2.zero);
+                return;
+            }
             float sf = stateFrame + alpha;
             switch (state)
             {

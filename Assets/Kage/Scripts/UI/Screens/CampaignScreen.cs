@@ -26,6 +26,10 @@ namespace Kage
         bool enterAll, enterMap, enterCard;
         int chapterIndex;
 
+        // the stage whose card the player opened by clicking its tile: hovering or moving the focus over a tile never opens it
+        string openCard;
+        bool CardShown { get { return openCard != null && openCard == C.SelectedStage; } }
+
         public CampaignScreen(GameFlow flow, RectTransform stage) : base(flow, stage, "Campaign") { }
 
         protected override string DefaultFocus { get { return "node:" + C.SelectedStage; } }
@@ -38,6 +42,12 @@ namespace Kage
 
         public override bool Handle(MenuCommand cmd)
         {
+            if (cmd == MenuCommand.Back && CardShown)       // Esc first closes the open card, then leaves the map
+            {
+                openCard = null;
+                Rebuild("node:" + C.SelectedStage);
+                return true;
+            }
             if (cmd == MenuCommand.Prev || cmd == MenuCommand.Next)
             {
                 var chapters = GameRules.Chapters;
@@ -63,10 +73,13 @@ namespace Kage
             string chId = ChapterOfSelected();
             var view = CampaignView.Build(save, chId, C.SelectedStage);
             var ch = view.Chapter;
+            if (Fresh) openCard = null;                     // a map that opens shows no card until a tile is clicked
+            bool cardShown = CardShown;
+            string shownStage = cardShown ? C.SelectedStage : null;
             enterAll = Fresh;
             enterMap = Fresh || builtChapter != chId;
-            enterCard = Fresh || builtStage != C.SelectedStage;
-            builtChapter = chId; builtStage = C.SelectedStage;
+            enterCard = Fresh || builtStage != shownStage;
+            builtChapter = chId; builtStage = shownStage;
             chapterIndex = 0;
 
             Backdrop(Root);
@@ -91,14 +104,17 @@ namespace Kage
 
             // ---- chapter rail ----
             for (int i = 0; i < view.Chapters.Length; i++) ChapterRow(view.Chapters[i], 40, 124 + i * 88);
-            UiParts.Keys(Root, 40, 812, new[] { "ENTER", "Fight" }, new[] { "ESC", "Back" }, new[] { "Q / E", "Chapter" });
+            UiParts.Keys(Root, 40, 812, new[] { "ENTER", cardShown ? "Fight" : "Select" }, new[] { "ESC", "Back" }, new[] { "Q / E", "Chapter" });
 
             // ---- the map ----
             MapPanel(view, save);
 
             // ---- the card column ----
-            bool withBoss = view.Card.BossArt != null && Ui.Tex("reveal_" + view.Card.BossArt) != null;
-            StageCardPanel(view, withBoss);
+            if (cardShown)
+            {
+                bool withBoss = view.Card.BossArt != null && Ui.Tex("reveal_" + view.Card.BossArt) != null;
+                StageCardPanel(view, withBoss);
+            }
         }
 
         // ---------------- backdrop ----------------
@@ -224,9 +240,10 @@ namespace Kage
             if (st.IsNext) { fill = Ui.InkOnGold; edge = Ui.Gold; bw = 2f; Ui.Glow(rt, 70, box / 2, 56, Ui.A(Ui.Gold, 0.45f), 1.6f); }
             float cx = 70, cy = box / 2;
             // the current node's ring breathes (cpHalo: 2.4 s, scale 1.3 to 1.45, opacity 1 to .45)
-            if (st.IsNext) UiFx.Loop(Ui.Diamond(rt, cx, cy, 56f, Color.clear, Ui.GoldHair, 1f).transform, UiAnims.CpHalo());
-            var dia = Ui.Diamond(rt, cx, cy, ds, fill, edge, bw);
-            if (st.Selected && !st.IsNext) Ui.Diamond(rt, cx, cy, ds * 1.32f, Color.clear, Ui.Gold, 1.5f);
+            if (st.IsNext) UiFx.Loop(Ui.Diamond(rt, cx, cy, 56f, Color.clear, Ui.GoldHair, 1f, true).transform, UiAnims.CpHalo());
+            var dia = Ui.Diamond(rt, cx, cy, ds, fill, edge, bw, true);
+            bool selected = st.Selected && CardShown;
+            if (selected && !st.IsNext) Ui.Diamond(rt, cx, cy, ds * 1.32f, Color.clear, Ui.Gold, 1.5f, true);
 
             // the glyph
             if (locked && !big && st.Kind != "boss") LockIcon(rt, cx, cy - 2, Ui.Muted);
@@ -239,7 +256,7 @@ namespace Kage
             }
 
             // name and type under the diamond
-            Color nameC = st.Selected || st.IsNext ? Ui.Gold : locked ? Ui.Muted : Ui.Bone;
+            Color nameC = selected || st.IsNext ? Ui.Gold : locked ? Ui.Muted : Ui.Bone;
             int nameSize = st.Kind == "boss" ? 16 : st.IsNext ? 15 : 14;
             var nm = Ui.Label(rt, st.Label, UiFont.Title, nameSize, nameC, 5, box + 6, 130, 36, TextAnchor.UpperCenter, 0, true, 0.9f);
             nm.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -256,13 +273,15 @@ namespace Kage
             // JS: a node pops in from 60% (cpPop, .45 s, 40 ms apart), and hovering one grows its diamond 10% in .2 s
             if (enterMap) UiFx.In(rt, UiAnims.NodePop(index * 0.04f));
             var grow = UiFocusTween.On(rt, .2f, v => dia.rectTransform.localScale = Vector3.one * (1f + 0.1f * v));
-            var item = UiParts.Make(rt, Nav, "node:" + id, () =>
+            // clicking (or Enter on) a node opens its card; the Fight button on the card starts the stage. Hovering does nothing.
+            UiParts.Make(rt, Nav, "node:" + id, () =>
             {
-                if (C.SelectedStage == id) C.BeginLoadout();
-                else C.SelectStage(id);
+                if (openCard == id && C.SelectedStage == id) return;
+                openCard = id;
+                C.SelectStage(id);
+                var fight = System.Linq.Enumerable.FirstOrDefault(Nav.Items, i => i != null && i.key == "fight" && i.interactable);
+                if (fight != null) Nav.SetFocus("fight");       // the card's Fight button is the next thing to press
             }, f => grow.Set(f));
-            // moving onto a node selects it, so the card follows the cursor (a rebuild restoring the focus does not)
-            item.onUserFocus = () => { if (C.SelectedStage != id) C.SelectStage(id); };
         }
 
         // ---------------- stage card ----------------

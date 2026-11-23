@@ -109,14 +109,16 @@ namespace Kage
             }
             var saves = new List<SaveData>();
             var xs = new List<float>();
+            var shown = new List<bool>();
             for (int i = 0; i < v.Tiles.Length; i++)
             {
                 saves.Add(ArmoryView.PreviewSave(save, ArmoryTab.Armor, v.Tiles[i].Id));
                 xs.Add(CardX(i) + 3f + 0.54f * (CardW - 6f));
+                shown.Add(CardInWindow(i));
             }
             string key = "armor|" + save.equipped.weapon + ":" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
             // the row scrolls by the camera panning with it, so each Kage stays in his card
-            world.ShowRow(saves, xs, key, cardScroll);
+            world.ShowRow(saves, xs, key, cardScroll, shown);
         }
 
         // ---------------- the Weapons tab's preview: the JS illustration of the blade ----------------
@@ -210,6 +212,16 @@ namespace Kage
         float Rarity(Transform p, float x, float y, ArmoryView v)
         {
             var c = TierColor(v.TierId);
+            if (v.TierId == JsTables.Legendary.Id)
+            {
+                // the legendary helmets: a larger tier title in a drifting rainbow over its own soft glow
+                Ui.Glow(p, x + 90f, y + 12f, 120f, Ui.A(Color.white, 0.08f), 1.2f);
+                var gem = Ui.Diamond(p, x + 6f, y + 12f, 12f, Color.white, Color.white, 0f);
+                gem.gameObject.AddComponent<Rainbow>();
+                var t = Ui.Label(p, v.TierLine.ToUpperInvariant(), UiFont.Title, 20, Color.white, x + 24f, y, 460f, 24f, TextAnchor.MiddleLeft, 6f);
+                t.gameObject.AddComponent<Rainbow>();
+                return 24f;
+            }
             Ui.Diamond(p, x + 4.5f, y + 10f, 9f, c, c, 0f);
             Ui.Label(p, v.TierLine.ToUpperInvariant(), UiFont.Title, 14, c, x + 19f, y, 460f, 20f, TextAnchor.MiddleLeft, 4.2f);
             return 20f;
@@ -466,7 +478,8 @@ namespace Kage
             }
             else if (t.LockLabel != null)
             {
-                Ui.Label(rt, t.LockLabel.ToUpperInvariant(), UiFont.Title, 11, Ui.Hot, 0, H - 10f - 18f, TileW, 18f, TextAnchor.MiddleCenter, 1.6f);
+                var lockText = Ui.Label(rt, t.LockLabel.ToUpperInvariant(), UiFont.Title, 11, Ui.Hot, 0, H - 10f - 18f, TileW, 18f, TextAnchor.MiddleCenter, 1.6f);
+                if (t.LockLabel == JsTables.Legendary.Label) lockText.gameObject.AddComponent<Rainbow>();
             }
             else
             {
@@ -550,6 +563,13 @@ namespace Kage
         const float CardW = 177f, CardPitch = 191f, RowX = 40f, RowW = 1520f;
 
         static float CardX(int i) { return 42f + i * CardPitch; }
+
+        /// <summary>True when armour card i lies inside the row's clipped window at the current scroll (a few px of slack).</summary>
+        bool CardInWindow(int i)
+        {
+            float left = CardX(i) - cardScroll, right = left + CardW;
+            return left >= RowX - 8f && right <= RowX + RowW + 8f;
+        }
 
         // returns true when the row scrolled
         bool KeepCardVisible(int i)

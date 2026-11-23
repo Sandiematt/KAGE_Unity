@@ -20,7 +20,8 @@ namespace Kage.Rules
         public static int MaxLevel(GearKind kind, string id)
         {
             var it = Item(kind, id);
-            return it != null && (it.Tier == "trophy" || it.Tier == "boss") ? 1 : GearMax(kind);
+            string tier = it != null && it.Gear != null ? it.Gear.Tier : it?.Tier;     // the JS tier: a legendary trophy helmet stays at level 1
+            return it != null && (tier == "trophy" || tier == "boss") ? 1 : GearMax(kind);
         }
 
         /// <summary>Coins to take an owned item from <paramref name="level"/> to the next level.</summary>

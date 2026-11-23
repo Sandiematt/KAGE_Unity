@@ -51,13 +51,63 @@ namespace Kage
                 _announced = true;
                 Publish();
             }
+            TickWind();
             if (_f.health <= 0f || _f.maxHealth <= 0f) return;
             float fraction = _f.health / _f.maxHealth;
             while (Index + 1 < Count && fraction <= Boss.phases[Index + 1].at)
             {
                 Apply(Index + 1);
+                var enter = Current.enterMove;
+                if (enter != null) _f.QueueForcedMove(enter);         // a later phase's entry replaces an earlier one still waiting
                 Publish();
             }
+        }
+
+        // ---- the phase's wind (FighterRig.wind on both rigs), ramped in ----
+        Wind _windFrom, _windTo;
+        int _windAge, _windFrames;
+
+        /// <summary>The wind the phase is blowing now (mid-ramp: between the last phase's and this one's), in world space.</summary>
+        public Wind WindNow => _windFrames <= 0 || _windAge >= _windFrames ? _windTo : LerpWind(_windFrom, _windTo, _windAge / (float)_windFrames);
+
+        void StartWind(PhaseDef p, bool instant)
+        {
+            if (p.wind == null) return;
+            var w = p.wind.Value;
+            float face = _f.facing >= 0f ? 1f : -1f;
+            w.steady = new UnityEngine.Vector2(w.steady.x * face, w.steady.y);
+            _windFrom = instant ? w : WindNow;
+            _windTo = w;
+            _windAge = 0;
+            _windFrames = instant ? 0 : p.windRampFrames;
+            SetWind(WindNow);
+        }
+
+        void TickWind()
+        {
+            if (_windFrames <= 0 || _windAge >= _windFrames) return;
+            _windAge++;
+            SetWind(WindNow);
+        }
+
+        void SetWind(Wind w)
+        {
+            if (_f.rig != null) _f.rig.wind = w;
+            if (_f.opponent != null && _f.opponent.rig != null) _f.opponent.rig.wind = w;
+        }
+
+        /// <summary>Steady wind, gust and gust rate eased linearly; the seed is the target's (a calm end keeps the start's, so gusts don't jump).</summary>
+        public static Wind LerpWind(Wind a, Wind b, float u)
+        {
+            u = UnityEngine.Mathf.Clamp01(u);
+            float rateA = a.gustRate > 0f ? a.gustRate : 0.6f, rateB = b.gustRate > 0f ? b.gustRate : 0.6f;
+            return new Wind
+            {
+                steady = UnityEngine.Vector2.Lerp(a.steady, b.steady, u),
+                gust = UnityEngine.Mathf.Lerp(a.gust, b.gust, u),
+                gustRate = UnityEngine.Mathf.Lerp(rateA, rateB, u),
+                seed = b.IsCalm ? a.seed : b.seed,
+            };
         }
 
         /// <summary>Back to the first phase (a new round: the boss has its health back).</summary>
@@ -65,6 +115,13 @@ namespace Kage
         {
             Apply(0);
             _announced = false;
+        }
+
+        /// <summary>Applies phase <paramref name="index"/> at once with no entry move (tests, a dev jump to a phase).</summary>
+        public void JumpTo(int index)
+        {
+            Apply(UnityEngine.Mathf.Clamp(index, 0, Count - 1));
+            Publish();
         }
 
         void Publish()
@@ -91,6 +148,8 @@ namespace Kage
                 if (p.aiProfile != null) ai.SetProfile(AiProfiles.Get(p.aiProfile));
                 ai.aggressive = p.aggressive;
             }
+            StartWind(p, index == 0);
+            p.onEnter?.Invoke(_f, index);
         }
     }
 }

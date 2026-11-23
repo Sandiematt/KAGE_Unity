@@ -83,10 +83,11 @@ namespace Kage.Tests
         {
             var save = Money(99999, 999);
             var a = New(save);
-            a.Select("raiko_no_tachi");
-            Assert.AreEqual("raiko_no_tachi", a.SelectedId);
+            a.SelectTab(ArmoryTab.Helmets);
+            a.Select("sumi_eboshi");
+            Assert.AreEqual("sumi_eboshi", a.SelectedId);
             Assert.IsFalse(a.Buy());
-            Assert.IsFalse(save.owned.weapons.ContainsKey("raiko_no_tachi"));
+            Assert.IsFalse(save.owned.helmets.ContainsKey("sumi_eboshi"));
         }
 
         [Test]

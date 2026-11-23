@@ -99,7 +99,7 @@ namespace Kage
         {
             result = HitResult.Blocked;
             var w = info.w;
-            if (!IsGuarding || !GuardBlocks(w.level, _crouchHeld)) return false;
+            if (!IsGuarding || w.unguardable || !GuardBlocks(w.level, _crouchHeld)) return false;     // unguardable: only a parry stops it (Raikon's iaijutsu)
             var t = Tuning.Get<GuardTuning>();
             SetState(FState.Blockstun);
             _stun = Mathf.Max(t.minBlockstun, Mathf.RoundToInt(w.stun * t.blockstunFactor));

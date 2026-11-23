@@ -10,7 +10,7 @@ namespace Kage
     /// eased particle travel (fast then hanging), and screen feedback (hit-stop, shake, flash).
     /// Contact flashes and sparks run on unscaled time so they bloom during hit-stop.
     /// </summary>
-    public class Vfx : MonoBehaviour
+    public partial class Vfx : MonoBehaviour
     {
         public static Vfx I;
         ParticleSystem _sparks, _dust, _embers, _motes;

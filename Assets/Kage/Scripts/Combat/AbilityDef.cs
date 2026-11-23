@@ -29,6 +29,16 @@ namespace Kage
         /// guard, the JS style's <c>when</c>). Null: any. The fighter itself doesn't ask it, so a scripted press starts the ability anyway.
         /// </summary>
         public System.Func<Fighter, Fighter, bool> when;
+        /// <summary>
+        /// A reaction (Raikon's Iron Guard Counter vs light-attack spam, Sky-Splitter vs a jump): the AI checks it on every frame it is free to act,
+        /// not only when it next decides, so <see cref="when"/> is answered the moment it holds. Range, cooldown, phase and chance still apply.
+        /// </summary>
+        public bool reactive;
+        /// <summary>
+        /// An escape (Raikon's Afterimage Feint): once the fighter has taken this many blows in a row (<see cref="Fighter.HitsTakenInARow"/>), it starts the
+        /// ability itself on its next frame, out of the hit-stun or through its armour (Fighter.Ascendant.cs). The AI never picks it in neutral. 0: not an escape.
+        /// </summary>
+        public int escapeAfterHits;
     }
 
     /// <summary>

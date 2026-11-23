@@ -36,7 +36,7 @@ namespace Kage
         public static NavItem Back(Transform p, NavGroup nav, Action onSubmit, float x = 40f, float y = 15f)
         {
             var rt = Ui.Node(p, "Back", x, y, 58, 58);
-            var dia = Ui.Diamond(rt, 29, 29, 40, Ui.PanelA(0.8f), Ui.GoldDim, 1.5f);
+            var dia = Ui.Diamond(rt, 29, 29, 40, Ui.PanelA(0.8f), Ui.GoldDim, 1.5f, true);
             var chevron = Ui.Line(rt, new[] { new Vector2(32.2f, 37f), new Vector2(26.7f, 29f), new Vector2(32.2f, 21f) }, 2f, Ui.Bone);
             chevron.rectTransform.sizeDelta = new Vector2(58, 58);
             return Make(rt, nav, "back", onSubmit, f =>

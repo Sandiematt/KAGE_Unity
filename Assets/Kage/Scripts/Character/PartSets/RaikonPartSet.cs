@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using UnityEngine;
+
 namespace Kage
 {
     /// <summary>
@@ -10,9 +13,13 @@ namespace Kage
     /// Nothing is drawn in code. <c>Tools/svg_art/svg_rig.py</c> cuts the owner's trace (<c>Tools/raikon_art/original/Raikon.svg</c>,
     /// its silhouette and the hair, fur and face tones from <c>Raikon.png</c>) by the regions of <c>Tools/raikon_art/rig.json</c> into
     /// <see cref="Resource"/>; <see cref="SvgRig"/> puts each piece on its bone in the trace's own colours (<see cref="RaikonArt"/>).
-    /// Rigid pieces (hat, head, eye, torso, sode, arms, hands, rope belt, skirt, legs, boots, the tachi) ride their bones; the cape,
-    /// ponytail, ribbons, hat tassels, fur, chest tassel, apron, cord tassel and back coat panels hang on spring chains
-    /// (<see cref="SoftPresets"/>) that swing with the body and bend in the wind (<see cref="FighterRig.wind"/>).
+    /// Rigid pieces (hat, head, eye, torso, sode, arms, hands, rope belt, legs, boots, the tachi) ride their bones; every flowing
+    /// piece flows as Kage's hair does (<see cref="FlowField"/>): it turns about the point it is tied on at (<see cref="TiedAt"/>) with
+    /// a spring lag and a wind wave that never stops, in its <see cref="SoftPresets"/> feel: the cape (Cape), the ponytail (Hair),
+    /// the ribbons (Strip), the hat, chest and cord tassels (Tassel), the fur (Fur), the apron and back coat panels (Tails) and the
+    /// plated haidate (Plates). No chains are drawn in the config. They sway at rest, trail the body, bend in the wind
+    /// (<see cref="FighterRig.wind"/>), drape on the floor (<see cref="FighterRig.groundY"/>) and whip when he is hit, knocked down
+    /// or lands (<see cref="FighterRig.Impulse"/>).
     /// </para>
     /// <para>
     /// The painting holds the tachi in the near hand; on the shared skeleton the sword hangs from the far hand. So the far arm is the
@@ -38,11 +45,24 @@ namespace Kage
 
         public string Id => "raikon";
 
+        /// <summary>
+        /// Where the pieces that do not simply hang from their top edge are tied on (SVG px), as Kage's hair has its skull centre
+        /// (<see cref="RigDef.hairCentre"/>): the ponytail at the knot on the crown of the hat, its ribbons where they come off it, the fur mantle round
+        /// the neck. Every other flowing piece hangs from the middle of its top edge (<see cref="SvgRig.TieOf"/>): the cape at the
+        /// shoulders, the apron, skirt and coat panels at the belt, each tassel at its cord.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, Vector2> TiedAt = new Dictionary<string, Vector2>
+        {
+            ["Ponytail"] = new(530f, 110f),
+            ["Ribbons"] = new(655f, 92f),
+            ["Fur"] = new(505f, 300f),
+        };
+
         public RigDef Build(CharacterDef c)
         {
             var d = KageModel.Skeleton("RAIKON");
             RaikonArt.Dress(d);
-            SvgRig.Build(d, SvgRigData.Load(Resource), RaikonArt.Style);
+            SvgRig.Build(d, SvgRigData.Load(Resource), RaikonArt.Style, TiedAt);
             return d;
         }
     }

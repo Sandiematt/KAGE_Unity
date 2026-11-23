@@ -130,16 +130,33 @@ namespace Kage.Rules
         public static double GearDef(GearKind kind, string id, int level)
         {
             var g = Item(kind, id);
-            return g != null && g.Gear != null && g.Gear.Def > 0 ? g.Gear.Def + GearDefPerLevel * ((level <= 0 ? 1 : level) - 1) : 0;
+            if (g == null || g.Gear == null || g.Gear.Def <= 0) return 0;
+            double def = IsLegendary(kind, id) ? MaxHelmetDef() : g.Gear.Def;
+            return def + GearDefPerLevel * ((level <= 0 ? 1 : level) - 1);
         }
 
         /// <summary>Health (JS units) a helmet or armour gives at a level.</summary>
         public static int GearHp(GearKind kind, string id, int level)
         {
             var g = Item(kind, id);
-            return g != null && g.Gear != null && g.Gear.Hp > 0
-                ? JsRound(g.Gear.Hp * (1 + GearHpGrowthPerLevel * ((level <= 0 ? 1 : level) - 1)))
-                : 0;
+            if (g == null || g.Gear == null || g.Gear.Hp <= 0) return 0;
+            double hp = IsLegendary(kind, id) ? MaxHelmetHp() : g.Gear.Hp;
+            return JsRound(hp * (1 + GearHpGrowthPerLevel * ((level <= 0 ? 1 : level) - 1)));
+        }
+
+        // the best base defence and health of any player helmet in the tables: what a legendary helmet gives
+        static double MaxHelmetDef()
+        {
+            double best = 0;
+            foreach (var h in JsTables.Helmets) if (!h.Enemy && !h.Retired && h.Def > best) best = h.Def;
+            return best;
+        }
+
+        static double MaxHelmetHp()
+        {
+            double best = 0;
+            foreach (var h in JsTables.Helmets) if (!h.Enemy && !h.Retired && h.Hp > best) best = h.Hp;
+            return best;
         }
 
         // The level an owned item is at, 1 when it isn't in the save.

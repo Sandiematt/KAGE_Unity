@@ -18,7 +18,7 @@ namespace Kage
     public enum Limb { ArmN, ArmF, LegN, LegF }
 
     public enum PartRole { Body, Trim, TrimDeep, Metal, Eye, Hair, Boot, Detail }
-    public enum SoftKind { None, Hair, Coat, Chain }
+    public enum SoftKind { None, Hair, Coat, Chain, Flow }
 
     /// <summary>How a <see cref="SoftKind.Chain"/> part moves (<see cref="SoftChains"/>): Raikon's cape, ponytail, tassels and fur (SAN-71).</summary>
     public struct ChainFeel
@@ -58,6 +58,7 @@ namespace Kage
         public int clothLayer;         // coat: 0 = front flap cloth, 1 = tail cloth (side + back panels)
         public List<Vector2[]> chains; // SoftKind.Chain: spring chains (bind space, root first) the mesh is bound to
         public ChainFeel chainFeel;
+        public Vector2 flowRoot;       // SoftKind.Flow: bind-space point the piece is tied on at (FlowField), as Kage's hairCentre
     }
 
     /// <summary>An extra scarf tail (armour visuals, SAN-85): a short strip on the scarf's knot that streams like the two main tails.</summary>

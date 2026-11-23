@@ -14,7 +14,7 @@ The Armory lists only gear that exists in Unity. The tables (`JsTables`, from th
 
 The Armor tab shows one list: the starter and the seven shop armours, then the Act I reward armours (Ikazuchi-dō from Garan, Shiden Yoroi from Shiden) once the save owns them, and not before, so there is no locked "Trophy" card. A worn reward armour is selected when the tab opens and can be equipped like any other. The trophy armours' data and drawings (`ArmorLooksTrophies.cs`) stay: fights, results and the profile still draw them. The title's Trophies diamond and overlay (every boss stage and whether it has fallen) is a different feature and is unchanged.
 
-Weapons and helmets keep their locked Act I rewards visible (Raikō no Tachi, Sumi Eboshi, Hisame Zukin, Raijin Kabuto): they are real, you can get them in Act I, and the lock box says how.
+Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raijin Kabuto): they are real, you can get them in Act I, and the lock box says how.
 
 ## Weapons
 
@@ -26,7 +26,7 @@ Weapons and helmets keep their locked Act I rewards visible (Raikō no Tachi, Su
 | Onikiri | shop 1400 | cleaver | (a) | listed |
 | Mizuchi | shop 1700 | spear | (a) | listed |
 | Yamigama | shop 2600 | chain sickle | (a) | listed |
-| Raikō no Tachi | Act I boss (Raikon) | heavy tachi | (a) | listed, locked until Raikon falls |
+| Raikō no Tachi | Act I boss (Raikon) | heavy tachi | (b) withheld | removed: Raikon no longer grants it (owner, 2026-11-23) |
 | Iwakudaki | shop 3200 | hammer: no family (out of scope), fights with the cleaver set | (b) stand-in | removed |
 | Shinsen | boss weapon, "Defeat Akari" (later act) | katana | (b) | removed |
 | Kagehira & Yūrei | boss weapon, "Defeat Akari" (later act) | twin blades | (b) | removed |
@@ -72,6 +72,10 @@ Weapons and helmets keep their locked Act I rewards visible (Raikō no Tachi, Su
 ## Counts
 
 Before: 48 items a player could hold were listed (11 weapons, 19 helmets, 18 armours). Now: 31 are listed (7 weapons, 14 helmets, 10 armours), 17 removed, all class (b): 4 weapons (Iwakudaki, Shinsen, Kagehira & Yūrei, Mugen no Ha), 5 helmets and 8 armours. Class (c) gear (30 foe weapons, 10 retired armours) was never listed.
+
+## Withheld weapons
+
+The owner removed four boss weapons for now (Shinsen is meant to come only after Act 2 or 3): Shinsen, Raikō no Tachi, Kagehira & Yūrei and Mugen no Ha. `GameRules.IsWithheld` names them. A stage reward never grants them, the Armory and the loadout's weapon row never list them, and `ArmoryListing.Classify` reports them as (b). The table rows, the weapon families and the foes' own copies of the blades (Raikon still fights with his tachi) are untouched. Delete an id from `WithheldWeapons` in `GameRules.Campaign.cs` to turn one back on.
 
 ## Turning an item back on
 

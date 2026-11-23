@@ -34,6 +34,20 @@ namespace Kage
         public bool berserk;
         /// <summary>JS <c>secondWave</c>: the delay in seconds of Thunder Swing's second wave; 0 = none. Read from <see cref="Fighter.SecondWaveDelay"/>.</summary>
         public float secondWave;
+        /// <summary>
+        /// The move the boss plays the moment the phase opens, out of whatever it was doing (a forced move, <see cref="Fighter.QueueForcedMove"/>): Raikon's
+        /// Storm Kindling, Ascension and Final Overload. Never played for the first phase or after a reset. Null: none.
+        /// </summary>
+        public MoveDef enterMove;
+        /// <summary>
+        /// The wind on both fighters' rigs while the phase lasts (<see cref="FighterRig.wind"/>), in the boss's own frame: +x is the way he faces when
+        /// the phase opens. Ramped in from the last phase's wind over <see cref="windRampFrames"/>. Null keeps the wind as it is.
+        /// </summary>
+        public Wind? wind;
+        /// <summary>Frames the wind takes to reach this phase's (0 = at once).</summary>
+        public int windRampFrames;
+        /// <summary>Called when the phase is applied (the first phase on spawn and on every reset too), with the boss and the phase index: the persistent look of a phase.</summary>
+        public Action<Fighter, int> onEnter;
     }
 
     /// <summary>
@@ -99,6 +113,7 @@ namespace Kage
             Register(FootmanBoss.Boss());          // the test boss (SAN-102)
             Register(Garan.Boss());                // Garan: the JS phases with his clinch in both (SAN-104)
             Register(Shiden.Boss());               // Shiden: the JS phases with his charging thrust in both (SAN-106)
+            Register(Raikon.Boss());               // Raikon: the Lightning Ascendant's three phases and the Final Overload
         }
 
         /// <summary>Adds or replaces a boss (validated).</summary>

@@ -89,13 +89,17 @@ namespace Kage.Tests
             yield return null;
             flow.Controller.OpenCampaign();
             var nav = flow.Panel(FlowScreen.Campaign).Nav;
+            Assert.IsFalse(nav.Items.Any(i => i.key == "fight"), "no card, so no Fight button, until a tile is clicked");
+
+            nav.SetFocus("node:prologue.1");
+            flow.Send(MenuCommand.Submit);          // clicking the tile opens its card
             Assert.IsTrue(nav.Items.Single(i => i.key == "fight").interactable, "the Prologue is open on a fresh save");
 
-            flow.Controller.SelectStage("act1.stretch1");
-            nav = flow.Panel(FlowScreen.Campaign).Nav;
+            nav.SetFocus("node:act1.stretch1");
+            flow.Send(MenuCommand.Submit);
             Assert.IsFalse(nav.Items.Single(i => i.key == "fight").interactable, "Act I waits for the Prologue");
             nav.SetFocus("node:act1.stretch1");
-            flow.Send(MenuCommand.Submit);          // the locked stage is selected: Enter must not open its loadout
+            flow.Send(MenuCommand.Submit);          // the locked stage's card is open: Enter must not open its loadout
             Assert.AreEqual(FlowScreen.Campaign, flow.Controller.Screen, "a locked stage can't be started");
             Assert.AreEqual("act1.stretch1", flow.Controller.SelectedStage);
         }
@@ -106,8 +110,10 @@ namespace Kage.Tests
             StartFlow(devMode: true);
             yield return null;
             flow.Controller.OpenCampaign();
-            flow.Controller.SelectStage("act1.boss");
-            Assert.IsTrue(flow.Panel(FlowScreen.Campaign).Nav.Items.Single(i => i.key == "fight").interactable);
+            var nav = flow.Panel(FlowScreen.Campaign).Nav;
+            nav.SetFocus("node:act1.boss");
+            flow.Send(MenuCommand.Submit);
+            Assert.IsTrue(nav.Items.Single(i => i.key == "fight").interactable);
         }
 
         [UnityTest]
@@ -117,7 +123,10 @@ namespace Kage.Tests
             yield return null;
             flow.Controller.OpenCampaign();
             Assert.AreEqual("node:prologue.1", Focus);
-            flow.Send(MenuCommand.Submit);          // the stage is already selected: this opens its loadout
+            flow.Send(MenuCommand.Submit);          // clicking the tile opens its card and focuses Fight; it does not start the stage
+            Assert.AreEqual(FlowScreen.Campaign, flow.Controller.Screen);
+            Assert.AreEqual("fight", Focus);
+            flow.Send(MenuCommand.Submit);          // the Fight button opens the loadout
             Assert.AreEqual(FlowScreen.Loadout, flow.Controller.Screen);
             Assert.IsNotNull(flow.World, "the two fighters stand behind the loadout");
             Assert.AreEqual(StageWorld.Phase.Tableau, flow.World.phase);

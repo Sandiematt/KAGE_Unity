@@ -254,10 +254,12 @@ namespace Kage
         }
 
         /// <summary>A square turned 45 degrees: JS .w-dia::before. <paramref name="ds"/> is the square's side.</summary>
-        public static DiamondGraphic Diamond(Transform parent, float cx, float cy, float ds, Color fill, Color border, float bw = 1.5f)
+        public static DiamondGraphic Diamond(Transform parent, float cx, float cy, float ds, Color fill, Color border, float bw = 1.5f, bool centerPivot = false)
         {
             float half = ds * 0.7071f + 1f;
             var rt = Node(parent, "Diamond", cx - half, cy - half, half * 2, half * 2);
+            // centerPivot (position unchanged): for diamonds that get scaled: the halo, the selection ring and the hover grow scale it, and a top-left pivot made them drift down and right
+            if (centerPivot) { rt.pivot = new Vector2(0.5f, 0.5f); rt.anchoredPosition = new Vector2(cx, -cy); }
             var g = rt.gameObject.AddComponent<DiamondGraphic>();
             g.raycastTarget = false;
             g.Set(ds, bw, fill, border);
@@ -321,6 +323,38 @@ namespace Kage
             {
                 vh.PopulateUIVertex(ref v, i);
                 v.position.x += px * (i / 4) + shift;
+                vh.SetUIVertex(v, i);
+            }
+        }
+    }
+
+    /// <summary>
+    /// A rainbow across a Text or a shape (the legendary tier line): each vertex takes the hue of where it sits from the left to
+    /// the right edge of the mesh, the hues drifting slowly sideways. Add it after <see cref="Tracking"/> so it colours the moved glyphs.
+    /// </summary>
+    [AddComponentMenu("")]
+    public sealed class Rainbow : BaseMeshEffect
+    {
+        public float saturation = 0.62f, value = 1f, speed = 0.12f;
+
+        void Update() { if (speed != 0f && graphic != null) graphic.SetVerticesDirty(); }
+
+        public override void ModifyMesh(VertexHelper vh)
+        {
+            if (!IsActive()) return;
+            int count = vh.currentVertCount;
+            if (count == 0) return;
+            var v = new UIVertex();
+            float x0 = float.MaxValue, x1 = float.MinValue;
+            for (int i = 0; i < count; i++) { vh.PopulateUIVertex(ref v, i); x0 = Mathf.Min(x0, v.position.x); x1 = Mathf.Max(x1, v.position.x); }
+            float span = Mathf.Max(1f, x1 - x0), shift = Time.unscaledTime * speed;
+            for (int i = 0; i < count; i++)
+            {
+                vh.PopulateUIVertex(ref v, i);
+                float h = Mathf.Repeat((v.position.x - x0) / span * 0.85f + shift, 1f);
+                Color c = Color.HSVToRGB(h, saturation, value);
+                c.a = v.color.a / 255f;
+                v.color = c;
                 vh.SetUIVertex(v, i);
             }
         }

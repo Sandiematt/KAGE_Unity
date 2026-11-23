@@ -159,7 +159,7 @@ namespace Kage.Tests
             Assert.IsTrue(GameRules.Owns(saved, GearKind.Armors, "ikazuchi_do"), "Garan");
             Assert.IsTrue(GameRules.Owns(saved, GearKind.Helmets, "hisame_zukin"), "Hisame");
             Assert.IsTrue(GameRules.Owns(saved, GearKind.Armors, "shiden_yoroi"), "Shiden");
-            Assert.IsTrue(GameRules.Owns(saved, GearKind.Weapons, "raiko_no_tachi"), "Raikon's blade");
+            Assert.IsFalse(GameRules.Owns(saved, GearKind.Weapons, "raiko_no_tachi"), "Raikon's blade is withheld for now");
             Assert.IsTrue(GameRules.Owns(saved, GearKind.Helmets, "raijin_kabuto"), "Raikon's helm");
 
             // coins and gems of ten B-rated first clears at chapter tier 1: 115 per stretch (five), 255 per sub-boss (four), 395 for the boss

@@ -123,7 +123,8 @@ namespace Kage
                 var w = Def.hit;
                 var info = new HitInfo
                 {
-                    attacker = Owner, w = w, dmg = DamageCalc.For(Owner, t, w.dmg, false, false), kb = new Vector2(w.kb.x * away, w.kb.y), zone = best.Zone, contact = pos,
+                    attacker = Owner, w = w, dmg = w.dmg <= 0 ? 0 : DamageCalc.For(Owner, t, w.dmg, false, false),     // 0: a knockback-only shockwave (Raikon's phase shifts)
+                    kb = new Vector2(w.kb.x * away, w.kb.y), zone = best.Zone, contact = pos,
                     moveId = Def.id, window = -1, origin = HitOrigin.Hazard,
                 };
                 var outcome = ExternalHit.Deliver(Owner, t, info, out _);

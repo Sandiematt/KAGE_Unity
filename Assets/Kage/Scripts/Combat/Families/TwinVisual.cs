@@ -12,10 +12,11 @@ namespace Kage
     /// </summary>
     public sealed class TwinVisual : IWeaponVisual
     {
-        enum Look { Blades, Daggers, Fans }
+        enum Look { Blades, Daggers, Fans, Tsubame }
 
         static Look LookOf(string weaponId) => weaponId switch
         {
+            "tsubame" => Look.Tsubame,
             "shadow_daggers" or "courier_kunai" or "quiet_kodachi" => Look.Daggers,
             "mist_fans" => Look.Fans,
             _ => Look.Blades,
@@ -41,8 +42,44 @@ namespace Kage
 
         public void Detach(FighterRig rig) => rig.ClearFamilyParts();
 
+        /// <summary>
+        /// Tsubame as the Armory draws it (JS <c>kb_tsubame</c>, src/js/21-characters/kage/weapons.js): a short fang bowing toward
+        /// the spine like a swallow's wing with a hooked bump at its base, the lightning engraving down the middle of the
+        /// flat, the electric-cyan edge light, a swallow-tail pommel and a swept-back wing guard. JS units, 64 to the blade.
+        /// </summary>
+        static void Tsubame(BladePen p)
+        {
+            const float L = 64f, hl = 0.32f;
+            Color fit = KMath.Hex("#C9A45C"), fitHi = KMath.Hex("#F2DCA4"), glow = KMath.Hex("#38c8ff"), hot = KMath.Hex("#e6f9ff");
+            static Vector2 V(float x, float y) => new(x, y);
+
+            p.Grip("Grip", 0, -L * hl, 0f, 2.7f, KMath.Hex("#2a2620"), glow, 4);
+            // swallow-tail pommel: two prongs
+            p.Fill("Pommel", 1, fit, PartRole.Metal, new[] { V(-L * hl + 1f, -2.4f), V(-L * hl - 5f, -5.6f), V(-L * hl - 2.4f, 0f), V(-L * hl - 5f, 5.6f), V(-L * hl + 1f, 2.4f) }, true);
+            // wing guard, swept back toward the hand
+            var guard = new[] { V(1.2f, -1.6f), V(-1.2f, -7.6f), V(-4.2f, -9.4f), V(-1.6f, -4.4f), V(-1.6f, 4.4f), V(-4.2f, 9.4f), V(-1.2f, 7.6f), V(1.2f, 1.6f) };
+            p.Fill("Guard", 1, fit, PartRole.Metal, guard, true);
+            p.Stroke("GuardHi", 2, fitHi, PartRole.Metal, new List<Vector2>(guard) { guard[0] }, 0.7f);
+
+            float Bow(float u) => -0.24f * L * Mathf.Pow(u, 2.2f);      // the fang bows toward the spine
+            float Belly(float u) => Bow(u) + Mathf.Lerp(3.6f, 0.1f, Mathf.Pow(u, 1.15f)) + 1.6f * Mathf.Sin(u * Mathf.PI);
+            var spine = new List<Vector2> { V(0.02f, -2.6f), V(0.09f, -3.3f), V(0.13f, -5.0f), V(0.16f, -3.6f) };   // the hooked bump
+            for (int i = 1; i <= 8; i++) { float u = 0.16f + 0.84f * i / 8f; spine.Add(V(u, Bow(u) - Mathf.Lerp(3.3f, 0.2f, Mathf.Pow((u - 0.16f) / 0.84f, 1.3f)))); }
+            var edge = new List<Vector2> { V(0.02f, 3.0f) };
+            for (int i = 1; i <= 10; i++) { float u = 0.02f + 0.98f * i / 10f; edge.Add(V(u, Belly(u))); }
+            p.Fill("Steel", 0, Palette.Steel, PartRole.Metal, BladePen.Outline(L, spine, edge), true);
+            // the lightning engraving along the middle of the flat, then the cyan edge on the belly
+            var zz = new List<Vector2>();
+            for (int i = 0; i <= 6; i++) { float u = 0.12f + 0.6f * i / 6f; zz.Add(V(u * L, Bow(u) + (i % 2 == 1 ? 1.1f : -0.6f))); }
+            p.Stroke("Engraving", 1, KMath.Hex("#7a5f34"), PartRole.TrimDeep, zz, 0.75f);
+            var eg = new List<Vector2>();
+            for (int i = 0; i <= 12; i++) { float u = 0.06f + 0.92f * i / 12f; eg.Add(V(u * L, Belly(u) - 0.5f)); }
+            p.Glow("Edge", eg, 0.6f, glow, hot, 1, 2);
+        }
+
         static void Blade(FighterRig rig, string side, B bone, Vector2 origin, Vector2 dir, Look look)
         {
+            if (look == Look.Tsubame) { Tsubame(new BladePen(rig, $"Twin_{side}Blade", bone, origin, dir, TwinMoves.BladeLength / 64f)); return; }
             Vector2 perp = new(-dir.y, dir.x);
             Vector2[] Poly(params float[] uv)
             {

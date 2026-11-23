@@ -40,7 +40,9 @@ namespace Kage
         readonly List<HairField> _hair = new();
         readonly CoatCloth[] _cloths = new CoatCloth[2];
         readonly List<SoftChains> _chains = new();
+        readonly List<FlowField> _flows = new();
         public bool autoSecondary;          // gallery / preview rigs animate themselves
+        /// <summary>The floor (world y) every soft part drapes on and never falls through: 0, the fight floor, unless a gallery sets it.</summary>
         public float groundY;
         /// <summary>The wind on this fighter's spring chains (SAN-76; <see cref="Kage.Wind"/>). Calm by default: nothing moves differently.</summary>
         public Wind wind;
@@ -98,6 +100,7 @@ namespace Kage
                     if (p.soft == SoftKind.Hair) _hair.Add(new HairField(multi, d.hairCentre - pivot));
                     else if (p.soft == SoftKind.Coat) Cloth(d, p.clothLayer).Bind(multi);
                     else if (p.soft == SoftKind.Chain) _chains.Add(new SoftChains(multi, parent, Relative(p.chains, pivot), p.chainFeel));
+                    else if (p.soft == SoftKind.Flow) _flows.Add(new FlowField(multi, parent, transform, p.flowRoot - pivot, p.chainFeel, _flows.Count * 1.37f));
                     if (p.glow > 1.01f) Glow(rt.main, p.glow);
                     if (p.rimPts != null)   // a cel part (OpponentKit.AddCel): the world-fixed back-light rim round its outline
                     {
@@ -197,27 +200,50 @@ namespace Kage
         /// <summary>Positive = squash (landing, impact), negative = stretch (take-off).</summary>
         public void Squash(float amount) { _sq = amount; _sqVel = 0f; }
 
+        /// <summary>
+        /// A jolt to every soft part on this rig: each spring chain (an SVG rig's cape, hair, tassels, skirt panels), each coat cloth
+        /// patch and each hair field. <paramref name="world"/> is a velocity kick in world m/s (the tips take the most of it, by
+        /// <paramref name="tipBias"/>); the parts hold it through hit-stop and spend it on their next tick. The fighter calls it when
+        /// it takes a blow, is knocked down or bounced, and lands (<see cref="Fighter"/>).
+        /// </summary>
+        public void Impulse(Vector2 world, float tipBias = 1f)
+        {
+            foreach (var c in _chains) c.AddImpulse(world, tipBias);
+            foreach (var f in _flows) f.AddImpulse(world, tipBias);
+            foreach (var c in _cloths) c?.AddImpulse(world, tipBias);
+            var local = new Vector2(world.x * facing, world.y);
+            foreach (var h in _hair) h.AddImpulse(local);
+        }
+
+        /// <summary>How many soft parts this rig moves (spring-chain parts, coat cloth patches, hair fields).</summary>
+        public int SoftPartCount
+        {
+            get
+            {
+                int n = _chains.Count + _flows.Count + _hair.Count;
+                foreach (var c in _cloths) if (c != null) n++;
+                return n;
+            }
+        }
+
         void ApplyScale()
         {
             float v = Mathf.Abs(_vis) < 0.08f ? 0.08f * (facing >= 0 ? 1f : -1f) : _vis;
             transform.localScale = new Vector3(_baseScale.x * v * (1f + _sq * 0.55f), _baseScale.y * (1f - _sq), 1f);
         }
 
-        /// <summary>Coat cloth patch for a layer, created on first use with leg colliders.</summary>
+        /// <summary>
+        /// Coat cloth patch for a layer, created on first use. The front flap swings with the lead thigh it covers; the looser tails
+        /// take a little of the rear thigh's swing and run their wind out of step with the flap.
+        /// </summary>
         CoatCloth Cloth(RigDef d, int layer)
         {
             layer = d.coatTail ? Mathf.Clamp(layer, 0, 1) : 0;
             if (_cloths[layer] != null) return _cloths[layer];
             Vector2 hp = d.pivot[(int)B.Hips];
             var c = layer == 0
-                ? new CoatCloth(Bone(B.Hips), d.coatF0 - hp, d.coatF1 - hp, d.coatB0 - hp, d.coatB1 - hp)
-                : new CoatCloth(Bone(B.Hips), d.tailF0 - hp, d.tailF1 - hp, d.tailB0 - hp, d.tailB1 - hp, 1.45f);
-            c.AddCollider(Bone(B.LegNU), d.BindLocal(B.LegNL) * 0.5f, 0.115f);
-            c.AddCollider(Bone(B.LegNL), Vector2.zero, 0.105f);
-            c.AddCollider(Bone(B.LegNL), d.BindLocal(B.FootN) * 0.6f, 0.09f);
-            c.AddCollider(Bone(B.LegFU), d.BindLocal(B.LegFL) * 0.5f, 0.115f);
-            c.AddCollider(Bone(B.LegFL), Vector2.zero, 0.105f);
-            c.AddCollider(Bone(B.LegFL), d.BindLocal(B.FootF) * 0.6f, 0.09f);
+                ? new CoatCloth(Bone(B.Hips), d.coatF0 - hp, d.coatF1 - hp, d.coatB0 - hp, d.coatB1 - hp, 1f, Bone(B.LegNU), 0.7f, 0f)
+                : new CoatCloth(Bone(B.Hips), d.tailF0 - hp, d.tailF1 - hp, d.tailB0 - hp, d.tailB1 - hp, 1.45f, Bone(B.LegFU), 0.35f, 1.7f);
             return _cloths[layer] = c;
         }
 
@@ -226,6 +252,7 @@ namespace Kage
             foreach (var c in _cloths) c?.Reset();
             foreach (var h in _hair) h.Reset();
             foreach (var c in _chains) c.Reset();
+            foreach (var f in _flows) f.Reset();
             _prevHips = Bone(B.Hips).position;
         }
 
@@ -279,7 +306,11 @@ namespace Kage
             float dA = Mathf.DeltaAngle(_headAngPrev, headAng);
             _headAngPrev = headAng;
             _headAngVel = Mathf.Lerp(_headAngVel, Mathf.Clamp(dA / dt, -900f, 900f), 0.5f);
-            foreach (var h in _hair) h.Tick(dt, vLocal, _headAngVel);
+            foreach (var h in _hair)
+            {
+                h.worldWind = wind;
+                h.Tick(dt, vLocal, _headAngVel, facing, 0f, hipsNow);
+            }
             float drive = -_headAngVel * 0.04f - vLocal.x * 1.2f + hv.y * -1.4f;
             foreach (var p in _parts)
             {
@@ -294,14 +325,22 @@ namespace Kage
             {
                 if (c == null) continue;
                 c.groundY = groundY;
+                c.wind = wind;
                 c.Tick(dt, facing, hv);
             }
-            // --- spring chains (Raikon's cape, ponytail, tassels, fur) ---
+            // --- spring chains (the Hollow and Order SVG rigs' cloth and plates) ---
             foreach (var c in _chains)
             {
                 c.groundY = groundY;
                 c.wind = wind;
                 c.Tick(dt, facing, hv);
+            }
+            // --- flow fields (Raikon's ponytail, ribbons, tassels, fur, cape, apron, skirt and hem): Kage's hair motion ---
+            foreach (var f in _flows)
+            {
+                f.groundY = groundY;
+                f.wind = wind;
+                f.Tick(dt, facing, hv);
             }
 
             // --- rim light: keep the outline offset fixed towards the back-top in world space ---

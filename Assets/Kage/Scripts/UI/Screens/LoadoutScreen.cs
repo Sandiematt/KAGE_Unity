@@ -196,7 +196,7 @@ namespace Kage
 
             var owned = new List<JsWeapon>();
             foreach (var w in JsTables.Weapons)
-                if (!w.Enemy && save.owned.weapons.ContainsKey(w.Id)) owned.Add(w);
+                if (!w.Enemy && !GameRules.IsWithheld(GearKind.Weapons, w.Id) && save.owned.weapons.ContainsKey(w.Id)) owned.Add(w);
             // the starter weapon leads, as it does on the JS screen
             int starter = owned.FindIndex(w => w.Id == "kagetsu");
             if (starter > 0) { var k = owned[starter]; owned.RemoveAt(starter); owned.Insert(0, k); }
@@ -254,7 +254,8 @@ namespace Kage
                 Ui.Frame(rt, 0, 0, CardW, 70, 1.5f, Ui.Gold);
             }
             else Ui.Frame(rt, 0, 0, CardW, 70, 1, Ui.GoldDim);
-            string tex = "ui_w_" + w.Id;
+            // the Armory's own picture of the weapon: its render, or the JS drawing for the weapons without one (Shinsen, Raikō no Tachi, ...)
+            string tex = GearArt.For(GearKind.Weapons, w.Id).Key;
             if (Ui.Tex(tex) != null)
             {
                 var pic = Ui.Pic(rt, tex, 30, 4, 76, 40);
