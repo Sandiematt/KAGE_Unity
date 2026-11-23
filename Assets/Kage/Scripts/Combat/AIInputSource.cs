@@ -86,7 +86,7 @@ namespace Kage
                     _parryTry = parryRate > 0f && lvl != HitLevel.Unblockable && R() < parryRate;
                     _parryWait = _parryTry ? Mathf.Max(0, ahead - Tuning.Get<ParryTuning>().windowFrames / 2) : 0;
                     _plan.Clear(); _curLeft = 0;
-                    if (lvl == HitLevel.Unblockable && R() < level) { _guardFrames = 0; Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1); }
+                    if (lvl == HitLevel.Unblockable && R() < level) { _guardFrames = 0; Backflip(Cornered(self, opp)); }
                 }
             }
             if (_guardFrames > 0)
@@ -203,13 +203,22 @@ namespace Kage
         }
 
         /// <summary>
-        /// The "cornered" test that holds back a backflip dodge: at a wall, with <paramref name="opp"/> not on the side the stage opens to.
-        /// The wall comes from the fight's bounds (<see cref="Fighter.WallSide"/>), as for <see cref="WallBehind"/> (SAN-116).
+        /// Cornered: the wall behind <paramref name="self"/> and <paramref name="opp"/> in front, so a backflip or a step back goes into
+        /// the wall. The same condition as <see cref="WallBehind"/>; the name is what the dodge and retreat choices ask. A cornered foe
+        /// never retreats: <see cref="Backflip"/> rolls forward out of the corner instead and <see cref="StepBack"/> holds a guard (SAN-130;
+        /// before it the test was inverted, true only with the opponent on the wall's side, so a foe backflipped into the wall).
         /// </summary>
-        public static bool Cornered(Fighter self, Fighter opp)
+        public static bool Cornered(Fighter self, Fighter opp) => WallBehind(self, opp);
+
+        /// <summary>The backflip dodge (a double tap back); cornered, the roll forward out of the corner (a double tap forward) instead.</summary>
+        void Backflip(bool cornered) => Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: cornered ? 1 : -1);
+
+        /// <summary>A walk back for <paramref name="frames"/>; cornered, a plain high guard held as long instead (no parry), since a step back walks into the wall.</summary>
+        void StepBack(int frames, bool cornered)
         {
-            int wall = self.WallSide;
-            return wall != 0 && Mathf.Sign(opp.Pos.x - self.Pos.x) != -wall;
+            if (!cornered) { Enqueue(frames, -1, 0, Btn.None); return; }
+            _guardFrames = frames;
+            _guardLow = false; _parryTry = false; _parryWait = 0;
         }
 
         static void Press(ref FrameInput o, Btn b)
@@ -250,7 +259,7 @@ namespace Kage
             if (oppDown)
             {
                 if (dist < 1.0f && r < 0.5f) { Enqueue(2, 0, -1, Btn.P); return; }
-                Enqueue(18 + N(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
+                if (dist > 1.3f) Enqueue(18 + N(12), 1, 0, Btn.None); else StepBack(18 + N(12), cornered);
                 return;
             }
             if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f && self.moves.Select(Btn.X, 0, 0, false, self)?.projectileFrame >= 0) { Enqueue(2, 0, 0, Btn.X); return; }     // the ranged Special (a family whose Special is a melee move, like the fists, never throws it at range)
@@ -268,7 +277,7 @@ namespace Kage
                 else if (r < 0.5f) Enqueue(2, 1, 0, Btn.S);                       // shadow step
                 else if (r < 0.62f) { Enqueue(1, 1, 1, Btn.None); Enqueue(12, 1, 0, Btn.None); Enqueue(2, 0, 0, Btn.K); }
                 else if (r < 0.72f) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: 1);
-                else if (r < 0.82f) Enqueue(12, -1, 0, Btn.None);
+                else if (r < 0.82f) StepBack(12, cornered);
                 else Enqueue(14, 0, 0, Btn.None);
                 return;
             }
@@ -280,8 +289,8 @@ namespace Kage
                 else if (r < 0.62f) Enqueue(2, 1, 0, Btn.K);
                 else if (r < 0.7f) Enqueue(2, 0, -1, Btn.S);
                 else if (r < 0.8f) Enqueue(8, 1, 0, Btn.None);
-                else if (r < 0.88f && !cornered) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1);
-                else Enqueue(10, -1, 0, Btn.None);
+                else if (r < 0.88f) Backflip(cornered);
+                else StepBack(10, cornered);
                 return;
             }
             if (r < 0.3f) Enqueue(2, 0, 0, Btn.P);
@@ -289,8 +298,8 @@ namespace Kage
             else if (r < 0.62f) Enqueue(2, 0, -1, Btn.K);
             else if (r < 0.74f) Enqueue(2, 0, 0, Btn.K);
             else if (r < 0.82f) Enqueue(2, 0, -1, Btn.P);
-            else if (r < 0.9f && !cornered) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1);
-            else Enqueue(12, -1, 0, Btn.None);
+            else if (r < 0.9f) Backflip(cornered);
+            else StepBack(12, cornered);
         }
     }
 }

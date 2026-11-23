@@ -7,8 +7,10 @@ namespace Kage.Tests
     /// <summary>
     /// The AI's wall checks read the fight's bounds (SAN-116): on a stretch road the walls are where <see cref="StageBounds"/> puts
     /// them (the road's start, an encounter arena's left end, a closed gate), so a foe pressed against one steps away from it instead
-    /// of backing into it. In the dev arena (walls at ±7.6 m) the checks answer exactly as the old sign-of-x ones did, so duels and
-    /// the baseline replay are unchanged. Built with <see cref="FightBuilder"/> on a manual clock; the AI is polled, the fight not stepped.
+    /// of backing into it. In the dev arena (walls at ±7.6 m) <see cref="AIInputSource.WallBehind"/> answers exactly as the old sign-of-x
+    /// check did. <see cref="AIInputSource.Cornered"/> does not (SAN-130): the old check was inverted (true only with the opponent on the
+    /// wall's side), so a foe with its back to the wall backflipped and stepped back into it; it now means "wall behind, opponent in front".
+    /// Built with <see cref="FightBuilder"/> on a manual clock; the AI is polled, the fight not stepped.
     /// </summary>
     public class AiWallSideTests
     {
@@ -120,11 +122,13 @@ namespace Kage.Tests
         }
 
         /// <summary>
-        /// In the dev arena the bounds-aware checks give the old sign-of-x answers at every position (walls, near them, the middle,
-        /// the opponent on either side), so arena duels and the baseline replay decide exactly as before.
+        /// In the dev arena the bounds-aware wall-behind check gives the old sign-of-x answer at every position (walls, near them, the
+        /// middle, the opponent on either side). Cornered is that same condition (SAN-130), no longer the old inverted sign-of-x
+        /// "cornered" (at a wall with the opponent on the wall's side), which held a backflip back only when it would have gone away
+        /// from the wall; that change is intended and moves arena duels and the baseline replay.
         /// </summary>
         [Test]
-        public void InTheDevArenaTheChecksAnswerAsTheOldSignOfXOnes()
+        public void InTheDevArenaWallBehindAnswersAsTheOldSignOfXCheckAndCorneredIsWallBehind()
         {
             _root = new GameObject("AiWallSideArena");
             var b = new FightBuilder(_root.transform, 116, manualClock: true);
@@ -137,7 +141,7 @@ namespace Kage.Tests
 
             float h = StageBounds.DefaultHalf;
             float[] xs = { -h, -h + 0.02f, -h + 0.05f, -h + 0.06f, -h + 0.5f, -3f, -0.4f, 0f, 0.6f, 3f, h - 0.5f, h - 0.06f, h - 0.05f, h - 0.02f, h };
-            int checkedPairs = 0, atWall = 0;
+            int checkedPairs = 0, atWall = 0, changedCornered = 0;
             foreach (float sx in xs)
             foreach (float ox in xs)
             {
@@ -145,14 +149,106 @@ namespace Kage.Tests
                 a.ResetForRound(sx, 1f);
                 c.ResetForRound(ox, -1f);
                 bool oldWallBehind = a.AtWall && Mathf.Sign(a.Pos.x) == -Mathf.Sign(c.Pos.x - a.Pos.x);
-                bool oldCornered = a.AtWall && Mathf.Sign(c.Pos.x - a.Pos.x) != Mathf.Sign(-a.Pos.x);
+                bool oldInvertedCornered = a.AtWall && Mathf.Sign(c.Pos.x - a.Pos.x) != Mathf.Sign(-a.Pos.x);
                 Assert.AreEqual(oldWallBehind, AIInputSource.WallBehind(a, c), $"wall behind, self {sx} opp {ox}");
-                Assert.AreEqual(oldCornered, AIInputSource.Cornered(a, c), $"cornered, self {sx} opp {ox}");
+                Assert.AreEqual(oldWallBehind, AIInputSource.Cornered(a, c), $"cornered = wall behind, self {sx} opp {ox}");
+                if (oldInvertedCornered != oldWallBehind) changedCornered++;
                 checkedPairs++;
                 if (a.AtWall) atWall++;
             }
             Assert.Greater(atWall, 0, "some positions are at a wall");
+            Assert.Greater(changedCornered, 0, "the old inverted cornered check differed at the walls (SAN-130)");
             Assert.AreEqual(xs.Length * (xs.Length - 1), checkedPairs);
+        }
+
+        // ---------------------------------------------------------------- SAN-130: cornered
+
+        /// <summary>
+        /// A foe with its back to a wall and Kage 0.7 m in front. With <paramref name="legacy"/> the foe decides with the pre-SAN-95 AI
+        /// (the Ronin's); otherwise with the footman's profile made to dodge every attack it answers (dodge 1, guard and parry 0), so
+        /// every answer is the backflip the cornered check has to hold back. Where: "arenaLeft", "arenaRight" (the dev arena's walls),
+        /// "roadStart", "gate" (act1.stretch1's start and its second encounter's closed gate).
+        /// </summary>
+        (Fighter foe, Fighter kage, AIInputSource ai) Cornered(string where, bool legacy)
+        {
+            var data = StretchData.FromStage("act1.stretch1");
+            float h = StageBounds.DefaultHalf;
+            bool road = where == "roadStart" || where == "gate";
+            float foeX = where == "arenaLeft" ? -h : where == "arenaRight" ? h : where == "roadStart" ? 0f : (float)data.Encounters[1].Gate;
+            int wall = where == "arenaLeft" || where == "roadStart" ? -1 : 1;
+            float kageX = foeX - wall * 0.7f;
+
+            _root = new GameObject("AiCornered");
+            var b = new FightBuilder(_root.transform, 130, manualClock: true);
+            if (!road) b.AddGround();
+            var kage = b.Spawn(CharacterCatalog.Get(KageCharacter.Id), 0, new StandStill());
+            var ai = new AIInputSource();
+            var foe = b.Spawn(CharacterCatalog.Get("order_footman"), 1, ai);
+            var ctx = b.Build();
+            if (road)
+            {
+                _road = StretchRoad.BuildPhysics(_root.transform, data, ctx.Bounds);
+                if (where == "roadStart") ctx.Bounds.Set(0f, (float)data.Limit(0));
+                else ctx.Bounds.Set((float)data.ArenaLeft(1), (float)data.Encounters[1].Gate);
+            }
+            ctx.Begin();
+            if (legacy) ai.SetProfile(AiProfiles.Get(AiProfiles.LegacyId));
+            else
+            {
+                var p = AiProfiles.Get("regular").Clone();
+                p.dodgeRate = 1f; p.guardRate = 0f; p.parryRate = 0f;
+                ai.SetProfile(p);
+            }
+            kage.ResetForRound(kageX, wall); kage.BeginFight();
+            foe.ResetForRound(foeX, -wall); foe.BeginFight();
+            foe.Tick();                                         // one still frame: the foe reads as standing on the ground
+            Assert.IsTrue(foe.Grounded, "the foe stands on the ground");
+            Assert.AreEqual(wall, foe.WallSide, $"{where}: the foe stands at the wall");
+            Assert.IsTrue(AIInputSource.WallBehind(foe, kage), $"{where}: the wall is behind the foe, Kage in front");
+            ctx.Engagement.Update(ctx.Fighters);
+            Assert.IsTrue(ctx.Engagement.MayAttack(foe), "the foe is engaged");
+            return (foe, kage, ai);
+        }
+
+        /// <summary>
+        /// SAN-130: the cornered foe's AI is polled <see cref="Polls"/> times. Against the dodging profile Kage punches over and over (each
+        /// punch started afresh, so the foe answers each one with the dodge); against the legacy AI he stands, so the foe decides its own
+        /// moves every few frames (the legacy AI guards nearly every punch it sees and would rarely decide). Either way it never backflips
+        /// (a double tap toward the wall) and never walks back into the wall, and it still does something (guards, attacks, rolls out,
+        /// steps in) rather than freezing.
+        /// </summary>
+        [TestCase("arenaLeft", false)]
+        [TestCase("arenaRight", false)]
+        [TestCase("roadStart", false)]
+        [TestCase("gate", false)]
+        [TestCase("arenaLeft", true)]
+        [TestCase("arenaRight", true)]
+        [TestCase("roadStart", true)]
+        [TestCase("gate", true)]
+        public void ACorneredFoeNeverBackflipsOrStepsBackIntoTheWallAndStillActs(string where, bool legacy)
+        {
+            var (foe, kage, ai) = Cornered(where, legacy);
+            int wall = foe.WallSide;
+            var attack = kage.moves.Select(Btn.P, 0, 0, false, kage);
+            Assert.IsNotNull(attack, "Kage has a punch");
+            Assert.Greater(attack.hits.Count, 0, "the punch has a hit window");
+
+            int backflips = 0, stepsBack = 0, acts = 0;
+            for (int i = 0; i < Polls; i++)
+            {
+                // Kage throws a punch, holds it 12 frames, stands for 3: every punch is a new attack for the foe to answer
+                int phase = i % 15;
+                if (!legacy && phase == 0) kage.StartMove(attack);
+                else if (!legacy && phase == 12) kage.BeginFight();
+                var o = ai.Poll(foe);
+                if (wall < 0 ? o.tapLeft2 : o.tapRight2) backflips++;
+                if (o.dx == wall) stepsBack++;
+                if (o.dx != 0 || o.dy != 0 || o.p || o.k || o.s || o.x || o.guard || o.tapLeft2 || o.tapRight2 || o.dash || o.ability > 0) acts++;
+            }
+            string who = legacy ? "legacy AI" : "dodging profile";
+            Assert.AreEqual(0, backflips, $"{where}, {who}: the cornered foe never backflips into the wall ({backflips} backflips)");
+            Assert.AreEqual(0, stepsBack, $"{where}, {who}: the cornered foe never steps back into the wall ({stepsBack} of {Polls} frames did)");
+            Assert.Greater(acts, Polls / 10, $"{where}, {who}: the cornered foe still acts ({acts} of {Polls} frames had an input)");
         }
     }
 }

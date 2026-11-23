@@ -99,11 +99,19 @@ namespace Kage
             }
             else if (r < parry + guard + dodge)
             {
-                bool cornered = Cornered(self, opp);
-                if (cornered) return;
                 _plan.Clear(); _curLeft = 0;
+                bool cornered = Cornered(self, opp);
+                if (cornered && lvl != HitLevel.Unblockable && !m.isThrow)
+                {
+                    // the wall is behind: no backflip into it (SAN-130); guard the blow instead (no parry), after the same reaction delay
+                    _parryTry = false;
+                    _parryWait = wait;
+                    _guardFrames = Mathf.Max(ahead, wait) + 10;
+                    _guardLow = lvl == HitLevel.Low;
+                    return;
+                }
                 if (wait > 0) Enqueue(wait, 0, 0, Btn.None);
-                Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1);      // the backflip, which is out of the way of anything on the ground
+                Backflip(cornered);                                     // the backflip, out of the way of anything on the ground; cornered, a roll forward out of the corner
             }
             else if (dist < t.closeReach + 0.1f && R() < Aggression(self) * t.tradeChance * attackRate)
             {
@@ -147,15 +155,14 @@ namespace Kage
         {
             var t = T; var p = profile;
             bool oppDown = opp.state == FState.Down;
-            bool cornered = Cornered(self, opp);
-            bool wallBehind = WallBehind(self, opp);
+            bool wallBehind = WallBehind(self, opp);        // = Cornered: a backflip or step back goes into the wall
             float aggr = Aggression(self);
             float pref = p.preferredRange;
 
             if (oppDown)
             {
                 if (dist < 1.0f && R() < 0.5f) { Enqueue(2, 0, -1, Btn.P); _comboLeft = 0; return; }
-                Enqueue(18 + N(12), dist > 1.3f ? 1 : -1, 0, Btn.None);
+                if (dist > 1.3f) Enqueue(18 + N(12), 1, 0, Btn.None); else StepBack(18 + N(12), wallBehind);
                 return;
             }
             if (TryAbility(self, dist)) return;
@@ -164,7 +171,7 @@ namespace Kage
             {
                 if (dist < pref - t.rangedBackOff && !wallBehind && R() < 0.6f)
                 {
-                    if (R() < p.dodgeRate && !cornered) Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: -1);
+                    if (R() < p.dodgeRate) Backflip(false);         // only ever with no wall behind (the branch's own test)
                     else Enqueue(14 + N(10), -1, 0, Btn.None);
                     return;
                 }
