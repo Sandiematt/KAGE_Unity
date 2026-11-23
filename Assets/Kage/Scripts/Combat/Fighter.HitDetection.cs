@@ -103,9 +103,9 @@ namespace Kage
             for (int k = i; k < j; k++)
             {
                 var s = sweeps[k];
-                Hurtbox.Overlap(s.to, s.radius, BoxTmp);
+                Hurtbox.Overlap(ctx.Physics, s.to, s.radius, BoxTmp);
                 foreach (var b in BoxTmp) AddTarget(b.Owner);
-                Hurtbox.Sweep(s.from, s.to, s.radius, SweepTmp);
+                Hurtbox.Sweep(ctx.Physics, s.from, s.to, s.radius, SweepTmp);
                 foreach (var h in SweepTmp) AddTarget(h.box.Owner);
             }
             _targets.Sort((a, b) => a.order.CompareTo(b.order));
@@ -148,7 +148,7 @@ namespace Kage
             for (int k = i; k < j; k++)
             {
                 var s = sweeps[k];
-                Hurtbox.Overlap(s.to, s.radius, BoxTmp);
+                Hurtbox.Overlap(ctx.Physics, s.to, s.radius, BoxTmp);
                 Hurtbox best = null;
                 foreach (var b in BoxTmp) if (ReferenceEquals(b.Owner, t) && (best == null || b.Index < best.Index)) best = b;
                 if (best == null) continue;
@@ -161,7 +161,7 @@ namespace Kage
             for (int k = i; k < j; k++)
             {
                 var s = sweeps[k];
-                Hurtbox.Sweep(s.from, s.to, s.radius, SweepTmp);
+                Hurtbox.Sweep(ctx.Physics, s.from, s.to, s.radius, SweepTmp);
                 foreach (var h in SweepTmp)
                 {
                     if (!ReferenceEquals(h.box.Owner, t)) continue;

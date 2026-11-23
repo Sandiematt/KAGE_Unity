@@ -25,11 +25,28 @@ namespace Kage
         public FightContext Context { get; }
         public FightLoop Loop { get; }
 
-        public FightBuilder(Transform root, int seed, bool manualClock)
+        static int _ownScenes;
+
+        /// <param name="ownPhysics">
+        /// Headless only (<paramref name="manualClock"/>): moves <paramref name="root"/> (a scene root) into a new scene with a
+        /// physics world of its own, so the fight never shares Box2D's world with other fights. Two runs of the same fight are
+        /// then identical to the last bit, whatever ran before them (SAN-115). The default physics world keeps internal state
+        /// across fights even after their bodies are gone (which proxy ids and contacts new bodies get), so with several bodies
+        /// in contact the solver order, and the last digits of positions, can differ. The harness unloads the scene
+        /// (<see cref="FightContext.OwnScene"/>) when the fight is disposed.
+        /// </param>
+        public FightBuilder(Transform root, int seed, bool manualClock, bool ownPhysics = false)
         {
             _root = root;
             ConfigurePhysics();
             Context = new FightContext(seed, manualClock);
+            if (ownPhysics && manualClock)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.CreateScene($"{root.name}_Physics{++_ownScenes}",
+                    new UnityEngine.SceneManagement.CreateSceneParameters(UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root.gameObject, scene);
+                Context.UseOwnScene(scene);
+            }
             Loop = root.gameObject.AddComponent<FightLoop>();
             if (manualClock && Physics2D.simulationMode != SimulationMode2D.Script)
             {

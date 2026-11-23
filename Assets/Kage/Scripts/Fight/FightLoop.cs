@@ -110,14 +110,14 @@ namespace Kage
 
         /// <summary>
         /// One whole frame of a headless fight (manual clock): <see cref="Step"/>, then
-        /// Physics2D.Simulate, then each fighter's pose output at that exact frame (what LateUpdate does in play).
+        /// a physics step of the fight's physics scene (<see cref="FightContext.Physics"/>), then each fighter's pose output at that exact frame (what LateUpdate does in play).
         /// </summary>
         public bool StepHeadless()
         {
             bool ran = Step();
             if (!ran) return false;
             float dt = Time.fixedDeltaTime;
-            Physics2D.Simulate(dt);
+            Context.Physics.Simulate(dt);
             float t = Context.Clock.Frame * dt;
             foreach (var f in Context.Fighters) if (Live(f)) f.PoseOutput(0f, dt, t);
             return true;

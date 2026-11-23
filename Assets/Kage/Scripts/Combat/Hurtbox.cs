@@ -87,38 +87,50 @@ namespace Kage
             Physics2D.SyncTransforms();
         }
 
-        /// <summary>Every hurtbox a circle at <paramref name="p"/> touches.</summary>
-        public static void Overlap(Vector2 p, float r, List<Hurtbox> into)
+        // Each query runs in a physics scene: the fight's (FightContext.Physics), which is the default scene unless the fight was
+        // built with its own (SAN-115). The overloads without one query the default scene.
+
+        /// <summary>Every hurtbox a circle at <paramref name="p"/> touches, in the default physics scene.</summary>
+        public static void Overlap(Vector2 p, float r, List<Hurtbox> into) => Overlap(Physics2D.defaultPhysicsScene, p, r, into);
+
+        /// <summary>Every hurtbox a circle at <paramref name="p"/> touches in <paramref name="physics"/>.</summary>
+        public static void Overlap(PhysicsScene2D physics, Vector2 p, float r, List<Hurtbox> into)
         {
             into.Clear();
             ColTmp.Clear();
-            Physics2D.OverlapCircle(p, r, Filter, ColTmp);
+            physics.OverlapCircle(p, r, Filter, ColTmp);
             foreach (var c in ColTmp)
                 if (c.TryGetComponent<Hurtbox>(out var h)) into.Add(h);
         }
 
-        /// <summary>Every hurtbox an axis-aligned box centred at <paramref name="centre"/> touches (hazards, SAN-75).</summary>
-        public static void OverlapBox(Vector2 centre, Vector2 size, List<Hurtbox> into)
+        /// <summary>Every hurtbox an axis-aligned box centred at <paramref name="centre"/> touches (hazards, SAN-75), in the default physics scene.</summary>
+        public static void OverlapBox(Vector2 centre, Vector2 size, List<Hurtbox> into) => OverlapBox(Physics2D.defaultPhysicsScene, centre, size, into);
+
+        /// <summary>Every hurtbox an axis-aligned box centred at <paramref name="centre"/> touches in <paramref name="physics"/>.</summary>
+        public static void OverlapBox(PhysicsScene2D physics, Vector2 centre, Vector2 size, List<Hurtbox> into)
         {
             into.Clear();
             ColTmp.Clear();
-            Physics2D.OverlapBox(centre, size, 0f, Filter, ColTmp);
+            physics.OverlapBox(centre, size, 0f, Filter, ColTmp);
             foreach (var c in ColTmp)
                 if (c.TryGetComponent<Hurtbox>(out var h)) into.Add(h);
         }
+
+        /// <summary><see cref="Sweep(PhysicsScene2D, Vector2, Vector2, float, List{HurtboxHit})"/> in the default physics scene.</summary>
+        public static void Sweep(Vector2 from, Vector2 to, float r, List<HurtboxHit> into) => Sweep(Physics2D.defaultPhysicsScene, from, to, r, into);
 
         /// <summary>
         /// Every hurtbox a circle moving from <paramref name="from"/> to <paramref name="to"/> touches on
-        /// the way, with the fraction of the path where it first touches. A zero-length sweep finds nothing.
+        /// the way in <paramref name="physics"/>, with the fraction of the path where it first touches. A zero-length sweep finds nothing.
         /// </summary>
-        public static void Sweep(Vector2 from, Vector2 to, float r, List<HurtboxHit> into)
+        public static void Sweep(PhysicsScene2D physics, Vector2 from, Vector2 to, float r, List<HurtboxHit> into)
         {
             into.Clear();
             Vector2 d = to - from;
             float len = d.magnitude;
             if (len < 1e-6f) return;
             CastTmp.Clear();
-            Physics2D.CircleCast(from, r, d / len, Filter, CastTmp, len);
+            physics.CircleCast(from, r, d / len, len, Filter, CastTmp);
             foreach (var hit in CastTmp)
                 if (hit.collider.TryGetComponent<Hurtbox>(out var h))
                     into.Add(new HurtboxHit { box = h, fraction = hit.fraction, point = hit.point });

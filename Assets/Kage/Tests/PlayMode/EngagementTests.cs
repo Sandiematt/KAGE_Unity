@@ -146,7 +146,11 @@ namespace Kage.Tests
             List<string> events, frames;
             (List<string>, List<string>) Once()
             {
-                var f = Fight(8384);
+                // SAN-115: each run in a physics world of its own. In the shared default world, Box2D keeps state from earlier
+                // fights (the proxy ids and contact order new bodies get), so two runs differed in the last digits whenever five
+                // bodies touched, and once by ~2 cm after the chaotic group fight amplified it.
+                var f = new GroupFight(8384, 0f, FourFootmen, kageAi: true, ownPhysics: true);
+                _fights.Add(f);
                 f.Run(1200);
                 var r = (f.Log.Lines().ToList(), f.Frames.ToList());
                 f.Dispose();
@@ -156,9 +160,9 @@ namespace Kage.Tests
             (events, frames) = Once();
             var (events2, frames2) = Once();
             Assert.Greater(events.Count(l => l.Contains(" Hit ") || l.Contains(" Blocked ")), 0, "the fight lands hits");
-            // ADR-0002: identical events; positions within 1e-4 m (with five bodies the physics step's contact order can
-            // differ in the last digit between two fights in one session)
+            // ADR-0002: identical events and positions; each run has a physics world of its own, so they match exactly
             CollectionAssert.AreEqual(events, events2);
+            CollectionAssert.AreEqual(frames, frames2);
             Assert.IsNull(BaselineReplay.Compare(BaselineReplay.Format("group", 8384, events, frames), BaselineReplay.Format("group", 8384, events2, frames2)));
         }
     }

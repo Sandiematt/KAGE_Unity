@@ -27,10 +27,10 @@ namespace Kage.Tests
         readonly List<string> _frames = new();
 
         public GroupFight(int seed, float kageX, float[] foeXs, string foeId = "order_footman", bool kageAi = false,
-                          bool foesStill = false, CharacterDef kageDef = null, float aiLevel = 0.6f)
+                          bool foesStill = false, CharacterDef kageDef = null, float aiLevel = 0.6f, bool ownPhysics = false)
         {
             Root = new GameObject("GroupFight");
-            var b = new FightBuilder(Root.transform, seed, manualClock: true);
+            var b = new FightBuilder(Root.transform, seed, manualClock: true, ownPhysics: ownPhysics);
             b.AddGround();
             KageInput = new ScriptedInput();
             if (kageAi)
@@ -128,6 +128,8 @@ namespace Kage.Tests
         {
             Log.Dispose();
             if (Root != null) UnityEngine.Object.DestroyImmediate(Root);
+            var own = Ctx.OwnScene;
+            if (own.IsValid() && own.isLoaded) UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(own);
         }
     }
 }

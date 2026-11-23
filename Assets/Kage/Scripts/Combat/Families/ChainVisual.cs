@@ -116,6 +116,9 @@ namespace Kage
             var anchor = rig.Bone(B.Sword).Find(AnchorName);
             if (anchor != null)
             {
+                // hidden at once: detached, it sits at the world origin until Destroy lands at the end of the frame, and a headless
+                // session runs many fights in one frame (SAN-114: it was drawn behind Kage in the next test's screenshots)
+                anchor.gameObject.SetActive(false);
                 anchor.SetParent(null, false);
                 Object.Destroy(anchor.gameObject);
             }
