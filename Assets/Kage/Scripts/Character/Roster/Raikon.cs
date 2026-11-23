@@ -21,7 +21,7 @@ namespace Kage
             d.mass = 2.2f;              // the heaviest of Act I (JS build w 13.5 at scale 1.24, heavy armour): pushed back least (Garan 1.8)
             d.postureMax = 100f / (float)JsTables.FightStyle(Id).Poise;   // a boss's 100 (SAN-86), filled 0.75 times as fast (JS poise 0.75: a quarter harder to stagger): 133
             d.moveRate = 1f / WeaponStats.Combat(d.weaponId, 1).speed;    // raikon_tachi's JS speed (40 against Onikiri's 35) would shorten every tell: his moves play as authored
-            d.bladeLength = RaikonModel.PaintedBladeLength;              // his hit line is his painted blade, not the family's 1.5 m (SAN-107)
+            d.bladeLength = RaikonPartSet.PaintedBladeLength;             // his hit line is his painted blade, not the family's 1.5 m (SAN-107)
             d.colors = new FighterColors(KMath.Hex("#FF4A3C"), KMath.Hex("#FFE2DC"), KMath.Hex("#7A0E14"));
             RaikonAbilities.Register(d.bodyScale);
             return d;

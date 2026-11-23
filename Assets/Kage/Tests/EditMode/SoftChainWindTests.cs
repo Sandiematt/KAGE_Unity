@@ -11,16 +11,18 @@ namespace Kage.Tests
     /// </summary>
     public class SoftChainWindTests
     {
-        // ---- Raikon's cape on a real rig, before wind existed: the regression the calm default must keep ----
+        // ---- a cape on a real rig: the calm default is no wind at all ----
+        // (SAN-76 kept a golden of Raikon's region-cut cape measured before wind existed; SAN-71's redesign redrew that cape, so the
+        // regression is now stated directly: a rig whose wind is set to calm moves exactly as one whose wind was never set)
 
-        [Test]
-        public void WithTheWindCalmRaikonsCapeMovesExactlyAsBefore()
+        static Vector3[] CapeAfterAWalk(bool setCalm)
         {
             var go = new GameObject("RaikonRig");
             try
             {
                 var rig = go.AddComponent<FighterRig>();
                 rig.Build(CharacterCatalog.PartSet("raikon").Build(CharacterCatalog.Get("raikon")), 1000);
+                if (setCalm) rig.wind = Wind.Calm;
                 rig.Apply(PoseLib.Stance());
                 rig.ResetSoft();
                 const float dt = 1f / 60f;
@@ -31,16 +33,19 @@ namespace Kage.Tests
                     rig.Apply(PoseLib.Stance());
                     rig.Secondary(dt, new Vector2(v, 0f));
                 }
-                var cape = go.GetComponentsInChildren<MeshFilter>().First(m => m.name == "Cape").sharedMesh.vertices;
-                double sx = 0, sy = 0, w = 0;
-                for (int i = 0; i < cape.Length; i++) { sx += cape[i].x; sy += cape[i].y; w += cape[i].x * (i % 7) - cape[i].y * (i % 5); }
-                Debug.Log($"SAN-76 cape golden: n={cape.Length} sx={sx:R} sy={sy:R} w={w:R} v0={cape[0].x:R},{cape[0].y:R} vlast={cape[^1].x:R},{cape[^1].y:R}");
-                Assert.AreEqual(GoldenCount, cape.Length);
-                Assert.AreEqual(GoldenSx, sx, 1e-3);
-                Assert.AreEqual(GoldenSy, sy, 1e-3);
-                Assert.AreEqual(GoldenW, w, 1e-3);
+                return go.GetComponentsInChildren<MeshFilter>().First(m => m.name == "Cape").sharedMesh.vertices;
             }
             finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
+        public void WithTheWindCalmACapeMovesExactlyAsWithNoWindSet()
+        {
+            var unset = CapeAfterAWalk(false);
+            var calm = CapeAfterAWalk(true);
+            Assert.AreEqual(unset.Length, calm.Length);
+            Assert.Greater(unset.Length, 1000, "the whole cut cape");
+            for (int i = 0; i < unset.Length; i++) Assert.AreEqual(unset[i], calm[i], "vertex " + i);
         }
 
         // ---- one chain on a bare bone: hang, swing, bend, repeat ----
@@ -202,9 +207,5 @@ namespace Kage.Tests
             }
             Assert.Less(platesBend, capeBend, "hanging plates are heavier than cloth: the wind moves them less");
         }
-
-        // measured on main (963ebcf) before SoftChains had a wind input
-        const int GoldenCount = 6037;
-        const double GoldenSx = -2185.437089189887, GoldenSy = -1052.8597129345872, GoldenW = -4454.3849588494631;
     }
 }
