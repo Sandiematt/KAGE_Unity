@@ -1,0 +1,525 @@
+diff --git a/Tools/raikon_art/regions.py b/Tools/raikon_art/regions.py
+index cf76234..1f959ee 100644
+--- a/Tools/raikon_art/regions.py
++++ b/Tools/raikon_art/regions.py
+@@ -7,15 +7,16 @@ black, so the figure's outline is not in the file. This tool finds it and writes
+                (except the cape's torn holes), plus the black areas listed in BLACK (face, neck, ...), grown by the
+                outline width;
+   part       = its rough polygon (PARTS) inside the silhouette, minus the rough polygons of the parts listed in its
+-               "minus" (what covers it in the painting, so nothing is drawn twice);
+-  fill       = a rough polygon drawn as one flat palette colour (FILLS): what the painting hides behind a part
+-               that moves (the torso behind the arms, the legs under the skirt).
++               "minus" (eroded by SEAM_BLEED so adjacent cuts don't crack from anti-aliasing);
++  fill       = a rough polygon drawn as one flat palette colour (FILLS) or an inpainted patch (PATCHES): what the
++               painting hides behind a part that moves (the torso behind the arms, the skirt behind the blade/hands).
+ 
+ Run:  python Tools/raikon_art/regions.py
+ Writes Assets/Kage/Scripts/Character/PartSets/RaikonRegions.g.cs and Screenshots/review/SAN-71/regions.png.
+ Coordinates are SVG pixels (976 x 1230, x right, y down, Raikon facing left).
+ """
+-import os, re, sys
++import os
++import re
+ import numpy as np
+ import cv2
+ 
+@@ -24,11 +25,14 @@ ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
+ SVG = os.path.join(HERE, 'original', 'Raikon.svg')
+ OUT_CS = os.path.join(ROOT, 'Assets', 'Kage', 'Scripts', 'Character', 'PartSets', 'RaikonRegions.g.cs')
+ OUT_PNG = os.path.join(ROOT, 'Screenshots', 'review', 'SAN-71', 'regions.png')
++
+ S = 4               # raster supersampling
+ W, H = 976, 1230
+ CLOSE = 5           # px: black gaps narrower than about twice this between colours are the figure's own lines
+ OUTLINE = 2         # px: black outline kept around the figure
++SEAM_BLEED = 0.75   # px: slight overlap under occluding ("minus") parts to prevent hairline cracks (0 to disable)
+ EPS = 0.35          # px: polygon simplification
++INPAINT_REACH = 75  # px: max distance to pull colours from surrounding pixels when patching occluded regions
+ 
+ # ---- rough part regions (SVG px). name: (polygon, minus) ----
+ PARTS = {
+@@ -85,16 +89,22 @@ PARTS = {
+ 
+ # flat palette fills: name: (polygon, colour index)
+ FILLS = {
++    'NeckFill': ([(428, 294), (504, 286), (514, 356), (434, 360)], 0),
++    'ShoulderNFill': ([(496, 360), (596, 360), (608, 494), (510, 494)], 2),
+     'TorsoFill': ([(392, 330), (470, 320), (560, 372), (604, 450), (596, 540), (520, 580), (396, 584), (360, 520), (370, 400)], 2),
+     'HipsFill': ([(384, 556), (560, 556), (600, 700), (604, 950), (560, 1000), (420, 1004), (380, 900)], 2),
+     'ThighN': ([(470, 780), (548, 780), (548, 1004), (482, 1004)], 2),
+     'GripFill': ([(600, 604), (610, 622), (506, 712), (494, 694)], 1),
+ }
+ 
+-# what a moving part hides of the part behind it, painted back by continuing that part's colours down its columns
+-# (the skirt's panels and cords run straight down): name: (part behind, part in front)
++# what moving parts hide of the part behind them, painted back by continuing the behind-part's colours:
++# name: (part behind, list of occluding parts in front, directional grain: 'vertical' | 'horizontal' | 'nearest')
+ PATCHES = {
+-    'SkirtUnderBlade': ('Skirt', 'Tachi_Blade'),
++    'SkirtUnderBlade': ('Skirt', ['Tachi_Blade', 'Tachi_Hilt', 'GripHand', 'ArmN_Fore', 'FarForearm', 'Fist'], 'vertical'),
++    'RopeUnderArm': ('Rope', ['ArmN_Upper', 'ArmN_Fore'], 'horizontal'),
++    'CapeUnderArm': ('Cape', ['ArmN_Upper', 'ArmN_Fore', 'GripHand', 'Tachi_Hilt'], 'vertical'),
++    'HatUnderTassels': ('Hat', ['Tassel1', 'Tassel2', 'Tassel3'], 'horizontal'),
++    'PonytailUnderTassel3': ('Ponytail', ['Tassel3'], 'vertical'),
+ }
+ 
+ # black areas that belong to the figure (the trace merges them with the background)
+@@ -108,67 +118,137 @@ TORN = [(600, 560), (850, 560), (850, 1100), (600, 1100)]
+ 
+ 
+ def parse(d):
+-    toks = re.findall(r'[MCZ]|-?\d*\.?\d+(?:e-?\d+)?', d)
++    """Parses SVG path data (M/m, L/l, H/h, V/v, C/c, Q/q, Z/z) into lists of sampled polyline points."""
++    toks = re.findall(r'[MLHVCQZmlhvcqz]|-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?', d)
+     subs, cur, i, cmd = [], None, 0, None
++    pos = (0.0, 0.0)
++    start = (0.0, 0.0)
++
+     while i < len(toks):
+         t = toks[i]
+-        if t in 'MCZ':
+-            cmd = t; i += 1
+-            if t == 'Z' and cur:
+-                subs.append(cur); cur = None
++        if t.isalpha():
++            cmd = t
++            i += 1
++            if cmd in 'Zz':
++                if cur:
++                    subs.append(cur)
++                    cur = None
++                pos = start
+             continue
+-        if cmd == 'M':
+-            cur = [(float(toks[i]), float(toks[i + 1]))]; i += 2; cmd = 'L'
+-        elif cmd == 'C':
+-            p0 = cur[-1]
+-            p1, p2, p3 = [(float(toks[i + k]), float(toks[i + k + 1])) for k in (0, 2, 4)]
++
++        if cmd in 'Mm':
++            if cur:
++                subs.append(cur)
++            x, y = float(toks[i]), float(toks[i + 1])
++            i += 2
++            if cmd == 'm':
++                x, y = pos[0] + x, pos[1] + y
++            pos = start = (x, y)
++            cur = [pos]
++            cmd = 'L' if cmd == 'M' else 'l'
++        elif cmd in 'Ll':
++            x, y = float(toks[i]), float(toks[i + 1])
++            i += 2
++            if cmd == 'l':
++                x, y = pos[0] + x, pos[1] + y
++            pos = (x, y)
++            cur.append(pos)
++        elif cmd in 'Hh':
++            x = float(toks[i])
++            i += 1
++            if cmd == 'h':
++                x += pos[0]
++            pos = (x, pos[1])
++            cur.append(pos)
++        elif cmd in 'Vv':
++            y = float(toks[i])
++            i += 1
++            if cmd == 'v':
++                y += pos[1]
++            pos = (pos[0], y)
++            cur.append(pos)
++        elif cmd in 'Cc':
++            p0 = pos
++            pts = [(float(toks[i + k]), float(toks[i + k + 1])) for k in (0, 2, 4)]
+             i += 6
++            if cmd == 'c':
++                pts = [(p0[0] + px, p0[1] + py) for px, py in pts]
++            p1, p2, p3 = pts
++            for k in range(1, 7):
++                u = k / 6.0
++                a = 1.0 - u
++                cur.append((
++                    a**3 * p0[0] + 3 * a * a * u * p1[0] + 3 * a * u * u * p2[0] + u**3 * p3[0],
++                    a**3 * p0[1] + 3 * a * a * u * p1[1] + 3 * a * u * u * p2[1] + u**3 * p3[1],
++                ))
++            pos = p3
++        elif cmd in 'Qq':
++            p0 = pos
++            pts = [(float(toks[i + k]), float(toks[i + k + 1])) for k in (0, 2)]
++            i += 4
++            if cmd == 'q':
++                pts = [(p0[0] + px, p0[1] + py) for px, py in pts]
++            p1, p2 = pts
+             for k in range(1, 7):
+-                t_ = k / 6; a = 1 - t_
+-                cur.append((a**3*p0[0] + 3*a*a*t_*p1[0] + 3*a*t_*t_*p2[0] + t_**3*p3[0],
+-                            a**3*p0[1] + 3*a*a*t_*p1[1] + 3*a*t_*t_*p2[1] + t_**3*p3[1]))
++                u = k / 6.0
++                a = 1.0 - u
++                cur.append((
++                    a * a * p0[0] + 2 * a * u * p1[0] + u * u * p2[0],
++                    a * a * p0[1] + 2 * a * u * p1[1] + u * u * p2[1],
++                ))
++            pos = p2
+         else:
+-            raise ValueError(cmd)
+-    if cur: subs.append(cur)
++            raise ValueError(f'Unsupported SVG path command: {cmd!r}')
++
++    if cur:
++        subs.append(cur)
+     return subs
+ 
+ 
+ def poly_mask(pts):
+     m = np.zeros((H * S, W * S), np.uint8)
+-    cv2.fillPoly(m, [np.round(np.array(pts) * S).astype(np.int32)], 1)
++    cv2.fillPoly(m, [np.round(np.array(pts, dtype=np.float64) * S).astype(np.int32)], 1)
+     return m
+ 
+ 
+ def disk(r):
+     r = int(round(r * S))
++    if r <= 0:
++        return np.ones((1, 1), np.uint8)
+     return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+ 
+ 
+ def labels():
+-    s = open(SVG).read()
+-    paths = re.findall(r'<path d="([^"]*)" fill="(#[0-9a-f]{6})"', s)
++    with open(SVG, encoding='utf-8') as f:
++        s = f.read()
++    paths = re.findall(r'<path d="([^"]*)" fill="(#[0-9a-fA-F]{6})"', s)
+     lab = np.zeros((H * S, W * S), np.uint8)
+     for ci, (d, _) in enumerate(paths):
+         m = np.zeros_like(lab)
+         for sp in parse(d):
++            if len(sp) < 3:
++                continue
+             t = np.zeros_like(lab)
+-            cv2.fillPoly(t, [np.round(np.array(sp) * S).astype(np.int32)], 1)
++            cv2.fillPoly(t, [np.round(np.array(sp, dtype=np.float64) * S).astype(np.int32)], 1)
+             m ^= t
+         lab[m == 1] = ci
+-    return lab, [c for _, c in paths]
++    return lab, [c.lower() for _, c in paths]
+ 
+ 
+ def fill_holes(m):
++    """Fills all interior holes, treating any component touching the canvas border as exterior background."""
+     inv = (1 - m).astype(np.uint8)
+-    n, cc = cv2.connectedComponents(inv, connectivity=4)
+-    bg = cc[0, 0]
+-    return np.where(cc == bg, 0, 1).astype(np.uint8)
++    _, cc = cv2.connectedComponents(inv, connectivity=4)
++    border = np.unique(np.concatenate([cc[0, :], cc[-1, :], cc[:, 0], cc[:, -1]]))
++    border = border[border > 0]
++    return np.where(np.isin(cc, border), 0, 1).astype(np.uint8)
+ 
+ 
+ def silhouette(lab):
+     sil = (lab != 0).astype(np.uint8)
+     sil = cv2.morphologyEx(sil, cv2.MORPH_CLOSE, disk(CLOSE))
+-    for b in BLACK: sil |= poly_mask(b)
++    for b in BLACK:
++        sil |= poly_mask(b)
+     filled = fill_holes(sil)
+     torn = poly_mask(TORN)
+     holes = filled & (1 - sil)
+@@ -178,24 +258,65 @@ def silhouette(lab):
+     for k in range(1, n):
+         if st[k, cv2.CC_STAT_AREA] > 60 * S * S:
+             comp = (cc == k)
+-            if torn[comp].mean() > 0.5: keep_hole[comp] = 1
++            if torn[comp].mean() > 0.5:
++                keep_hole[comp] = 1
+     sil = filled & (1 - keep_hole)
+     sil = cv2.dilate(sil, disk(OUTLINE))
+     return sil
+ 
+ 
++def _segments_intersect(a, b, c, d):
++    """True if open segments (a, b) and (c, d) cross."""
++    def orient(p, q, r):
++        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
++
++    o1, o2 = orient(a, b, c), orient(a, b, d)
++    o3, o4 = orient(c, d, a), orient(c, d, b)
++    return (o1 * o2 < 0) and (o3 * o4 < 0)
++
++
+ def keyhole(outer, holes):
+-    """Joins each hole to its outline by a zero-width cut, so a region with holes is one polygon (the importer then
+-    clips by plain polygons, which is much faster than by a region with holes)."""
++    """Joins each hole to its outline by a non-crossing zero-width cut so a region with holes is one polygon."""
+     outer = list(outer)
+-    for h in holes:
+-        best = None
+-        for j, p in enumerate(outer):
+-            for k, q in enumerate(h):
+-                d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2
+-                if best is None or d < best[0]: best = (d, j, k)
+-        _, j, k = best
+-        outer = outer[:j + 1] + list(h[k:]) + list(h[:k + 1]) + outer[j:]
++    remaining = [list(h) for h in holes]
++    while remaining:
++        # Join the hole closest to the current outer loop first to avoid crossing inner holes.
++        best_hole_idx = 0
++        best_dist = float('inf')
++        o_arr = np.asarray(outer, dtype=np.float64)
++        for hi, h in enumerate(remaining):
++            h_arr = np.asarray(h, dtype=np.float64)
++            d2 = ((o_arr[:, None, :] - h_arr[None, :, :]) ** 2).sum(axis=2)
++            md = float(d2.min())
++            if md < best_dist:
++                best_dist = md
++                best_hole_idx = hi
++
++        h = remaining.pop(best_hole_idx)
++        h_arr = np.asarray(h, dtype=np.float64)
++        d2 = ((o_arr[:, None, :] - h_arr[None, :, :]) ** 2).sum(axis=2)
++        flat_order = np.argsort(d2, axis=None)
++
++        # Build obstacle edges from current outer and all other rings.
++        edges = [(outer[i], outer[(i + 1) % len(outer)]) for i in range(len(outer))]
++        edges += [(h[i], h[(i + 1) % len(h)]) for i in range(len(h))]
++        for other in remaining:
++            edges += [(other[i], other[(i + 1) % len(other)]) for i in range(len(other))]
++
++        chosen = None
++        h_len = len(h)
++        for idx in flat_order:
++            j, k = divmod(int(idx), h_len)
++            p, q = outer[j], h[k]
++            if not any(_segments_intersect(p, q, e0, e1) for e0, e1 in edges):
++                chosen = (j, k)
++                break
++        if chosen is None:
++            j, k = divmod(int(flat_order[0]), h_len)
++        else:
++            j, k = chosen
++
++        outer = outer[:j + 1] + h[k:] + h[:k + 1] + outer[j:]
+     return outer
+ 
+ 
+@@ -203,35 +324,38 @@ def contours(m):
+     """Polygons (SVG px) of a mask: one per island, holes joined in."""
+     m = np.pad(m, 1)
+     cs, hier = cv2.findContours(m, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+-    if hier is None: return []
++    if hier is None:
++        return []
+     hier = hier[0]
++
+     def simp(c):
+         a = cv2.approxPolyDP(c, EPS * S, True).reshape(-1, 2)
+         return [((x - 1 + 0.5) / S, (y - 1 + 0.5) / S) for x, y in a]
++
+     out = []
+     for i, c in enumerate(cs):
+-        if hier[i][3] >= 0 or cv2.contourArea(c) < 4 * S * S: continue
++        if hier[i][3] >= 0 or cv2.contourArea(c) < 4 * S * S:
++            continue
+         outer = simp(c)
+-        if len(outer) < 3: continue
++        if len(outer) < 3:
++            continue
+         holes = [simp(cs[k]) for k in range(len(cs)) if hier[k][3] == i and cv2.contourArea(cs[k]) >= 4 * S * S]
+         out.append(keyhole(outer, [h for h in holes if len(h) >= 3]))
+     return out
+ 
+ 
+-def inpaint(lab, hole, source):
+-    """Labels for the hole pixels, each taken from the nearest source pixel straight above or below it
+-    (-1 where there is none within 60 px)."""
+-    H_, W_ = lab.shape
++def _inpaint_1d(lab, hole, source, reach):
++    """Column-wise nearest source lookup along axis 0 within `reach` pixels."""
++    H_, _ = lab.shape
+     out = np.full(lab.shape, -1, np.int16)
+-    reach = 60 * S
+     ys = np.arange(H_)
+     for x in np.nonzero(hole.any(axis=0))[0]:
+-        col_h, col_s = hole[:, x].astype(bool), source[:, x].astype(bool)
+-        if not col_s.any(): continue
+-        idx = np.where(col_s, ys, -1)
+-        above = np.maximum.accumulate(idx)                       # last source row at or above
+-        idx2 = np.where(col_s, ys, H_ * 2)
+-        below = np.minimum.accumulate(idx2[::-1])[::-1]          # first source row at or below
++        col_h = hole[:, x].astype(bool)
++        col_s = source[:, x].astype(bool)
++        if not col_s.any():
++            continue
++        above = np.maximum.accumulate(np.where(col_s, ys, -1))
++        below = np.minimum.accumulate(np.where(col_s, ys, H_ * 2)[::-1])[::-1]
+         da = np.where(above >= 0, ys - above, 10 ** 9)
+         db = np.where(below < H_, below - ys, 10 ** 9)
+         pick = np.where(da <= db, above, below)
+@@ -240,57 +364,108 @@ def inpaint(lab, hole, source):
+     return out
+ 
+ 
++def inpaint(lab, hole, source, mode='vertical', reach_px=INPAINT_REACH):
++    """Fills `hole` pixels with labels from `source` along the cloth grain, with 2D nearest-source fallback."""
++    reach = int(round(reach_px * S))
++    if mode == 'vertical':
++        out = _inpaint_1d(lab, hole, source, reach)
++    elif mode == 'horizontal':
++        out = _inpaint_1d(lab.T, hole.T, source.T, reach).T
++    else:
++        out = np.full(lab.shape, -1, np.int16)
++
++    # 2D nearest-source fallback for remaining uncovered hole pixels (e.g. diagonal edges or wide occlusions)
++    rem = (hole == 1) & (out < 0)
++    if rem.any() and source.any():
++        dist, nearest = cv2.distanceTransformWithLabels(
++            (source == 0).astype(np.uint8), cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL
++        )
++        sy, sx = np.nonzero(source)
++        ok = rem & (dist <= reach)
++        if ok.any():
++            idx = nearest[ok] - 1
++            out[ok] = lab[sy[idx], sx[idx]]
++    return out
++
++
++def compute_patch_masks(rough, sil, behind, fronts):
++    """Returns (hole, source) masks for patching `behind` where `fronts` cover it."""
++    front_mask = np.zeros_like(sil)
++    for fr in fronts:
++        front_mask |= rough[fr]
++    hole = front_mask & rough[behind] & sil
++    source = rough[behind] & sil & (1 - front_mask)
++    for o in PARTS[behind][1]:
++        source &= 1 - rough[o]
++        if o not in fronts:
++            hole &= 1 - rough[o]
++    return hole, source
++
++
+ def main():
+     lab, cols = labels()
+     sil = silhouette(lab)
+     rough = {n: poly_mask(p) for n, (p, _) in PARTS.items()}
++    bleed_kernel = disk(SEAM_BLEED) if SEAM_BLEED > 0 else None
++
++    part_masks = {}
+     result = {}
+-    for n, (p, minus) in PARTS.items():
+-        m = rough[n] & sil
+-        for o in minus: m &= 1 - rough[o]
++    for n, (_, minus) in PARTS.items():
++        m = (rough[n] & sil).copy()
++        for o in minus:
++            cut = cv2.erode(rough[o], bleed_kernel) if bleed_kernel is not None else rough[o]
++            m &= 1 - cut
++        part_masks[n] = m
+         result[n] = contours(m)
+-    fills = [(n, layer, contours(poly_mask(p))[0]) for n, (p, layer) in FILLS.items()]
+-    for n, (behind, front) in PATCHES.items():
+-        hole = rough[front] & rough[behind] & sil
+-        source = rough[behind] & sil & (1 - rough[front])
+-        for o in PARTS[behind][1]: source &= 1 - rough[o]
+-        got = inpaint(lab, hole, source)
++
++    # Export clean hand-defined FILLS directly without rasterization jitter
++    fills = [(n, layer, [(float(x), float(y)) for x, y in p]) for n, (p, layer) in FILLS.items()]
++
++    patch_results = {}
++    for n, (behind, fronts, mode) in PATCHES.items():
++        hole, source = compute_patch_masks(rough, sil, behind, fronts)
++        got = inpaint(lab, hole, source, mode=mode)
++        patch_results[n] = (hole, got)
+         for layer in range(len(cols)):
+             for c in contours(((got == layer) & (hole == 1)).astype(np.uint8)):
+                 fills.append((n, layer, c))
+ 
+-    def arr(c): return 'new float[] { ' + ','.join(f'{v:.2f}f' for pt in c for v in pt) + ' }'
+-    with open(OUT_CS, 'w', newline='\n') as f:
++    def arr(c):
++        return 'new float[] { ' + ','.join(f'{v:.2f}f' for pt in c for v in pt) + ' }'
++
++    os.makedirs(os.path.dirname(OUT_CS), exist_ok=True)
++    with open(OUT_CS, 'w', newline='\n', encoding='utf-8') as f:
+         f.write('// GENERATED by Tools/raikon_art/regions.py from Tools/raikon_art/original/Raikon.svg — do not edit by hand.\n')
+-        f.write('// The region of each of Raikon\'s rig parts: polygons (x, y pairs in SVG px), combined even-odd.\n')
++        f.write("// The region of each of Raikon's rig parts: polygons (x, y pairs in SVG px), combined even-odd.\n")
+         f.write('namespace Kage\n{\n    public static class RaikonRegions\n    {\n')
+         f.write('        public static readonly (string name, float[][] polygons)[] Parts =\n        {\n')
+         for n, cs in result.items():
+             f.write(f'            ("{n}", new float[][]\n            {{\n')
+-            for c in cs: f.write('                ' + arr(c) + ',\n')
++            for c in cs:
++                f.write('                ' + arr(c) + ',\n')
+             f.write('            }),\n')
+         f.write('        };\n\n')
+-        f.write('        /// <summary>Fills in the trace\'s colours (layer index): flat underlays, and patches painted back where a moving part covered another.</summary>\n')
++        f.write("        /// <summary>Fills in the trace's colours (layer index): flat underlays, and patches painted back where a moving part covered another.</summary>\n")
+         f.write('        public static readonly (string name, int layer, float[] polygon)[] Fills =\n        {\n')
+         for n, layer, c in fills:
+             f.write(f'            ("{n}", {layer}, {arr(c)}),\n')
+         f.write('        };\n    }\n}\n')
+ 
+-    # preview: the trace tinted by the part that draws each pixel; magenta = figure that no part draws
++    # Preview 1: trace tinted by the part that draws each pixel; magenta = uncovered figure
+     pal = np.array([[int(c[5:7], 16), int(c[3:5], 16), int(c[1:3], 16)] for c in cols], np.uint8)
+     img = pal[lab].astype(np.float32)
+     covered = np.zeros_like(sil)
+     rng = np.random.RandomState(5)
+     names = []
+-    for n in PARTS:
+-        m = rough[n] & sil
+-        for o in PARTS[n][1]: m &= 1 - rough[o]
++    for n, m in part_masks.items():
+         covered |= m
+         col = rng.randint(60, 255, 3).astype(np.float32)
+         img[m == 1] = img[m == 1] * 0.55 + col * 0.45
+         ys, xs = np.nonzero(m)
+-        if len(xs): names.append((n, int(xs.mean()), int(ys.mean()), tuple(int(v) for v in col)))
+-    for n, (p, _) in FILLS.items(): covered |= poly_mask(p) & sil
++        if len(xs):
++            names.append((n, int(xs.mean()), int(ys.mean()), tuple(int(v) for v in col)))
++    for _, (p, _) in FILLS.items():
++        covered |= poly_mask(p) & sil
+     img[(sil == 1) & (covered == 0)] = (255, 0, 255)
+     img[sil == 0] = (40, 70, 40)
+     img = cv2.resize(img.astype(np.uint8), (W * 2, H * 2), interpolation=cv2.INTER_AREA)
+@@ -299,19 +474,23 @@ def main():
+         cv2.putText(img, n, (x * 2 // S - 30, y * 2 // S), cv2.FONT_HERSHEY_SIMPLEX, 0.55, col, 1)
+     os.makedirs(os.path.dirname(OUT_PNG), exist_ok=True)
+     cv2.imwrite(OUT_PNG, img)
+-    print('uncovered figure px', int(((sil == 1) & (covered == 0)).sum() / S / S))
+-    print('parts', len(result), 'fills', len(fills), 'points', sum(len(c) for cs in result.values() for c in cs))
+-    # preview of the patches alone (what shows when the tachi moves away from the skirt)
+-    patch = pal[lab].copy()
+-    for n, (behind, front) in PATCHES.items():
+-        hole = rough[front] & rough[behind] & sil
+-        source = rough[behind] & sil & (1 - rough[front])
+-        for o in PARTS[behind][1]: source &= 1 - rough[o]
+-        got = inpaint(lab, hole, source)
+-        patch[(hole == 1) & (got >= 0)] = pal[got[(hole == 1) & (got >= 0)]]
+-        patch[(hole == 1) & (got < 0)] = (255, 0, 255)
+-    cv2.imwrite(os.path.join(os.path.dirname(OUT_PNG), 'regions_patches.png'), cv2.resize(patch, (W, H), interpolation=cv2.INTER_AREA))
++
++    # Preview 2: all inpainted patches (magenta = still un-inpainted hole pixels)
++    patch_img = pal[lab].copy()
++    for n, (hole, got) in patch_results.items():
++        patch_img[(hole == 1) & (got >= 0)] = pal[got[(hole == 1) & (got >= 0)]]
++        missed = (hole == 1) & (got < 0)
++        patch_img[missed] = (255, 0, 255)
++        if missed.any():
++            print(f'patch {n}: {int(missed.sum() / S / S)} un-inpainted px')
++    cv2.imwrite(
++        os.path.join(os.path.dirname(OUT_PNG), 'regions_patches.png'),
++        cv2.resize(patch_img, (W, H), interpolation=cv2.INTER_AREA),
++    )
++
++    print('uncovered figure px:', int(((sil == 1) & (covered == 0)).sum() / S / S))
++    print('parts:', len(result), 'fills:', len(fills), 'points:', sum(len(c) for cs in result.values() for c in cs))
+ 
+ 
+ if __name__ == '__main__':
+-    main()
++    main()
+\ No newline at end of file
