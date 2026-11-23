@@ -99,7 +99,7 @@ namespace Kage
             }
             else if (r < parry + guard + dodge)
             {
-                bool cornered = self.AtWall && Mathf.Sign(opp.Pos.x - self.Pos.x) != Mathf.Sign(-self.Pos.x);
+                bool cornered = Cornered(self, opp);
                 if (cornered) return;
                 _plan.Clear(); _curLeft = 0;
                 if (wait > 0) Enqueue(wait, 0, 0, Btn.None);
@@ -147,8 +147,8 @@ namespace Kage
         {
             var t = T; var p = profile;
             bool oppDown = opp.state == FState.Down;
-            bool cornered = self.AtWall && Mathf.Sign(opp.Pos.x - self.Pos.x) != Mathf.Sign(-self.Pos.x);
-            bool wallBehind = self.AtWall && Mathf.Sign(self.Pos.x) == -Mathf.Sign(opp.Pos.x - self.Pos.x);
+            bool cornered = Cornered(self, opp);
+            bool wallBehind = WallBehind(self, opp);
             float aggr = Aggression(self);
             float pref = p.preferredRange;
 
