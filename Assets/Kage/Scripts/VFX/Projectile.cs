@@ -48,8 +48,12 @@ namespace Kage
     /// </summary>
     public sealed class Projectile : MonoBehaviour, IHasOwner
     {
-        /// <summary>A projectile that flies past this |x| is spent (the arena edge).</summary>
-        public const float ArenaLimit = 9.5f;
+        /// <summary>
+        /// A projectile that flies this far past the fight's bounds (<see cref="FightContext.Bounds"/>) is spent (SAN-132): off
+        /// screen past the wall. 9.5 m - 7.6 m, so in the dev arena and the duel it ends past |x| = 9.5 m exactly as before; on a
+        /// stretch road it ends past the road's current walls, wherever they are.
+        /// </summary>
+        public const float BoundsMargin = 9.5f - StageBounds.DefaultHalf;
 
         public Fighter Owner { get; private set; }
         public ProjectileDef Def { get; private set; }
@@ -130,7 +134,14 @@ namespace Kage
             CastSamples(from, to);
             if (_done) return;
 
-            if (Age >= Def.lifeFrames || Mathf.Abs(_pos.x) > ArenaLimit) End(_pos);
+            if (Age >= Def.lifeFrames || OutOfBounds(_pos.x)) End(_pos);
+        }
+
+        /// <summary>True past the fight's bounds by more than <see cref="BoundsMargin"/>, on either side.</summary>
+        bool OutOfBounds(float x)
+        {
+            var b = Ctx.Bounds;
+            return x > b.Right + BoundsMargin || x < b.Left - BoundsMargin;
         }
 
         bool HitsGround(Vector2 from, Vector2 to, out Vector2 at)
@@ -202,7 +213,8 @@ namespace Kage
             _done = true;
             Ctx.Projectiles.Remove(this);
             EffectCues.Play(Def.endCue, at, new CueArgs { owner = Owner, dir = new Vector2(Dir, 0f), scale = 1f });
-            Destroy(gameObject);
+            if (Application.isPlaying) Destroy(gameObject);
+            else DestroyImmediate(gameObject);      // an EditMode test ticking it outside play mode
         }
     }
 }
