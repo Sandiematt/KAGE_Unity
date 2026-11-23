@@ -143,8 +143,12 @@ namespace Kage
 
         static bool Live(Fighter f) => f != null && f.isActiveAndEnabled && f.def != null && f.rb != null;
 
-        /// <summary>The legacy push: moves overlapping fighters apart by position, half each (all of it for the one not cornered).</summary>
-        static void Pushbox(Fighter a, Fighter b)
+        /// <summary>
+        /// The legacy push: moves overlapping fighters apart by position, half each (all of it for the one not cornered).
+        /// A fighter pressed against the wall it would be pushed into (<see cref="Fighter.WallSide"/>) stays put.
+        /// Public so EditMode tests can push two fighters apart without stepping a fight.
+        /// </summary>
+        public static void Pushbox(Fighter a, Fighter b)
         {
             if (a.state is FState.KO or FState.Thrown or FState.Ultimate || b.state is FState.KO or FState.Thrown or FState.Ultimate) return;
             if (a.IsDown || b.IsDown) return;
@@ -157,8 +161,9 @@ namespace Kage
             float dir = Mathf.Abs(dx) < 0.001f ? a.facing : Mathf.Sign(dx);
             float overlap = min - Mathf.Abs(dx);
             float sa = 0.5f, sb = 0.5f;
-            if (a.AtWall && Mathf.Sign(pa.x) == -dir) { sa = 0f; sb = 1f; }
-            if (b.AtWall && Mathf.Sign(pb.x) == dir) { sa = 1f; sb = 0f; }
+            // the wall's side comes from the fight's bounds, not the sign of x, which only said it in the dev arena (SAN-131)
+            if (a.WallSide == -dir) { sa = 0f; sb = 1f; }
+            if (b.WallSide == dir) { sa = 1f; sb = 0f; }
             a.rb.position = pa - new Vector2(dir * overlap * sa, 0f);
             b.rb.position = pb + new Vector2(dir * overlap * sb, 0f);
         }
