@@ -180,8 +180,7 @@ namespace Kage
         void PlanWait(Fighter self, Fighter opp, float dist)
         {
             var t = Tuning.Get<EngagementTuning>();
-            float away = -Mathf.Sign(opp.Pos.x - self.Pos.x);
-            bool wallBehind = self.AtWall && Mathf.Sign(self.Pos.x) == away;
+            bool wallBehind = WallBehind(self, opp);
             if (dist < t.waitDistance - t.retreatInside && !wallBehind) Enqueue(t.stepFrames, -1, 0, Btn.None);
             else if (dist > t.waitDistance + t.approachBeyond) Enqueue(t.stepFrames, 1, 0, Btn.None);
             else if (R() < t.circleChance)
@@ -191,6 +190,24 @@ namespace Kage
                 Enqueue(_rng.Range(t.circleStepMin, t.circleStepMax + 1), dir, 0, Btn.None);
             }
             else Enqueue(_rng.Range(t.holdMin, t.holdMax + 1), 0, 0, Btn.None);
+        }
+
+        /// <summary>
+        /// True when <paramref name="self"/> stands at a wall on the side away from <paramref name="opp"/>, so a step back walks into it.
+        /// The wall comes from the fight's bounds (<see cref="Fighter.WallSide"/>), not the sign of x, which only said it in the dev arena (SAN-116).
+        /// </summary>
+        public static bool WallBehind(Fighter self, Fighter opp)
+        {
+            return self.AtWall && Mathf.Sign(self.Pos.x) == -Mathf.Sign(opp.Pos.x - self.Pos.x);
+        }
+
+        /// <summary>
+        /// The "cornered" test that holds back a backflip dodge: at a wall, with <paramref name="opp"/> not on the side the stage opens to.
+        /// The wall comes from the fight's bounds (<see cref="Fighter.WallSide"/>), as for <see cref="WallBehind"/> (SAN-116).
+        /// </summary>
+        public static bool Cornered(Fighter self, Fighter opp)
+        {
+            return self.AtWall && Mathf.Sign(opp.Pos.x - self.Pos.x) != Mathf.Sign(-self.Pos.x);
         }
 
         static void Press(ref FrameInput o, Btn b)
@@ -227,7 +244,7 @@ namespace Kage
         {
             float r = R();
             bool oppDown = opp.state == FState.Down;
-            bool cornered = self.AtWall && Mathf.Sign(opp.Pos.x - self.Pos.x) != Mathf.Sign(-self.Pos.x);
+            bool cornered = Cornered(self, opp);
             if (oppDown)
             {
                 if (dist < 1.0f && r < 0.5f) { Enqueue(2, 0, -1, Btn.P); return; }
