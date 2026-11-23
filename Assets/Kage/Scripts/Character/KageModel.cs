@@ -514,6 +514,7 @@ namespace Kage
             }
             SP("Tsuba", 2, Palette.Silver, PartRole.Metal, L(tsuba.ToArray()), true);
             SP("Habaki", 2, KMath.Hex("#B89A5A"), PartRole.Metal, L(0.052f, -0.017f, 0.074f, -0.016f, 0.074f, 0.016f, 0.052f, 0.017f));
+            d.parts[d.parts.Count - 1].underSlot = -1;   // under the tsuba where they overlap, every time (SAN-114)
         }
     }
 }

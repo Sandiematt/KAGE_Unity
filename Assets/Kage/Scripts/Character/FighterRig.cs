@@ -174,7 +174,7 @@ namespace Kage
             foreach (var p in _parts)
             {
                 int o = p.def.order + (p.def.swordLayer && (swordFront || _frontAlways) ? 30 * 4 : 0);
-                p.main.sortingOrder = baseOrder + o * 3 + 2;
+                p.main.sortingOrder = baseOrder + o * 3 + 2 + Mathf.Clamp(p.def.underSlot, -1, 0);
                 if (p.rim != null) p.rim.sortingOrder = baseOrder + (o - o % 4) * 3;
             }
             if (scarf != null) scarf.SetOrder(baseOrder + 3);
@@ -480,6 +480,7 @@ namespace Kage
             _all.Remove(r);
             var mesh = r.GetComponent<MeshFilter>()?.sharedMesh;
             if (mesh != null) Destroy(mesh);
+            r.gameObject.SetActive(false);     // gone from view at once: Destroy lands at the end of the frame (SAN-114)
             Destroy(r.gameObject);
         }
 

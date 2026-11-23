@@ -35,6 +35,41 @@ namespace Kage.Tests
         public void KageAndTheRoninLookAsBefore()
         {
             Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            RenderAndCompare();
+        }
+
+        /// <summary>
+        /// SAN-114: a chain sickle fight run first in the same session (a weapon family fight test class sorting before this one)
+        /// changed these images by a few pixels. Re-equipping the sickle detaches its old parts to the scene root to be destroyed at
+        /// the end of the frame, and a headless session runs many tests in one frame, so they were drawn at the world origin, behind
+        /// Kage. They are hidden at once now. The fight here re-equips the sickle the way the family tests do, and must leave
+        /// nothing drawn behind it.
+        /// </summary>
+        [Test]
+        public void KageAndTheRoninLookAsBefore_after_a_chain_sickle_fight()
+        {
+            var before = new HashSet<Renderer>(Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None));
+            using (var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, 0f, 1.2f, kageDef: SpearFamilyFightTests.KageWith("yamigama")))
+            {
+                f.RoninInput.Add(600);
+                f.KageInput.Add(1, buttons: "S").Add(40);
+                f.Run(20);
+                f.Kage.EquipWeapon("kagetsu");
+                f.Kage.EquipWeapon("yamigama");
+                f.Kage.EquipWeapon("chain_hook");
+                f.Run(20);
+            }
+            var drawn = new List<string>();
+            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (r.enabled && !before.Contains(r)) drawn.Add(r.transform.root.name + "/" + r.name);
+            CollectionAssert.IsEmpty(drawn, "nothing of the disposed fight is still drawn");
+
+            Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
+            RenderAndCompare();
+        }
+
+        static void RenderAndCompare()
+        {
             string outDir = Path.Combine(Root, Label);
             Directory.CreateDirectory(outDir);
 

@@ -39,6 +39,12 @@ namespace Kage
         public Color color;
         public PartRole role;
         public int order;              // depth slot within the fighter
+        /// <summary>
+        /// -1 draws the part just under the other parts of its depth slot (above the slot below). Two overlapping parts in one
+        /// slot have the same sorting order, and Unity then draws them in whatever order it picks, which can change from one
+        /// render to the next in a session (SAN-114: the habaki and the tsuba).
+        /// </summary>
+        public int underSlot;
         public bool rim = true;
         public float rimGrow = 0.0045f;
         public Color? rimColor;
