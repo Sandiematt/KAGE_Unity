@@ -40,12 +40,27 @@ namespace Kage
         public CameraRig Camera;
         public Hud Hud;
 
+        /// <summary>
+        /// The physics scene the fight's bodies live in: the fight loop simulates it and every hit query (melee sweeps,
+        /// projectiles, hazards) runs in it. The default physics scene, unless the fight was built with a physics world of
+        /// its own (<see cref="FightBuilder"/>'s <c>ownPhysics</c>, SAN-115), whose <see cref="OwnScene"/> it then is.
+        /// </summary>
+        public UnityEngine.PhysicsScene2D Physics { get; private set; } = UnityEngine.Physics2D.defaultPhysicsScene;
+        /// <summary>The scene holding a fight built with its own physics world; not valid otherwise. Unload it when the fight is over.</summary>
+        public UnityEngine.SceneManagement.Scene OwnScene { get; private set; }
+
         public FightContext(int seed, bool manualClock)
         {
             Seed = seed;
             LegacyHits = Tuning.Get<CombatTuning>().legacyHitResolution;
             Random = new FightRandom(seed);
             Clock = new FightClock(manualClock);
+        }
+
+        internal void UseOwnScene(UnityEngine.SceneManagement.Scene scene)
+        {
+            OwnScene = scene;
+            Physics = UnityEngine.PhysicsSceneExtensions2D.GetPhysicsScene2D(scene);
         }
 
         /// <summary>Publishes FightStarted (Index = seed). Call once, after listeners are attached.</summary>

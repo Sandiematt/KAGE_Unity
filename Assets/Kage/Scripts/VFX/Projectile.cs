@@ -139,7 +139,7 @@ namespace Kage
             Vector2 d = to - from;
             float len = d.magnitude;
             if (len < 1e-6f) return false;
-            var hit = Physics2D.CircleCast(from, Def.radius, d / len, len, 1 << PhysicsLayers.Ground);
+            var hit = ExternalHit.PhysicsOf(Ctx).CircleCast(from, Def.radius, d / len, len, 1 << PhysicsLayers.Ground);
             if (hit.collider == null) return false;
             at = hit.centroid;
             return true;
@@ -158,11 +158,12 @@ namespace Kage
 
             BoxTmp.Clear();
             var all = new List<Hurtbox>();
+            var physics = ExternalHit.PhysicsOf(Ctx);
             foreach (var (f, t) in _samples)
             {
-                Hurtbox.Overlap(t, Def.radius, BoxTmp);
+                Hurtbox.Overlap(physics, t, Def.radius, BoxTmp);
                 all.AddRange(BoxTmp);
-                Hurtbox.Sweep(f, t, Def.radius, SweepTmp);
+                Hurtbox.Sweep(physics, f, t, Def.radius, SweepTmp);
                 foreach (var h in SweepTmp) all.Add(h.box);
             }
             ExternalHit.OrderedTargets(Ctx, all, TargetTmp);
@@ -170,7 +171,7 @@ namespace Kage
             foreach (var t in targets)
             {
                 if (!ExternalHit.CanTarget(Owner, t) || _log.Contains(t)) continue;
-                if (!ExternalHit.FindContact(t, _samples, Def.radius, out var zone, out var contact)) continue;
+                if (!ExternalHit.FindContact(physics, t, _samples, Def.radius, out var zone, out var contact)) continue;
                 if (Deliver(t, zone, contact)) return;
             }
         }

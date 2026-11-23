@@ -108,7 +108,7 @@ namespace Kage
         void Strike()
         {
             Hurtbox.SyncAll();
-            Hurtbox.OverlapBox(Centre, Def.size, BoxTmp);
+            Hurtbox.OverlapBox(ExternalHit.PhysicsOf(Ctx), Centre, Def.size, BoxTmp);
             ExternalHit.OrderedTargets(Ctx, BoxTmp, TargetTmp);
             var targets = new List<IHittable>(TargetTmp);
             var inside = new List<Hurtbox>(BoxTmp);

@@ -46,8 +46,11 @@ namespace Kage
             }
         }
 
+        /// <summary>The fight's physics scene (<see cref="FightContext.Physics"/>), or the default one with no fight.</summary>
+        public static PhysicsScene2D PhysicsOf(FightContext ctx) => ctx != null ? ctx.Physics : Physics2D.defaultPhysicsScene;
+
         /// <summary>The circle swept with each sample point: where <paramref name="t"/> is touched, as a melee window does it.</summary>
-        public static bool FindContact(IHittable t, List<(Vector2 from, Vector2 to)> samples, float radius, out HitZone zone, out Vector2 contact)
+        public static bool FindContact(PhysicsScene2D physics, IHittable t, List<(Vector2 from, Vector2 to)> samples, float radius, out HitZone zone, out Vector2 contact)
         {
             zone = HitZone.Body;
             contact = default;
@@ -55,7 +58,7 @@ namespace Kage
             // the first sample (in order) that rests in one of its circles wins, with the lowest-index circle's zone
             foreach (var (_, to) in samples)
             {
-                Hurtbox.Overlap(to, radius, boxes);
+                Hurtbox.Overlap(physics, to, radius, boxes);
                 Hurtbox best = null;
                 foreach (var b in boxes) if (ReferenceEquals(b.Owner, t) && (best == null || b.Index < best.Index)) best = b;
                 if (best == null) continue;
@@ -68,7 +71,7 @@ namespace Kage
             int bestIndex = int.MaxValue;
             foreach (var (from, to) in samples)
             {
-                Hurtbox.Sweep(from, to, radius, SweepScratch);
+                Hurtbox.Sweep(physics, from, to, radius, SweepScratch);
                 foreach (var h in SweepScratch)
                 {
                     if (!ReferenceEquals(h.box.Owner, t)) continue;
