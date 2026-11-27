@@ -39,5 +39,7 @@ namespace Kage
         public float behindPenalty = 1.5f;
         /// <summary>The current target counts this much nearer, so two foes at about the same distance don't swap every frame.</summary>
         public float stickiness = 0.25f;
+        /// <summary>A "!" over a foe behind Kage as it starts an attack, so he knows to turn (Guard + Back) and parry it.</summary>
+        public bool warnBackAttacks = true;
     }
 }

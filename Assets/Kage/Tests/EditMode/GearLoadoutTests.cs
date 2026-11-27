@@ -42,13 +42,14 @@ namespace Kage.Tests
             Assert.AreEqual(1f, d.damageMul);
             Assert.AreEqual(1f, d.speedMul);
             Assert.IsTrue(d.perks.IsNone);
-            Assert.AreEqual("kagetsu", d.weaponId);
+            Assert.AreEqual("mumei", d.weaponId, "a new save starts with Mumei (the catalog's reference Kage keeps Kagetsu, x1 like Mumei)");
             Assert.AreEqual(1, d.weaponLevel);
             Assert.AreEqual(cat.jsHealth, d.jsHealth);
             Assert.AreEqual(cat.defense, d.defense);
             Assert.AreEqual(cat.damageMul, d.damageMul);
             Assert.AreEqual(cat.speedMul, d.speedMul);
-            Assert.AreEqual(cat.weaponId, d.weaponId);
+            Assert.AreEqual("kagetsu", cat.weaponId, "the catalog's reference Kage holds Kagetsu, the katana family's x1 weapon");
+            Assert.AreEqual(1, cat.weaponLevel);
             Assert.AreEqual(cat.helmet, d.helmet);
             Assert.AreEqual(cat.armor, d.armor);
         }

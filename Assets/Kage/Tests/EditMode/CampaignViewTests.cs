@@ -148,6 +148,23 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void A_sub_boss_card_carries_its_portrait_foe_and_the_gear_he_gives_up()
+        {
+            var save = GameRules.DefaultSave(false);
+            var card = View(save, "act1", "act1.sub1").Card;
+            Assert.AreEqual("kuroe", card.PortraitFoe);
+            Assert.AreEqual("Kuroe", card.FoeName);
+            Assert.AreEqual("the Ink Censor", card.FoeTitle);
+            Assert.AreEqual(1, card.Spoils.Length);
+            Assert.AreEqual("sumi_eboshi", card.Spoils[0].Id);
+            Assert.IsFalse(card.Spoils[0].Owned);
+
+            // only a sub-boss card is drawn with the foe himself
+            Assert.IsNull(View(save, "act1", "act1.stretch1").Card.PortraitFoe);
+            Assert.IsNull(View(save, "act1", "act1.boss").Card.PortraitFoe);
+        }
+
+        [Test]
         public void With_no_stage_selected_the_card_shows_the_first_open_stage_of_the_chapter()
         {
             var save = GameRules.DefaultSave(false);

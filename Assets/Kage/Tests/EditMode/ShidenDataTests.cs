@@ -15,7 +15,7 @@ namespace Kage.Tests
     {
         const string Id = "shiden";
         const float Px = 1f / 115f;      // metres per JS pixel (ADR-0010)
-        const float Scale = 1.12f;       // his JS build scale
+        const float Scale = 1.28f;
 
         static CharacterDef Def() => CharacterCatalog.Get(Id);
 
@@ -37,7 +37,7 @@ namespace Kage.Tests
             Assert.AreEqual("Shiden", d.displayName);
             Assert.AreEqual("the Last Lieutenant", d.title);
             Assert.AreEqual(400f, d.jsHealth, "41-styles/shiden.js lowers 10-data.js's 460 to 400");
-            Assert.AreEqual(400f * 1.05f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(400f * 1.31f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.12f, d.defense, 1e-6);
             Assert.AreEqual(0.93f, d.damageMul, 1e-6, "41-styles/shiden.js lowers 1.05 to 0.93");
             Assert.AreEqual(1f, d.speedMul, 1e-6);
@@ -59,12 +59,13 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void He_is_a_boss_with_the_JS_abilities_in_slot_order_and_the_charging_thrust_last()
+        public void He_is_a_boss_with_the_JS_abilities_in_slot_order_the_charging_thrust_and_his_sojutsu_kit()
         {
             var d = Def();
             Assert.AreEqual(Id, d.bossId);
-            CollectionAssert.AreEqual(new[] { "vanguardBreak", "shidenBrace", "vanguardGuard", ShidenAbilities.ChargeId }, d.abilities,
+            CollectionAssert.AreEqual(new[] { "vanguardBreak", "shidenBrace", "vanguardGuard", ShidenAbilities.ChargeId }, d.abilities.Take(4).ToArray(),
                 "the JS phases' abilities in first-use order, then the ticket's charging thrust");
+            CollectionAssert.AreEqual(ShidenAbilities.ExtraIds, d.abilities.Skip(4).ToArray());
         }
 
         // ---------------------------------------------------------------- phases
@@ -79,12 +80,12 @@ namespace Kage.Tests
             Assert.AreEqual(2, b.Count);
             Assert.AreEqual("Vanguard", b.phases[0].name);
             Assert.AreEqual(1f, b.phases[0].at);
-            CollectionAssert.AreEquivalent(new[] { "vanguardBreak", "shidenBrace", ShidenAbilities.ChargeId }, b.phases[0].abilities);
+            CollectionAssert.AreEquivalent(new[] { "vanguardBreak", "shidenBrace", ShidenAbilities.ChargeId, ShidenAbilities.MakiOtoshiId, ShidenAbilities.SojutsuSweepId }, b.phases[0].abilities);
             Assert.IsFalse(b.phases[0].aggressive);
             Assert.AreEqual("Hold the Line", b.phases[1].name);
             Assert.AreEqual(0.5f, b.phases[1].at, "the JS threshold");
-            CollectionAssert.AreEquivalent(new[] { "vanguardBreak", "vanguardGuard", "shidenBrace", ShidenAbilities.ChargeId }, b.phases[1].abilities,
-                "phase two adds Vanguard Guard");
+            CollectionAssert.AreEquivalent(new[] { "vanguardBreak", "vanguardGuard", "shidenBrace", ShidenAbilities.ChargeId, ShidenAbilities.MakiOtoshiId, ShidenAbilities.SojutsuSweepId, ShidenAbilities.RaijinLanceId }, b.phases[1].abilities,
+                "phase two adds Vanguard Guard and Vanguard Raijin Arc");
             Assert.IsTrue(b.phases[1].aggressive, "and the JS aggressive flag");
             Assert.IsNull(b.phases[1].aiProfile, "he stays on the boss profile");
             Assert.IsFalse(b.phases[0].berserk || b.phases[1].berserk);
@@ -257,7 +258,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void His_part_set_draws_the_kabuto_maedate_do_sode_and_banner_on_Kages_skeleton_in_his_own_palette()
+        public void His_part_set_draws_the_kabuto_maedate_do_sode_and_haori_on_Kages_skeleton_in_his_own_palette()
         {
             var d = Def();
             Assert.AreEqual(Id, d.partSet);
@@ -271,7 +272,7 @@ namespace Kage.Tests
                 bool drawn = p.pts != null ? p.pts.Length >= 3 : p.polys != null && p.polys.Count > 0;
                 Assert.IsTrue(drawn, "part " + p.name + " has no shape");
             }
-            foreach (var name in new[] { "Kabuto", "Maedate", "Hoate", "Do", "SodeN", "Kusazuri_Front", "Banner", "BannerPole" })
+            foreach (var name in new[] { "Kabuto", "Maedate", "Hoate", "Do", "SodeN", "Kusazuri_Front", "HaoriTrain", "HaoriLapel" })
                 Assert.IsTrue(rig.parts.Any(p => p.name == name), "his " + name);
             foreach (var other in new[] { Kuroe.Id, Garan.Id, Hisame.Id, "order_footman" })
             {

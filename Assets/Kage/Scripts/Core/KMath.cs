@@ -59,9 +59,6 @@ namespace Kage
 
         public static Color Mul(this Color c, float k) => new Color(c.r * k, c.g * k, c.b * k, c.a);
 
-        /// <summary>Flip/roll timing: quick but soft ramp in, steady through the middle, soft settle.</summary>
-        public static float SpinEase(float t) { t = Mathf.Clamp01(t); return 0.25f * t + 0.75f * (t * t * (3f - 2f * t)); }
-
         public static float Smooth01(float t) { t = Mathf.Clamp01(t); return t * t * (3f - 2f * t); }
 
         public static float Hash(int n)

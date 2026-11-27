@@ -16,16 +16,17 @@ namespace Kage.Tests
         // ---- fresh save ----
 
         [Test]
-        public void A_fresh_save_owns_Kagetsu_and_the_starter_helmet_and_armour_at_level_1_equipped()
+        public void A_fresh_save_owns_Mumei_and_the_starter_helmet_and_armour_at_level_1_equipped()
         {
+            // the starter weapon is Unity's plain Mumei now (docs/weapon-styles.md, the tiers); Kagetsu is sold
             var s = GameRules.DefaultSave(false);
-            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
             Assert.AreEqual(1, s.owned.helmets["shiro_maki"]);
             Assert.AreEqual(1, s.owned.armors["tachibana_yoroi"]);
             Assert.AreEqual(1, s.owned.weapons.Count);
             Assert.AreEqual(1, s.owned.helmets.Count);
             Assert.AreEqual(1, s.owned.armors.Count);
-            Assert.AreEqual("kagetsu", s.equipped.weapon);
+            Assert.AreEqual("mumei", s.equipped.weapon);
             Assert.AreEqual("shiro_maki", s.equipped.helmet);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
             Assert.AreEqual(250, s.coins);
@@ -69,7 +70,7 @@ namespace Kage.Tests
             Assert.IsNotNull(opened.Error);
             Assert.AreEqual(text, opened.CorruptText);
             Assert.GreaterOrEqual(opened.Save.coins, 250);
-            Assert.AreEqual(1, opened.Save.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, opened.Save.owned.weapons["mumei"]);
         }
 
         // ---- normalising ----
@@ -84,8 +85,8 @@ namespace Kage.Tests
             Assert.AreEqual("normal", s.difficulty);
             Assert.AreEqual("full", s.settings.shake);
             Assert.IsTrue(s.settings.sound);
-            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
-            Assert.AreEqual("kagetsu", s.equipped.weapon);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
+            Assert.AreEqual("mumei", s.equipped.weapon);
             Assert.IsNotNull(s.cleared);
             Assert.IsNotNull(s.stats);
         }
@@ -94,7 +95,7 @@ namespace Kage.Tests
         public void Explicit_nulls_do_not_leave_holes()
         {
             var s = Open("{\"owned\":null,\"equipped\":null,\"cleared\":null,\"settings\":null,\"stats\":null,\"clues\":null}");
-            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
             Assert.AreEqual("shiro_maki", s.equipped.helmet);
             Assert.IsNotNull(s.cleared);
             Assert.IsNotNull(s.settings);
@@ -106,7 +107,7 @@ namespace Kage.Tests
         public void The_starter_items_stay_owned_even_if_the_file_leaves_them_out()
         {
             var s = Open("{\"owned\":{\"weapons\":{\"tsubame\":3}}}");
-            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
             Assert.AreEqual(3, s.owned.weapons["tsubame"]);
             Assert.AreEqual(1, s.owned.helmets["shiro_maki"]);
             Assert.AreEqual(1, s.owned.armors["tachibana_yoroi"]);
@@ -128,7 +129,7 @@ namespace Kage.Tests
         public void A_slot_wearing_something_unowned_goes_back_to_the_starter_item()
         {
             var s = Open("{\"equipped\":{\"weapon\":\"onikiri\",\"helmet\":\"made_up\",\"armor\":\"mugen_yoroi\"},\"owned\":{\"weapons\":{\"tsubame\":1}}}");
-            Assert.AreEqual("kagetsu", s.equipped.weapon);
+            Assert.AreEqual("mumei", s.equipped.weapon);
             Assert.AreEqual("shiro_maki", s.equipped.helmet);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
         }
@@ -166,7 +167,10 @@ namespace Kage.Tests
             var s = Open("{\"v\":2,\"coins\":400,\"gems\":2,\"owned\":{\"weapons\":{\"kagetsu\":1},\"helmets\":{\"shiro_maki\":1},\"armors\":{\"tachibana_yoroi\":1}}}");
             Assert.IsFalse(s.devMode);
             Assert.AreEqual(400, s.coins);
-            Assert.AreEqual(1, s.owned.weapons.Count);
+            // a JS save owns its old starter Kagetsu; Unity's starter Mumei is always owned too
+            Assert.AreEqual(2, s.owned.weapons.Count);
+            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
         }
 
         [Test]

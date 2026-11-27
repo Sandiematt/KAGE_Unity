@@ -20,7 +20,7 @@ namespace Kage.Rules
     // Pure: no file access. SaveStore (Kage.Runtime) reads and writes the file.
     public static partial class GameRules
     {
-        static readonly string StarterWeapon = "kagetsu", StarterHelmet = "shiro_maki", StarterArmor = "tachibana_yoroi";
+        static readonly string StarterWeapon = StarterWeaponId, StarterHelmet = "shiro_maki", StarterArmor = "tachibana_yoroi";
 
         // ---------------- opening ----------------
 
@@ -148,7 +148,7 @@ namespace Kage.Rules
         /// </summary>
         public static SaveData ApplyDevUnlock(SaveData save)
         {
-            foreach (var w in JsTables.Weapons)
+            foreach (var w in JsTables.AllWeapons)
                 if (!w.Enemy && w.Id != "fists") EnsureOwned(save.owned.weapons, w.Id);
             foreach (var h in JsTables.Helmets)
                 if (!h.Enemy && !h.Retired) EnsureOwned(save.owned.helmets, h.Id);

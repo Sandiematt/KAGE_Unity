@@ -41,6 +41,8 @@ namespace Kage
         /// <summary>Posture 0..1 (<see cref="Fighter.PostureFill"/>) and whether the guard is broken.</summary>
         public float Posture;
         public bool GuardBroken;
+        /// <summary>True while Kage's active Parry or Perfect Dodge timing window is open (drives the minimal HUD timing dots).</summary>
+        public bool InTimingWindow;
         /// <summary>The combo this fighter is landing.</summary>
         public int Combo;
         public int RoundsWon;
@@ -85,6 +87,18 @@ namespace Kage
         public HudRoadState Road;
         /// <summary>The foes' small bars in a stretch; null or empty = none.</summary>
         public IReadOnlyList<HudMiniBar> MiniBars;
+        /// <summary>The rage art's opening on Kage's target (<see cref="HudReader.RageCue"/>): the cue over a boss that would take the art now.</summary>
+        public HudRageCue RageCue;
+    }
+
+    /// <summary>
+    /// Kage's Rage is full and his target, a boss that reads rage arts, is open to one (<see cref="Fighter.OpenToRageArt"/>): now is the time.
+    /// <see cref="World"/> is the point over its head the cue sits on.
+    /// </summary>
+    public struct HudRageCue
+    {
+        public bool On;
+        public Vector2 World;
     }
 
     /// <summary>What a boss bar needs to know about its boss (from <see cref="BossDef"/> and the character data).</summary>

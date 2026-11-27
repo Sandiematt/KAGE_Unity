@@ -195,11 +195,28 @@ namespace Kage
             }
             var ctx = fight.Build();
             ctx.Begin();
+            bool isRow = sig.StartsWith("row|");
+            bool isHead = sig.StartsWith("head|");
             for (int i = 0; i < fighters.Count; i++)
             {
                 fighters[i].ResetForRound(xs[i], 1f);
                 fighters[i].BeginFight();
-                shadows.Add(MakeShadow(studio.transform));
+                if (fighters[i].rig != null)
+                {
+                    if (isRow)
+                    {
+                        // Armor cards show armor only (never a weapon) and keep scarf/cape breeze gentle so fabric stays inside each card
+                        fighters[i].rig.SetSwordVisible(false);
+                        fighters[i].rig.wind = Wind.Blowing(new Vector2(-0.14f, 0.04f), gust: 0.22f, seed: 101 + i * 17, gustRate: 0.35f);
+                        if (fighters[i].rig.scarf != null) fighters[i].rig.scarf.wind = 1.6f;
+                    }
+                    else
+                    {
+                        if (isHead) fighters[i].rig.SetSwordVisible(false);
+                        fighters[i].rig.wind = Wind.Blowing(new Vector2(-0.45f, 0.06f), gust: 0.55f, seed: 101 + i * 17, gustRate: 0.4f);
+                    }
+                }
+                shadows.Add(MakeShadow(studio.transform, isRow ? 0.42f : 0.55f));
             }
             Signature = sig;
             Builds++;
@@ -208,11 +225,11 @@ namespace Kage
         /// <summary>True when the fighter at this index is on show (a row fighter whose card is outside the window is not).</summary>
         public bool IsShown(int i) { return rowShown == null || i >= rowShown.Count || rowShown[i]; }
 
-        Transform MakeShadow(Transform parent)
+        Transform MakeShadow(Transform parent, float radius = 0.55f)
         {
             var t = new GameObject("KageShadow").transform;
             t.SetParent(parent, false);
-            MeshKit.MakeRenderer("Contact", t, MeshKit.Disc(Vector2.zero, 0.55f, new Color(0f, 0f, 0f, 0.75f), new Color(0f, 0f, 0f, 0f), 32, 1f, 0.12f), MeshKit.Alpha, -900);
+            MeshKit.MakeRenderer("Contact", t, MeshKit.Disc(Vector2.zero, radius, new Color(0f, 0f, 0f, 0.72f), new Color(0f, 0f, 0f, 0f), 32, 1f, 0.12f), MeshKit.Alpha, -900);
             return t;
         }
 
@@ -232,10 +249,10 @@ namespace Kage
 
         // weapons: Kage whole, his feet low on the sun's left (JS: the ghost warrior at 0.42 of the 1000 px preview)
         static readonly Frame BodyFrame = new Frame { size = 1.55f, cx = 1.343f, cy = 0.964f };
-        // helmets: his head and shoulders, big, the sun behind (JS: the figure at 1.5 x the preview's height)
-        static readonly Frame HeadFrame = new Frame { size = 0.87f, cx = 0.578f, cy = 1.52f };
-        // armour cards: a row of whole figures, feet on the card baseline
-        static readonly Frame RowFrame = new Frame { size = 2.94f, cx = 0f, cy = 0.235f };
+        // helmets: Kage's head, helmet and crimson scarf framed cleanly inside the top-right live preview showcase (stage x 1030..1560, y 106..312)
+        static readonly Frame HeadFrame = new Frame { size = 1.66f, cx = -1.78f, cy = 0.74f };
+        // armour cards: a row of whole unarmed figures, feet cleanly above the card footer and head clear of top badges
+        static readonly Frame RowFrame = new Frame { size = 3.06f, cx = 0f, cy = 0.09f };
 
         static float SingleX(bool head) { return 0f; }
 

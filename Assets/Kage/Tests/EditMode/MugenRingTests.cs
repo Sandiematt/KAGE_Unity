@@ -42,11 +42,15 @@ namespace Kage.Tests
             _rig.SetFacing(facing, true);
         }
 
-        /// <summary>The ring's polygon corners, in the Head bone's bind space.</summary>
+        /// <summary>
+        /// The ring's polygon corners, in the Head bone's bind space. Since the 5-tier armour redesign (Tools/armor_art/armors.py) the ring is the halo's
+        /// band, its frame, glow and core (<c>Armor_mugen_Halo*</c>, on the head bone); the gold rays that radiate out of it merge into
+        /// <c>Armor_mugen_Head_&lt;order&gt;</c> and are not part of the ring.
+        /// </summary>
         static List<Vector2> RingBind(RigDef d)
         {
             var o = new List<Vector2>();
-            foreach (var p in d.parts.Where(p => p.name.StartsWith("Armor_mugen_Head")))
+            foreach (var p in d.parts.Where(p => p.bone == B.Head && p.name.StartsWith("Armor_mugen_Halo")))
                 if (p.polys != null)
                     foreach (var (pts, _) in p.polys) o.AddRange(pts);
             return o;

@@ -46,6 +46,8 @@ namespace Kage
         public float damageMul = 1f;
         /// <summary>Locomotion speed: walk, run, dash, jump distance (JS <c>speed</c>). Not the move rate.</summary>
         public float speedMul = 1f;
+        /// <summary>Walk and run speed only (not dash or jump), on top of <see cref="speedMul"/>: a sub-boss's footwork (<see cref="SubBossTier"/>).</summary>
+        public float groundSpeedMul = 1f;
         /// <summary>Attack playback rate (Footman 0.9). Applied by fractional move playback (ADR-0006, SAN-70).</summary>
         public float moveRate = 1f;
         /// <summary>
@@ -99,6 +101,10 @@ namespace Kage
         /// agile 0.05, defensive 0.16, ranged 0.04, heavy 0, boss 0.12 (the JS <c>parry</c> column). A parry attempt presses Guard half a parry window before the blow.
         /// </summary>
         public float parryRate;
+        /// <summary>Added to the AI's stage level (0 easy .. 1 hard) for this character: a sub-boss's rank on the Act I ladder (<see cref="SubBossTier"/>).</summary>
+        public float aiSkill;
+        /// <summary>Metres: further from its target than this, the AI holds forward long enough to break into a run instead of walking in short steps. 0 = never.</summary>
+        public float runInBeyond;
         /// <summary>Ability ids this character may use, in slot order (ADR-0008).</summary>
         public List<string> abilities = new();
         /// <summary>BossDef id when the character has phases (ADR-0008); else null.</summary>

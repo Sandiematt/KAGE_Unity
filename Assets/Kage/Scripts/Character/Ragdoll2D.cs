@@ -30,11 +30,51 @@ namespace Kage
             _ => B.Hips
         };
 
-        static float Limit(B b) => b switch
+        /// <summary>
+        /// A joint's human range (degrees, facing right, counter-clockwise positive): the turn of the child bone's line from the parent's,
+        /// measured from <c>zero</c> (180 for a limb hanging off the trunk). Elbows only bend forward and knees only bend back, the spine
+        /// curls further than it arches and the hip flexes further than it extends, so a fall can't fold the body into a right-angled
+        /// table or bend a knee the wrong way.
+        /// </summary>
+        static (float lo, float hi, float zero) Range(B b) => b switch
         {
-            B.Chest => 35f, B.Head => 40f, B.ArmNU or B.ArmFU => 120f, B.ArmNL or B.ArmFL => 75f,
-            B.LegNU or B.LegFU => 80f, B.LegNL or B.LegFL => 70f, _ => 45f
+            B.Chest => (-40f, 22f, 0f),
+            B.Head => (-40f, 38f, 0f),
+            B.ArmNU or B.ArmFU => (-60f, 175f, 180f),
+            B.ArmNL or B.ArmFL => (-6f, 145f, 0f),
+            B.LegNU or B.LegFU => (-28f, 125f, 180f),
+            B.LegNL or B.LegFL => (-145f, 4f, 0f),
+            _ => (-45f, 45f, 0f)
         };
+
+        /// <summary>The line a body's bone draws in bind pose (towards its child joint), root space facing right.</summary>
+        static Vector2 BoneLine(RigDef d, B b) => b switch
+        {
+            B.Chest => d.BindLocal(B.Neck),
+            B.ArmNU => d.BindLocal(B.ArmNL), B.ArmNL => d.BindLocal(B.HandN),
+            B.ArmFU => d.BindLocal(B.ArmFL), B.ArmFL => d.BindLocal(B.HandF),
+            B.LegNU => d.BindLocal(B.LegNL), B.LegNL => d.BindLocal(B.FootN),
+            B.LegFU => d.BindLocal(B.LegFL), B.LegFL => d.BindLocal(B.FootF),
+            _ => Vector2.up      // hips, head
+        };
+
+        /// <summary>
+        /// The hinge limits that keep joint <paramref name="b"/> in its human range (<see cref="Range"/>), from the bodies' turn now.
+        /// A HingeJoint2D measures from the turn it was made at, opposite to the child's turn; a mirrored rig turns the other way. The
+        /// drawn bind pose and the pose the fall starts from are always inside the limits.
+        /// </summary>
+        static JointAngleLimits2D AnatomicalLimits(RigDef d, B b, float childRot, float parentRot, float facing)
+        {
+            var (lo, hi, zero) = Range(b);
+            var jp = JointParent(b);
+            float bind = KMath.Wrap(KMath.Ang(BoneLine(d, b)) - KMath.Ang(BoneLine(d, jp)) - zero);
+            float now = KMath.Wrap(bind + facing * Mathf.DeltaAngle(parentRot, childRot));
+            lo = Mathf.Min(lo, bind - 2f, now);
+            hi = Mathf.Max(hi, bind + 2f, now);
+            return facing > 0f
+                ? new JointAngleLimits2D { min = now - hi, max = now - lo }
+                : new JointAngleLimits2D { min = lo - now, max = hi - now };
+        }
 
         readonly List<Saved> _saved = new();
         readonly List<Component> _added = new();
@@ -217,6 +257,7 @@ namespace Kage
                 world[b] = (m.GetColumn(3), ang, Mathf.Sign(det) * y.magnitude);
                 _saved.Add(new Saved { t = t, parent = t.parent, lp = t.localPosition, lr = t.localRotation, ls = t.localScale });
             }
+            float facing = Mathf.Sign(world[B.Hips].sx);      // a mirrored rig (facing left) turns its joints the other way
             foreach (var b in Bodies)
             {
                 var t = rig.Bone(b);
@@ -282,8 +323,7 @@ namespace Kage
                 j.anchor = Vector2.zero;
                 j.enableCollision = false;
                 j.useLimits = true;
-                float lim = Limit(b);
-                j.limits = new JointAngleLimits2D { min = -lim, max = lim };
+                j.limits = AnatomicalLimits(d, b, world[b].ang, world[JointParent(b)].ang, facing);
                 _added.Add(j);
             }
         }

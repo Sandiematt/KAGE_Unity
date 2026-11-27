@@ -36,6 +36,14 @@ def main():
         kit.export_cs(helmets.ALL, out)
         print('wrote', out, len(helmets.ALL), 'helmets')
         return
+    if cmd == 'icons':
+        icons_dir = os.path.join(kit.ROOT, 'Assets', 'Kage', 'Resources', 'UI', 'Img')
+        os.makedirs(icons_dir, exist_ok=True)
+        kit.render_icon(None, size=320).save(os.path.join(icons_dir, 'icon_h_shiro_maki.png'))
+        for h in helmets.ALL:
+            kit.render_icon(h, size=320).save(os.path.join(icons_dir, f'icon_h_{h.id}.png'))
+        print('wrote', 1 + len(helmets.ALL), 'helmet icons to', icons_dir)
+        return
     from PIL import Image, ImageDraw, ImageFont
     out = sys.argv[2]
     ids = sys.argv[3:]

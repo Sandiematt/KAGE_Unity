@@ -30,6 +30,7 @@ namespace Kage
                 int par = (int)def.parent[i];
                 Vector2 local = def.BindLocal(b);
                 if (b == B.Hips) local += p.hip;
+                else if (b == B.Sword && p.shaftSlide != 0f) local += KMath.Dir(p.a[(int)B.Sword] + def.bladeBindAngle) * p.shaftSlide;
                 pos[i] = pos[par] + KMath.Rot(local, rot[par]);
                 rot[i] = rot[par] + (b == B.CoatN || b == B.CoatF ? 0f : p.a[i]);
             }

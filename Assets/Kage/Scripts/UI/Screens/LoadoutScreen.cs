@@ -22,8 +22,8 @@ namespace Kage
 
         static readonly Dictionary<string, string> WeaponKanji = new Dictionary<string, string>
         {
-            { "kagetsu", "影月" }, { "tsubame", "燕" }, { "shizuka", "静" }, { "onikiri", "鬼斬" }, { "mizuchi", "蛟" },
-            { "yamigama", "闇鎌" }, { "shinsen", "神閃" }, { "raiko_no_tachi", "雷" },
+            { "mumei", "無銘" }, { "kagetsu", "影月" }, { "tsubame", "燕" }, { "shizuka", "静" }, { "onikiri", "鬼斬" }, { "mizuchi", "蛟" },
+            { "yamigama", "闇鎌" }, { "iwakudaki", "岩砕き" }, { "shinsen", "神閃" }, { "raiko_no_tachi", "雷" },
         };
 
         public LoadoutScreen(GameFlow flow, RectTransform stage) : base(flow, stage, "Loadout") { }
@@ -40,15 +40,16 @@ namespace Kage
             bool stretch = stage.Kind == "stretch";
 
             // atmosphere over the live tableau
-            Ui.Grad(Root, 0, 0, 1600, 340, Ui.A(Ui.Sky3, 0.88f), Ui.A(Ui.Sky3, 0f));
-            Ui.Glow(Root, 1300, 500, 420, Ui.A(Ui.Acc, 0.22f), 1.2f);
-            Ui.Grad(Root, 799, 120, 1.5f, 640, Color.clear, Color.clear, false, Ui.A(Ui.Bone, 0.35f));
-            // the versus mark
-            Ripples();
+            Ui.Grad(Root, 0, 0, 1600, 320, Ui.A(Ui.Sky3, 0.86f), Ui.A(Ui.Sky3, 0f));
+            // Subtle top-right scrim behind the foe title block so text stays crisp even over the bright moon
+            Ui.Grad(Root, 920, 88, 680, 212, Color.clear, Ui.PanelA(0.68f), true);
+            Ui.Grad(Root, 799, 120, 1.5f, 640, Color.clear, Color.clear, false, Ui.A(Ui.Bone, 0.30f));
+            // the versus mark (grounded 3D contact shadows already anchor both fighters in StageWorld; no wireframe ripple crossing legs)
             var vs = Ui.Node(Root, "Vs", 720, 400, 160, 160);
             Enter(vs, UiAnims.VsPop(.7f, .15f, 2f, -12f));
-            Ui.Glow(vs, 80, 80, 90, Ui.A(Ui.Acc, 0.3f), 1.5f);
-            Ui.Diamond(vs, 80, 80, 92, Ui.PanelA(0.85f), Ui.Gold, 2f);
+            Ui.Glow(vs, 80, 80, 68, Ui.A(Ui.Acc, 0.22f), 1.6f);
+            Ui.Diamond(vs, 80, 80, 92, Ui.PanelA(0.90f), Ui.Gold, 2f);
+            Ui.Diamond(vs, 80, 80, 80, Color.clear, Ui.A(Ui.Gold, 0.32f), 1f);
             Ui.Label(vs, "対", UiFont.Brush, 64, Ui.Acc, 0, 0, 160, 160, TextAnchor.MiddleCenter);
 
             // top bar
@@ -111,37 +112,6 @@ namespace Kage
             Dock(save, stage);
         }
 
-        // JS .pf-ripple: a thin ellipse of water under each fighter that breathes (pfRipple, 3.2 s, the foe's half a cycle later)
-        void Ripples()
-        {
-            var w = flow.World;
-            var cam = Camera.main;
-            if (w == null || cam == null || w.Player == null) return;
-            for (int i = 0; i < 2; i++)
-            {
-                var f = i == 0 ? w.Player : w.Foe;
-                if (f == null) continue;
-                Vector3 feet = f.transform.position;
-                Vector2 sp = cam.WorldToScreenPoint(feet);
-                Vector2 local;
-                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(flow.Stage, sp, null, out local)) continue;
-                float cx = local.x + 800f, cy = 450f - local.y;
-                const float rw = 380f;
-                var ring = Ui.Node(Root, i == 0 ? "Ripple" : "RippleFoe", cx - rw / 2f, cy - 8f, rw, 36);
-                var line = Ui.Line(ring, Ui.Circle(rw / 2f, 18f, 1f, 40), 1f, i == 0 ? new Color(0.925f, 0.898f, 0.827f, 0.2f) : Ui.A(Ui.Acc, 0.3f));
-                line.rectTransform.sizeDelta = new Vector2(rw, 36f);
-                // an ellipse: the circle's points stretched to the box
-                var pts = new Vector2[41];
-                for (int k = 0; k <= 40; k++)
-                {
-                    float a = k / 40f * Mathf.PI * 2f;
-                    pts[k] = new Vector2(rw / 2f + Mathf.Cos(a) * (rw / 2f - 1f), 18f + Mathf.Sin(a) * 17f);
-                }
-                line.Set(pts, 1f, i == 0 ? new Color(0.925f, 0.898f, 0.827f, 0.2f) : Ui.A(Ui.Acc, 0.3f), 0f, 0f);
-                UiFx.Loop(ring, UiAnims.PfRipple(i == 0 ? 0f : -1.6f));
-            }
-        }
-
         // JS .pf-gear: a gold-edged button that opens the Armory (a Change gear tile after the Mode cell)
         void ChangeGear(float x, float y)
         {
@@ -149,25 +119,27 @@ namespace Kage
             float w = 18f + 20f + 10f + UiParts.Width(label, 1.68f) + 1.68f + 18f;
             var rt = Ui.Node(Root, "ChangeGear", x, y, w, 58);
             Enter(rt, UiAnims.WRise(.6f));
-            Ui.Box(rt, 0, 0, w, 58, Ui.PanelA(0.7f)).transform.SetAsFirstSibling();
+            Ui.Box(rt, 0, 0, w, 58, Ui.PanelA(0.88f)).transform.SetAsFirstSibling();
             var hl = Ui.Box(rt, 0, 0, w, 58, Color.clear, "Light");
-            Ui.Frame(rt, 0, 0, w, 58, 1, Ui.Gold);
+            Ui.Frame(rt, 0, 0, w, 58, 1.2f, Ui.Gold);
+            var ring = Ui.Frame2(rt, w, 58);
             // a small breastplate for the icon
             Ui.Shape(rt, 18, 19, 20, 20, Ui.Poly(20, 20, 0, 0, 30, 14, 50, 0, 70, 14, 100, 0, 100, 60, 70, 100, 30, 100, 0, 60), Ui.Gold, null, null, false, "Icon");
             label.transform.SetParent(rt, false);
             label.rectTransform.anchoredPosition = new Vector2(18 + 20 + 10, 0);
-            UiParts.Make(rt, Nav, "gear", () => C.OpenArmory(), f => hl.color = f ? Ui.A(Ui.Gold, 0.16f) : Color.clear);
+            UiParts.Make(rt, Nav, "gear", () => C.OpenArmory(), f =>
+            {
+                hl.color = f ? Ui.A(Ui.Gold, 0.14f) : Color.clear;
+                ring.color = f ? Ui.Gold : Color.clear;
+            });
         }
 
-        // the foe's words sit over the bright live scene: a soft shadow keeps them readable
+        // Clean single tight drop shadow over the dark scrim (eliminates muddy double-shadow blur)
         static void Soften(Text t)
         {
             var sh = t.gameObject.AddComponent<Shadow>();
-            sh.effectColor = new Color(0f, 0f, 0f, 0.8f);
-            sh.effectDistance = new Vector2(0f, -2.5f);
-            var sh2 = t.gameObject.AddComponent<Shadow>();
-            sh2.effectColor = new Color(0f, 0f, 0f, 0.45f);
-            sh2.effectDistance = new Vector2(2f, 2f);
+            sh.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            sh.effectDistance = new Vector2(0f, -2f);
         }
 
         float Cell(float x, float y, string k, string v)
@@ -195,10 +167,10 @@ namespace Kage
             Ui.Box(Root, 0, 836, 1600, 64, Ui.A(Ui.Sky3, 0.5f));
 
             var owned = new List<JsWeapon>();
-            foreach (var w in JsTables.Weapons)
+            foreach (var w in JsTables.AllWeapons)
                 if (!w.Enemy && !GameRules.IsWithheld(GearKind.Weapons, w.Id) && save.owned.weapons.ContainsKey(w.Id)) owned.Add(w);
             // the starter weapon leads, as it does on the JS screen
-            int starter = owned.FindIndex(w => w.Id == "kagetsu");
+            int starter = owned.FindIndex(w => w.Id == GameRules.StarterWeaponId);
             if (starter > 0) { var k = owned[starter]; owned.RemoveAt(starter); owned.Insert(0, k); }
 
             var head = Ui.Label(Root, "CHOOSE WEAPON", UiFont.Title, 13, Ui.Muted, 56, 788, 300, 18, TextAnchor.MiddleLeft, 4.42f);
@@ -208,21 +180,19 @@ namespace Kage
             Ui.Label(badge, owned.Count.ToString(), UiFont.Title, 13, Ui.Bone, 0, 0, 40, 18, TextAnchor.MiddleCenter, 1f);
 
             float rowY = 812f;
-            // arrows and the clipped row
-            var left = Arrow(56, rowY, false);
-            var viewport = Ui.Node(Root, "Weapons", RowX, rowY - 6, RowW, 82);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            content = Ui.Node(viewport, "Content", 0, 0, owned.Count * (CardW + CardGap), 82);
-            var right = Arrow(RowX + RowW + 8, rowY, true);
             float contentW = owned.Count * (CardW + CardGap) - CardGap + 4;
             float maxScroll = Mathf.Max(0f, contentW - RowW);
             scroll = Mathf.Clamp(scroll, 0f, maxScroll);
+            var left = Arrow(56, rowY, false, scroll > 2f);
+            var viewport = Ui.Node(Root, "Weapons", RowX, rowY - 6, RowW, 82);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            content = Ui.Node(viewport, "Content", 0, 0, owned.Count * (CardW + CardGap), 82);
+            var right = Arrow(RowX + RowW + 8, rowY, true, scroll < maxScroll - 2f);
             content.anchoredPosition = new Vector2(-scroll, 0);
             for (int i = 0; i < owned.Count; i++) Card(content, owned[i], 2 + i * (CardW + CardGap), 6, save.equipped.weapon == owned[i].Id, maxScroll);
 
             left.onSubmit = () => ScrollBy(-RowW * 0.7f, maxScroll);
             right.onSubmit = () => ScrollBy(RowW * 0.7f, maxScroll);
-            left.interactable = scroll > 2f; right.interactable = scroll < maxScroll - 2f;
 
             UiParts.Brush(Root, Nav, "fight", 1204, 801, 340, 78, "戦", "FIGHT", 30, 34, 10.2f, false, () => C.StartStage());
         }
@@ -233,27 +203,31 @@ namespace Kage
             Rebuild();
         }
 
-        NavItem Arrow(float x, float y, bool rightSide)
+        NavItem Arrow(float x, float y, bool rightSide, bool enabled)
         {
             var rt = Ui.Node(Root, rightSide ? "ArrowR" : "ArrowL", x, y, 34, 70);
-            Ui.Box(rt, 0, 0, 34, 70, Ui.PanelA(0.88f));
-            Ui.Frame(rt, 0, 0, 34, 70, 1, Ui.GoldDim);
+            Ui.Box(rt, 0, 0, 34, 70, Ui.PanelA(enabled ? 0.90f : 0.55f));
+            var hl = Ui.Box(rt, 0, 0, 34, 70, Color.clear, "Focus");
+            Ui.Frame(rt, 0, 0, 34, 70, 1, enabled ? Ui.GoldDim : Ui.Hair);
             float s = rightSide ? -1f : 1f;
-            var chev = Ui.Line(rt, new[] { new Vector2(17 + 4 * s, 28), new Vector2(17 - 4 * s, 35), new Vector2(17 + 4 * s, 42) }, 2f, Ui.Gold);
+            var chev = Ui.Line(rt, new[] { new Vector2(17 + 4 * s, 28), new Vector2(17 - 4 * s, 35), new Vector2(17 + 4 * s, 42) }, 2f, enabled ? Ui.Gold : Ui.A(Ui.Muted, 0.35f));
             chev.rectTransform.sizeDelta = new Vector2(34, 70);
-            return UiParts.Make(rt, Nav, rightSide ? "arrow-r" : "arrow-l", null, null);
+            return UiParts.Make(rt, Nav, rightSide ? "arrow-r" : "arrow-l", null, f => hl.color = f && enabled ? Ui.A(Ui.Gold, 0.14f) : Color.clear, enabled);
         }
 
         void Card(Transform parent, JsWeapon w, float x, float y, bool selected, float maxScroll)
         {
             var rt = Ui.Node(parent, "Weapon_" + w.Id, x, y, CardW, 70);
-            Ui.Box(rt, 0, 0, CardW, 70, Ui.PanelA(0.9f));
+            rt.gameObject.AddComponent<RectMask2D>();
+            Ui.Box(rt, 0, 0, CardW, 70, Ui.PanelA(0.92f));
             if (selected)
             {
-                Ui.Glow(rt, CardW / 2, 28, 80, Ui.A(Ui.Acc, 0.45f), 1.3f);
+                Ui.Grad(rt, 0, 0, CardW, 70, Ui.A(Ui.Acc, 0.26f), Ui.PanelA(0.94f), false);
+                Ui.Box(rt, 0, 0, CardW, 2.5f, Ui.Gold);
                 Ui.Frame(rt, 0, 0, CardW, 70, 1.5f, Ui.Gold);
             }
-            else Ui.Frame(rt, 0, 0, CardW, 70, 1, Ui.GoldDim);
+            else Ui.Frame(rt, 0, 0, CardW, 70, 1, Ui.A(Ui.GoldDim, 0.8f));
+            var wash = Ui.Box(rt, 0, 0, CardW, 70, Color.clear, "Focus");
             // the Armory's own picture of the weapon: its render, or the JS drawing for the weapons without one (Shinsen, Raikō no Tachi, ...)
             string tex = GearArt.For(GearKind.Weapons, w.Id).Key;
             if (Ui.Tex(tex) != null)
@@ -270,7 +244,11 @@ namespace Kage
             Ui.Label(rt, Clean(w.Name).ToUpperInvariant(), UiFont.Title, 13, selected ? Ui.Gold : Ui.Bone, 4, 48, CardW - 8, 18, TextAnchor.MiddleCenter, 0.78f);
             string id = w.Id;
             float cardX = x;
-            var lift = UiFocusTween.On(rt, .16f, v => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * v)));
+            var lift = UiFocusTween.On(rt, .16f, v =>
+            {
+                UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * v));
+                wash.color = Ui.A(Ui.Gold, 0.10f * v);
+            });
             UiParts.Make(rt, Nav, "weapon:" + id, () => C.EquipWeapon(id), f =>
             {
                 lift.Set(f);

@@ -11,5 +11,6 @@
     "holdMin": 13,
     "holdMax": 30,
     "behindPenalty": 1.5,
-    "stickiness": 0.25
+    "stickiness": 0.25,
+    "warnBackAttacks": true
 }

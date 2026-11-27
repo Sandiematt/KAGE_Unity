@@ -34,13 +34,14 @@ namespace Kage.Rules
         // ---------------- save ----------------
 
         /// <summary>
-        /// A fresh save (JS defaultSave): 250 coins, 5 gems, level 1, owning and wearing the starter gear at level 1.
+        /// A fresh save (JS defaultSave): 250 coins, 5 gems, level 1, owning and wearing the starter gear at level 1. The starter weapon is
+        /// Unity's Mumei (<see cref="StarterWeaponId"/>), not the JS Kagetsu.
         /// Dev mode only sets the flag; the dev grants are SAN-64's.
         /// </summary>
         public static SaveData DefaultSave(bool devMode)
         {
             var s = new SaveData { devMode = devMode };
-            s.owned.weapons["kagetsu"] = 1;
+            s.owned.weapons[StarterWeaponId] = 1;          // Mumei, the plain katana (Kagetsu is sold now)
             s.owned.helmets["shiro_maki"] = 1;
             s.owned.armors["tachibana_yoroi"] = 1;
             return s;

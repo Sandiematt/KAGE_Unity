@@ -48,7 +48,7 @@ namespace Kage.Tests
         [Test]
         public void KageAndTheRoninLookAsBefore_after_a_chain_sickle_fight()
         {
-            var before = new HashSet<Renderer>(Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None));
+            var before = new HashSet<Renderer>(Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude));
             using (var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, 0f, 1.2f, kageDef: SpearFamilyFightTests.KageWith("yamigama")))
             {
                 f.RoninInput.Add(600);
@@ -60,7 +60,7 @@ namespace Kage.Tests
                 f.Run(20);
             }
             var drawn = new List<string>();
-            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude))
                 if (r.enabled && !before.Contains(r)) drawn.Add(r.transform.root.name + "/" + r.name);
             CollectionAssert.IsEmpty(drawn, "nothing of the disposed fight is still drawn");
 

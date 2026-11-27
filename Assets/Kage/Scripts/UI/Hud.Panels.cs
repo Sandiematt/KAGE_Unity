@@ -45,6 +45,7 @@ namespace Kage
         // ---- fonts and colours (styles.css) ----
         static readonly Color Bone = Hex("#f1ebe0"), Cream = Hex("#f6e6c8"), NameCream = Hex("#f4e6cc"), Gold = Hex("#c9a45c"),
             Crimson = Hex("#c8232f"), HpRed = Hex("#d8202c"), TrackInk = Hex("#120808"), ValueCream = Hex("#f6e7cc"), LineAsh = Hex("#3a342b");
+        static readonly Color PlayerHpTop = Hex("#fa4c4e"), PlayerHpBottom = Hex("#bc172e"), PlayerHpFrame = Hex("#e8c886");
 
         static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
         static Color A(Color c, float a) { c.a = a; return c; }
@@ -59,16 +60,21 @@ namespace Kage
             public HudBar chip, fill, posture;
             public Image postureTrack;
             public RawImage portrait;
+            public Texture2D kagePortrait;
             public RectTransform rageBarRoot, readyRoot, kunaiRoot;
             public HudBar rageFill;
             public GameObject rageRow;
             public float rageBarW;
             public ShapeGraphic readyShape;
+            public RadialGlow readyGlow;
             public string shownName, shownSub;
             public HudPortrait cam;
             public int portraitTicks;
             public Fighter shownFighter;
             public bool portraitDone;
+            // Minimal 3-dot timing indicator under Kage's health/rage bar (Ready ○○○ / Window ○●○ / Perfect ●●●)
+            public readonly RingDotGraphic[] timingDots = new RingDotGraphic[3];
+            public readonly RadialGlow[] timingGlows = new RadialGlow[3];
         }
 
         JsPanel _pl, _pr;
@@ -131,6 +137,7 @@ namespace Kage
             BuildRoad();
             BuildPauseButton();
             BuildCombo();
+            BuildCallouts();
             BuildBossBar();
         }
 
@@ -150,20 +157,28 @@ namespace Kage
 
         JsPanel BuildPanel(RectTransform root, bool right)
         {
-            var p = new JsPanel { right = right, root = root, basePos = root.anchoredPosition };
+            var p = new JsPanel
+            {
+                right = right, root = root, basePos = root.anchoredPosition,
+                kagePortrait = right ? null : Ui.Tex("kage_hud_portrait"),
+            };
             float medalX = right ? PanelW - Medal : 0f, bodyX = right ? 0f : Medal + MedalGap;
 
             // medal: ring, dark face, glow, portrait, diamond
             var medal = Ui.Node(root, "Medal", medalX, 0, Medal, Medal);
-            Ui.Disc(medal, Medal / 2, Medal / 2, Medal / 2, right ? Hex("#d84a3c") : Hex("#e8c886"));
+            Ui.Disc(medal, Medal / 2, Medal / 2, Medal / 2, right ? Hex("#d84a3c") : PlayerHpFrame);
             Ui.Disc(medal, Medal / 2, Medal / 2, Medal / 2 - 3f, Hex("#0a0707"));
             Ui.Glow(medal, Medal / 2, Medal * 0.45f, Medal * 0.5f, right ? Hex("#6a1d16") : Hex("#4a2a1a"), 1.2f);
-            var maskGo = Ui.Node(medal, "PortraitMask", 3f, 3f, Medal - 6f, Medal - 6f);
+            float portraitInset = right ? 3f : 4f;
+            float portraitSize = Medal - 2f * portraitInset;
+            if (!right)
+                Ui.Disc(medal, Medal / 2, Medal / 2, Medal / 2 - 3f, Hex("#775033"));
+            var maskGo = Ui.Node(medal, "PortraitMask", portraitInset, portraitInset, portraitSize, portraitSize);
             var maskImg = maskGo.gameObject.AddComponent<Image>();
             maskImg.sprite = CircleSprite();
             maskImg.raycastTarget = false;
             maskGo.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            var ri = Ui.Node(maskGo, "Portrait", 0, 0, Medal - 6f, Medal - 6f).gameObject.AddComponent<RawImage>();
+            var ri = Ui.Node(maskGo, "Portrait", 0, 0, portraitSize, portraitSize).gameObject.AddComponent<RawImage>();
             ri.raycastTarget = false;
             ri.color = Color.clear;
             p.portrait = ri;
@@ -180,12 +195,12 @@ namespace Kage
             float trackX = right ? ValW + ValGap : 0f, valX = right ? 0f : TrackW + ValGap;
             float hy = HudLayoutRects.HpY;
             var track = Ui.Node(body, "HpTrack", trackX, hy, TrackW, HpH);
-            Ui.Shape(track, 0, 0, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right), Bone, null, null, false, "Frame");
+            Ui.Shape(track, 0, 0, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right), right ? Bone : PlayerHpFrame, null, null, false, "Frame");
             Ui.Shape(track, 0, 0, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right, 2f), TrackInk, null, null, false, "Ink");
             p.chip = MakeBar(track, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right, 2f), right);
             p.chip.SetColors(Bone, Bone);
             p.fill = MakeBar(track, TrackW, HpH, Slant(TrackW, HpH, 11.2f, !right, 2f), right);
-            p.fill.SetColors(HpRed, HpRed);
+            p.fill.SetColors(right ? HpRed : PlayerHpTop, right ? HpRed : PlayerHpBottom);
             p.hpValue = Lbl(body, "", UiFont.Num, 18, ValueCream, valX, hy - 3f, ValW, HpH + 6f, TextAnchor.MiddleLeft);
             // posture: a thin strip under the bar, only while it means something
             var pt = Ui.Node(track, "Posture", 0, HpH + 1.2f, TrackW, 3f);
@@ -194,8 +209,30 @@ namespace Kage
             p.posture.SetColors(Hex("#FFE7A8"), Hex("#C9A45C"));
             pt.gameObject.SetActive(true);
 
-            if (!right) BuildRageRow(body, p);
+            if (!right)
+            {
+                BuildRageRow(body, p);
+                BuildTimingDots(body, p);
+            }
             return p;
+        }
+
+        void BuildTimingDots(Transform body, JsPanel p)
+        {
+            const float dotR = 3.6f, step = 13.5f;
+            var row = Ui.Node(body, "TimingDots", 2f, 77f, step * 3f + 4f, 12f);
+            for (int i = 0; i < 3; i++)
+            {
+                float cx = 5f + i * step;
+                float cy = 6f;
+                var glow = Ui.Glow(row, cx, cy, 9.5f, Color.clear, 1.9f);
+                p.timingGlows[i] = glow;
+                var dRt = Ui.Node(row, "Dot" + i, cx - dotR - 1f, cy - dotR - 1f, (dotR + 1f) * 2f, (dotR + 1f) * 2f);
+                var dot = dRt.gameObject.AddComponent<RingDotGraphic>();
+                dot.raycastTarget = false;
+                dot.Set(dotR, 1.2f, Color.clear, A(Bone, 0.58f));
+                p.timingDots[i] = dot;
+            }
         }
 
         HudBar MakeBar(Transform parent, float w, float h, Vector2[] shape, bool fromRight)
@@ -227,8 +264,13 @@ namespace Kage
             var pill = Ui.Node(row, "Ready", 0, 0, 100f, 18.4f);
             pill.pivot = new Vector2(0.5f, 0.5f);
             p.readyRoot = pill;
+            p.readyGlow = Ui.Glow(pill, 50f, 9.2f, 22f, Color.clear, 1.9f);
+            p.readyGlow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            p.readyGlow.rectTransform.anchoredPosition = new Vector2(50f, -9.2f);
+            p.readyGlow.rectTransform.localScale = new Vector3(2.8f, 0.9f, 1f);
             p.readyShape = Ui.Shape(pill, 0, 0, 100f, 18.4f, Slant(100f, 18.4f, 4.8f, true, 0f), Hex("#f3d48f"), Hex("#ffeec8"), null, true, "Pill");
-            p.rageReady = Lbl(pill, "RAGE READY", UiFont.Teko, 15, Hex("#1a0907"), 0f, 0f, 100f, 18.4f, TextAnchor.MiddleCenter, 2.7f, false);
+            // Optical center inside the right-slanted Teko pill (+1.2px vertical baseline balance, -1.5px for right slant)
+            p.rageReady = Lbl(pill, "RAGE READY", UiFont.Teko, 15, Hex("#1a0907"), -1.5f, 1.2f, 100f, 18.4f, TextAnchor.MiddleCenter, 2.7f, false);
             // kunai: icon and count at the row's right end
             var k = Ui.Node(row, "Kunai", BodyW * 0.82f - 28f, 0, 28f, 18.4f);
             p.kunaiRoot = k;
@@ -240,13 +282,26 @@ namespace Kage
             p.kunaiRoot = k;
         }
 
-        // portrait capture is retried for a few ticks after a fighter is bound, then once more now and then (its pose settles)
-        void UpdatePortrait(JsPanel p, Fighter f, bool visible)
+        void UpdatePortrait(JsPanel p, Fighter f)
         {
-            if (!visible || f == null) { if (p.portrait != null && p.shownFighter != null) { p.portrait.color = Color.clear; p.shownFighter = null; p.portraitDone = false; p.portraitTicks = 0; } return; }
-            if (p.shownFighter != f) { p.shownFighter = f; p.portraitDone = false; p.portraitTicks = 0; }
-            if (p.portraitDone) return;
-            if (++p.portraitTicks < 4) return;       // the rig poses in its first frames
+            if (p.shownFighter != f || (f == null && p.portraitDone))
+            {
+                p.shownFighter = f;
+                p.portraitDone = false;
+                p.portraitTicks = 0;
+                p.portrait.color = Color.clear;
+            }
+            if (f == null || p.portraitDone) return;
+
+            if (p.kagePortrait != null && f.Character?.id == KageCharacter.Id)
+            {
+                p.portrait.texture = p.kagePortrait;
+                p.portrait.color = Color.white;
+                p.portraitDone = true;
+                return;
+            }
+
+            if (++p.portraitTicks < 4) return; // let the live rig settle into its first pose
             p.cam ??= new HudPortrait();
             if (p.cam.Capture(f))
             {
@@ -282,7 +337,7 @@ namespace Kage
             bool vis = v.Visible;
             if (p.root.gameObject.activeSelf != vis) p.root.gameObject.SetActive(vis);
             if (!vis) return;
-            UpdatePortrait(p, f, true);
+            UpdatePortrait(p, f);
             var off = HurtOffset(v.Hurt);
             p.root.anchoredPosition = p.basePos + new Vector2(p.right ? -off.x : off.x, off.y);
 
@@ -319,7 +374,8 @@ namespace Kage
             float flash = 1f + v.Hurt * 1.4f;
             p.fill.SetFill(v.Hp);
             p.chip.SetFill(v.Chip);
-            p.fill.SetColors(Brighten(HpRed, low * flash), Brighten(HpRed, low * flash));
+            p.fill.SetColors(Brighten(p.right ? HpRed : PlayerHpTop, low * flash),
+                Brighten(p.right ? HpRed : PlayerHpBottom, low * flash));
             string hv = v.HpValue.ToString();
             if (p.hpValue.text != hv) p.hpValue.text = hv;
 
@@ -340,25 +396,57 @@ namespace Kage
             if (p.right) return;
             // rage
             bool ready = v.RageReady;
+            float ragePulse = ready ? Mathf.PingPong(Time.unscaledTime * 1.4f, 1f) : 0f;
             float pillW = Mathf.Max(70f, p.rageReady.preferredWidth + 2.7f * 10 + 16f);
             float barW = p.rageBarW - (ready ? pillW + 8.8f : 0f);
             // the bar's own shapes were built for the full width: scale them with the node
             p.rageBarRoot.localScale = new Vector3(barW / p.rageBarW, 1f, 1f);
             p.rageFill.SetFill(v.RageFill);
-            p.rageFill.SetColors(Hex("#e8b45a"), Hex("#e8b45a"));
-            p.rageIcon.color = ready ? Color.Lerp(Gold, Hex("#ffd98f"), Mathf.PingPong(Time.unscaledTime * 1.25f, 1f)) : Gold;
+            Color rageCol = ready ? Color.Lerp(Hex("#e8b45a"), Hex("#ffe39b"), 0.35f + 0.4f * ragePulse) : Hex("#e8b45a");
+            p.rageFill.SetColors(rageCol, Hex("#e8b45a"));
+            p.rageIcon.color = ready ? Color.Lerp(Gold, Hex("#ffe6a8"), ragePulse) : Gold;
             if (p.readyRoot.gameObject.activeSelf != ready) p.readyRoot.gameObject.SetActive(ready);
             if (ready)
             {
                 p.readyRoot.anchoredPosition = new Vector2(19.2f + 8.8f + barW + 8.8f + pillW / 2f, -9.2f);
                 p.readyRoot.sizeDelta = new Vector2(pillW, 18.4f);
-                p.readyShape.Set(Slant(pillW, 18.4f, 4.8f, true, 0f), Hex("#f3d48f"), Hex("#ffeec8"), Hex("#ffeec8"), true);
+                p.readyGlow.rectTransform.anchoredPosition = new Vector2(pillW * 0.5f, -9.2f);
+                p.readyGlow.color = A(Hex("#ffd98f"), 0.22f + 0.24f * ragePulse);
+                p.readyShape.Set(Slant(pillW, 18.4f, 4.8f, true, 0f), Color.Lerp(Hex("#f3d48f"), Hex("#ffe9b8"), ragePulse * 0.45f), Hex("#ffeec8"), Hex("#ffeec8"), true);
+                p.rageReady.rectTransform.anchoredPosition = new Vector2(-1.5f, -1.2f);
                 p.rageReady.rectTransform.sizeDelta = new Vector2(pillW, 18.4f);
                 float s = Mathf.Lerp(1f, 0.6f, v.RageReadyPop);
                 p.readyRoot.localScale = new Vector3(s, s, 1f);
             }
             if (p.kunaiRoot.gameObject.activeSelf != v.KunaiShown) p.kunaiRoot.gameObject.SetActive(v.KunaiShown);
             if (v.KunaiShown) { string ks = v.Kunai.ToString(); if (p.kunai.text != ks) p.kunai.text = ks; }
+            ApplyTimingDots(p, v);
+        }
+
+        void ApplyTimingDots(JsPanel p, HudPanelView v)
+        {
+            if (p.timingDots[0] == null) return;
+            const float dotR = 3.6f;
+            Color ringCol = A(Bone, 0.58f);
+            Color goldLit = Hex("#FFE58F");
+            Color goldGlow = Hex("#FFCA54");
+            float pulse = v.TimingPulse;
+
+            for (int i = 0; i < 3; i++)
+            {
+                bool lit = v.TimingState == HudTimingState.Perfect || (v.TimingState == HudTimingState.Window && i == 1);
+                if (lit)
+                {
+                    float gA = v.TimingState == HudTimingState.Perfect ? 0.40f + 0.45f * pulse : 0.60f;
+                    p.timingDots[i].Set(dotR, 1.2f, goldLit, goldLit);
+                    p.timingGlows[i].color = A(goldGlow, gA);
+                }
+                else
+                {
+                    p.timingDots[i].Set(dotR, 1.2f, Color.clear, ringCol);
+                    p.timingGlows[i].color = Color.clear;
+                }
+            }
         }
 
         // =====================================================================================================
@@ -370,7 +458,6 @@ namespace Kage
         readonly List<DiamondGraphic> _pips = new();
         const float ClockSize = 89.6f;
         RectTransform _pause;
-        Image _pauseDisc;
         Font _fallbackFont;
 
         void BuildClock()
@@ -437,11 +524,10 @@ namespace Kage
         void BuildPauseButton()
         {
             _pause = Container("Pause", new Vector2(0.5f, 1f), new Vector2(57.6f + 17.6f, -25.6f), new Vector2(35.2f, 35.2f));
-            var disc = Ui.Disc(_pause, 17.6f, 17.6f, 17.6f, A(Gold, 0.45f));
+            Ui.Disc(_pause, 17.6f, 17.6f, 17.6f, A(Gold, 0.45f));
             Ui.Disc(_pause, 17.6f, 17.6f, 16.6f, A(Hex("#060303"), 0.88f));
             Ui.Box(_pause, 17.6f - 5f, 17.6f - 5.75f, 3.4f, 11.5f, Gold, "Bar");
             Ui.Box(_pause, 17.6f + 1.6f, 17.6f - 5.75f, 3.4f, 11.5f, Gold, "Bar");
-            _pauseDisc = null;
         }
 
         void ApplyPauseButton(bool stretch)
@@ -672,7 +758,8 @@ namespace Kage
 
         void OnCombatEvent(CombatEvent e)
         {
-            _model.Handle(e);
+            bool perfectParry = e.Type == CombatEventType.Parried && e.Target != null && e.Target.LastParryPerfect;
+            _model.Handle(e, perfectParry);
             if (e.Type == CombatEventType.BossPhaseChanged && _boss != null && e.TargetId == _model.Boss.Id && e.Index > 0)
                 Banner("PHASE " + FightHudModel.Roman(e.Index + 1) + "  ·  " + (e.Name ?? "").ToUpperInvariant(), Hex("#FFD08A"), 1.6f);
         }
@@ -695,6 +782,7 @@ namespace Kage
             };
             if (f.HasFoe) f.Foe = HudReader.Fighter(r, _foeName);
             if (f.Layout == HudLayout.Stretch) { HudReader.MiniBars(_stretch, _miniBars); f.MiniBars = _miniBars; }
+            f.RageCue = HudReader.RageCue(l);           // a boss open to the rage art (Hud.RageCue.cs)
             return f;
         }
 

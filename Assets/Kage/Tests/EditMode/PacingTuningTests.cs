@@ -21,7 +21,7 @@ namespace Kage.Tests
         {
             { "hollow_shade", 1.4f }, { "order_footman", 1.65f }, { "order_runner", 1.35f }, { "order_chainthrower", 1.7f },
             { "order_shieldbearer", 1.1f }, { "hollow_flicker", 2.5f }, { "order_ironclad", 1.35f }, { "hollow_husk", 1.4f },
-            { "kuroe", 1.15f }, { "garan", 1.25f }, { "hisame", 1.2f }, { "shiden", 1.05f }, { "raikon", 1.4f },
+            { "kuroe", 1.15f }, { "garan", 1.25f }, { "hisame", 1.35f }, { "shiden", 1.31f }, { "raikon", 1.4f },
         };
 
         static readonly string[] Foes =
@@ -104,8 +104,17 @@ namespace Kage.Tests
             return h.ToString("x16");
         }
 
-        // SAN-118 cleave rework: + katana|airCleave|10-17:12 (the air Kage Cleave, the ground cleave's 12 damage); nothing else changed
-        const string DamageHash = "d907a57a64f42077";
+        // SAN-118 cleave rework (+ katana|airCleave|10-17:12) + Raikon Ascendant & Act I sub-boss martial abilities; no weapon-family or prior ability damage changed.
+        // The Lightning Ascendant expansion (2026-11-27) adds nine abilities' lines only; the signature without them still hashes to the old 4ee367fd82c0cc64.
+        // The reference kata (2026-11-27, the contact-matched parry pass) add four moves' lines only (katana and tachi crownWheel and tameCut);
+        // the signature without them still hashes to the old 426889ffedf59f2e.
+        // The chain / cleaver / spear rework (2026-11-27, owner-approved re-bless): new chain.cyclone 18-25:12, chain.dashHook 7-13:9,
+        // spear.crescentCleave 12-18:12, spear.dashSkewer 7-14:10, spear.twinFang 8-11:5,15-20:6; changed chain.crescentLift 5-10:8 -> 6-10:5,8-14:7,
+        // chain.graveHook 8-13:7 -> 8-14:7, chain.groundHook 8-13:4 -> 8-13:5, chain.pull 8-14:4 -> 8-13:4,20-24:7, chain.reap 7-11:7 -> 6-10:7,
+        // chain.reapUp 6-11:7 -> 7-11:7, cleaver.charge 16-32:14 -> 17-26:15, cleaver.hack 11-16:8 -> 10-15:9, cleaver.hack2 12-17:9 -> 11-17:10,
+        // cleaver.lowHack 10-15:7 -> 10-15:8, cleaver.slam 31-40:26 -> 27-36:26, cleaver.sweep 23-32:16 -> 22-30:16, spear.lunge 9-18:11 -> 10-20:12,
+        // spear.sweep 10-16:8 -> 10-17:8, spear.vault 8-16:8 -> 8-17:9, and Shiden's chargingThrust 35-106:11 -> 35-106:12. Nothing else moved.
+        const string DamageHash = "2979bded56742b6a";
 
         [Test]
         public void No_move_damage_changed_in_the_pacing_pass()

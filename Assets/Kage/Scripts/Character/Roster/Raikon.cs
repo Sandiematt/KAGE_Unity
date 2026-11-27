@@ -7,7 +7,7 @@ namespace Kage
     /// Raikon (id "raikon"), the Act I boss: his JS stats (health 640, defence 0.16, damage ×1.1, speed ×0.9, build
     /// scale 1.24, heavy armour, no-grab) and his look, cut from the owner's painting (<see cref="RaikonPartSet"/>, SAN-71).
     /// His fight: the tachi set, mass, posture, a hit line that is his painted blade (<see cref="CharacterDef.bladeLength"/>), and the Lightning Ascendant's
-    /// three phases and fourteen abilities (<see cref="RaikonAscendant"/>, docs/raikon-ascendant-vfx.md). The four SAN-107 abilities
+    /// three phases and twenty-three abilities (<see cref="RaikonAscendant"/>, docs/raikon-ascendant-vfx.md). The four SAN-107 abilities
     /// (<see cref="RaikonAbilities"/>) keep their slots but no phase enables them.
     /// </summary>
     public static class Raikon

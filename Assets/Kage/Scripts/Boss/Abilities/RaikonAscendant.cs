@@ -16,6 +16,8 @@ namespace Kage
     /// <item><b>Phase 3, Lightning Ascendant</b> (30–0 %, opened by Ascension): everything, plus Blink Flurry, Heavens' Verdict, Ascendant Rush and
     /// Afterimage Feint; once at 12 % the Final Overload.</item>
     /// </list>
+    /// The expansion (RaikonAscendant.Expansion.cs) adds three moves a phase (Sheathe Cross, Tsuba Press → Overhead Cleave, Whirlwind Feint;
+    /// Fulmination Drag, Arc Anchor, Gale Sever; Tempest Cage, Zenith Guillotine, Mirage Severance), their cross-phase upgrades and nine strings.
     /// <para>
     /// <b>The three-colour telegraph</b> (never mixed): the <i>steel glint</i> (<see cref="SteelCue"/>) marks a strike that can be blocked and parried;
     /// the <i>red eye flash</i> (<see cref="EyeCue"/>) a high-speed iaijutsu or blink that can't be guarded but can be parried
@@ -34,10 +36,14 @@ namespace Kage
         public const string KesaGiriId = "kesaGiri", PommelKickId = "pommelKick", CrimsonFlashId = "crimsonFlash", LowSweepId = "lowSweep", IronGuardId = "ironGuard";
         public const string RaijinArcId = "raijinArc", ThunderStepId = "thunderStep", SkySplitterId = "skySplitter", StaticPalmId = "staticPalm", TempestWheelId = "tempestWheel";
         public const string BlinkFlurryId = "blinkFlurry", HeavensVerdictId = "heavensVerdict", AscendantRushId = "ascendantRush", AfterimageFeintId = "afterimageFeint";
+        // ---- the expansion (2026-11-27): three more a phase (RaikonAscendant.Expansion.cs) ----
+        public const string SheatheCrossId = "sheatheCross", TsubaPressId = "tsubaPress", WhirlwindFeintId = "whirlwindFeint";
+        public const string FulminationDragId = "fulminationDrag", ArcAnchorId = "arcAnchor", GaleSeverId = "galeSever";
+        public const string TempestCageId = "tempestCage", ZenithGuillotineId = "zenithGuillotine", MirageSeveranceId = "mirageSeverance";
 
-        public static readonly string[] Phase1 = { KesaGiriId, PommelKickId, CrimsonFlashId, LowSweepId, IronGuardId };
-        public static readonly string[] Phase2Adds = { RaijinArcId, ThunderStepId, SkySplitterId, StaticPalmId, TempestWheelId };
-        public static readonly string[] Phase3Adds = { BlinkFlurryId, HeavensVerdictId, AscendantRushId, AfterimageFeintId };
+        public static readonly string[] Phase1 = { KesaGiriId, PommelKickId, CrimsonFlashId, LowSweepId, IronGuardId, SheatheCrossId, TsubaPressId, WhirlwindFeintId };
+        public static readonly string[] Phase2Adds = { RaijinArcId, ThunderStepId, SkySplitterId, StaticPalmId, TempestWheelId, FulminationDragId, ArcAnchorId, GaleSeverId };
+        public static readonly string[] Phase3Adds = { BlinkFlurryId, HeavensVerdictId, AscendantRushId, AfterimageFeintId, TempestCageId, ZenithGuillotineId, MirageSeveranceId };
 
         /// <summary>Every new ability id, in slot order.</summary>
         public static IEnumerable<string> AllIds
@@ -93,6 +99,71 @@ namespace Kage
             Reg(HeavensVerdictId, HeavensVerdict, 9.0f, 3.0f, 11f, 0.4f);
             Reg(AscendantRushId, AscendantRush, 7.0f, 0f, 1.6f, 0.5f);
             Reg(AfterimageFeintId, AfterimageFeint, FeintCooldown, 0f, 99f, 1f).escapeAfterHits = FeintAfterHits;
+            RegisterExpansion();
+
+            // a phase shows off its own kit: its new abilities come up more often than the old ones
+            foreach (var id in Phase2Adds) AbilityCatalog.Get(id).weight = Phase2Weight;
+            foreach (var id in Phase3Adds) AbilityCatalog.Get(id).weight = Phase3Weight;
+            foreach (var id in ExpansionIds) AbilityCatalog.Get(id).weight *= ExpansionWeight;       // the expansion's moves show in a playtest
+            foreach (var (from, next) in Strings) Chain(from, next);
+        }
+
+        // ---------------------------------------------------------------------------------------------- the boss strings
+        /// <summary>How much more often a phase's new abilities are picked than phase 1's (<see cref="AbilityDef.weight"/>).</summary>
+        public const float Phase2Weight = 1.5f, Phase3Weight = 2f;
+        /// <summary>The expansion's nine moves come up half again as often as their phase's older ones, so they show in a playtest.</summary>
+        public const float ExpansionWeight = 1.5f;
+
+        /// <summary>The expansion's nine ability ids (RaikonAscendant.Expansion.cs).</summary>
+        public static readonly string[] ExpansionIds =
+        {
+            SheatheCrossId, TsubaPressId, WhirlwindFeintId, FulminationDragId, ArcAnchorId, GaleSeverId, TempestCageId, ZenithGuillotineId, MirageSeveranceId,
+        };
+
+        /// <summary>
+        /// Raikon's strings (<see cref="AbilityDef.chain"/>): what he may go straight into when an ability ends, in order of preference; the first one the
+        /// phase enables, off cooldown and in its distance band is taken. Each one has a reason: the push kick throws Kage out to the iaijutsu's range,
+        /// the Raijin wave makes him jump and the Crimson Flash takes him on landing, the blink puts Raikon at Kage's back for the Kesa-Giri, and so on.
+        /// </summary>
+        public static readonly (string from, string[] next)[] Strings =
+        {
+            (PommelKickId, new[] { CrimsonFlashId, RaijinArcId, LowSweepId }),
+            (KesaGiriId, new[] { PommelKickId, ThunderStepId }),
+            (LowSweepId, new[] { KesaGiriId, TempestWheelId }),
+            (CrimsonFlashId, new[] { BlinkFlurryId, ThunderStepId }),
+            (RaijinArcId, new[] { CrimsonFlashId, ThunderStepId }),
+            (ThunderStepId, new[] { KesaGiriId, StaticPalmId }),
+            (TempestWheelId, new[] { StaticPalmId, PommelKickId }),
+            (StaticPalmId, new[] { RaijinArcId, CrimsonFlashId }),
+            (BlinkFlurryId, new[] { HeavensVerdictId, ThunderStepId }),
+            (HeavensVerdictId, new[] { CrimsonFlashId, AscendantRushId }),
+            (AscendantRushId, new[] { ThunderStepId, BlinkFlurryId }),
+            (AfterimageFeintId, new[] { AscendantRushId, KesaGiriId }),
+            // the expansion's strings (docs/raikon-ascendant-vfx.md, "Boss strings")
+            (SheatheCrossId, new[] { PommelKickId }),
+            (TsubaPressId, new[] { LowSweepId }),                       // only when the shove whiffed (AbilityDef.chainIf)
+            (WhirlwindFeintId, new[] { KesaGiriId }),
+            (FulminationDragId, new[] { SkySplitterId, TempestWheelId }),
+            (ArcAnchorId, new[] { StaticPalmId, ThunderStepId }),
+            (GaleSeverId, new[] { RaijinArcId, CrimsonFlashId }),
+            (TempestCageId, new[] { HeavensVerdictId, BlinkFlurryId }),
+            (ZenithGuillotineId, new[] { AscendantRushId, StaticPalmId }),
+            (MirageSeveranceId, new[] { CrimsonFlashId, BlinkFlurryId }),
+        };
+
+        /// <summary>The chance he follows a string, by phase: phase 1 sometimes, phase 3 nearly always.</summary>
+        public static float ChainChance(Fighter f) => PhaseOf(f) switch { 0 => 0.45f, 1 => 0.7f, 2 => 0.85f, _ => 0.92f };
+
+        /// <summary>The beat in frames between the end of one ability and the next of a string, by phase: readable in phase 1, a snap in phase 3.</summary>
+        public static int ChainBeat(Fighter f) => PhaseOf(f) switch { 0 => 14, 1 => 9, 2 => 5, _ => 3 };
+
+        static void Chain(string from, string[] next)
+        {
+            var a = AbilityCatalog.Get(from);
+            if (a == null) return;
+            a.chain = next;
+            a.chainChance = ChainChance;
+            a.chainBeat = ChainBeat;
         }
 
         static AbilityDef Reg(string id, MoveDef m, float cdSeconds, float near, float far, float chance)
@@ -249,12 +320,13 @@ namespace Kage
                 .Armour(0, 26)
                 .Hit(27, 31, Blade, Dmg(11), HitLevel.Overhead, new Vector2(3f, 1.5f), stun: 24, hitstop: 10, shake: 0.45f, heavy: true, radius: BladeRadius)
                 .Throw(28, Wave, new Vector2(0.9f * scale / 1.24f, Wave.radius))
-                .Every(AuraCue, 3, 24, 4)
+                .Every(AuraCue, 3, 24, 4).Cue(28, SlamCue)
                 .Fx(28, 28, FxKind.Dust).Fx(28, 28, FxKind.Shockwave).Fx(25, 30, FxKind.TrailBlade)
                 .Impulse(6, new Vector2(-1.5f, 3.5f)).Impulse(28, new Vector2(3f, -2.5f))
                 .Sword().Fixed();
 
-            // Thunder Step: 0.3 s of boot static and an eye flash, a 0.18 s blink behind Kage (ghosts), a spinning back-kick, a horizontal slash.
+            // Thunder Step: 0.3 s of boot static and an eye flash, a 0.18 s blink behind Kage (ghosts), a chambered push kick, a horizontal slash
+            // (upright throughout: the old spinning back-kick is a straight kick now).
             // Parrying the kick reels him, so the slash never comes.
             ThunderStep = new MoveDef("raikon.thunderStep", "Thunder Step", 78)
                 .Key(8, Carry(P().Hip(-0.02f, -0.18f, 2f).Chest(-10f).Head(8f).Feet(0.26f, -0.3f)), Ease.OutQuad)
@@ -267,9 +339,8 @@ namespace Kage
                 .Key(46, Hold(Lunge(), 0.52f, 1.12f, 0f), Ease.OutExpo)
                 .Key(52, Hold(Lunge(), 0.48f, 1.16f, 12f))
                 .Key(78, Ready(), Ease.InOutQuad)
-                .Vault(18, 29, 1.0f, 0.12f, 0.7f, 0.4f)
+                .Vault(18, 29, 1.0f, 0f, 0.7f, 0.4f)          // a flat blink along the floor: no hop
                 .Invuln(17, 30).NoPush(17, 31)
-                .Spin(29, 35, -360f)
                 .Hit(32, 36, FootN, Dmg(7), HitLevel.Mid, new Vector2(1.5f, 0.5f), stun: 26, hitstop: 7, shake: 0.2f, radius: 0.13f)
                 .Hit(44, 48, Blade, Dmg(11), HitLevel.Mid, new Vector2(4.5f, 1f), stun: 26, hitstop: 9, shake: 0.32f, radius: BladeRadius)
                 .Cue(2, EyeCue).Every(BootStaticCue, 3, 15, 3).Every(GhostCue, 18, 30, 2).Cue(28, SteelFootCue).Cue(38, SteelCue)
@@ -308,18 +379,21 @@ namespace Kage
                 .Impulse(25, new Vector2(3f, 1f))
                 .Fixed();
 
-            // Tempest Wheel: a 0.4 s spin tell, a lunging two-kick advance, then a 360-degree electrified blade spin.
+            // Tempest Wheel: a 0.4 s tell, a lunging two-kick advance, then an electrified grounded blade sweep: a flat cut forward through
+            // Kage on a step-in and the backhand cut back (no whole-body spin; the wheel cue is the blade's arc, not his body turning).
             TempestWheel = new MoveDef("raikon.tempestWheel", "Tempest Wheel", 90)
                 .Key(10, Carry(P().Hip(-0.04f, -0.12f, -10f).Chest(-20f).Head(10f).Feet(0.3f, -0.3f)), Ease.OutQuad)
                 .Key(22, Carry(P().Hip(-0.06f, -0.14f, -16f).Chest(-28f).Head(14f).Feet(0.3f, -0.32f)))
                 .Key(27, PushOut(), Ease.OutExpo)
                 .Key(31, Chamber(), Ease.InOutQuad)
                 .Key(36, PushOut(), Ease.OutExpo)
-                .Key(42, Hold(P().Hip(0f, -0.1f, 0f).Chest(0f).Head(0f).Feet(0.3f, -0.3f), 0.5f, 1.15f, 0f), Ease.InOutQuad)
-                .Key(60, Hold(P().Hip(0f, -0.12f, 0f).Chest(-4f).Head(2f).Feet(0.3f, -0.3f), 0.5f, 1.12f, -4f))
+                .Key(42, Hold(P().Hip(-0.04f, -0.14f, 6f).Chest(8f).Head(-4f).Feet(0.3f, -0.3f), -0.1f, 1.2f, 168f), Ease.InOutQuad)
+                .Key(48, Hold(P().Hip(0.12f, -0.14f, -14f).Chest(-24f).Head(12f).Feet(0.42f, -0.28f), 0.62f, 1.1f, 2f), Ease.OutExpo)
+                .Key(51, Hold(P().Hip(0.12f, -0.15f, -14f).Chest(-24f).Head(12f).Feet(0.42f, -0.28f), 0.56f, 1.02f, -14f))
+                .Key(56, Hold(P().Hip(0.06f, -0.14f, -4f).Chest(-8f).Head(4f).Feet(0.4f, -0.28f), 0.4f, 1.18f, 30f), Ease.OutExpo)
+                .Key(60, Hold(P().Hip(0.04f, -0.14f, -2f).Chest(-6f).Head(3f).Feet(0.38f, -0.28f), 0.34f, 1.22f, 44f))
                 .Key(90, Ready(), Ease.InOutQuad)
                 .Move(22, 30, 5.5f).Move(42, 56, 2f)
-                .Spin(44, 60, 360f)
                 .Hit(24, 28, FootTip, Dmg(6), HitLevel.Mid, new Vector2(1.2f, 0.3f), stun: 22, hitstop: 6, shake: 0.15f, radius: 0.13f)
                 .Hit(34, 38, FootTip, Dmg(6), HitLevel.Mid, new Vector2(1.2f, 0.3f), stun: 22, hitstop: 6, shake: 0.15f, radius: 0.13f)
                 .Hit(46, 58, Blade, Dmg(10), HitLevel.Mid, new Vector2(4.5f, 1.2f), stun: 26, hitstop: 9, shake: 0.32f, radius: 0.4f)
@@ -349,7 +423,7 @@ namespace Kage
                 .Impulse(60, new Vector2(-5f, 1f)).Impulse(73, new Vector2(-2f, -3f))
                 .Sword().Fixed();
 
-            // Ascendant Rush: 0.35 s stance, then elbow, low sweep, rising lightning kick, air blade spin, heavy slam. A parry on any link (the
+            // Ascendant Rush: 0.35 s stance, then elbow, low sweep, rising lightning kick, air blade cut, heavy slam. A parry on any link (the
             // rising kick's steel glint marks the easiest) reels him and ends the chain.
             AscendantRush = new MoveDef("raikon.ascendantRush", "Ascendant Rush", 106)
                 .Key(8, Carry(P().Hip(-0.04f, -0.16f, 2f).Chest(-8f).Head(6f).Feet(0.3f, -0.32f)), Ease.OutQuad)
@@ -359,19 +433,20 @@ namespace Kage
                 .Key(32, Carry(P().Hip(0.06f, -0.34f, 8f).Chest(-8f).Head(8f).LegN(92f, -4f, 20f).FootF(-0.26f, 0.15f, -25f), 0.12f, 0.9f), Ease.OutExpo)
                 .Key(37, Carry(P().Hip(0f, -0.06f, 14f).Chest(10f).Head(-6f).LegN(140f, -90f, 10f).FootF(-0.14f, 0.13f)), Ease.InOutQuad)
                 .Key(41, Carry(P().Hip(0.04f, -0.02f, 24f).Chest(20f).Head(-12f).LegN(165f, -8f, 20f).FootF(-0.12f, 0.14f)), Ease.OutExpo)
-                .Key(48, Hold(P().Hip(0f, 0.02f, 0f).Chest(0f).Head(0f).LegN(60f, -90f).LegF(40f, -100f), 0.5f, 1.2f, 0f), Ease.InOutQuad)
+                .Key(45, Hold(P().Hip(0f, 0.02f, 6f).Chest(8f).Head(-6f).LegN(60f, -90f).LegF(40f, -100f), -0.05f, 1.4f, 160f), Ease.InOutQuad)
+                .Key(50, Hold(P().Hip(0f, 0.02f, -12f).Chest(-20f).Head(10f).LegN(60f, -90f).LegF(40f, -100f), 0.58f, 1.16f, 0f), Ease.OutExpo)
+                .Key(55, Hold(P().Hip(0f, 0.02f, -10f).Chest(-16f).Head(8f).LegN(60f, -90f).LegF(40f, -100f), 0.5f, 1.06f, -20f))
                 .Key(60, AirRaised(), Ease.InOutQuad)
                 .Key(64, Slam(), Ease.InCubic)
                 .Key(76, Slam())
                 .Key(106, Ready(), Ease.InOutQuad)
                 .Move(19, 24, 3.5f).Move(44, 45, 1.2f, 6.2f, true).Move(58, 59, 0f, -6f, true)
-                .Spin(46, 56, 360f)
                 .Hit(21, 24, Palm, Dmg(5), HitLevel.Mid, new Vector2(0.8f, 0.2f), stun: 22, hitstop: 5, shake: 0.12f, radius: 0.2f)
                 .Hit(30, 33, FootN, Dmg(5), HitLevel.Low, new Vector2(0.6f, 0f), stun: 22, hitstop: 5, shake: 0.12f, radius: 0.12f)
                 .Hit(39, 43, FootTip, Dmg(6), HitLevel.Mid, new Vector2(0.8f, 5.2f), stun: 28, hitstop: 7, shake: 0.2f, launch: true, radius: 0.13f)
                 .Hit(48, 56, Blade, Dmg(6), HitLevel.Mid, new Vector2(1f, 1.5f), stun: 26, hitstop: 6, shake: 0.18f, radius: 0.32f)
                 .Hit(62, 67, Blade, Dmg(11), HitLevel.Overhead, new Vector2(4f, 2.5f), stun: 30, hitstop: 12, shake: 0.5f, knockdown: true, heavy: true, radius: BladeRadius)
-                .Cue(6, SteelCue).Cue(33, SteelFootCue).Cue(40, FootArcCue).Cue(48, WheelCue).Cue(54, WheelCue)
+                .Cue(6, SteelCue).Cue(33, SteelFootCue).Cue(40, FootArcCue).Cue(48, WheelCue).Cue(54, WheelCue).Cue(64, SlamCue)
                 .Fx(29, 33, FxKind.TrailFootN).Fx(38, 43, FxKind.TrailFootN).Fx(46, 57, FxKind.TrailBlade).Fx(61, 67, FxKind.TrailBlade)
                 .Fx(64, 64, FxKind.Dust).Fx(64, 64, FxKind.Shockwave)
                 .Impulse(44, new Vector2(0f, -4f)).Impulse(64, new Vector2(3f, -3f))
@@ -385,13 +460,16 @@ namespace Kage
                 .Key(30, Hold(Lunge(), 0.46f, 0.95f, -40f))
                 .Key(50, Ready(), Ease.InOutQuad)
                 .Hazard(0, DecoyPop, 0f)
-                .Vault(2, 12, 0.9f, 0.1f, 0.7f, 0.4f)
+                .Vault(2, 12, 0.9f, 0f, 0.7f, 0.4f)           // a flat blink along the floor: no hop
                 .Invuln(0, 20).NoPush(0, 14)
                 .Hit(22, 26, Blade, Dmg(10), HitLevel.Mid, new Vector2(4f, 1f), stun: 26, hitstop: 9, shake: 0.3f, radius: BladeRadius)
                 .Cue(0, DecoyCue).Every(GhostCue, 2, 12, 2).Cue(16, SteelCue)
                 .Fx(21, 27, FxKind.TrailBlade)
                 .Impulse(2, new Vector2(-7f, 2f))
                 .Sword().Fixed();
+
+            // ==================================================================== THE EXPANSION (three more moves a phase)
+            BuildExpansion(scale);
 
             // ==================================================================== PHASE SHIFTS
             // Storm Kindling (into phase 2): the tachi planted in the floor, a zero-damage knockback shockwave, a sky bolt that ignites the blade.
@@ -402,7 +480,7 @@ namespace Kage
                 .Key(84, Ready(), Ease.InOutQuad)
                 .Invuln(0, 84).NoPush(0, 84)
                 .Hazard(14, PlantShock, 0f)
-                .Cue(30, BladeIgniteCue).Every(BladeArcCue, 34, 76, 5)
+                .Cue(6, GatherKindleCue).Cue(30, BladeIgniteCue).Every(BladeArcCue, 34, 76, 5)
                 .Impulse(14, new Vector2(-3f, 5f)).Impulse(30, new Vector2(0f, 6f))
                 .Sword();
 
@@ -414,7 +492,7 @@ namespace Kage
                 .Key(80, Ready(), Ease.InOutQuad)
                 .Invuln(0, 80).NoPush(0, 80)
                 .Hazard(20, SpiralKnock, 0f)
-                .Every(AuraCue, 2, 18, 4).Every(AuraCue, 30, 66, 8)
+                .Cue(2, GatherAscendCue).Every(AuraCue, 2, 18, 4).Every(AuraCue, 30, 66, 8)
                 .Impulse(20, new Vector2(-5f, 7f))
                 .Sword();
 
@@ -439,7 +517,7 @@ namespace Kage
                 .HazardOnTarget(50, SkyBolt).HazardOnTargetAlso(66, SkyBolt)
                 .Move(110, 123, 54f).NoPush(109, 125)
                 .Hit(111, 124, Blade, Dmg(18), HitLevel.Unblockable, new Vector2(7f, 2f), stun: 34, hitstop: 14, shake: 0.7f, knockdown: true, heavy: true, radius: 0.34f)
-                .Cue(0, DimCue).Every(InwardCue, 0, 44, 6).Every(AuraCue, 2, 46, 4).Cue(48, ReleaseCue)
+                .Cue(0, DimCue).Cue(0, GatherOverloadCue).Every(InwardCue, 0, 44, 6).Every(AuraCue, 2, 46, 4).Cue(48, ReleaseCue).Cue(48, SlamCue)
                 .Every(AuraCue, 84, 106, 4).Cue(100, EyeCue).Every(GhostCue, 110, 124, 2).Cue(124, IaiSliceCue).Cue(124, FinisherCue)
                 .Fx(48, 48, FxKind.Dust).Fx(48, 48, FxKind.Shockwave).Fx(110, 124, FxKind.TrailBlade).Fx(134, 134, FxKind.Dust)
                 .Impulse(0, new Vector2(0f, 4f)).Impulse(48, new Vector2(3f, -3f)).Impulse(110, new Vector2(-9f, 2f)).Impulse(124, new Vector2(6f, 1f)).Impulse(134, new Vector2(0f, -3f))
@@ -466,7 +544,7 @@ namespace Kage
                 .Hit(21, 25, Blade, Dmg(9), HitLevel.Mid, new Vector2(1.2f, 0.4f), stun: 26, hitstop: 7, shake: 0.2f, radius: BladeRadius)
                 .Hit(35, 39, Blade, Dmg(9), HitLevel.Mid, new Vector2(1.2f, 0.8f), stun: 26, hitstop: 7, shake: 0.2f, radius: BladeRadius)
                 .Hit(63, 67, Blade, Dmg(14), HitLevel.Overhead, new Vector2(4f, 2f), stun: 30, hitstop: 11, shake: 0.45f, knockdown: true, heavy: true, radius: BladeRadius)
-                .Cue(9, SteelCue).Cue(26, SteelCue).Cue(51, SteelCue)
+                .Cue(9, SteelCue).Cue(26, SteelCue).Cue(51, SteelCue).Cue(65, SlamCue)
                 .Fx(20, 26, FxKind.TrailBlade).Fx(34, 40, FxKind.TrailBlade).Fx(62, 68, FxKind.TrailBlade).Fx(65, 65, FxKind.Dust)
                 .Impulse(24, new Vector2(2f, -1f)).Impulse(38, new Vector2(1.5f, 2f)).Impulse(65, new Vector2(3f, -2.5f))
                 .Sword().Fixed();
@@ -511,7 +589,7 @@ namespace Kage
                 .Vault(6, 24, -0.6f, 2.2f, 0f, 0.4f)
                 .Hit(20, 26, Blade, Dmg(13), HitLevel.Overhead, new Vector2(3f, 2f), stun: 30, hitstop: 12, shake: 0.5f, knockdown: true, heavy: true, radius: BladeRadius)
                 .HazardAlso(24, FlurrySlam, 0.6f)
-                .Cue(0, EyeCue).Cue(10, SteelCue).Every(GhostCue, 6, 22, 2)
+                .Cue(0, EyeCue).Cue(10, SteelCue).Every(GhostCue, 6, 22, 2).Cue(24, SlamCue)
                 .Fx(19, 26, FxKind.TrailBlade).Fx(24, 24, FxKind.Dust).Fx(24, 24, FxKind.Shockwave)
                 .Impulse(6, new Vector2(0f, -5f)).Impulse(24, new Vector2(3f, -3f))
                 .Sword().Fixed();
@@ -519,7 +597,7 @@ namespace Kage
             BlinkFlurry2 = new MoveDef("raikon.blinkFlurry2", "Blink Flurry", 16)
                 .Key(3, IaiDash(), Ease.OutExpo)
                 .Key(14, IaiEnd())
-                .Vault(3, 13, 1.4f, 0.05f, 0.8f, 0.4f).NoPush(2, 15)
+                .Vault(3, 13, 1.4f, 0f, 0.8f, 0.4f).NoPush(2, 15)
                 .Hit(4, 13, Blade, Dmg(8), HitLevel.Mid, new Vector2(1f, 0.3f), stun: 34, hitstop: 6, shake: 0.2f, radius: 0.3f).Unguardable()
                 .HazardOnTargetAlso(3, FlurrySlash)
                 .Cue(0, EyeCue).Every(GhostCue, 3, 13, 2)
@@ -533,7 +611,7 @@ namespace Kage
                 .Key(32, IaiCrouch(0.05f))
                 .Key(37, Hold(P().Hip(0.1f, -0.34f, -16f).Chest(-32f).Head(24f).Feet(0.5f, -0.42f), 0.62f, 0.7f, -6f), Ease.OutExpo)
                 .Key(45, Hold(P().Hip(0.1f, -0.32f, -16f).Chest(-30f).Head(22f).Feet(0.5f, -0.42f), 0.6f, 0.74f, 4f))
-                .Vault(33, 43, 1.4f, 0.05f, 0.8f, 0.4f).NoPush(32, 45)
+                .Vault(33, 43, 1.4f, 0f, 0.8f, 0.4f).NoPush(32, 45)
                 .Hit(34, 43, Blade, Dmg(8), HitLevel.Low, new Vector2(1f, 0f), stun: 34, hitstop: 6, shake: 0.2f, radius: 0.3f).Unguardable()
                 .HazardOnTargetAlso(33, FlurrySlash)
                 .Cue(3, EyeCue).Cue(14, EyeCue).Cue(25, EyeCue).Every(GhostCue, 33, 43, 2)

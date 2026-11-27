@@ -36,6 +36,7 @@ namespace Kage
 
             bool held = state is FState.Ultimate or FState.Thrown || _victim != null;
             if (held && opponent != null && Targets.Contains(opponent)) return;
+            if (HoldFocus()) return;             // the foe it parried or turned to stays the target for a while (Fighter.Counter.cs)
             if (Targets.Count <= 1) { opponent = Targets.Count == 1 ? Targets[0] : null; return; }
 
             var t = Tuning.Get<EngagementTuning>();

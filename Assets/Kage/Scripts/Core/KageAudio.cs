@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace Kage
 {
-    public enum SfxKind { Whoosh, SwordWhoosh, Hit, HitHeavy, Slash, Block, Thud, Land, Grab, KO, Counter, Crescent, Ultimate, Gong }
+    /// <summary><c>Clang</c> is Kage's parry (a bright ringing steel), <c>FoeParry</c> a foe's parry of his blow (lower, harsher, a warning).</summary>
+    public enum SfxKind { Whoosh, SwordWhoosh, Hit, HitHeavy, Slash, Block, Thud, Land, Grab, KO, Counter, Crescent, Ultimate, Gong, Clang, FoeParry, PerfectChime, Shatter, TimeSlice, ClashRing, PunishConfirm }
 
     /// <summary>
     /// Synthesised sound effects (no audio files): filtered noise for whooshes and cloth,
@@ -17,7 +18,6 @@ namespace Kage
         readonly List<AudioSource> _pool = new();
         int _next;
         AudioSource _ambience;
-        System.Random _rng = new(7);
 
         void Awake()
         {
@@ -28,6 +28,18 @@ namespace Kage
                 s.spatialBlend = 0f;
                 _pool.Add(s);
             }
+            // Waveform noise has its own reproducible start without advancing the scene's cosmetic random sequence.
+            var previous = Random.state;
+            try
+            {
+                Random.InitState(7);
+                BuildClips();
+            }
+            finally { Random.state = previous; }
+        }
+
+        void BuildClips()
+        {
             _clips[SfxKind.Whoosh] = Variants(3, v => Whoosh(0.2f, 900f + v * 250f, 0.35f));
             _clips[SfxKind.SwordWhoosh] = Variants(3, v => Whoosh(0.18f, 2600f + v * 400f, 0.4f, true));
             _clips[SfxKind.Hit] = Variants(3, v => Impact(0.16f, 110f + v * 15f, 0.55f, 2200f));
@@ -42,12 +54,27 @@ namespace Kage
             _clips[SfxKind.Crescent] = Variants(1, v => Rise(0.55f, 400f, 1800f));
             _clips[SfxKind.Ultimate] = Variants(1, v => Rise(1.2f, 60f, 420f, 0.9f));
             _clips[SfxKind.Gong] = Variants(1, v => Gong(2.2f, 72f));
+            _clips[SfxKind.Clang] = Variants(2, v => Clang(0.55f, 1850f + v * 160f, 0.6f, 9f));
+            _clips[SfxKind.FoeParry] = Variants(2, v => Clang(0.4f, 980f + v * 90f, 0.62f, 14f));
+
+            _clips[SfxKind.PerfectChime] = Variants(1, v => Chime(0.85f, 990f, true));
+            _clips[SfxKind.Shatter] = Variants(2, v => Shatter(v));
+            _clips[SfxKind.TimeSlice] = Variants(1, v => Whoosh(0.14f, 4100f, 0.55f, true));
+            _clips[SfxKind.ClashRing] = Variants(2, v => Clang(0.66f, 1240f + v * 80f, 0.72f, 7.5f));
+            _clips[SfxKind.PunishConfirm] = Variants(1, v => Steel(0.13f, 2780f, 0.43f));
 
             _ambience = gameObject.AddComponent<AudioSource>();
             _ambience.clip = Ambience(8f);
             _ambience.loop = true;
             _ambience.volume = 0.32f;
             _ambience.Play();
+        }
+
+        void OnDestroy()
+        {
+            foreach (var variants in _clips.Values)
+                foreach (var clip in variants) Destroy(clip);
+            if (_ambience != null && _ambience.clip != null) Destroy(_ambience.clip);
         }
 
         AudioClip[] Variants(int n, System.Func<int, AudioClip> make)
@@ -66,7 +93,7 @@ namespace Kage
             s.PlayOneShot(arr[Random.Range(0, arr.Length)], vol);
         }
 
-        float Noise() => (float)(_rng.NextDouble() * 2.0 - 1.0);
+        static float Noise() => Random.value * 2f - 1f;
 
         static AudioClip Make(string name, float[] d)
         {
@@ -149,6 +176,28 @@ namespace Kage
             return Make("steel", d);
         }
 
+        /// <summary>
+        /// Blade on blade: a hard noise transient, then inharmonic steel partials (the free-bar ratios 1, 2.76, 5.40, 8.93) that ring on,
+        /// the higher ones dying first, with a slow beat between two near partials. <paramref name="decay"/> is the fundamental's decay rate.
+        /// </summary>
+        AudioClip Clang(float dur, float f0, float vol, float decay)
+        {
+            int n = (int)(dur * Rate);
+            var d = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float s = Mathf.Sin(2f * Mathf.PI * f0 * t) * Mathf.Exp(-t * decay)
+                        + 0.55f * Mathf.Sin(2f * Mathf.PI * f0 * 1.007f * t) * Mathf.Exp(-t * decay * 1.1f)
+                        + 0.5f * Mathf.Sin(2f * Mathf.PI * f0 * 2.76f * t) * Mathf.Exp(-t * decay * 1.8f)
+                        + 0.3f * Mathf.Sin(2f * Mathf.PI * f0 * 5.40f * t) * Mathf.Exp(-t * decay * 3f)
+                        + 0.18f * Mathf.Sin(2f * Mathf.PI * f0 * 8.93f * t) * Mathf.Exp(-t * decay * 5f)
+                        + 0.7f * Noise() * Mathf.Exp(-t * 140f);
+                d[i] = s * vol * 0.4f;
+            }
+            return Make("clang", d);
+        }
+
         AudioClip Gong(float dur, float f0)
         {
             int n = (int)(dur * Rate);
@@ -167,16 +216,34 @@ namespace Kage
             return Make("gong", d);
         }
 
-        AudioClip Chime(float dur)
+        AudioClip Shatter(int variant)
+        {
+            var d = new float[Rate / 4];
+            for (int i = 0; i < d.Length; i++)
+            {
+                float t = i / (float)Rate;
+                // Three splinters crack in succession, each a little quieter than the first.
+                float second = Mathf.Max(0f, t - 0.018f);
+                float third = Mathf.Max(0f, t - 0.044f);
+                float env = Mathf.Exp(-95f * t);
+                if (second > 0f) env += 0.63f * Mathf.Exp(-120f * second);
+                if (third > 0f) env += 0.42f * Mathf.Exp(-145f * third);
+                d[i] = (0.7f * Noise() + 0.27f * Mathf.Sin((7800f + variant * 520f) * t)) * env;
+            }
+            return Make("posture crack", d);
+        }
+
+        AudioClip Chime(float dur, float root = 1320f, bool overtone = false)
         {
             int n = (int)(dur * Rate);
             var d = new float[n];
             for (int i = 0; i < n; i++)
             {
                 float t = i / (float)Rate;
-                float s = Mathf.Sin(2f * Mathf.PI * 1320f * t) * Mathf.Exp(-t * 6f)
-                        + 0.6f * Mathf.Sin(2f * Mathf.PI * 1980f * t) * Mathf.Exp(-t * 8f)
-                        + 0.4f * Mathf.Sin(2f * Mathf.PI * 2640f * t) * Mathf.Exp(-t * 10f);
+                float s = Mathf.Sin(2f * Mathf.PI * root * t) * Mathf.Exp(-t * 6f)
+                        + 0.6f * Mathf.Sin(2f * Mathf.PI * (root * 1.5f) * t) * Mathf.Exp(-t * 8f)
+                        + 0.4f * Mathf.Sin(2f * Mathf.PI * (root * 2f) * t) * Mathf.Exp(-t * 10f);
+                if (overtone) s += 0.35f * Mathf.Sin(2f * Mathf.PI * root * 2.5f * t) * Mathf.Exp(-t * 5f);
                 d[i] = s * 0.35f;
             }
             return Make("chime", d);
@@ -204,6 +271,7 @@ namespace Kage
             int n = (int)(dur * Rate);
             var d = new float[n];
             float lp = 0f, lp2 = 0f;
+            float[] hits = { 0f, 0.5f, 4f, 4.5f, 5.25f };
             for (int i = 0; i < n; i++)
             {
                 float t = i / (float)Rate;
@@ -214,7 +282,6 @@ namespace Kage
                 float wind = (lp - lp2) * 6f * gust;
                 // slow taiko pulse: two strikes every 4 s
                 float beat = 0f;
-                float[] hits = { 0f, 0.5f, 4f, 4.5f, 5.25f };
                 foreach (var h in hits)
                 {
                     float u = t - h;

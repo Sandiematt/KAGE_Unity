@@ -149,9 +149,10 @@ namespace Kage.Tests
         public void AFoeWithAbilitiesKeepsThemInSlotOrder()
         {
             // the JS ability list is the slot order (ADR-0008); a JS boss lists its abilities only in its phases, so its slots are
-            // the phases' abilities in first-use order (SAN-103): Raikon's from the generated table
+            // the phases' abilities in first-use order (SAN-103): Raikon's from the generated table. The Lightning Ascendant's kit is appended after
+            // them (RaikonAscendantTests checks those slots), so the JS four keep the first slots.
             var raikon = CharacterCatalog.Get("raikon");
-            CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, raikon.abilities);
+            CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, raikon.abilities.Take(4).ToArray());
         }
     }
 }

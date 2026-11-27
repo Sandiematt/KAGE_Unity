@@ -39,6 +39,7 @@ namespace Kage
         /// </summary>
         public CameraRig Camera;
         public Hud Hud;
+        public KageAudio Audio;
 
         /// <summary>
         /// The physics scene the fight's bodies live in: the fight loop simulates it and every hit query (melee sweeps,

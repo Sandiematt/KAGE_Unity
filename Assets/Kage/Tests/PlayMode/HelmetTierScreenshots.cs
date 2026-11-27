@@ -18,29 +18,33 @@ namespace Kage.Tests
     public class HelmetTierScreenshots
     {
         const int W = 800, H = 600;
-        const int Tile = 420, IconW = 300, IconH = 174;
-        static readonly Color Back = new(0.16f, 0.13f, 0.14f, 1f);
+        const int Tile = 420, IconW = 320, IconH = 320;
+        static readonly Color Back = new(0.10f, 0.11f, 0.14f, 1f);
 
-        // the starter, the 10 shop helmets, the 3 Act I rewards
+        // the 14 Act I helmets in 5-tier order (Common, Rare, Epic, Trophy, Legendary)
         static readonly string[] Act1 =
         {
-            "shiro_maki", "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
-            "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "sumi_eboshi", "hisame_zukin", "raijin_kabuto",
+            "shiro_maki", "kuro_zukin",
+            "sugegasa", "hachigane", "kasumi_men",
+            "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
+            "shika_kabuto", "sumi_eboshi", "hisame_zukin",
+            "raijin_kabuto", "utsuro_kabuto", "shikko_zukin",
         };
 
         static string Root => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
 
-        static CharacterDef Wearing(string helmet)
+        static CharacterDef Wearing(string helmet, bool bareHands = false)
         {
             var def = CharacterCatalog.Get(KageCharacter.Id);
             def.helmet = helmet;
+            if (bareHands) def.weaponId = "fists";
             return def;
         }
 
         /// <summary>Kage in a pose: idle, a walk, a slash, the high hurt pose, and standing in a head wind that blows his soft pieces back.</summary>
-        static HeadlessFight Posed(string helmet, string pose)
+        static HeadlessFight Posed(string helmet, string pose, bool bareHands = false)
         {
-            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, -0.2f, kageDef: Wearing(helmet));
+            var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, -0.2f, kageDef: Wearing(helmet, bareHands));
             switch (pose)
             {
                 case "idle": f.Run(30); break;
@@ -66,22 +70,26 @@ namespace Kage.Tests
                 {
                     using var f = Posed(id, pose);
                     Vector2 head = f.Kage.rig.Bone(B.Head).position;
-                    Save(Path.Combine(tiles, $"{id}_{pose}.png"), Render(head + new Vector2(-0.1f, 0.12f), 0.56f, Tile, Tile, Back), Tile, Tile);
+                    Save(Path.Combine(tiles, $"{id}_{pose}.png"), Render(head + new Vector2(-0.08f, 0.14f), 0.56f, Tile, Tile, Back), Tile, Tile);
                     if (pose == "walk")
                         Save(Path.Combine(tiles, $"{id}_body.png"), Render(f.Kage.Pos + new Vector2(0f, 1.0f), 1.2f, Tile, Tile, Back), Tile, Tile);
-                    if (pose == "idle")
-                        Save(Path.Combine(icons, $"icon_h_{id}.png"), Icon(head + new Vector2(-0.12f, 0.2f)), IconW, IconH);
+                }
+                // Square side-profile bust portrait for the 5-tier Helmet Selection cards (no weapon intruding into the bust)
+                using (var portrait = Posed(id, "idle", bareHands: true))
+                {
+                    Vector2 head = portrait.Kage.rig.Bone(B.Head).position;
+                    Save(Path.Combine(icons, $"icon_h_{id}.png"), Icon(head + new Vector2(-0.04f, 0.10f)), IconW, IconH);
                 }
             }
             FileAssert.Exists(Path.Combine(tiles, "raijin_kabuto_wind.png"));
             FileAssert.Exists(Path.Combine(icons, "icon_h_raijin_kabuto.png"));
         }
 
-        /// <summary>An Armory tile picture: the head on a see-through background (rendered on black and on white; the difference is the coverage).</summary>
+        /// <summary>An Armory helmet bust portrait: Kage's dark silhouette, glowing eye, crimson scarf and helmet on transparent alpha.</summary>
         static Color32[] Icon(Vector2 centre)
         {
-            var black = Render(centre, 0.42f, IconW, IconH, Color.black);
-            var white = Render(centre, 0.42f, IconW, IconH, Color.white);
+            var black = Render(centre, 0.50f, IconW, IconH, Color.black);
+            var white = Render(centre, 0.50f, IconW, IconH, Color.white);
             var o = new Color32[black.Length];
             for (int i = 0; i < o.Length; i++)
             {

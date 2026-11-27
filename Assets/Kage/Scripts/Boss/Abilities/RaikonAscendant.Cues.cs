@@ -28,15 +28,29 @@ namespace Kage
         public const string VerticalBoltCue = "VFX_Raikon_Vertical_Bolt", BoltMarkCue = "VFX_Raikon_Sky_Bolt_Mark", SkyBoltCue = "VFX_Raikon_Sky_Bolt";
         public const string SlashMarkCue = "VFX_Raikon_Flurry_Slash_Mark", SlashDetonateCue = "VFX_Raikon_Flurry_Slash";
         public const string PlantShockCue = "VFX_Raikon_Plant_Shock", SpiralBurstCue = "VFX_Raikon_Spiral_Burst";
+        // ---- the thunder pass: storm clouds gathering over him before the phase shifts' bolts, and a slam's thunder (scaled by phase) ----
+        public const string GatherKindleCue = "VFX_Raikon_Cloud_Kindle", GatherAscendCue = "VFX_Raikon_Cloud_Ascend", GatherOverloadCue = "VFX_Raikon_Cloud_Overload";
+        public const string SlamCue = "VFX_Raikon_Slam_Thunder";
 
-        /// <summary>Every cue id this file registers.</summary>
-        public static readonly string[] CueIds =
+        /// <summary>Seconds each phase shift's cloud takes to gather: to Storm Kindling's bolt (f6 → f30), Ascension's burst (f2 → f20), the Overload's release (f0 → f48).</summary>
+        public const float KindleGather = 24 / 60f, AscendGather = 18 / 60f, OverloadGather = 48 / 60f;
+
+        /// <summary>Every cue id this file and the expansion's (RaikonAscendant.ExpansionCues.cs) register.</summary>
+        public static readonly string[] CueIds = Join(new[]
         {
             SteelCue, SteelHandCue, SteelFootCue, EyeCue, AuraCue, GhostCue, DecoyCue, BootStaticCue, GroundSparkCue, PalmChargeCue, PalmReleaseCue, WheelCue,
             FootArcCue, BladeIgniteCue, BladeArcCue, BladeStaticCue, IaiSliceCue, DimCue, InwardCue, ReleaseCue, FinisherCue, SparkLineMarkCue,
             SparkLineStrikeCue, TrailArcMarkCue, TrailArcStrikeCue, VerticalBoltCue, BoltMarkCue, SkyBoltCue, SlashMarkCue, SlashDetonateCue, PlantShockCue,
-            SpiralBurstCue,
-        };
+            SpiralBurstCue, GatherKindleCue, GatherAscendCue, GatherOverloadCue, SlamCue,
+        }, ExpansionCueIds);
+
+        static string[] Join(string[] a, string[] b)
+        {
+            var all = new string[a.Length + b.Length];
+            a.CopyTo(all, 0);
+            b.CopyTo(all, a.Length);
+            return all;
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void RegisterCues()
@@ -45,7 +59,7 @@ namespace Kage
             EffectCues.Register(SteelHandCue, (Vector2 p, in CueArgs a) => V?.SteelGlint(Bone(a, B.HandF, p), 0.32f));
             EffectCues.Register(SteelFootCue, (Vector2 p, in CueArgs a) => V?.SteelGlint(Bone(a, B.FootN, p), 0.32f));
             EffectCues.Register(EyeCue, (Vector2 p, in CueArgs a) => V?.EyeFlash(EyePos(a.owner, p)));
-            EffectCues.Register(AuraCue, (Vector2 p, in CueArgs a) => V?.AuraPulse(Chest(a, p)));
+            EffectCues.Register(AuraCue, (Vector2 p, in CueArgs a) => { V?.AuraPulse(Chest(a, p)); RaikonAura.Flare(a.owner); });
             EffectCues.Register(GhostCue, (Vector2 p, in CueArgs a) => V?.BlinkGhost(a.owner != null ? a.owner.rig : null));
             EffectCues.Register(DecoyCue, (Vector2 p, in CueArgs a) => V?.Decoy(a.owner != null ? a.owner.rig : null, DecoyPop.telegraphFrames / 60f, Chest(a, p)));
             EffectCues.Register(BootStaticCue, PlayBootStatic);
@@ -68,11 +82,82 @@ namespace Kage
             EffectCues.Register(TrailArcStrikeCue, PlayTrailArc);
             EffectCues.Register(VerticalBoltCue, PlayVerticalBolt);
             EffectCues.Register(BoltMarkCue, RaikonBoltMark.Play);
-            EffectCues.Register(SkyBoltCue, (Vector2 p, in CueArgs a) => V?.SkyBolt(p, 7.5f));
+            EffectCues.Register(SkyBoltCue, PlaySkyBolt);
             EffectCues.Register(SlashMarkCue, (Vector2 p, in CueArgs a) => V?.SparkLineMark(p + new Vector2(-0.6f, 0.35f), p + new Vector2(0.6f, 1.5f), a.seconds));
             EffectCues.Register(SlashDetonateCue, PlaySlashDetonate);
             EffectCues.Register(PlantShockCue, PlayPlantShock);
-            EffectCues.Register(SpiralBurstCue, (Vector2 p, in CueArgs a) => V?.SpiralBurst(p + Vector2.up * 1.1f, 2.6f));
+            EffectCues.Register(SpiralBurstCue, PlaySpiralBurst);
+            EffectCues.Register(GatherKindleCue, (Vector2 p, in CueArgs a) => GatherOver(a, 2.6f, KindleGather, 0.45f));
+            EffectCues.Register(GatherAscendCue, (Vector2 p, in CueArgs a) => GatherOver(a, 3.6f, AscendGather, 0f));
+            EffectCues.Register(GatherOverloadCue, (Vector2 p, in CueArgs a) => GatherOver(a, 5f, OverloadGather, 0f, 3));
+            EffectCues.Register(SlamCue, PlaySlam);
+            RegisterExpansionCues();
+        }
+
+        /// <summary>
+        /// A storm cloud gathering over him for a phase shift's bolts, <paramref name="ahead"/> m in front of him (over Storm Kindling's planted blade),
+        /// <paramref name="width"/> wide, at his phase's power unless <paramref name="power"/> says (an entry move plays after its phase has begun, so that
+        /// is already the new phase's).
+        /// </summary>
+        static void GatherOver(in CueArgs a, float width, float seconds, float ahead, int power = -1)
+        {
+            if (V == null || a.owner == null) return;
+            int pw = power >= 0 ? power : RaikonStorm.PowerOf(a.owner);
+            ThunderCloud.Gather(a.owner.Pos.x + a.owner.facing * ahead, width, seconds, pw, null, a.owner, 1.2f);
+        }
+
+        /// <summary>Heavens' Verdict's and Final Overload's sky bolt: out of the cloud that gathered over its ring (a quick one if none), at his phase's power.</summary>
+        static void PlaySkyBolt(Vector2 p, in CueArgs a)
+        {
+            var v = V;
+            if (v == null) return;
+            int power = RaikonStorm.PowerOf(a.owner);
+            Vector2 top = ThunderCloud.StrikeOver(p.x, p.y, power, a.owner);
+            v.ThunderStrike(p, top, 1f, power);
+        }
+
+        /// <summary>A slam's thunder where the blade meets the floor: cracks, and from phase 2 bolts erupting out of them (<see cref="Vfx.SlamThunder"/>).</summary>
+        static void PlaySlam(Vector2 pos, in CueArgs a)
+        {
+            var v = V;
+            if (v == null || a.owner == null) return;
+            Vector2 tip = Tip(a, pos, 0.95f);
+            v.SlamThunder(new Vector2(tip.x, a.owner.Pos.y), RaikonStorm.PowerOf(a.owner), a.owner.facing);
+        }
+
+        /// <summary>Ascension's burst: the crimson spiral, and the storm that gathered over him breaking: four bolts round him out of the cloud.</summary>
+        static void PlaySpiralBurst(Vector2 p, in CueArgs a)
+        {
+            var v = V;
+            if (v == null) return;
+            v.SpiralBurst(p + Vector2.up * 1.1f, 2.6f);
+            float x = a.owner != null ? a.owner.Pos.x : p.x, y = a.owner != null ? a.owner.Pos.y : p.y;
+            var cloud = ThunderCloud.Near(x, 2.5f);
+            float[] at = { -2.2f, -1.1f, 1.1f, 2.2f };
+            for (int i = 0; i < at.Length; i++)
+            {
+                var g = new Vector2(x + at[i] + Random.Range(-0.2f, 0.2f), y);
+                Vector2 top = cloud != null ? cloud.BoltTop(g.x) : g + Vector2.up * 7f;
+                v.After(i * 0.04f, () => { if (Vfx.I != null) Vfx.I.ThunderStrike(g, top, 0.75f, 2, 0.3f); });
+            }
+            if (cloud != null) cloud.Strike(x);
+        }
+
+        /// <summary>Final Overload's release: five bolts out of the great cloud that gathered over the pull, round him and out to both walls' sides.</summary>
+        static void OverloadBolts(Vector2 c, Fighter owner)
+        {
+            var v = V;
+            if (v == null) return;
+            float x = owner != null ? owner.Pos.x : c.x, y = owner != null ? owner.Pos.y : 0f;
+            var cloud = ThunderCloud.Near(x, 3f);
+            float[] at = { -3.2f, -1.6f, 0.9f, 2.0f, 3.4f };
+            for (int i = 0; i < at.Length; i++)
+            {
+                var g = new Vector2(x + at[i] + Random.Range(-0.25f, 0.25f), y);
+                Vector2 top = cloud != null ? cloud.BoltTop(g.x) : g + Vector2.up * 7f;
+                v.After(0.03f + i * 0.05f, () => { if (Vfx.I != null) Vfx.I.ThunderStrike(g, top, 0.8f, 3, 0.25f); });
+            }
+            if (cloud != null) cloud.Strike(x);
         }
 
         static Vfx V => Vfx.I;
@@ -200,7 +285,10 @@ namespace Kage
             var v = V;
             if (v == null) return;
             Vector2 tip = Tip(a, pos, 1f), hilt = Tip(a, pos, 0f);
-            v.Bolt(tip + new Vector2(Random.Range(-0.3f, 0.3f), 7f), tip, 0.065f, 0.45f, Vfx.Crimson, 18, 0.32f, 3);
+            Vector2 top = ThunderCloud.StrikeOver(tip.x, tip.y, 1, a.owner, 2.6f);            // out of the cloud that gathered over the planted blade
+            v.Bolt(top, tip, 0.065f, 0.45f, Vfx.Crimson, 18, 0.32f, 3);
+            v.LightPillar(tip, top, 0.4f, 0.45f, new Color(1f, 0.35f, 0.4f, 0.9f));
+            v.BackdropFlash(0.16f, 0.45f);
             v.Star(tip, 0.9f, Color.white, Vfx.Crimson);
             v.Arc(tip, hilt, 0.2f, 0.022f);
             v.Arc(Vector2.Lerp(tip, hilt, 0.3f), hilt, 0.16f, 0.016f);
@@ -227,6 +315,7 @@ namespace Kage
             v.Star(c, 1.4f, Color.white, Vfx.Crimson);
             v.Ring(c + Vector2.down * 1.0f, 0.2f, 3.2f, 0.12f, Vfx.Crimson, 0.5f, false, 0.22f, 2.4f);
             v.Crackle(c, 1.0f, 1.2f, 5);
+            OverloadBolts(c, a.owner);
             GameFeel.Flash(new Color(1f, 0.6f, 0.6f, 0.25f), 0.2f);
             GameFeel.Shake(0.55f);
         }
@@ -257,7 +346,8 @@ namespace Kage
             var v = V;
             if (v == null) return;
             float h = a.size.y > 0f ? a.size.y : 4f;
-            v.Bolt(pos, pos + Vector2.up * h, 0.045f, 0.3f, Vfx.Crimson, 12, 0.14f, 2);
+            Vector2 top = ThunderCloud.StrikeOver(pos.x, pos.y, RaikonStorm.PowerOf(a.owner), a.owner, 1.6f);     // it rises into a cloud that flashes
+            v.Bolt(pos, top, 0.045f, 0.3f, Vfx.Crimson, 14, 0.16f, 2);
             v.Star(pos + Vector2.up * 1.2f, 0.7f, Color.white, Vfx.Crimson);
             for (int i = 0; i < 8; i++)
                 v.Spark(pos + Vector2.up * Random.Range(0.2f, h * 0.6f), new Vector2(Random.Range(-2.5f, 2.5f), Random.Range(0f, 2f)), i % 2 == 0 ? Color.white : Vfx.Crimson, 0.03f, 0.3f);
@@ -302,6 +392,8 @@ namespace Kage
         public static void Play(Vector2 pos, in CueArgs a)
         {
             if (Vfx.I == null) return;
+            // the storm cloud the bolt will fall out of gathers over the ring for the whole telegraph, riding it while it tracks Kage
+            ThunderCloud.Gather(pos.x, 2.4f, Mathf.Max(0.1f, a.seconds), RaikonStorm.PowerOf(a.owner), a.follow, a.owner);
             if (a.follow == null) { Vfx.I.Ring(pos + Vector2.up * 0.03f, 0.3f, 0.8f, 0.04f, Vfx.Crimson, Mathf.Max(0.2f, a.seconds), false, 0.22f, 1.6f); return; }
             var go = new GameObject("RaikonBoltMark");
             go.transform.SetParent(a.follow, false);

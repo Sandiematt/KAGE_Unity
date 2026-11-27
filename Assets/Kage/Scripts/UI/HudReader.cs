@@ -32,6 +32,7 @@ namespace Kage
                 Kunai = f.KunaiCount,
                 Posture = f.PostureFill,
                 GuardBroken = f.GuardBroken,
+                InTimingWindow = f.isPlayer && (f.InParryWindow || f.InPerfectDodgeWindow),
                 Combo = f.comboCount,
                 RoundsWon = f.roundsWon,
             };
@@ -80,6 +81,21 @@ namespace Kage
                 float scale = f.Character != null ? f.Character.bodyScale : 1f;
                 into.Add(new HudMiniBar { World = f.Pos + Vector2.up * (2.15f * scale), Ratio = Mathf.Clamp01(f.health / f.maxHealth) });
             }
+        }
+
+        /// <summary>
+        /// The rage art's opening (Fighter.RageArtCounter.cs): on while <paramref name="kage"/> has a full Rage bar and can act or is finishing a
+        /// move, and his target is a sub-boss or the boss that would take the art now; at the point over its head. Off for a foe that takes the art
+        /// anywhere (it needs no cue) and during the art itself.
+        /// </summary>
+        public static HudRageCue RageCue(Fighter kage)
+        {
+            if (kage == null || !kage.Has(CharacterFlags.CanRageArt) || kage.meter < 100f || kage.health <= 0f || !kage.Grounded) return default;
+            if (kage.state is FState.Hitstun or FState.Launched or FState.Down or FState.Thrown or FState.KO or FState.Ultimate or FState.Intro or FState.Victory) return default;
+            var t = kage.opponent;
+            if (t == null || !t.isActiveAndEnabled || t.health <= 0f || !t.CountersRageArts || !t.OpenToRageArt(kage)) return default;
+            float scale = t.Character != null ? t.Character.bodyScale : 1f;
+            return new HudRageCue { On = true, World = t.Pos + Vector2.up * (2.2f * scale) };
         }
 
         /// <summary>The boss bar's boss.</summary>

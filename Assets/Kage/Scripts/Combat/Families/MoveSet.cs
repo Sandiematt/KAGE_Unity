@@ -29,6 +29,12 @@ namespace Kage
         /// </summary>
         public virtual MoveDef BareHanded(MoveDef m) => null;
 
+        /// <summary>
+        /// The fighter is driven by a legacy AI (no profile, <see cref="AIInputSource.IsProfiled"/>): a Select keeps to the moves that AI always
+        /// had (no reference kata, <see cref="MoveDef.profiledOnly"/>), so its fights replay as before.
+        /// </summary>
+        protected static bool LegacyAi(Fighter self) => self != null && self.input is AIInputSource ai && !ai.IsProfiled;
+
         /// <summary>Copies the shared body moves of <paramref name="from"/> (references).</summary>
         protected void ShareBodyMoves(MoveSet from)
         {
@@ -54,6 +60,21 @@ namespace Kage
             if (fam == null) return null;
             s = fam.build(this);
             _sets[familyId] = s;
+            return s;
+        }
+
+        /// <summary>
+        /// The set a fighter with <paramref name="style"/> fights with: the style's own set over its family's (Shizuka's iai string),
+        /// built once per fight and shared; the family's set when the style plays no button differently (docs/weapon-styles.md).
+        /// </summary>
+        public MoveSet Get(string familyId, WeaponStyle style)
+        {
+            var family = Get(familyId);
+            if (family == null || style == null || style.buildMoves == null) return family;
+            string key = familyId + "+" + style.weaponId;
+            if (_sets.TryGetValue(key, out var s)) return s;
+            s = style.buildMoves(family);
+            _sets[key] = s;
             return s;
         }
     }

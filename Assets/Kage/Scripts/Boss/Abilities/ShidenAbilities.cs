@@ -5,65 +5,61 @@ using static Kage.PoseLib;
 namespace Kage
 {
     /// <summary>
-    /// Shiden's abilities (SAN-106, ADR-0008): the three JS ones and the charging thrust the ticket asks for, each an ordinary
-    /// <see cref="MoveDef"/> on the spear set (his Vanguard Yari).
+    /// Shiden's abilities (SAN-106 + Hōzōin-ryū sōjutsu martial arts &amp; Raikon's lieutenant lightning, ADR-0008):
     /// <list type="bullet">
-    /// <item><b>Vanguard Break</b> (<c>vanguardBreak</c>, JS "a lighter Storm Break"): the yari raised high, armoured, while a ground mark
-    /// shows where the shockwave will run; then the spear driven into the ground (a crushing overhead blow that breaks a guard) and the
-    /// shockwave, a <see cref="Hazard"/> (ADR-0007) along the floor in front of him. Then a long open recovery: the JS tip is "step back
-    /// from the shockwave".</item>
-    /// <item><b>Brace</b> (<c>shidenBrace</c>, "KAMAE", 41-styles/shiden.js): he sets the spear low and level (a glint on the point) and holds
-    /// it. A Kage who rushes onto the point (a dash, a run or a quick walk at him, a cut started on the way in) within the JS trigger is met
-    /// at once by the thrust, a counter-hit critical (a <see cref="MoveDef.Brace"/>). Left alone, he lifts the point and stands open: the JS
-    /// "wait it out". It is not a counter window: a blow that doesn't rush in (a kunai, a poke from where Kage stands) lands as usual.</item>
-    /// <item><b>Hold the Line</b> (<c>vanguardGuard</c>, phase two, JS "a short guard whose punish can be blocked"): a counter stance
-    /// (<see cref="MoveDef.counterAnswer"/>, as Kuroe's Censure) with the shaft raised upright; a blow into it is turned aside and answered by
-    /// a stepping thrust; waited out, he drops it and is open. The JS tip: "do not strike into it".</item>
-    /// <item><b>The charging thrust</b> (<see cref="ChargeId"/>, the ticket's signature; not a JS ability): the spear set's dash thrust run
-    /// at the arena's scale. A long readable wind-up (the spear drawn back low, a glint on the point), then a run with the point out
-    /// across most of the arena. It stops on contact; a guard blocks it, a parry turns it, a jump clears the low point and a dash or a roll
-    /// gets through; dodged, he runs on and stands open (or meets the wall, staggered).</item>
+    /// <item><b>Vanguard Break</b> (<c>vanguardBreak</c>), <b>Brace</b> (<c>shidenBrace</c>), <b>Hold the Line</b> (<c>vanguardGuard</c>), and
+    /// <b>Charging Thrust</b> (<c>shiden.chargingThrust</c>): his four SAN-106 slots, upgraded with 40:1 Hōzōin-ryū spear pierce streaks and
+    /// violet-crimson lieutenant lightning strikes.</item>
+    /// <item><b>Maki-Otoshi · Ren-Tsuki</b> (<c>shiden.makiOtoshi</c>): textbook Hōzōin-ryū Omote kata — a winding downward beat of the shaft
+    /// to knock down the foe's guard, a snapping probe jab, and a body-weighted piston <i>Ō-Tsuki</i> down the centerline.</item>
+    /// <item><b>Suriage · Ō-Nagi</b> (<c>shiden.sojutsuSweep</c>): classical sōjutsu low shin sweep into a rising diagonal yari fang trailing
+    /// violet-crimson static (echoing Raikon's Low Sweep → Rising Cut &amp; Sky-Splitter).</item>
+    /// <item><b>Vanguard Raijin Arc</b> (<c>shiden.raijinLance</c>, Phase 2): as Raikon's closest disciple, Shiden raises the Vanguard Yari
+    /// in an armoured lightning call and slashes out a ground-skimming violet-crimson spark wave (an apprentice Raijin Arc).</item>
     /// </list>
-    /// <para>
-    /// <b>Numbers.</b> As Garan's and Hisame's: cooldown, range and chance from <see cref="JsTables.BossAbility"/>; Vanguard Break's variant
-    /// (wind-up, damage, shock and its life) and the JS shock projectile; Hold the Line's variant (stance, damage, unb); the Braced Spear's
-    /// <see cref="JsTables.ShidenBrace"/> (hold, reach, trigger, damage, open); the tells scaled by the JS <c>ai.p.windup</c> for a sub-boss
-    /// on Normal (<see cref="GaranAbilities.Windup"/>). What the JS writes only in its ability code is a named constant (here, or Storm
-    /// Break's and the charge's in <see cref="GaranAbilities"/>). Damage is the JS damage × <see cref="GaranAbilities.UnityPerJsDamage"/>.
-    /// Posture is Hisame's rule (<see cref="HisameAbilities.PostureMul"/>): a JS <c>gb</c> takes the same share of Kage's posture as of the
-    /// JS guard (out of 100); a blow with no <c>gb</c> leans the JS default, damage × 1.3.
-    /// The charging thrust is not in the JS, so it is built from what is: the spear set's own dash thrust (Charging Lunge: its damage and
-    /// hit), the JS dash's 900 px/s, the JS charge's tell, cooldown, chance and wall stun (<c>BOSS_ABILITIES.charge</c>), the near end of
-    /// the JS style's dash-thrust string (320 px); the run's length is the one Unity number (<see cref="ChargeRunTime"/>).
-    /// </para>
     /// </summary>
     public static class ShidenAbilities
     {
         public const string VanguardBreakId = "vanguardBreak", BraceId = "shidenBrace", VanguardGuardId = "vanguardGuard";
         public const string ChargeId = "shiden.chargingThrust";
-        public const string ShockId = "shiden.vanguardBreak.shock";
-        /// <summary>A violet glint on the point: the brace is set, the charge is coming.</summary>
+        public const string MakiOtoshiId = "shiden.makiOtoshi", SojutsuSweepId = "shiden.sojutsuSweep", RaijinLanceId = "shiden.raijinLance";
+        public const string ShockId = "shiden.vanguardBreak.shock", RaijinWaveId = "shiden.raijinWave";
+
+        public static readonly string[] ExtraIds = { MakiOtoshiId, SojutsuSweepId, RaijinLanceId };
+
+        // ---- effect cues ----
         public const string ChargeGlintCue = "VFX_Kage_ShidenGlint";
-        /// <summary>Violet sparks on the raised yari through Vanguard Break's wind-up (the JS raikonCrackle, his tint).</summary>
         public const string CrackleCue = "VFX_Kage_ShidenCrackle";
-        /// <summary>The shockwave where it strikes: the ground crack in his violet.</summary>
         public const string ShockCue = "VFX_Kage_VanguardShock";
+        public const string SpearPierceCue = "VFX_Kage_ShidenSpearPierce";
+        public const string StormPierceCue = "VFX_Kage_ShidenStormPierce";
+        public const string RisingFangCue = "VFX_Kage_ShidenRisingFang";
+        public const string RaijinWaveFlightCue = "VFX_Kage_ShidenRaijinWave";
+        public const string MakiBeatCue = "VFX_Kage_ShidenMakiBeat";
+        public const string LowSweepCue = "VFX_Kage_ShidenLowSweep";
 
-        // ---- constants of the JS ability code (not data, so not in the generated tables) ----
-        const double BraceSet = 0.22;               // 41-styles/shiden.js shidenBrace: set = 0.22 x ai.p.windup
-        const double BraceThrustLive = 0.24, BraceThrustEnd = 0.5;      //   ...the thrust's area is live 0.24 s, the move is over at 0.5 s
-        const double BraceKbPx = 560, BraceUpPx = 160, BraceStun = 0.5;  //   ...kb 560, up -160, hs 0.5
-        const double BraceLungePx = 520, BraceDamp = 14;                 //   ...the body pushed 520 px/s, damped 14 /s: 520 / 14 px in all
-        const double RushRunPx = 140, RushCutPx = 60;   // shidenRushing: walking or running at him faster than 140 px/s, a cut started on the way in faster than 60
-        const double GuardLeanPerDmg = 1.3;         // 30-combat.js: a blow without gb leans dmg x 1.3 on a guard
-        const double RedlinePunish = 0.1;           // 40-ai.js redlineCounter: the punish waits o.punish || 0.1 s (Hold the Line has none)
-        const int CounterAnswerDamage = 12;         // the Unity counter answer the Redline Counter is measured against (Kuroe's Censure)
-        const int GuardRaise = 4, GuardDrop = 14;   // Censure's: the shaft is up in 4 frames, dropped in 14 (no window)
-        const double DashPx = 900;                  // 20-fighter.js startDash: the dash runs at 900 px/s
-        const double ChargeStringPx = 320;          // FIGHT_STYLES.shiden: ['dash', 'weapon'] from 320 px (the generated style string)
+        public static readonly string[] CueIds =
+        {
+            ChargeGlintCue, CrackleCue, ShockCue, SpearPierceCue, StormPierceCue, RisingFangCue, RaijinWaveFlightCue, MakiBeatCue, LowSweepCue,
+        };
 
-        /// <summary>How long the charging thrust runs: Unity tuning, the one number the JS doesn't have (1.2 s at 900 px/s = 9.4 m, most of the 15.2 m arena).</summary>
+        // ---- constants of the JS ability code ----
+        const double BraceSet = 0.22;
+        const double BraceThrustLive = 0.24, BraceThrustEnd = 0.5;
+        const double BraceKbPx = 560, BraceUpPx = 160, BraceStun = 0.5;
+        const double BraceLungePx = 520, BraceDamp = 14;
+        const double RushRunPx = 140, RushCutPx = 60;
+        const double GuardLeanPerDmg = 1.3;
+        const double RedlinePunish = 0.1;
+        const int CounterAnswerDamage = 12;
+        const int GuardRaise = 4, GuardDrop = 14;
+        const double DashPx = 900;
+        const double ChargeStringPx = 320;
+
         public const double ChargeRunTime = 1.2;
+
+        public static MoveDef MakiOtoshiMove, SojutsuSweepMove, RaijinLanceMove;
+        public static ProjectileDef RaijinWave;
 
         static int Frames(double seconds) => Mathf.RoundToInt((float)(seconds * 60.0));
         static float Metres(double px) => (float)JsUnits.PxToMetres(px);
@@ -80,9 +76,10 @@ namespace Kage
             };
         }
 
-        /// <summary>Registers the four abilities in the <see cref="AbilityCatalog"/> for a Shiden of build scale <paramref name="scale"/>. Idempotent.</summary>
+        /// <summary>Registers Shiden's abilities in the <see cref="AbilityCatalog"/> for build scale <paramref name="scale"/>. Idempotent.</summary>
         public static void Register(float scale)
         {
+            RegisterCues();
             AbilityCatalog.Register(Def(VanguardBreakId, VanguardBreak(JsTables.BossAbility(VanguardBreakId), scale)));
             AbilityCatalog.Register(Def(BraceId, Brace(JsTables.ShidenBrace, scale)));
             AbilityCatalog.Register(Def(VanguardGuardId, HoldTheLine(JsTables.BossAbility(VanguardGuardId))));
@@ -93,9 +90,34 @@ namespace Kage
                 id = ChargeId, move = move, cooldownFrames = Frames(charge.Cd), chance = (float)charge.Chance,
                 range = new Vector2(Metres(DashStringNear()), reach),
             });
+
+            BuildMartialKit();
+            Reg(MakiOtoshiId, MakiOtoshiMove, 5.5f, 0.7f, 2.5f, 0.45f);
+            Reg(SojutsuSweepId, SojutsuSweepMove, 6.0f, 0.8f, 2.4f, 0.42f);
+            Reg(RaijinLanceId, RaijinLanceMove, 6.8f, 2.2f, 6.8f, 0.45f);
+            Patterns();
         }
 
-        /// <summary>The near end of the JS style's dash-thrust string (['dash', 'weapon']), from the generated style.</summary>
+        /// <summary>
+        /// Shiden's strings (sub-boss IV, <see cref="SubBossTier.Shiden"/>: the most frequent chains on the shortest beat, the hardest of Act I's
+        /// lieutenants). The bind-and-thrust kata flows into the low sweep or the overhead Vanguard Break; the sweep's rising fang opens Kage for the
+        /// Raijin wave or the charging thrust; whatever lands, the next link is already coming.
+        /// </summary>
+        static void Patterns()
+        {
+            var t = SubBossTier.Shiden;
+            t.Chain(MakiOtoshiId, SojutsuSweepId, VanguardBreakId);
+            t.Chain(SojutsuSweepId, RaijinLanceId, ChargeId, MakiOtoshiId);
+            t.Chain(VanguardBreakId, MakiOtoshiId, RaijinLanceId);
+            t.Chain(RaijinLanceId, ChargeId, MakiOtoshiId);
+            t.Chain(ChargeId, SojutsuSweepId, MakiOtoshiId);
+        }
+
+        static void Reg(string id, MoveDef m, float cd, float near, float far, float chance)
+        {
+            AbilityCatalog.Register(new AbilityDef { id = id, move = m, cooldownFrames = Frames(cd), range = new Vector2(near, far), chance = chance });
+        }
+
         static double DashStringNear()
         {
             foreach (var s in JsTables.FightStyle(Shiden.Id).Strings)
@@ -103,10 +125,6 @@ namespace Kage
             return ChargeStringPx;
         }
 
-        /// <summary>
-        /// The JS <c>shidenRushing</c>: is Kage coming in on the point? A dash; a walk or a run at him faster than 140 px/s; or a cut
-        /// started on the way in (an attack before its first blow, facing him, moving at him faster than 60 px/s).
-        /// </summary>
         public static bool Rushing(Fighter self, Fighter kage)
         {
             if (self == null || kage == null) return false;
@@ -121,31 +139,91 @@ namespace Kage
             return kage.moveFrame < first && kage.facing == toward && Mathf.Sign(vx) == toward && Mathf.Abs(vx) > Metres(RushCutPx);
         }
 
-        // ---------------------------------------------------------------------------------------------- poses
         static Pose P() => new Pose();
-
-        /// <summary>Both hands on the shaft: the lead hand's wrist at (x, y), the shaft pointing <paramref name="blade"/> degrees.</summary>
         static Pose Hold(Pose p, float x, float y, float blade) => p.HandF(x, y).Blade(blade).Grip();
-
-        /// <summary>His ready stance: the point at Kage's chest (the spear set's stance).</summary>
         static Pose Ready() => Stance();
+
+        static void BuildMartialKit()
+        {
+            if (MakiOtoshiMove != null) return;
+
+            RaijinWave = new ProjectileDef
+            {
+                id = RaijinWaveId,
+                speed = 6.2f,
+                groundWave = true,
+                radius = 0.25f,
+                lifeFrames = 85,
+                maxHits = 1,
+                hit = new HitWindow { dmg = Dmg(7), level = HitLevel.Mid, kb = new Vector2(2.8f, 1.8f), stun = 22, hitstop = 7, shake = 0.22f, heavy = true },
+                flightCue = RaijinWaveFlightCue,
+            };
+
+            // Hōzōin-ryū Maki-Otoshi · Ren-Tsuki: circular winding beat -> snapping probe thrust -> body-weighted piston Ō-Tsuki
+            MakiOtoshiMove = new MoveDef(MakiOtoshiId, "Maki-Otoshi · Ren-Tsuki", 72)
+                .Key(9, Hold(P().Hip(-0.04f, -0.1f, 4f).Chest(10f).Head(-6f).Feet(0.28f, -0.32f), 0.14f, 1.54f, 52f), Ease.OutQuad)
+                .Key(17, Hold(P().Hip(0.1f, -0.22f, -10f).Chest(-20f).Head(10f).Feet(0.42f, -0.32f), 0.56f, 0.84f, -22f), Ease.OutExpo)
+                .Key(24, Hold(P().Hip(0.02f, -0.18f, -4f).Chest(-8f).Head(6f).Feet(0.36f, -0.32f), 0.18f, 0.98f, 4f), Ease.InOutQuad)
+                .Key(30, Hold(P().Hip(0.14f, -0.2f, -12f).Chest(-22f).Head(12f).Feet(0.46f, -0.32f), 0.72f, 1.0f, 3f), Ease.OutExpo)
+                .Key(37, Hold(P().Hip(0.0f, -0.22f, -2f).Chest(-6f).Head(4f).Feet(0.38f, -0.34f), 0.08f, 0.94f, 2f), Ease.InOutQuad)
+                .Key(44, Hold(P().Hip(0.22f, -0.24f, -16f).Chest(-30f).Head(16f).Feet(0.54f, -0.34f), 0.88f, 0.98f, 2f), Ease.OutExpo)
+                .Key(51, Hold(P().Hip(0.2f, -0.24f, -16f).Chest(-28f).Head(14f).Feet(0.54f, -0.34f), 0.86f, 0.98f, 2f))
+                .Key(72, Ready(), Ease.InOutQuad)
+                .Move(13, 18, 2.2f).Move(27, 31, 1.8f).Move(41, 46, 3.6f)
+                .Hit(16, 20, new[] { HitPoint.Blade }, Dmg(5), HitLevel.Mid, new Vector2(1.1f, -0.4f), stun: 20, hitstop: 5, shake: 0.14f, radius: 0.11f, postureMul: 1.6f)
+                .Hit(29, 33, new[] { HitPoint.Blade }, Dmg(5), HitLevel.Mid, new Vector2(1.2f, 0f), stun: 20, hitstop: 5, shake: 0.14f, radius: 0.09f)
+                .Hit(43, 49, new[] { HitPoint.Blade }, Dmg(8), HitLevel.Mid, new Vector2(3.8f, 1.2f), stun: 26, hitstop: 9, shake: 0.3f, heavy: true, radius: 0.1f)
+                .Cue(6, ChargeGlintCue).Cue(17, MakiBeatCue).Cue(30, SpearPierceCue).Cue(44, StormPierceCue)
+                .Fx(15, 21, FxKind.TrailBlade).Fx(28, 34, FxKind.TrailBlade).Fx(42, 50, FxKind.TrailBlade).Fx(43, 43, FxKind.Dust)
+                .Impulse(44, new Vector2(3.0f, 0.4f)).Sword();
+
+            // Suriage · Ō-Nagi: low yari shin sweep pivoting smoothly into an electrified rising diagonal fang
+            SojutsuSweepMove = new MoveDef(SojutsuSweepId, "Suriage · Ō-Nagi", 60)
+                .Key(10, Hold(P().Hip(-0.08f, -0.36f, 2f).Chest(-22f).Head(14f).FootN(0.28f, 0.13f).FootF(-0.32f, 0.15f, -25f), -0.1f, 0.72f, 174f), Ease.OutQuad)
+                .Key(19, Hold(P().Hip(-0.1f, -0.38f, 4f).Chest(-24f).Head(16f).FootN(0.28f, 0.13f).FootF(-0.32f, 0.15f, -25f), -0.14f, 0.68f, 176f))
+                .Key(23, Hold(P().Hip(0.08f, -0.38f, -8f).Chest(-30f).Head(18f).FootN(0.4f, 0.13f).FootF(-0.32f, 0.15f, -25f), 0.62f, 0.58f, 4f), Ease.OutExpo)
+                .Key(30, Hold(P().Hip(0.06f, -0.26f, -4f).Chest(-14f).Head(8f).Feet(0.38f, -0.3f), 0.38f, 0.74f, -12f), Ease.InOutQuad)
+                .Key(37, Hold(P().Hip(0.14f, -0.08f, -4f).Chest(8f).Head(-8f).Feet(0.44f, -0.28f), 0.6f, 1.52f, 54f), Ease.OutExpo)
+                .Key(43, Hold(P().Hip(0.14f, -0.08f, -4f).Chest(8f).Head(-8f).Feet(0.44f, -0.28f), 0.56f, 1.56f, 58f))
+                .Key(60, Ready(), Ease.InOutQuad)
+                .Move(17, 23, 2.8f).Move(32, 37, 2.0f)
+                .Hit(20, 24, new[] { HitPoint.Blade }, Dmg(6), HitLevel.Low, new Vector2(1.2f, 0f), stun: 22, hitstop: 6, shake: 0.16f, radius: 0.16f)
+                .Hit(35, 40, new[] { HitPoint.Blade }, Dmg(8), HitLevel.Mid, new Vector2(3.0f, 2.4f), stun: 26, hitstop: 8, shake: 0.26f, heavy: true, radius: 0.15f)
+                .Cue(8, ChargeGlintCue).Cue(21, LowSweepCue).Cue(36, RisingFangCue)
+                .Fx(19, 25, FxKind.TrailBlade).Fx(34, 41, FxKind.TrailBlade)
+                .Impulse(36, new Vector2(2.0f, 2.4f)).Sword();
+
+            // Vanguard Raijin Arc (Phase 2): Shiden's disciplined sub-boss inheritance of Raikon's Raijin Arc
+            RaijinLanceMove = new MoveDef(RaijinLanceId, "Vanguard Raijin Arc", 60)
+                .Key(10, Hold(P().Hip(-0.04f, -0.06f, 6f).Chest(14f).Head(-12f).Feet(0.3f, -0.32f), 0.08f, 1.88f, 96f), Ease.OutQuad)
+                .Key(26, Hold(P().Hip(-0.06f, -0.04f, 8f).Chest(18f).Head(-14f).Feet(0.3f, -0.32f), 0.04f, 1.94f, 94f))
+                .Key(30, Hold(P().Hip(0.14f, -0.34f, -12f).Chest(-36f).Head(18f).Feet(0.48f, -0.32f), 0.64f, 0.78f, -24f), Ease.InCubic)
+                .Key(40, Hold(P().Hip(0.14f, -0.34f, -12f).Chest(-34f).Head(16f).Feet(0.48f, -0.32f), 0.62f, 0.8f, -26f))
+                .Key(60, Ready(), Ease.InOutQuad)
+                .Armour(0, 26)
+                .Hit(28, 32, new[] { HitPoint.Blade }, Dmg(9), HitLevel.Mid, new Vector2(2.8f, 1.4f), stun: 24, hitstop: 9, shake: 0.34f, heavy: true, radius: 0.14f)
+                .Throw(29, RaijinWave, new Vector2(0.95f, RaijinWave.radius))
+                .Cue(6, CrackleCue).Cue(12, CrackleCue).Cue(18, CrackleCue).Cue(22, ChargeGlintCue).Cue(29, StormPierceCue)
+                .Fx(27, 33, FxKind.TrailBlade).Fx(29, 29, FxKind.Dust).Fx(29, 29, FxKind.Shockwave)
+                .Impulse(29, new Vector2(2.8f, -2.2f)).Sword();
+        }
 
         // ---------------------------------------------------------------------------------------------- Vanguard Break
         static MoveDef VanguardBreak(JsBossAbility js, float scale)
         {
-            int land = Frames(js.Windup * GaranAbilities.Windup);       // 40: the point reaches the floor
-            int slam = land;                                            // the first frame of the blow (the point in the ground: the JS reach), and of the shock
+            int land = Frames(js.Windup * GaranAbilities.Windup);
+            int slam = land;
             int total = land + Frames(GaranAbilities.StormBreakRecovery);
             var overhead = Hold(P().Hip(-0.06f, -0.1f, 8f).Chest(16f).Head(-10f).Feet(0.34f, -0.32f), 0.1f, 1.98f, -24f);
             var higher = Hold(P().Hip(-0.08f, -0.08f, 10f).Chest(20f).Head(-12f).Feet(0.34f, -0.32f), 0.04f, 2.06f, -20f);
             var down = Hold(P().Hip(0.12f, -0.42f, -10f).Chest(-44f).Head(22f).Feet(0.48f, -0.32f), 0.6f, 0.7f, -44f);
             double jsSlam = GaranAbilities.StormBreakDmg * js.Dmg;
             var shock = JsTables.Projectile("shock");
-            double runPx = shock.Speed * shock.Life * js.ShockLife;     // how far the JS shockwave runs
+            double runPx = shock.Speed * shock.Life * js.ShockLife;
             var hazard = new HazardDef
             {
                 id = ShockId,
-                telegraphFrames = slam - 1,                              // laid down on frame 1, it strikes with the slam
+                telegraphFrames = slam - 1,
                 strikeFrames = Frames(shock.Life * js.ShockLife),
                 size = new Vector2(Metres(runPx + 2 * shock.R), Metres(2 * shock.R)),
                 hit = new HitWindow
@@ -166,7 +244,8 @@ namespace Kage
                 .Armour(0, land)
                 .Hazard(1, hazard, Metres(GaranAbilities.ShockStartPx * scale + runPx / 2))
                 .Fx(land - 8, land - 8, FxKind.Glint)
-                .Fx(land, land, FxKind.Dust).Fx(land, land, FxKind.Shockwave).Fx(slam - 2, land + 1, FxKind.TrailBlade).Sword();
+                .Fx(land, land, FxKind.Dust).Fx(land, land, FxKind.Shockwave).Fx(slam - 2, land + 1, FxKind.TrailBlade)
+                .Impulse(land, new Vector2(2.6f, -2.5f)).Sword();
             for (int f = 4; f < land; f += 4) m.Cue(f, CrackleCue);
             return m;
         }
@@ -174,9 +253,9 @@ namespace Kage
         // ---------------------------------------------------------------------------------------------- Brace
         static MoveDef Brace(JsBrace js, float scale)
         {
-            int set = Frames(BraceSet * GaranAbilities.Windup);         // 13: the spear set low and level
-            int held = set + Frames(js.Hold) - 1;                       // 87: the last frame a rush sets the thrust off
-            int total = held + 1 + Frames(js.Open);                     // 121: then the point lifted, open
+            int set = Frames(BraceSet * GaranAbilities.Windup);
+            int held = set + Frames(js.Hold) - 1;
+            int total = held + 1 + Frames(js.Open);
             var low = Hold(P().Hip(-0.08f, -0.32f, -4f).Chest(-18f).Head(12f).Feet(0.46f, -0.38f), 0.36f, 0.86f, 2f);
             var lower = Hold(P().Hip(-0.09f, -0.33f, -4f).Chest(-19f).Head(12f).Feet(0.46f, -0.38f), 0.35f, 0.85f, 2f);
             var lifted = Hold(P().Hip(-0.02f, -0.08f, 2f).Chest(6f).Head(-4f).Feet(0.26f, -0.28f), 0.22f, 1.26f, 62f);
@@ -189,11 +268,10 @@ namespace Kage
                 .Cue(set, ChargeGlintCue).Sword();
         }
 
-        /// <summary>The braced thrust: the point driven straight out the JS reach, live 0.24 s; a counter-hit critical.</summary>
         static MoveDef BraceThrust(JsBrace js, float scale)
         {
-            int live = Frames(BraceThrustLive), total = Frames(BraceThrustEnd);    // 14, 30
-            float lungeM = Metres(BraceLungePx / BraceDamp);                        // the JS body push: 520 px/s damped at 14 /s
+            int live = Frames(BraceThrustLive), total = Frames(BraceThrustEnd);
+            float lungeM = Metres(BraceLungePx / BraceDamp);
             var thrust = Hold(P().Hip(0.18f, -0.22f, -14f).Chest(-28f).Head(14f).Feet(0.52f, -0.34f), 0.86f, 0.92f, 2f);
             var m = new MoveDef("shiden.braceThrust", "Braced Thrust", total)
                 .Key(2, thrust, Ease.OutExpo)
@@ -202,15 +280,15 @@ namespace Kage
                 .Move(1, 4, lungeM * 60f / 4f)
                 .Hit(0, live, new[] { HitPoint.Blade }, Dmg(js.Dmg), HitLevel.Mid, new Vector2(Metres(BraceKbPx), Metres(BraceUpPx)), stun: Frames(BraceStun),
                     hitstop: 10, shake: 0.3f, heavy: true, radius: 0.09f, postureMul: Lean(js.Dmg))
+                .Cue(2, SpearPierceCue)
                 .Fx(0, live, FxKind.TrailBlade).Fx(0, 0, FxKind.Dust).Sword();
-            m.hits[0].critical = true;      // FIGHT_STYLES.shiden.crit: the spear met a man rushing onto it
+            m.hits[0].critical = true;
             return m;
         }
 
         // ---------------------------------------------------------------------------------------------- Hold the Line
         static Pose GuardBody() => P().Hip(-0.05f, -0.14f, -2f).Chest(2f).Head(-4f).Feet(0.26f, -0.32f);
 
-        /// <summary>The stance: the shaft comes up upright before him, holds for the JS stance, then drops (Kuroe's Censure with his poses).</summary>
         static MoveDef HoldTheLine(JsBossAbility js)
         {
             int counterTo = GuardRaise + Frames(js.Stance) - 1;
@@ -219,6 +297,7 @@ namespace Kage
                 .Key(GuardRaise, Hold(GuardBody(), 0.34f, 1.12f, 84f), Ease.OutExpo)
                 .Key(counterTo, Hold(GuardBody().Hip(-0.05f, -0.15f, -2f), 0.34f, 1.11f, 86f))
                 .Key(total, Ready(), Ease.InOutQuad)
+                .Cue(GuardRaise, ChargeGlintCue)
                 .Fx(GuardRaise, GuardRaise, FxKind.Glint).Sword();
             m.counterFrom = GuardRaise;
             m.counterTo = counterTo;
@@ -227,34 +306,34 @@ namespace Kage
             return m;
         }
 
-        /// <summary>The punish: the JS delay, then a stepping thrust (0.2 s live, as the JS area), a knockdown; blockable when the JS says so.</summary>
         static MoveDef HoldTheLinePunish(JsBossAbility js)
         {
             int delay = Frames(js.Punish > 0 ? js.Punish : RedlinePunish);
-            int live = 12;                                      // JS: the area is live 0.2 s after the delay
-            int total = delay + 33;                             // JS: the ability ends 0.55 s after the delay
+            int live = 12;
+            int total = delay + 33;
             var level = js.Unb == true ? HitLevel.Unblockable : HitLevel.Mid;
             int dmg = Mathf.RoundToInt(CounterAnswerDamage * (float)js.Dmg);
-            var thrust = Hold(P().Hip(0.2f, -0.2f, -16f).Chest(-28f).Head(14f).Feet(0.52f, -0.34f), 0.84f, 1.0f, 4f);
+            var thrust = Hold(P().Hip(0.2f, -0.2f, -16f).Chest(-28f).Head(14f).Feet(0.52f, -0.34f), 0.78f, 0.84f, -4f);
             return new MoveDef("shiden.holdTheLinePunish", "Hold the Line", total)
-                .Key(Mathf.Max(1, delay - 1), Hold(GuardBody().Chest(-4f), 0.02f, 1.0f, 6f), Ease.OutQuad)
+                .Key(Mathf.Max(1, delay - 1), Hold(GuardBody().Chest(-4f), 0.02f, 0.88f, 1f), Ease.OutQuad)
                 .Key(delay + 3, thrust, Ease.OutExpo)
                 .Key(delay + live, thrust)
                 .Key(total, Ready(), Ease.InOutQuad)
                 .Move(delay, delay + 4, 7.0f)
                 .Hit(delay, delay + live, new[] { HitPoint.Blade }, dmg, level, new Vector2(2.8f, 3.2f), stun: 26, hitstop: 9, shake: 0.3f,
                     knockdown: true, heavy: true, radius: 0.09f)
+                .Cue(delay + 2, StormPierceCue)
                 .Fx(delay - 1, delay + live, FxKind.TrailBlade).Fx(delay, delay + 6, FxKind.AfterImage).Fx(delay, delay, FxKind.Dust).Sword();
         }
 
         // ---------------------------------------------------------------------------------------------- the charging thrust
         static MoveDef ChargingThrust(out float reach)
         {
-            var lunge = SpearMoves.Build(KatanaMoves.Build()).lunge.hits[0];       // the spear set's dash thrust
-            int tell = Frames(GaranAbilities.ChargeTell * GaranAbilities.Windup);  // 35: drawn back low
-            int run = Frames(ChargeRunTime);                                       // 72
+            var lunge = SpearMoves.Build(KatanaMoves.Build()).lunge.hits[0];
+            int tell = Frames(GaranAbilities.ChargeTell * GaranAbilities.Windup);
+            int run = Frames(ChargeRunTime);
             int end = tell + run - 1;
-            int total = end + 1 + 24;                                              // the lunge's recovery, open
+            int total = end + 1 + 24;
             float speed = Metres(DashPx);
             reach = speed * run / 60f;
             var drawn = Hold(P().Hip(-0.14f, -0.34f, -2f).Chest(-16f).Head(14f).FootN(0.4f, 0.13f).FootF(-0.44f, 0.15f, -25f), -0.12f, 0.84f, 2f);
@@ -271,7 +350,7 @@ namespace Kage
                 .Hit(tell, end, new[] { HitPoint.Blade }, lunge.dmg, lunge.level, new Vector2(3.2f, 2.6f), stun: lunge.stun, hitstop: lunge.hitstop,
                     shake: lunge.shake, knockdown: true, heavy: true, radius: lunge.radius, postureMul: lunge.postureMul)
                 .NoPush(tell, end + 2)
-                .Cue(tell - 12, ChargeGlintCue)
+                .Cue(tell - 12, ChargeGlintCue).Cue(tell + 1, SpearPierceCue)
                 .Fx(tell, end, FxKind.AfterImage).Fx(tell, tell, FxKind.Dust).Fx(tell, end, FxKind.TrailBlade).Sword();
             m.onContact = new MoveDef("shiden.chargeStop", "Charging Thrust", 30)
                 .Key(8, Hold(P().Hip(0.04f, -0.26f, -6f).Chest(-14f).Head(8f).Feet(0.48f, -0.32f), 0.6f, 0.94f, 6f), Ease.OutQuad)
@@ -283,48 +362,54 @@ namespace Kage
         }
 
         // ---------------------------------------------------------------------------------------------- cues
+        // The look itself is in Vfx.Shiden.cs (docs/act1-subbosses-vfx.md); his needle trail and piercing impacts come from ShidenLook on every move.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void RegisterCues()
+        public static void RegisterCues()
         {
-            EffectCues.Register(ChargeGlintCue, PlayGlint);
-            EffectCues.Register(CrackleCue, PlayCrackle);
+            EffectCues.Register(ChargeGlintCue, (Vector2 p, in CueArgs a) => Vfx.I?.ShidenGlint(Tip(a, p, 0.95f)));
+            EffectCues.Register(CrackleCue, (Vector2 p, in CueArgs a) => Vfx.I?.ShidenCrackle(Tip(a, p, 0.9f), HoldTheLine(a)));
             EffectCues.Register(ShockCue, PlayShock);
+            EffectCues.Register(SpearPierceCue, (Vector2 p, in CueArgs a) => PlayPierce(p, a, false));
+            EffectCues.Register(StormPierceCue, (Vector2 p, in CueArgs a) => PlayPierce(p, a, true));
+            EffectCues.Register(RisingFangCue, PlayRisingFang);
+            EffectCues.Register(RaijinWaveFlightCue, VanguardWaveLook.Play);
+            EffectCues.Register(MakiBeatCue, (Vector2 p, in CueArgs a) => Vfx.I?.ShidenBindCross(Tip(a, p, 0.85f), Facing(a)));
+            EffectCues.Register(LowSweepCue, (Vector2 p, in CueArgs a) => Vfx.I?.ShidenLowSweep(a.owner != null ? a.owner.Pos : p, Facing(a)));
         }
 
-        /// <summary>A pale violet glint and a star on the point (the JS <c>w.fx.glint(..., '#e4d6ff')</c>).</summary>
-        static void PlayGlint(Vector2 pos, in CueArgs a)
-        {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            Vector2 at = pos;
-            if (a.owner != null && a.owner.rig != null) at = a.owner.rig.World(B.Sword, a.owner.BladeTipLocal * 0.95f);
-            vfx.Glint(at, ShidenPalette.Pale);
-            vfx.Star(at, 0.45f, Color.white, ShidenPalette.Accent);
-        }
+        static Vector2 Tip(in CueArgs a, Vector2 fallback, float k)
+            => a.owner != null && a.owner.rig != null ? a.owner.rig.World(B.Sword, a.owner.BladeTipLocal * k) : fallback;
+        static float Facing(in CueArgs a) => a.owner != null ? a.owner.facing : (a.dir.x >= 0f ? 1f : -1f);
+        static bool HoldTheLine(in CueArgs a) => a.owner?.Phases != null && a.owner.Phases.Index >= 1;
 
-        static void PlayCrackle(Vector2 pos, in CueArgs a)
-        {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            Vector2 at = pos;
-            if (a.owner != null && a.owner.rig != null) at = a.owner.rig.World(B.Sword, a.owner.BladeTipLocal * 0.9f);
-            for (int i = 0; i < 3; i++)
-                vfx.Spark(at + new Vector2(Random.Range(-0.15f, 0.15f), Random.Range(-0.1f, 0.15f)), new Vector2(Random.Range(-1f, 1f), Random.Range(0.4f, 1.6f)),
-                    i == 0 ? Color.white : ShidenPalette.Accent, 0.045f, 0.22f);
-        }
-
-        /// <summary>Placeholder ground crack in his violet: a shockwave and dust the length of the box, sparks running along the floor.</summary>
+        /// <summary>The Vanguard Break shock: strikes march away from him across the hazard.</summary>
         static void PlayShock(Vector2 pos, in CueArgs a)
         {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            Color c = ShidenPalette.Accent;
+            var v = Vfx.I;
+            if (v == null) return;
+            float face = Facing(a);
             float half = Mathf.Max(0.4f, a.size.x * 0.5f);
-            vfx.Shockwave(pos + Vector2.up * 0.03f, half, c);
-            vfx.Dust(pos, Mathf.Max(0.9f, a.size.x * 0.6f), 0f);
-            for (int i = -3; i <= 3; i++)
-                vfx.Spark(pos + new Vector2(i * half / 3.5f, 0.05f), new Vector2(i * 0.6f, 2.2f + Mathf.Abs(i) * 0.2f), i % 2 == 0 ? Color.white : c, 0.06f, 0.35f);
-            GameFeel.Shake(0.22f);
+            Vector2 g = new(pos.x, 0.02f);
+            v.ShidenStrikeRow(g - Vector2.right * (face * half * 0.8f), g + Vector2.right * (face * half * 0.8f), HoldTheLine(a));
+        }
+
+        static void PlayPierce(Vector2 pos, in CueArgs a, bool storm)
+        {
+            var v = Vfx.I;
+            if (v == null) return;
+            if (a.owner != null && a.owner.rig != null)
+                v.ShidenMachRelease(Tip(a, pos, 0.25f), Tip(a, pos, 1f), storm || HoldTheLine(a));
+            else
+                v.ShidenMachRelease(pos - Vector2.right * 0.6f, pos + Vector2.right * 0.6f, storm);
+        }
+
+        static void PlayRisingFang(Vector2 pos, in CueArgs a)
+        {
+            var v = Vfx.I;
+            if (v == null) return;
+            float face = Facing(a);
+            Vector2 lo = (a.owner != null ? a.owner.Pos : pos) + new Vector2(face * 0.35f, 0.25f);
+            v.ShidenRisingFang(lo, lo + new Vector2(face * 0.95f, 1.35f), HoldTheLine(a));
         }
     }
 }

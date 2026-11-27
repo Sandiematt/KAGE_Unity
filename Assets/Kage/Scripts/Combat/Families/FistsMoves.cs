@@ -145,7 +145,10 @@ namespace Kage
             {
                 case Btn.P:
                 case Btn.K:
-                    return _k.Select(b, fwd, dy, false, self);
+                {
+                    var m = _k.Select(b, fwd, dy, false, self);
+                    return m == _k.tameCut ? _k.jab : m;        // Back + P is the katana's Poised Fang: bare fists jab, as they always did
+                }
                 case Btn.S:
                     if (dy < 0) return quake;
                     if (fwd > 0) return grapple;
@@ -159,9 +162,10 @@ namespace Kage
 
         /// <summary>
         /// What plays in place of a katana move the shared fist techniques chain into: the Pommel Strike is the far-fist
-        /// cross, and the Iai Draw (a jab or roundhouse's Weapon chain) is the Iron Haymaker.
+        /// cross, and the Iai Draw (a jab or roundhouse's Weapon chain) is the Iron Haymaker. The Switch Kick's Weapon chain (the katana's
+        /// Poised Fang) has no stand-in: the fists' kick string stays as it was.
         /// </summary>
-        public override MoveDef BareHanded(MoveDef m) => m == _k.iai ? haymaker : _k.BareHanded(m);
+        public override MoveDef BareHanded(MoveDef m) => m == _k.iai ? haymaker : m == _k.tameCut ? null : _k.BareHanded(m);
 
         public override IEnumerable<MoveDef> All => new[]
         {

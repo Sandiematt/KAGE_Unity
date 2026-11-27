@@ -1,22 +1,51 @@
+using Kage.Rules;
 using UnityEngine;
 
 namespace Kage
 {
-    /// <summary>The look of a rage art: its name, kanji and colours (the JS <c>RAGE_ARTS</c> table).</summary>
+    /// <summary>The look of a rage art: its name, kanji, colours and the finisher's word (the JS <c>RAGE_ARTS</c> table and <c>finish</c> stamps).</summary>
     public sealed class RageArtLook
     {
-        public string name, kanji;
+        public string id, name, kanji;
+        /// <summary>The word slammed onto the screen at the finisher (<see cref="Hud.ArtStamp"/>): the JS stamp.</summary>
+        public string stamp;
         public Color col, hot, deep;
+        /// <summary>A legendary weapon's art (the rainbow tier): its name and word drift in a rainbow, its finisher has a prism ring.</summary>
+        public bool legendary;
 
-        /// <summary>Crimson Moon, 紅月: crimson, a pale pink core, a near-black red.</summary>
-        public static readonly RageArtLook Crimson = new()
+        static RageArtLook L(string id, string name, string kanji, string stamp, string col, string hot, string deep, bool legendary = false) => new()
         {
-            name = "Crimson Moon", kanji = "紅月",
-            col = KMath.Hex("#ff2238"), hot = KMath.Hex("#ffd0d4"), deep = KMath.Hex("#2a0008"),
+            id = id, name = name, kanji = kanji, stamp = stamp, col = KMath.Hex(col), hot = KMath.Hex(hot), deep = KMath.Hex(deep), legendary = legendary,
         };
 
-        /// <summary>The look of the art with this id, or null (Thousand Shadows has no cut-in).</summary>
-        public static RageArtLook Of(string artId) => artId == Fighter.CrimsonMoon ? Crimson : null;
+        /// <summary>Crimson Moon, 紅月 (Kagetsu): crimson, a pale pink core, a near-black red. Finisher: MOONFALL.</summary>
+        public static readonly RageArtLook Crimson = L(Fighter.CrimsonMoon, "Crimson Moon", "紅月", "MOONFALL", "#ff2238", "#ffd0d4", "#2a0008");
+        /// <summary>Silent Moon, 静月 (Shizuka): violet, a lilac-white core, an ink violet. Finisher: SILENCE.</summary>
+        public static readonly RageArtLook Silent = L(Fighter.SilentMoon, "Silent Moon", "静月", "SILENCE", "#a46bff", "#f0e6ff", "#12052a");
+        /// <summary>Thousand Swallows, 雷燕 (Tsubame): storm cyan, an ice-white core, a deep sea blue. Finisher: RAIJIN.</summary>
+        public static readonly RageArtLook Swallows = L(Fighter.SwallowStorm, "Thousand Swallows", "雷燕", "RAIJIN", "#38c8ff", "#e6f9ff", "#021626");
+        /// <summary>Hell Splitter, 鬼斬 (Onikiri): hell orange-red, a molten cream core, a scorched black-red. Finisher: HELL SPLIT.</summary>
+        public static readonly RageArtLook Hell = L(Fighter.HellSplitter, "Hell Splitter", "鬼斬", "HELL SPLIT", "#ff3a1c", "#ffd2a0", "#2a0500");
+        /// <summary>Rising Water Dragon, 水龍 (Mizuchi): water blue, a foam-white core, an abyss blue. Finisher: MIZUCHI.</summary>
+        public static readonly RageArtLook Dragon = L(Fighter.WaterDragon, "Rising Water Dragon", "水龍", "MIZUCHI", "#2f9dff", "#d4f1ff", "#001428");
+        /// <summary>Reaper's Requiem, 闇鎌 (Yamigama): reaper violet, a pale orchid core, the dark itself. Finisher: REQUIEM.</summary>
+        public static readonly RageArtLook Reaper = L(Fighter.ReaperRequiem, "Reaper's Requiem", "闇鎌", "REQUIEM", "#9a3cff", "#f0c8ff", "#06020c", legendary: true);
+        /// <summary>Earthsplitter, 地裂 (Iwakudaki, legendary): gold, a cream-white core, a buried brown-black. Finisher: EARTHSPLITTER.</summary>
+        public static readonly RageArtLook Earth = L(Fighter.Earthsplitter, "Earthsplitter", "地裂", "EARTHSPLITTER", "#ffb51f", "#fff1bf", "#1e1200", legendary: true);
+        /// <summary>Thousand Shadows, 千影 (basic / shadow art): deep crimson, warm bone core, ink shadow. Finisher: SHADOWFALL.</summary>
+        public static readonly RageArtLook Shadows = L(Fighter.ThousandShadows, "Thousand Shadows", "千影", "SHADOWFALL", "#e63242", "#f6e7d0", "#14060a");
+
+        static readonly RageArtLook[] All = { Crimson, Silent, Swallows, Hell, Dragon, Reaper, Earth };
+
+        /// <summary>The look of the art with this id, or null (Thousand Shadows is not in the cinematic table).</summary>
+        public static RageArtLook Of(string artId)
+        {
+            foreach (var l in All) if (l.id == artId) return l;
+            return null;
+        }
+
+        /// <summary>The HUD presentation look for any rage art, falling back to <see cref="Shadows"/> for Thousand Shadows or unknown ids.</summary>
+        public static RageArtLook ForHud(string artId) => Of(artId) ?? Shadows;
     }
 
     /// <summary>
@@ -42,14 +71,51 @@ namespace Kage
             EffectCues.Register(Fighter.CrimsonChargeCue, PlayCharge);
         }
 
+        /// <summary>Human-readable weapon display name from <see cref="JsTables"/> (never raw snake_case when the weapon is known).</summary>
+        public static string WeaponDisplayName(string weaponId)
+        {
+            if (string.IsNullOrEmpty(weaponId)) return "";
+            var w = JsTables.Weapon(weaponId);
+            if (w != null && !string.IsNullOrEmpty(w.Name)) return w.Name;
+            return weaponId.Replace('_', ' ');
+        }
+
+        /// <summary>Formats the cut-in subtitle: tier/art prefix + weapon display name (e.g. "LEGENDARY RAGE ART  ·  YAMIGAMA", "BOSS RAGE ART  ·  RAIKŌ NO TACHI").</summary>
+        public static string FormatCutInCaption(RageArtLook look, string weaponId)
+        {
+            if (look == null) return "";
+            string prefix;
+            if (look.legendary) prefix = "LEGENDARY RAGE ART";
+            else if (JsTables.Weapon(weaponId)?.Tier == "boss") prefix = "BOSS RAGE ART";
+            else if (look.id == Fighter.ThousandShadows) prefix = "SHADOW ART";
+            else prefix = "RAGE ART";
+            string weap = WeaponDisplayName(weaponId);
+            return string.IsNullOrEmpty(weap) ? prefix : prefix + "  ·  " + weap.ToUpperInvariant();
+        }
+
+        /// <summary>Formats the finisher stamp caption without repeating the stamp word (Earthsplitter uses its tier+weapon line; Mizuchi omits redundant weapon name).</summary>
+        public static string FormatStampCaption(RageArtLook look, string weaponId)
+        {
+            if (look == null) return "";
+            string art = (look.name ?? "").ToUpperInvariant();
+            string stamp = (look.stamp ?? "").ToUpperInvariant();
+            if (string.Equals(art, stamp, System.StringComparison.Ordinal))
+                return FormatCutInCaption(look, weaponId);
+            string weap = WeaponDisplayName(weaponId).ToUpperInvariant();
+            if (string.IsNullOrEmpty(weap) || string.Equals(weap, stamp, System.StringComparison.Ordinal))
+                return art;
+            return art + "  ·  " + weap;
+        }
+
         static void PlayCutIn(Vector2 pos, in CueArgs a)
         {
             var owner = a.owner;
-            var hud = owner != null && owner.ctx != null ? owner.ctx.Hud : null;
+            var hud = owner != null ? (owner.ctx != null && owner.ctx.Hud != null ? owner.ctx.Hud : KageGame.I?.Hud) : null;
             var look = RageArtLook.Of(owner != null ? owner.ActiveRageArt : null);
             if (hud == null || look == null) return;
-            string weapon = string.IsNullOrEmpty(owner.WeaponId) ? "" : "  ·  " + owner.WeaponId.Replace('_', ' ').ToUpperInvariant();
-            hud.CutIn(look.name.ToUpperInvariant(), look.kanji, "RAGE ART" + weapon, look.col, look.hot, a.seconds > 0f ? a.seconds : 0.7f);
+            string title = look.name.ToUpperInvariant();
+            if (hud.CutInShowing && hud.CutInName == title) return;
+            hud.CutIn(title, look.kanji, FormatCutInCaption(look, owner.WeaponId), look.col, look.hot, a.seconds > 0f ? a.seconds : 0.7f, look.legendary, look.deep);
         }
 
         static void PlayCrescent(Vector2 pos, in CueArgs a)

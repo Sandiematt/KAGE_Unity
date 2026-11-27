@@ -40,19 +40,19 @@ namespace Kage
             Vector2 dir = steady.sqrMagnitude > 1e-8f ? steady.normalized : Vector2.right;
             if (gust == 0f) return steady;
             float rate = gustRate > 0f ? gustRate : 0.6f;
-            float u = time * rate - x * 0.35f * Mathf.Sign(dir.x == 0f ? 1f : dir.x);
-            float g = Noise(seed, u) * 0.65f + Noise(seed + 7919, u * 2.3f + 11.1f) * 0.35f;     // 0..1
-            float side = Noise(seed + 104729, u * 1.7f + 3.3f) - 0.5f;                            // -0.5..0.5
-            return steady + dir * (gust * g) + new Vector2(-dir.y, dir.x) * (gust * 0.6f * side);
+            float u = time * (rate * 0.42f) - x * 0.2f * Mathf.Sign(dir.x == 0f ? 1f : dir.x);
+            float g = Noise(seed, u) * 0.82f + Noise(seed + 7919, u * 1.45f + 11.1f) * 0.18f;     // 0..1
+            float side = Noise(seed + 104729, u * 0.65f + 3.3f) - 0.5f;                            // -0.5..0.5
+            return steady + dir * (gust * g) + new Vector2(-dir.y, dir.x) * (gust * 0.18f * side);
         }
 
-        /// <summary>Smooth value noise in 0..1.</summary>
+        /// <summary>C2-smooth value noise in 0..1 (quintic fade prevents sudden acceleration jerks between gusts).</summary>
         static float Noise(int seed, float u)
         {
             float fl = Mathf.Floor(u);
             int i = (int)fl;
             float f = u - fl;
-            f = f * f * (3f - 2f * f);
+            f = f * f * f * (f * (f * 6f - 15f) + 10f);
             float a = Hash(seed, i), b = Hash(seed, i + 1);
             return a + (b - a) * f;
         }

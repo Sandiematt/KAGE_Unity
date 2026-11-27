@@ -26,7 +26,6 @@ namespace Kage
             _entries.Add(("Block", PoseLib.Block()));
             _entries.Add(("CrouchBlock", PoseLib.CrouchBlock()));
             _entries.Add(("JumpRise", PoseLib.JumpRise()));
-            { var fp = PoseLib.JumpTuck(); fp.SpinAbout(_def, -120f); _entries.Add(("Flip -120", fp)); }
             _entries.Add(("JumpFall", PoseLib.JumpFall()));
             _entries.Add(("Land", PoseLib.Land()));
             _entries.Add(("HurtHigh", PoseLib.HurtHigh()));
@@ -41,6 +40,7 @@ namespace Kage
                 m.jab, m.cross, m.uppercut, m.crouchPunch, m.lunge, m.kick1, m.kick2, m.axeKick, m.sweep, m.pushKick,
                 m.throwGrab, m.airKick, m.airPunch, m.airSlash, m.roll, m.backflip, m.groundPound, m.getUp,
                 m.iai, m.risingMoon, m.cleave, m.airCleave, m.shadowStep, m.lowReap, m.counterStance, m.counterSlash, m.crescent,
+                m.crownWheel, m.tameCut,
             };
             var start = PoseLib.Stance();
             foreach (var mv in all)
@@ -71,34 +71,24 @@ namespace Kage
         }
 
         /// <summary>Strobe view: one technique sampled at 12 evenly spaced frames, to judge how
-        /// smoothly it rotates. id is a KatanaMoves field name ("roll", "backflip", …), "flip" for the
-        /// jump somersault or "tumble" for a launched body.</summary>
+        /// smoothly it moves. id is a KatanaMoves field name ("roll", "backflip", …) or "tumble" for a
+        /// launched body turning towards lying.</summary>
         public void ShowStrobe(string id)
         {
             BuildEntries();
             if (page < 0) page = 0;
             var items = new List<(string, Pose)>();
             var stance = PoseLib.Stance();
-            if (id == "flip" || id == "tumble")
+            if (id == "tumble")
             {
-                Pose rise = PoseLib.JumpRise(), fall = PoseLib.JumpFall(), tuck = PoseLib.JumpTuck(), tumble = PoseLib.Tumble();
+                Pose tumble = PoseLib.Tumble();
                 for (int i = 0; i < PerPage; i++)
                 {
                     float u = i / (float)(PerPage - 1);
                     var p = new Pose();
-                    if (id == "flip")
-                    {
-                        float spin = -360f * KMath.SpinEase(Mathf.InverseLerp(0.1f, 0.86f, u));
-                        float tuckIn = KMath.Smooth01(Mathf.InverseLerp(0.02f, 0.22f, u)) * (1f - KMath.Smooth01(Mathf.InverseLerp(0.7f, 0.95f, u)));
-                        Pose.Blend(_def, u < 0.5f ? rise : fall, tuck, tuckIn, p);
-                        p.SpinAbout(_def, spin);
-                    }
-                    else
-                    {
-                        p.CopyFrom(tumble);
-                        p.a[(int)B.Hips] = u * 300f;
-                        p.MarkDirty();
-                    }
+                    p.CopyFrom(tumble);
+                    p.a[(int)B.Hips] = u * Tuning.Get<CombatFlowTuning>().tumbleRestAngle;     // towards lying, never past it
+                    p.MarkDirty();
                     items.Add(($"{id} {u:0.00}", p));
                 }
             }

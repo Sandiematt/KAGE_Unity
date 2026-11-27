@@ -20,14 +20,15 @@ Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raij
 
 | Item | Where from | Family | Class | Armory |
 | --- | --- | --- | --- | --- |
-| Kagetsu | starter | katana | (a) | listed |
-| Tsubame | shop 450 | twin blades | (a) | listed |
-| Shizuka | shop 1100 | katana | (a) | listed |
-| Onikiri | shop 1400 | cleaver | (a) | listed |
-| Mizuchi | shop 1700 | spear | (a) | listed |
-| Yamigama | shop 2600 | chain sickle | (a) | listed |
+| Mumei | starter (Unity's own row, 2026-11-23) | katana, common | (a) | listed |
+| Kagetsu | shop 300 (was the starter) | katana, rare | (a) | listed |
+| Tsubame | shop 450 | twin blades, rare | (a) | listed |
+| Shizuka | shop 1100 | katana, epic | (a) | listed |
+| Onikiri | shop 1400 | cleaver, epic | (a) | listed |
+| Mizuchi | shop 1700 | spear, epic | (a) | listed |
+| Yamigama | shop 2600 | chain sickle, legendary | (a) | listed |
+| Iwakudaki | shop 3200 | hammer (its own style and smash string over the cleaver set), legendary | (a) | listed |
 | Raikō no Tachi | Act I boss (Raikon) | heavy tachi | (b) withheld | removed: Raikon no longer grants it (owner, 2026-11-23) |
-| Iwakudaki | shop 3200 | hammer: no family (out of scope), fights with the cleaver set | (b) stand-in | removed |
 | Shinsen | boss weapon, "Defeat Akari" (later act) | katana | (b) | removed |
 | Kagehira & Yūrei | boss weapon, "Defeat Akari" (later act) | twin blades | (b) | removed |
 | Mugen no Ha | "Finish the Epilogue" | katana | (b) | removed |
@@ -71,7 +72,7 @@ Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raij
 
 ## Counts
 
-Before: 48 items a player could hold were listed (11 weapons, 19 helmets, 18 armours). Now: 31 are listed (7 weapons, 14 helmets, 10 armours), 17 removed, all class (b): 4 weapons (Iwakudaki, Shinsen, Kagehira & Yūrei, Mugen no Ha), 5 helmets and 8 armours. Class (c) gear (30 foe weapons, 10 retired armours) was never listed.
+Before: 48 items a player could hold were listed (11 weapons, 19 helmets, 18 armours). Then (SAN-108): 31 listed (7 weapons, 14 helmets, 10 armours), 17 removed, all class (b): 4 weapons (Iwakudaki, Shinsen, Kagehira & Yūrei, Mugen no Ha), 5 helmets and 8 armours. Now (2026-11-23, docs/weapon-styles.md): 8 weapons are listed (Iwakudaki back, Mumei added) in the owner's tiers: one common (Mumei), rare (Kagetsu, Tsubame), epic (Shizuka, Onikiri, Mizuchi), legendary (Yamigama, Iwakudaki), on `GameRules.WeaponTiers`. Class (c) gear (30 foe weapons, 10 retired armours) was never listed.
 
 ## Withheld weapons
 

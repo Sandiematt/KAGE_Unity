@@ -94,6 +94,7 @@ namespace Kage
 
             Audio = new GameObject("Audio").AddComponent<KageAudio>();
             Audio.transform.SetParent(transform, false);
+            fight.Context.Audio = Audio;
 
             var stage = new GameObject("Stage");
             stage.transform.SetParent(transform, false);
@@ -374,8 +375,7 @@ namespace Kage
 
         void UpdatePost()
         {
-            if (_ca != null) _ca.intensity.Override(Mathf.Clamp01(GameFeel.aberration));
-            if (_vig != null) _vig.intensity.Override(0.34f + (player != null && player.state == FState.Ultimate ? 0.22f : 0f));
+            GameFeel.ApplyPost(_bloom, _vig, _ca, player);
             if (player != null && enemy != null && mode == Mode.Duel && !Group)
             {
                 bool pFront = player.IsAttacking || !enemy.IsAttacking;
@@ -429,6 +429,7 @@ namespace Kage
                 Hud?.Banner($"{(w != null ? w.Name : player.WeaponId)}  LV {player.WeaponLevel}  ·  {player.Family.id} (F8)", Color.white, 1.2f);
             }
             if (kb.f9Key.wasPressedThisFrame) ToggleGallery();
+            HandleBossReviewKeys(kb);               // dev: F11 the boss's next phase, F12 / Shift+F12 its moves one by one (KageGame.BossReview.cs)
             if (Gallery != null && Gallery.page >= 0)
             {
                 if (kb.pageDownKey.wasPressedThisFrame) Gallery.Show(Gallery.page + 1);
@@ -548,8 +549,6 @@ namespace Kage
             // prop hits: the event names the prop, and there is no target fighter
             if (e.Target == null && e.TargetId != null && e.Type is CombatEventType.Hit or CombatEventType.Blocked or CombatEventType.Countered)
                 OnPropHit(e);
-            if (e.Type == CombatEventType.GuardBroken && e.Target != null)
-                Hud.Float(e.Target.Pos + Vector2.up * 2.0f, "GUARD BREAK!", KMath.Hex("#FF7A4B"), 1.1f);
         }
 
         void OnPropHit(CombatEvent e)

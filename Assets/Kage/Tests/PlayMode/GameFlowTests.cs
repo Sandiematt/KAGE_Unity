@@ -29,7 +29,7 @@ namespace Kage.Tests
         public void TearDown()
         {
             if (flow != null) Object.DestroyImmediate(flow.gameObject);
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
             Time.timeScale = 1f;
             GameFeel.paused = false;
             try { Directory.Delete(dir, true); } catch { }

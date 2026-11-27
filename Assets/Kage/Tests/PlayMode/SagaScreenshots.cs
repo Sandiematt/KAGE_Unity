@@ -35,7 +35,7 @@ namespace Kage.Tests
         public void TearDown()
         {
             if (flow != null) Object.DestroyImmediate(flow.gameObject);
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
             Time.timeScale = 1f;
             GameFeel.paused = false;
             try { Directory.Delete(dir, true); } catch { }
@@ -140,7 +140,7 @@ namespace Kage.Tests
             cam.depth = 100;
             var data = cam.GetUniversalAdditionalCameraData();
             if (data != null) { data.renderPostProcessing = false; data.antialiasing = AntialiasingMode.None; }
-            foreach (var c in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            foreach (var c in Object.FindObjectsByType<Canvas>())
             {
                 if (!c.isRootCanvas || c.renderMode != RenderMode.ScreenSpaceOverlay) continue;
                 canvases.Add((c, c.renderMode, c.worldCamera));

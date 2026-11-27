@@ -31,11 +31,50 @@ namespace Kage.Rules
             return id != null && map.TryGetValue(id, out row) ? row : null;
         }
 
-        /// <summary>The weapon with this id, or null.</summary>
+        /// <summary>The weapon with this id (a JS row or one of <see cref="UnityWeapons"/>), or null.</summary>
         public static JsWeapon Weapon(string id)
         {
-            if (weaponById == null) weaponById = Index(Weapons, w => w.Id);
+            if (weaponById == null) weaponById = Index(AllWeapons, w => w.Id);
             return Find(weaponById, id);
+        }
+
+        /// <summary>
+        /// Weapons Unity adds to the JS table (docs/weapon-styles.md; the generated rows are never edited): <b>Mumei</b>, the plain
+        /// starting katana (owner, 2026-11-23: "a basic katana with no design as the common and starting weapon"). It is a Kagetsu
+        /// with nothing on it: the same steel numbers (so it is x1 against the katana family's reference), no style, the basic rage art.
+        /// </summary>
+        public static readonly JsWeapon[] UnityWeapons =
+        {
+            new JsWeapon
+            {
+                Id = "mumei",
+                Name = "Mumei",
+                Cls = "Katana",
+                Tab = "blades",
+                Tier = "common",
+                Base = "kagetsu",
+                Stance = "katana",
+                Desc = "A plain, unsigned katana. Honest steel, no style of its own: every cut is the katana's.",
+                Lore = "\"No name.\" No smith signed the tang and no master carried it. Kage took it from the rack at Hoshimura the night he left.",
+                Price = 0,
+                Len = 82,
+                Hands = "2",
+                Stats = new int[] { 60, 64, 58 },
+            },
+        };
+
+        static JsWeapon[] allWeapons;
+
+        /// <summary>The JS weapon rows, then <see cref="UnityWeapons"/>: everything a listing, the dev unlock or the save repair walks.</summary>
+        public static JsWeapon[] AllWeapons
+        {
+            get
+            {
+                if (allWeapons != null) return allWeapons;
+                var list = new List<JsWeapon>(Weapons);
+                list.AddRange(UnityWeapons);
+                return allWeapons = list.ToArray();
+            }
         }
 
         /// <summary>The helmet with this id, or null.</summary>

@@ -104,23 +104,29 @@ namespace Kage.Tests
         // ---- item tiers ----
 
         [Test]
-        public void Kagetsu_climbs_from_Common_to_Rare_to_Epic_as_it_is_upgraded()
+        public void The_common_starter_climbs_from_Common_to_Rare_to_Epic_as_it_is_upgraded()
         {
-            Assert.AreEqual("common", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 1));
-            Assert.AreEqual("common", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 3));
-            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 4));
-            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 6));
+            // Mumei is the one common weapon now (Kagetsu, the old starter, is sold as a rare)
+            Assert.AreEqual("common", GameRules.ItemTier(GearKind.Weapons, "mumei", 1));
+            Assert.AreEqual("common", GameRules.ItemTier(GearKind.Weapons, "mumei", 3));
+            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "mumei", 4));
+            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "mumei", 6));
+            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "mumei", 7));
+            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "mumei", 8));
+            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 1));
             Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 7));
-            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "kagetsu", 8));
+            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Weapons, "iwakudaki", 8), "a legendary weapon stays legendary");
         }
 
         [Test]
         public void A_shop_weapon_never_drops_below_the_tier_it_is_sold_at()
         {
-            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "onikiri", 1));
-            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "onikiri", 4));
-            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "onikiri", 7));
-            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "yamigama", 1));
+            // the owner's tiers (docs/weapon-styles.md): Tsubame rare, Onikiri epic, Yamigama legendary
+            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "tsubame", 1));
+            Assert.AreEqual("rare", GameRules.ItemTier(GearKind.Weapons, "tsubame", 4));
+            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "tsubame", 7));
+            Assert.AreEqual("epic", GameRules.ItemTier(GearKind.Weapons, "onikiri", 1));
+            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Weapons, "yamigama", 1));
         }
 
         [Test]
@@ -135,9 +141,12 @@ namespace Kage.Tests
         [Test]
         public void Tier_labels_are_the_JS_labels()
         {
-            Assert.AreEqual("Common", GameRules.TierLabel(GearKind.Weapons, "kagetsu", 1));
+            Assert.AreEqual("Common", GameRules.TierLabel(GearKind.Weapons, "mumei", 1));
+            Assert.AreEqual("Rare", GameRules.TierLabel(GearKind.Weapons, "kagetsu", 1));
             Assert.AreEqual("Epic", GameRules.TierLabel(GearKind.Weapons, "kagetsu", 8));
-            Assert.AreEqual("Starting gear", GameRules.TierLabel(GearKind.Helmets, "shiro_maki", 1));
+            Assert.AreEqual("Legendary", GameRules.TierLabel(GearKind.Weapons, "iwakudaki", 1));
+            Assert.AreEqual("Common", GameRules.TierLabel(GearKind.Helmets, "shiro_maki", 1));
+            Assert.AreEqual("Starting gear", GameRules.TierLabel(GearKind.Armors, "tachibana_yoroi", 1));
             Assert.AreEqual("Boss weapon", GameRules.TierLabel(GearKind.Weapons, "shinsen", 1));
         }
 

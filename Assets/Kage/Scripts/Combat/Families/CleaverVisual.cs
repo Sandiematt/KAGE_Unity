@@ -49,6 +49,12 @@ namespace Kage
             if (rig.HasOwnPart(PaintedBlade)) { rig.SetSwordAlwaysFront(false); return; }
             rig.SetBaseSwordHidden(true);
             rig.SetSwordAlwaysFront(false);
+            if (rig.def.name == "GARAN" && weaponId == "onikiri")
+            {
+                rig.PrepareBackSling();
+                SubBossBlades.Greatsword(rig);
+                return;
+            }
             if (weaponId == "iwakudaki") { Hammer(rig); return; }
             var look = LookOf(weaponId);
             float x0 = 0.1f, tip = 0.08f + CleaverMoves.BladeLength, len = tip - x0;
@@ -124,7 +130,9 @@ namespace Kage
                 p.Stroke("Wrap", 2, KMath.Hex("#2a1e14"), PartRole.TrimDeep, new[] { V(x, -2.9f), V(x + 0.02f * L, 2.9f) }, 0.8f);
 
             // the head: wide at the two striking faces (+-H), pinched at the waist
-            float Half(float t) => Mathf.Lerp(ww, hw, 1f - Mathf.Pow(Mathf.Sin(t * Mathf.PI), 1.6f));
+            // Sin(PI) in float is a hair below zero, and a negative to the power 1.6 is NaN: that NaN corner broke the head's mesh (the
+            // owner's "gap in the weapon": a wedge of the head next to the shaft was not drawn). Clamp at 0.
+            float Half(float t) => Mathf.Lerp(ww, hw, 1f - Mathf.Pow(Mathf.Max(0f, Mathf.Sin(t * Mathf.PI)), 1.6f));
             var head = new List<Vector2>();
             var far = new List<Vector2> { V(cx, -H) };
             for (int i = 0; i <= 12; i++) { float t = i / 12f; head.Add(V(cx - Half(t), Mathf.Lerp(-H, H, t))); }

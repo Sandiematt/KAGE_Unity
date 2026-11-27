@@ -53,9 +53,18 @@ namespace Kage.Tests
                 int wrap = Named(fight.Kage, "Scarf_Wrap").sortingOrder;
                 var hair = fight.Kage.rig.GetComponentsInChildren<Renderer>(true).FirstOrDefault(r => r.name == "Head_Hair" || r.name == "Head");
                 Assert.IsNotNull(hair, id);
+                var design = HelmetDesigns.Get(id);
+                var orders = design.pieces.ToDictionary(p => $"Helmet_{design.look}_{p.name}", p => p.order);
                 foreach (var r in HelmetRenderers(fight.Kage))
                 {
-                    Assert.Greater(r.sortingOrder, hair.sortingOrder, $"{id}/{r.name} under the hair");
+                    if (r.name.Contains("_Eye"))
+                    {
+                        Assert.Less(r.sortingOrder, wrap, $"{id}/{r.name} over the scarf");
+                        continue;
+                    }
+                    // Rear cloth sits below the head at 83. Crown backing can share the head's layer at 84.
+                    Assert.AreEqual(orders[r.name].CompareTo(84), r.sortingOrder.CompareTo(hair.sortingOrder),
+                        $"{id}/{r.name} relative to the hair");
                     Assert.Less(r.sortingOrder, eye, $"{id}/{r.name} over the eye");
                     Assert.Less(r.sortingOrder, wrap, $"{id}/{r.name} over the scarf");
                 }

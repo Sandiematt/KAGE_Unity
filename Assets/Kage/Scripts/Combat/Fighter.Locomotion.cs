@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Kage
 {
-    /// <summary>Neutral, walk, run, dash, skid, jump, air, land, gravity, gait, stage clamp and facing.</summary>
+    /// <summary>Neutral, walk, run, dash, skid, jump, air, land, gravity, gait and stage clamp. Facing is Fighter.Facing.cs.</summary>
     public partial class Fighter
     {
         // ---- locomotion tuning (m, m/s, m/s²; gravity values are Rigidbody2D gravity scales) ----
@@ -51,7 +51,7 @@ namespace Kage
         {
             float dt = Time.fixedDeltaTime;
             float vl = rb.linearVelocity.x * facing;
-            float runT = state == FState.Run ? KMath.Smooth01(Mathf.InverseLerp(WalkFwd * SpeedMul, RunSpeed * 0.9f * SpeedMul, vl)) : 0f;
+            float runT = state == FState.Run ? KMath.Smooth01(Mathf.InverseLerp(WalkFwd * GroundSpeedMul, RunSpeed * 0.9f * GroundSpeedMul, vl)) : 0f;
             _runBlend = Mathf.MoveTowards(_runBlend, runT, 5f * dt);
             if (Mathf.Abs(vl) > 0.05f) _gaitDir = Mathf.Sign(vl);
             _gaitRate = PoseLib.GaitRate(Mathf.Abs(vl), _runBlend);
@@ -89,12 +89,7 @@ namespace Kage
             return true;
         }
 
-        void FaceOpponent()
-        {
-            if (opponent == null || opponent.state == FState.Thrown) return;
-            float dx = opponent.Pos.x - Pos.x;
-            if (Mathf.Abs(dx) > 0.06f && Mathf.Sign(dx) != facing) SetFacing(Mathf.Sign(dx));
-        }
+        // FaceOpponent (the neutral turn, with its dead zone and hold) is in Fighter.Facing.cs.
 
         // =====================================================================================
         void Neutral(FrameInput inp, int fwd)
@@ -130,13 +125,13 @@ namespace Kage
                 if (run)
                 {
                     if (state != FState.Run) SetState(FState.Run);
-                    float runV = RunSpeed * SpeedMul;
+                    float runV = RunSpeed * GroundSpeedMul;
                     vl = Mathf.MoveTowards(vl, runV, (vl > runV ? GroundDecel : RunAccel) * dt);
                 }
                 else
                 {
                     if (state != FState.Walk) SetState(FState.Walk);
-                    float walkV = WalkFwd * SpeedMul;
+                    float walkV = WalkFwd * GroundSpeedMul;
                     vl = Mathf.MoveTowards(vl, walkV, (vl > walkV ? GroundDecel : GroundAccel) * dt);
                 }
             }
@@ -144,11 +139,11 @@ namespace Kage
             {
                 _walkHeld = 0f;
                 // letting go of (or reversing out of) a full run plants the feet in a skid
-                if (state == FState.Run && vl > RunSpeed * 0.55f * SpeedMul) { StartSkid(); return; }
+                if (state == FState.Run && vl > RunSpeed * 0.55f * GroundSpeedMul) { StartSkid(); return; }
                 if (fwd < 0)
                 {
                     if (state != FState.Walk) SetState(FState.Walk);
-                    vl = Mathf.MoveTowards(vl, -WalkBack * SpeedMul, (vl > 0f ? GroundDecel * 1.3f : GroundAccel) * dt);
+                    vl = Mathf.MoveTowards(vl, -WalkBack * GroundSpeedMul, (vl > 0f ? GroundDecel * 1.3f : GroundAccel) * dt);
                 }
                 else
                 {
@@ -182,7 +177,8 @@ namespace Kage
             SetState(FState.Dash);
             rig.SnapFacing();
             rig.Squash(-0.08f);
-            float sp = (air ? AirDashSpeed : (dir > 0 ? DashSpeed : BackDashSpeed)) * SpeedMul;
+            rig.Impulse(new Vector2(-dir * facing * (air ? 5.5f : 7.0f), air ? 1.2f : 1.7f), 1.15f);
+            float sp = (air ? AirDashSpeed : (dir > 0 ? DashSpeed : BackDashSpeed)) * DashSpeedMul;
             rb.linearVelocity = new Vector2(dir * sp * facing, air ? 0f : Mathf.Min(0f, rb.linearVelocity.y));
             Vfx.I?.Dust(Pos + (air ? Vector2.up * 0.6f : Vector2.zero), air ? 0.5f : 0.9f, -dir * facing);
             Vfx.I?.Ghost(rig, fxMain, 0.3f);
@@ -194,8 +190,8 @@ namespace Kage
             _dashFrame++;
             int f = _dashFrame;
             float u = f / (float)_dashTotal;
-            float sp0 = (_dashAir ? AirDashSpeed : (_dashDir > 0 ? DashSpeed : BackDashSpeed)) * SpeedMul;
-            float spEnd = _dashAir ? 2.6f : (_dashDir > 0 ? (fwd > 0 ? RunSpeed * SpeedMul : 1.2f) : 0.5f);
+            float sp0 = (_dashAir ? AirDashSpeed : (_dashDir > 0 ? DashSpeed : BackDashSpeed)) * DashSpeedMul;
+            float spEnd = _dashAir ? 2.6f : (_dashDir > 0 ? (fwd > 0 ? RunSpeed * GroundSpeedMul : 1.2f) : 0.5f);
             // burst, hold, then bleed off (InQuad keeps the speed up early)
             float sp = Mathf.Lerp(sp0, spEnd, KMath.Apply(Ease.InQuad, u));
             Vector2 v = rb.linearVelocity;
@@ -203,6 +199,7 @@ namespace Kage
             if (_dashAir && f < _dashTotal - 4) v.y = 0f;
             rb.linearVelocity = v;
             if (f % 3 == 0 && f < _dashTotal - 2) Vfx.I?.Ghost(rig, fxMain, 0.22f);
+            StyleFootwork(f);                     // the weapon's trail: lightning, violet, flame, water, shadow (Fighter.Style.cs)
 
             // cancels: attacks out of the dash, dash-jump keeps the momentum
             if (f >= 4)
@@ -232,6 +229,7 @@ namespace Kage
         {
             SetState(FState.Skid);
             rig.Squash(0.05f);
+            rig.Impulse(new Vector2(facing * 4.4f, 1.2f), 1.1f);
             Vfx.I?.Dust(Pos + Vector2.right * facing * 0.3f, 0.7f, facing);
         }
 
@@ -261,6 +259,7 @@ namespace Kage
             _walkHeld = 0f;
             SetState(FState.Air);
             rig.Squash(-0.1f);
+            rig.Impulse(new Vector2(-facing * fwd * 2.0f, -3.2f), 1.2f);
             Vfx.I?.Dust(Pos, 0.6f, -Mathf.Sign(vx) * facing);
         }
 
@@ -277,6 +276,7 @@ namespace Kage
             else vxl *= 0.6f;
             rb.linearVelocity = new Vector2(vxl * facing, AirJumpV);
             rig.Squash(-0.09f);
+            rig.Impulse(new Vector2(-facing * dirIn * 2.4f, -3.0f), 1.2f);
             Vfx.I?.Dust(Pos + Vector2.up * 0.05f, 0.45f, 0f);
             KageGame.I?.Audio?.Play(SfxKind.Whoosh, 0.3f);
         }
@@ -327,7 +327,7 @@ namespace Kage
             _landHard = Mathf.InverseLerp(5f, 13f, impact);
             _landFrames = Mathf.RoundToInt(Mathf.Lerp(4f, 9f, _landHard));
             float vl = rb.linearVelocity.x * facing;
-            _landRun = vl > (WalkFwd + 0.4f) * SpeedMul;
+            _landRun = vl > (WalkFwd + 0.4f) * GroundSpeedMul;
             SetState(FState.Land);
             // keep some momentum: a running landing rolls on, a standing one sticks
             rb.linearVelocity = new Vector2(rb.linearVelocity.x * (_landRun ? 0.75f : 0.4f), 0f);
@@ -336,6 +336,7 @@ namespace Kage
             LandSoftParts(impact, Mathf.Lerp(0.6f, 1.2f, _landHard));
             Vfx.I?.Dust(Pos, Mathf.Lerp(0.6f, 1.1f, _landHard), 0f);
             if (_landHard > 0.5f) GameFeel.Shake(0.04f * _landHard);
+            StyleLanded(_landHard);               // a heavy weapon lands with a thud (Fighter.Style.cs)
             KageGame.I?.Audio?.Play(SfxKind.Land, Mathf.Lerp(0.35f, 0.65f, _landHard));
         }
 

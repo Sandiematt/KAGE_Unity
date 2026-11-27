@@ -34,40 +34,28 @@ warns that if everything glows, nothing reads.
   the demon (*shikami*) with horns as a fore-crest. Fudō Myō-ō engulfed in flames is one Met maedate. This is the source for the top
   tiers: the higher the rank, the larger and stranger the crest.
 
-## Principles and how the designs use them
+## Current wearable roster
 
-| Principle | Where it shows |
-|---|---|
-| The tier reads from the outline before the colour | COMMON stays inside or close to the skull (hoods, a band, a flat kasa). EPIC adds swept blades. TROPHY adds height (laurel, the tall eboshi) and long ribbons. LEGENDARY adds a big crest (antlers, crescent). GOD MODE adds horns, flames and a broken fire halo, the biggest outline. |
-| One colour family per tier, matching the owner's sheet and the common rarity ladder | `PALETTES` in `Tools/helmet_art/kit.py`: grey cloth and steel; black shell and violet; white enamel and gold; black lacquer, gold and red; black shell and burning red. The back-light rim takes the tier colour too (grey, violet, gold, amber, red), so even a black helmet is edged in its tier. |
-| Light is the last step and is rationed | COMMON has no glow. EPIC has one violet ring at the ear, thin violet seam lines and star rivets. TROPHY has only a pale glass gem. LEGENDARY is lit metal with no glow. GOD MODE glows (horns, flames, the emblem's ring, a red light behind the eye). A test checks it. |
-| Motion grows with the tier | Every helmet has a soft piece on the game's spring chains (knot tails, cord tails, a drape and a veil, a violet cord, white ribbons, red tassels and cords, fire tails, and the wrap's loose end). The higher tiers have longer and more of them, so they trail further and take the wind more. |
-| The face stays Kage's | His black face and white eye are never covered. Every face opening leaves the eye on bare black. The god-mode glow sits behind the eye (the eye is drawn on top). Hair is hidden under every hood, cap, hat and kabuto (the owner disliked it poking through). It stays only under the brow band, the shinobi *hitai-ate* look. |
-| The neck wrap ties the set together | As in the owner's sheet, each helmet but the veil winds a tier-coloured wrap round his neck over the front of the crimson scarf wrap. The scarf's knot and its two crimson tails still stream behind: the scarf stays his signature. |
-| Variety inside a tier comes from a different main shape | COMMON: a hood, a hat, a band, a veil. EPIC: a fin-swept helm, horns over a jaw mask, a crested star helm. TROPHY: a hood under a laurel, a tall court cap. LEGENDARY: antlers on a suji bachi, a crescent on a zukin-nari. GOD MODE: a flame crest under a fire halo, great horns with lightning. |
+The armory follows the five tiers in `GameRules.HelmetTiers` and the progression in `HelmetOrder`. The art kit defines each named material as a shade, base and highlight plus a tier rim.
 
-## The 14 helmets
-
-| Helmet | JS tier | Design tier | Design (Japanese type it builds on) |
+| Helmet ID | Tier | Materials | Side profile |
 |---|---|---|---|
-| Shiro Maki (Crimson Scarf) | starter | Common | No design: his bare spiky hair and the crimson scarf. That look is the starter's name, and it is the baseline the other tiers are measured against. |
-| Kuro Zukin | common, 300 | Common | An ash-grey shinobi hood with an eye slit, a cord knotted at the back with two tails (*zukin*). |
-| Sugegasa | common, 450 | Common | A wide conical straw *sugegasa* over a grey head cloth, a chin cord, two cord tails at the nape. |
-| Hachigane | common, 600 | Common | A grey cloth band with a riveted steel brow plate (*hachigane*), long knot tails, a grey half mask. His hair stays. |
-| Kasumi Veil | common, 750 | Common | A peaked grey cowl with a long back drape and a pale gauze veil from under the eye to the chest. |
-| Tetsu Kabuto | rare, 1200 | Epic | A sleek black helm with a pointed brow, four violet blade fins swept back, a glowing violet ear ring. |
-| Oni Menpō | rare, 12 gems | Epic | A black skull cap with two violet horns hooking forward and an angular oni *menpō* with glowing fangs. |
-| Hoshi Kabuto | rare, 1600 | Epic | A faceted black *hoshi bachi* with glowing violet star rivets, a tall bladed crest, a long visor, a violet cord. |
-| Hisame Zukin | trophy (Hisame) | Trophy | A white enamel hood edged in gold, a gold laurel with a pale rain-drop gem, a star medallion, white ribbons. |
-| Sumi Eboshi | trophy (Kuroe) | Trophy | A tall white lacquer *eboshi* swept back, one black ink stroke across it, a gold band and star medallion, white ribbons. |
-| Shika Kabuto | epic, 2300 | Legendary | A black *suji bachi* laced in red, a gold band and visor edge, branching gold antlers, a red and gold mon, a red tassel. |
-| Shikkō Zukin | epic, 2900 | Legendary | A tall *zukin-nari* kabuto whose peak curls back, a great gold crescent maedate, a red mon, red cords. |
-| Utsuro Kabuto | epic, 25 gems | God Mode | A black demonic helm under a broken ring of red fire, flames streaming off the crown, jagged shards, a red-lit eye. |
-| Raijin Kabuto | trophy (Raikon) | God Mode | A horned war helm: two great burning horns, a lightning crest, a fanged jaw guard, the thunder-drum emblem. |
+| shiro_maki | Common | Crimson scarf, dark hair | A high crossed fold beneath the bare head, with the knot seated between the existing ribbon anchors. |
+| kuro_zukin | Common | cloth, ink, wrap | Matte charcoal shinobi hood wrapped cleanly to the jaw with a sharp eye slit, layered cloth folds and fluttering back tails. |
+| sugegasa | Rare | straw, straw_dark | Wide conical woven golden-straw kasa with crisp radial ribs, a broad shadow facet, chin cord and hanging brim tassels. |
+| hachigane | Rare | cloth, ink, steel | Kage keeps his spiky hair over a slate ninja headband with a riveted brushed-steel brow plate, incised lightning slash and trailing knot tails. |
+| kasumi_men | Rare | cloth, ink, steel | Armored gunmetal-steel hood with hinged riveted cheek plate, layered iron-cloth lower face veil and sweeping back cloth. |
+| tetsu_kabuto | Epic | glow, gold, iron_dark, steel, wrap | Riveted forged-iron samurai kabuto with swept twin iron blades, brass brow stud, tiered iron shikoro and stern iron menpo mask. |
+| oni_menpo | Epic | glow, iron_dark, plume, shell, steel, wrap | Dark forged iron oni helm with twin curving demon horns, tiered iron neck plates, fierce arcane-lit oni eye and fanged face guard. |
+| hoshi_kabuto | Epic | glow, iron_dark, plume, shell, steel, wrap | Studded obsidian-iron sentinel kabuto crowned with a sweeping arcane-violet horsehair plume, pointed visor and layered purple collar. |
+| shika_kabuto | Trophy | antler, crimson, enamel, gold, ink, ribbon, wrap | Ceremonial white-enamel peaked kabuto with tall branching golden-bronze stag antlers, red-and-gold laced shikoro and ivory ribbons. |
+| sumi_eboshi | Trophy | enamel, gold, ink, ribbon | Tall ceremonial ivory-lacquer court cap swept high, slashed with a bold sumi-ink brushstroke, imperial gold brow band and long white ribbons. |
+| hisame_zukin | Trophy | enamel, glow, gold, ribbon, wrap | Ivory-white ceremonial cloth hood adorned with gold rain embroidery, draped white neck folds and long fluttering white ribbons. |
+| raijin_kabuto | Legendary | crimson, fire, glow, gold, horn, shell | Blazing demonic war kabuto with twin forked thunder horns, inset ember grooves, fanged demon jaw and blazing crimson-gold demon eye. |
+| utsuro_kabuto | Legendary | crimson, fire, glow, gold, shell | Obsidian demonic war helm with a swept, split-vane crest, magma cracks and hollow fiery eye. |
+| shikko_zukin | Legendary | crimson, fire, glow, gold, shell | Tall curved obsidian-crimson executioner kabuto with a single molten-gold blade crest, razor-thin fiery eye and crimson cords. |
 
-The tiers follow price and standing. The four cheapest shop helmets are COMMON. The three rare ones are EPIC. Two of the three epics
-are LEGENDARY. The two premium helmets at the top, the 25-gem Utsuro and the Act I boss's own Raijin (the highest health in Act I),
-are GOD MODE. Hisame's and Kuroe's rewards are TROPHY.
+The starter uses the base rig. The thirteen other helmets use their existing head frame and cloth chains. Hakobi-gasa, Utsushi-men, Deshi Tenugui, Mokushi Kabuto and Kasa are later-act catalog records without wearable drawings in this armory.
 
 ## Sources
 

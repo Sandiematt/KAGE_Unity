@@ -251,7 +251,7 @@ namespace Kage.Tests
         public override void TearDown()
         {
             if (_game != null) Object.DestroyImmediate(_game);
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
             base.TearDown();
         }
 

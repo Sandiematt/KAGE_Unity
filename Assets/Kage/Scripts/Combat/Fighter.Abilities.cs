@@ -79,6 +79,7 @@ namespace Kage
             if (m == null) return false;
             var a = AbilityCatalog.Get(id);
             if (a != null && a.cooldownFrames > 0 && ctx != null) _abilityReady[id] = ctx.Clock.Frame + Mathf.RoundToInt(a.cooldownFrames * AbilityCooldownMul);
+            if (!m.airborne) FaceTargetForAttack();               // the target is behind: turn before the wind-up (Fighter.Facing.cs)
             StartMove(m);
             return true;
         }

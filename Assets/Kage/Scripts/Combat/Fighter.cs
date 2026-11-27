@@ -21,6 +21,32 @@ namespace Kage
         public int window;
         /// <summary>What delivered the hit: a fighter's melee window (the default), a projectile or a hazard. The parry reads it (SAN-91).</summary>
         public HitOrigin origin;
+        /// <summary>The attacker's weapon style's posture multiplier (docs/weapon-styles.md); 0 (the default) counts as 1.</summary>
+        public float posture;
+        public float PostureScale => posture > 0f ? posture : 1f;
+
+        // ---- the striking part (the contact-matched parry): set by the attacker's hit detection; a synthetic hit has none ----
+        /// <summary>The fields below are set: the weapon's (or limb's) world segment and travel on the frame of the hit.</summary>
+        public bool hasStrikeGeometry;
+        /// <summary>The hit point kind whose sample touched (Blade, BladeN, Fist, a foot, ...).</summary>
+        public HitPoint strikePoint;
+        /// <summary>The striking segment, hilt (or knee, elbow) end to tip (or foot, fist), world.</summary>
+        public Vector2 strikeBase, strikeTip;
+        /// <summary>Unit world direction the striking part was travelling; zero when unknown.</summary>
+        public Vector2 swingDir;
+        /// <summary>The attacker's move time the segment was posed at (it touched part way through the frame); below 0 or unset with no geometry = the frame's own pose.</summary>
+        public float strikeTime;
+        /// <summary>Authored strike vector tag for contact-matched parrying.</summary>
+        public StrikeVector strikeVector;
+
+        /// <summary>The hit's striking part for <see cref="ParryContactSolver"/> (a made-up one from the contact and level when there is none).</summary>
+        public StrikeGeometry Strike => new()
+        {
+            baseWorld = strikeBase, tipWorld = strikeTip, swingDirWorld = swingDir, rawContactWorld = contact,
+            level = w != null ? w.level : HitLevel.Mid, point = strikePoint, hasSegment = hasStrikeGeometry,
+            isBlade = hasStrikeGeometry ? strikePoint is HitPoint.Blade or HitPoint.BladeN : w != null && w.sword,
+            strikeVector = strikeVector != StrikeVector.Auto ? strikeVector : (w != null ? w.strikeVector : StrikeVector.Auto),
+        };
     }
 
     /// <summary>Where a <see cref="HitInfo"/> came from (SAN-91): only a melee window staggers its owner when parried.</summary>
@@ -125,7 +151,9 @@ namespace Kage
         Fighter _thrower, _victim;
         float _thrownSpin;
         bool _hidden;
-        MotionTrail _trailBlade, _trailBladeN, _trailFist, _trailFootN, _trailFootF;
+        WeaponTrail _trailBlade, _trailBladeN, _trailFist, _trailFootN, _trailFootF;
+        /// <summary>The character's signature look (<see cref="CombatLook"/>): its own trails and contact effects; null = the generic ones.</summary>
+        public CombatLook Look { get; private set; }
         Ragdoll2D _ragdoll;
         public int comboCount;
         public System.Action<Fighter, Fighter, HitInfo, HitResult> onHit;
@@ -133,6 +161,8 @@ namespace Kage
 
 
         // =====================================================================================
+        float _contactScale = 1f;
+
         /// <summary>
         /// Builds this fighter from character data (ADR-0005): <paramref name="d"/> is the rig its part set drew.
         /// Health is jsHealth × healthMul × the health scale. Body scale is the caller's (FightBuilder.Spawn), and so
@@ -141,11 +171,14 @@ namespace Kage
         public void Setup(CharacterDef c, RigDef d, int sortBase)
         {
             Character = c;
+            // Contact radii are world metres. Bone transforms already scale their centres and reach.
+            _contactScale = SubBossTier.For(c.id) != null ? c.bodyScale : 1f;
             Setup(c.displayName, d, sortBase, c.colors.main, c.colors.core, c.colors.dark);
             Mass = c.mass;
             isPlayer = c.IsPlayer;
             Flags = c.flags;
             SpeedMul = c.speedMul;
+            GroundMul = c.groundSpeedMul;
             DamageMul = c.damageMul;
             Defense = c.defense;
             MoveRate = c.moveRate;
@@ -181,19 +214,28 @@ namespace Kage
             rig.Build(d, sortBase);
             BuildHurtboxes();
 
-            _trailBlade = new MotionTrail("TrailBlade", transform.parent, 0.12f, main, core, sortBase + 900, true);
-            _trailBladeN = new MotionTrail("TrailBladeN", transform.parent, 0.12f, main, core, sortBase + 900, true);
-            _trailFist = new MotionTrail("TrailFist", transform.parent, 0.09f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
-            _trailFootN = new MotionTrail("TrailFootN", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
-            _trailFootF = new MotionTrail("TrailFootF", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, sortBase + 900, false);
+            Look = CombatLook.For(Character?.id);
+            if (Application.isPlaying && !Headless) BuildTrails(sortBase, main, core);
 
             _display.CopyFrom(_ref);
             _start.CopyFrom(_ref);
             rig.Apply(_display);
         }
 
+        void BuildTrails(int sortBase, Color main, Color core)
+        {
+            int trailOrder = sortBase + 900;
+            _trailBlade = Look?.Trail(this, TrailSlot.Blade, transform.parent, trailOrder) ?? new MotionTrail("TrailBlade", transform.parent, 0.12f, main, core, trailOrder, true);
+            _trailBladeN = Look?.Trail(this, TrailSlot.BladeN, transform.parent, trailOrder) ?? new MotionTrail("TrailBladeN", transform.parent, 0.12f, main, core, trailOrder, true);
+            _trailFist = Look?.Trail(this, TrailSlot.Fist, transform.parent, trailOrder) ?? new MotionTrail("TrailFist", transform.parent, 0.09f, Color.Lerp(main, Color.white, 0.6f), core, trailOrder, false);
+            _trailFootN = Look?.Trail(this, TrailSlot.FootN, transform.parent, trailOrder) ?? new MotionTrail("TrailFootN", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, trailOrder, false);
+            _trailFootF = Look?.Trail(this, TrailSlot.FootF, transform.parent, trailOrder) ?? new MotionTrail("TrailFootF", transform.parent, 0.1f, Color.Lerp(main, Color.white, 0.6f), core, trailOrder, false);
+        }
+
         public void ResetForRound(float x, float face)
         {
+            rig?.ClearImpactPose();
+            _dodgeAfterglow = false;
             if (_ragdoll != null) { _ragdoll.Restore(); _ragdoll = null; }
             SetHurtboxesActive(true);
             if (_thrower != null || _victim != null) { _thrower = null; _victim = null; }
@@ -223,13 +265,20 @@ namespace Kage
             rig.ResetSoft();
             _liePose = _lie;
             ResetPosture();
+            ResetStyleState();
+            ResetCounter();
+            ResetFlow();
+            _sinceTurn = 9999;
             SetState(FState.Intro);
         }
 
+        /// <summary>Faces left (-1) or right (+1): a crisp flip on this frame (Fighter.Facing.cs). <paramref name="instant"/> is kept for the callers; every turn is instant.</summary>
         public void SetFacing(float f, bool instant = false)
         {
-            facing = Mathf.Sign(f);
-            rig.SetFacing(facing, instant);
+            float to = Mathf.Sign(f);
+            if (to != facing) _sinceTurn = 0;
+            facing = to;
+            rig.SetFacing(facing, true);
         }
 
         public Vector2 Pos => rb != null ? rb.position : (Vector2)transform.position;
@@ -239,6 +288,8 @@ namespace Kage
         bool LegacyPhysics => ctx != null && ctx.LegacyHits;
         public bool CanBeThrown => Grounded && (state == FState.Idle || state == FState.Walk || state == FState.Run || state == FState.Skid || state == FState.Crouch || state == FState.Blockstun || (state == FState.Attack && move != null && !move.isThrow && !move.Invulnerable(moveFrame)));
         public bool IsAttacking => state == FState.Attack && move != null;
+        /// <summary>True while dashing forward along the ground (routes Dash + S / Dash + P to each weapon's dash attack).</summary>
+        public bool IsForwardDash => state == FState.Dash && !_dashAir && _dashDir > 0;
         public bool Busy => state is FState.Attack or FState.Hitstun or FState.Blockstun or FState.Launched or FState.Down or FState.Thrown or FState.KO or FState.Ultimate;
         public bool IsDown => state is FState.Down or FState.KO;
 
@@ -246,17 +297,21 @@ namespace Kage
 
         void SetState(FState s)
         {
-            if (_cmActive && s != FState.Ultimate) AbortRageArt();     // the art ended early: the world and the camera come back (SAN-82)
+            if ((_cmActive || _art != null) && s != FState.Ultimate) AbortRageArt();     // the art ended early: the world and the camera come back (SAN-82)
             if (s != FState.Launched && s != FState.Down && s != FState.KO) EndPhysicalFall();
             if (s != FState.Attack) { move = null; rig.SetSwordFront(false); }
             _start.CopyFrom(_display);
             _start.Normalize();
             state = s;
             stateFrame = 0;
+            _recoverAt = -1;        // a stagger's early way out belongs to the stagger that set it (Fighter.Parry.cs)
             _stateEntries++;        // a new dash or dodge move can perfect-dodge again (Fighter.PerfectDodge.cs)
+            _parryCtrl.OnStateChanged(this, s);     // the parry's clash pose gives way: the new state blends from the pose on screen
         }
 
         // =====================================================================================
+        internal bool PresentsCombat => Application.isPlaying && !Headless;
+        internal KageAudio CombatAudio => ctx?.Audio ?? KageGame.I?.Audio;
         bool Headless => ctx != null && ctx.Clock.Manual;
         bool Ready => def != null && moves != null && rig != null && rig.def != null;   // false mid hot-reload: KageGame rebuilds the scene
         FrameInput _inp;
@@ -285,6 +340,8 @@ namespace Kage
             _inp = default;
             stateFrame++;
             _bufferAge++;
+            TurnTick();
+            FlowTick();
             if (inp.p) Buffer(Btn.P, inp);
             if (inp.k) Buffer(Btn.K, inp);
             if (inp.s) Buffer(Btn.S, inp);
@@ -303,6 +360,7 @@ namespace Kage
             ReadGuard(inp);
             _crouchHeld = inp.dy < 0;
             PostureTick();
+            CounterTick(inp);        // the focus, the counter opening, a fresh Back press (Fighter.Counter.cs)
             TryForcedMove();         // a boss phase's entry move, an escape (Fighter.Ascendant.cs)
 
             switch (state)
@@ -318,10 +376,12 @@ namespace Kage
                 case FState.Land: LandUpdate(inp, fwd); break;
                 case FState.Attack: AttackUpdate(inp, fwd); break;
                 case FState.Hitstun:
+                    if (TryStaggerEscape(inp, fwd)) break;     // a parried blow's stagger: guard or dodge out of its end (Fighter.Parry.cs)
                     rb.linearVelocity = new Vector2(Mathf.MoveTowards(v.x, 0f, 11f * Time.fixedDeltaTime), v.y);
                     if (--_stun <= 0) { _juggle = 0; SetState(FState.Idle); }
                     break;
                 case FState.Blockstun:
+                    if (TryRiposte()) break;          // the weapon's iai counter cancels the guard (Fighter.Style.cs)
                     rb.linearVelocity = new Vector2(Mathf.MoveTowards(v.x, 0f, 9f * Time.fixedDeltaTime), v.y);
                     if (--_stun <= 0) SetState(FState.Idle);
                     break;
@@ -342,6 +402,8 @@ namespace Kage
                     break;
             }
 
+            StyleTick();             // the weapon style's clocks: momentum, riposte, hook marks, silent cuts, the scabbard (Fighter.Style.cs)
+            AscendantTick();         // a style-less fighter's sheathed frames, and a move's vanished frames (Fighter.Ascendant.cs)
             if (state is FState.Idle or FState.Walk or FState.Run) UpdateGait();
             UpdateGravity();
             if (state is FState.Launched or FState.Down) DriveFall();

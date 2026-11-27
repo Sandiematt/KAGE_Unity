@@ -140,7 +140,7 @@ namespace Kage
             _f.MoveRate = c.moveRate * p.moveRateMul;
             _f.DamageMul = c.damageMul * p.damageMul;
             _f.Flags = (c.flags | p.addFlags) & ~p.removeFlags;
-            _f.AbilityCooldownMul = p.berserk ? BerserkCooldownMul : 1f;
+            _f.AbilityCooldownMul = (p.berserk ? BerserkCooldownMul : 1f) * p.cooldownMul;
             _f.SecondWaveDelay = p.secondWave;
             var ai = Ai;
             if (ai != null)

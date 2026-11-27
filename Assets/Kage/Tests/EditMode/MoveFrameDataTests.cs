@@ -13,7 +13,16 @@ namespace Kage.Tests
     /// its frame data (length, hit windows and their numbers and flags, root motion, cancels, invulnerability, armour,
     /// counter, spin, throw and effect frames). The expected text is a snapshot of main before SAN-118
     /// (<c>Data/MoveFrameData.txt</c>, generated from 0cf7534); a pose-only change leaves it equal. Intended changes since: the SAN-118 cleave rework (Kage Cleave stays
-    /// on the ground, its leap replaced by a stepping root motion at frames 15-20; the leaping style became <c>airCleave</c>, Down + S in the air).
+    /// on the ground, its leap replaced by a stepping root motion at frames 15-20; the leaping style became <c>airCleave</c>, Down + S in the air), and
+    /// the combat-flow pass (docs/combat-flow.md): the backflip became the back hop, its 360° spin gone (spin 0), every frame the same; and the
+    /// upright-and-grounded pass: the spin field is gone from the snapshot (no move spins), the roll and the back hop became flat slides (X-only
+    /// root motion in three phases, never airborne), every other frame the same; and the two reference kata (the contact-matched parry pass):
+    /// <c>katana.crownWheel</c>, <c>katana.tameCut</c>, <c>tachi.crownWheel</c> and <c>tachi.tameCut</c> added, with their chain links (iai, cross
+    /// and lowReap into the Crown Wheel; risingMoon, kick2 (shared by the fists) and the Crown Wheel into the Poised Fang; the tachi's cut1, cut2 and
+    /// sweep likewise) and the cancel frames those links need (lowReap 14, tachi.sweep 25). No existing katana/fists/twin/tachi move's frames changed;
+    /// and the four-weapon combat overhaul (Mizuchi spear, Yamigama chain sickle, Iwakudaki war hammer, Onikiri heavy cleaver): updated the
+    /// spear, chain and cleaver family move sets with martial-arts-authentic 4-phase pacing, sliding spear thrusts, dynamic weighted-chain whip
+    /// arcs, ground-impact/spark-drag cues and active ClashGeometry hit segments while keeping katana, fists, twin and tachi byte-for-byte identical.
     /// </summary>
     public class MoveFrameDataTests
     {
@@ -59,7 +68,7 @@ namespace Kage.Tests
         {
             sb.Append($"{fam}.{m.id} total={m.total} cancel={m.cancelFrom} jumpCancel={m.jumpCancelFrom} invuln={m.invulnFrom}..{m.invulnTo} " +
                       $"noPush={m.noPushFrom}..{m.noPushTo} armour={m.armorFrom}..{m.armorTo} counter={m.counterFrom}..{m.counterTo} " +
-                      $"gravOff={m.gravityOffFrom}..{m.gravityOffTo} spin={m.spinFrom}..{m.spinTo}:{F(m.spinDeg)} air={m.airborne}/{m.endsOnLanding} " +
+                      $"gravOff={m.gravityOffFrom}..{m.gravityOffTo} air={m.airborne}/{m.endsOnLanding} " +
                       $"sword={m.swordFront} norm={m.normalizeAtEnd} throw={m.isThrow}:{m.grabFrame}..{m.grabTo}/{m.releaseFrame}/{m.throwDmg} " +
                       $"meter={m.meterCost} proj={m.projectileFrame} hazard={m.hazardFrame} vault={m.vaultFrom}..{m.vaultTo} brace={m.braceFrom}..{m.braceTo} " +
                       $"wallStagger={m.wallStagger}\n");

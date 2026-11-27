@@ -77,15 +77,17 @@ namespace Kage
             _bossTitle = Lbl(_barRoot, "", UiFont.Teko, 15, Gold, 0f, 0f, 300f, 18f, TextAnchor.MiddleLeft, 3.9f);
             _bossPhase = Lbl(_barRoot, "", UiFont.Teko, 15, Hex("#ff8a7a"), 0f, 0f, 120f, 18f, TextAnchor.MiddleLeft, 3f);
 
-            // the art card, left of the bar
+            // the art card, left of the bar (inner clip keeps portrait & aura strictly inside the frame with zero blur bleed)
             _cardRoot = Ui.Node(_barRoot, "Art", -(14.4f + CardW), BossH + 8f - CardH, CardW, CardH);
-            _cardBack = Ui.Box(_cardRoot, 0, 0, CardW, CardH, Hex("#0a0710"), "Back");
-            _cardAura = Ui.Glow(_cardRoot, CardW / 2f, CardH * 0.34f, CardW * 0.75f, A(Crimson, 0.55f), 1.6f);
-            _cardImage = Ui.Pic(_cardRoot, "boss_raikon", 0, 0, CardW, CardH);
+            var cardClip = Ui.Node(_cardRoot, "ArtClip", 0, 0, CardW, CardH);
+            cardClip.gameObject.AddComponent<RectMask2D>();
+            _cardBack = Ui.Box(cardClip, 0, 0, CardW, CardH, Hex("#0a0710"), "Back");
+            _cardAura = Ui.Glow(cardClip, CardW / 2f, CardH * 0.38f, CardW * 0.56f, A(Crimson, 0.34f), 1.6f);
+            _cardImage = Ui.Pic(cardClip, "boss_raikon", 0, 0, CardW, CardH);
+            Ui.Grad(cardClip, 4, CardH - 40f, CardW - 8f, 36f, A(Hex("#050204"), 0f), A(Hex("#050204"), 0.85f), false);
+            _cardHit = Ui.Box(cardClip, 0, 0, CardW, CardH, new Color(1, 1, 1, 0), "Hit");
             Ui.Frame(_cardRoot, 0, 0, CardW, CardH, 2f, Bone);
-            Ui.Frame(_cardRoot, 2, 2, CardW - 4f, CardH - 4f, 2f, A(Color.black, 0.7f));
-            Ui.Grad(_cardRoot, 4, CardH - 40f, CardW - 8f, 36f, A(Hex("#050204"), 0f), A(Hex("#050204"), 0.85f), false);
-            _cardHit = Ui.Box(_cardRoot, 0, 0, CardW, CardH, new Color(1, 1, 1, 0), "Hit");
+            Ui.Frame(_cardRoot, 2, 2, CardW - 4f, CardH - 4f, 1.5f, A(Color.black, 0.75f));
             _cardCorner = Ui.Shape(_cardRoot, CardW - 8f, CardH - 28f, 16f, 16f, new[] { new Vector2(8, 0), new Vector2(16, 8), new Vector2(8, 16), new Vector2(0, 8) }, Crimson, null, null, false, "Corner");
             _bossArt = _cardRoot;
             _barRoot.gameObject.SetActive(false);
@@ -215,7 +217,7 @@ namespace Kage
                 _cardRoot.anchoredPosition = new Vector2(-(14.4f + CardW), -(BossH + 8f - CardH) + sway);
                 float breathe = 1f + 0.035f * (0.5f + 0.5f * Mathf.Sin(t * Mathf.PI * 2f / 3.6f));
                 _cardImage.rectTransform.localScale = new Vector3(1.04f * breathe, 1.04f * breathe, 1f);
-                Color aura = v.Low ? new Color(1f, 0.16f, 0.2f, 0.75f) : A(_cardAccent, 0.7f);
+                Color aura = v.Low ? new Color(1f, 0.16f, 0.2f, 0.45f) : A(_cardAccent, 0.36f);
                 float auraRate = v.Low ? 0.9f : 2.8f;
                 float ab = 0.55f + 0.45f * (0.5f + 0.5f * Mathf.Sin(t * Mathf.PI * 2f / auraRate));
                 aura.a *= ab;

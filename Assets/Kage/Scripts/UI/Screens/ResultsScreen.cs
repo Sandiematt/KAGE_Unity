@@ -48,9 +48,10 @@ namespace Kage
             var v = view;
             var accent = v.Win ? Hex("#f3d48f") : Hex("#e8443a");
 
-            // a dark wash on the right so the column reads over the world
-            for (int i = 0; i < 24; i++) Ui.Box(Root, 760 + i * 14, 0, 14, 900, Ui.A(Color.black, 0.7f * (i + 1) / 24f), "Wash");
-            Ui.Box(Root, 1096, 0, 504, 900, Ui.A(Color.black, 0.7f), "Wash");
+            // Smooth obsidian gradient wash on the right so the results column reads cleanly with zero vertical banding
+            Ui.Grad(Root, 700, 0, 380, 900, Ui.A(Ui.Void, 0f), Ui.A(Ui.Void, 0.80f), true);
+            Ui.Box(Root, 1080, 0, 520, 900, Ui.A(Ui.Void, 0.80f), "Wash");
+            Ui.Grad(Root, 916, 112, 1.5f, 676, Color.clear, Color.clear, false, Ui.A(accent, 0.35f));
 
             float y = ColY;
             Ui.Label(Root, v.Eyebrow.ToUpperInvariant(), UiFont.Cond, 13, Ui.Muted, ColX, y, ColW, 18, TextAnchor.MiddleLeft, 3.1f);
@@ -137,10 +138,14 @@ namespace Kage
                 Ui.Label(Root, "KEPT", UiFont.Cond, 12, Ui.Muted, ColX + 270, y + 56, 120, 18, TextAnchor.MiddleLeft, 2.6f);
                 y += 96;
                 Ui.Box(Root, ColX, y, ColW, 1, Ui.Hair);
-                y += 1 + 24;
-                Ui.Diamond(Root, ColX + 9, y + 12, 8, Ui.Gold, Ui.Gold, 0);
-                Ui.Label(Root, v.Tip, UiFont.Body, 15, Ui.Bone, ColX + 28, y, ColW - 28, 84, TextAnchor.UpperLeft, 0f, true, 1.15f);
-                y += 84 + 20;
+                y += 1 + 20;
+                var tipCard = Ui.Node(Root, "TipCard", ColX, y, ColW, 88);
+                Ui.Box(tipCard, 0, 0, ColW, 88, Ui.PanelA(0.82f));
+                Ui.Box(tipCard, 0, 0, 3, 88, Ui.Gold);
+                Ui.Frame(tipCard, 0, 0, ColW, 88, 1, Ui.Hair);
+                Ui.Diamond(tipCard, 18, 22, 7, Ui.Gold, Ui.Gold, 0);
+                Ui.Label(tipCard, v.Tip, UiFont.Body, 15, Ui.Bone, 32, 12, ColW - 46, 68, TextAnchor.UpperLeft, 0f, true, 1.2f);
+                y += 88 + 20;
             }
 
             // experience
@@ -234,11 +239,16 @@ namespace Kage
             string name = stage.Kind != "stretch" && !string.IsNullOrEmpty(stage.Foe) ? stage.Foe : stage.Name;
             var c = Ui.Node(Root, "TitleCard", 0, 330, 1600, 240);
             card = c.gameObject.AddComponent<CanvasGroup>();
-            Ui.Grad(c, 0, 0, 1600, 240, Ui.A(Color.black, 0f), Ui.A(Color.black, 0f), false, Ui.A(Color.black, 0.62f));
+            Ui.Grad(c, 0, 0, 1600, 240, Ui.A(Color.black, 0f), Ui.A(Color.black, 0f), false, Ui.A(Color.black, 0.72f));
+            Ui.Grad(c, 220, 40, 1160, 1, Color.clear, Color.clear, true, Ui.A(Ui.Gold, 0.45f));
+            Ui.Grad(c, 220, 200, 1160, 1, Color.clear, Color.clear, true, Ui.A(Ui.Gold, 0.45f));
             Ui.Label(c, (ch.Name + " · " + CampaignView.KindName(stage.Kind)).ToUpperInvariant(), UiFont.Title, 16, Ui.Gold, 0, 60, 1600, 24, TextAnchor.MiddleCenter, 6f);
-            Ui.Label(c, name, UiFont.Mincho, 64, Ui.Bone, 0, 88, 1600, 84, TextAnchor.MiddleCenter);
+            var nm = Ui.Label(c, name, UiFont.Mincho, 64, Ui.Bone, 0, 88, 1600, 84, TextAnchor.MiddleCenter);
+            var nmSh = nm.gameObject.AddComponent<Shadow>();
+            nmSh.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            nmSh.effectDistance = new Vector2(0f, -2.5f);
             Ui.Box(c, 740, 182, 120, 2, Ui.Gold);
-            hint = Ui.Label(Root, "ESC / START  ·  PAUSE", UiFont.Cond, 13, Ui.A(Ui.Bone, 0.5f), 1100, 860, 460, 20, TextAnchor.MiddleRight, 2.4f);
+            hint = Ui.Label(Root, "ESC / START  ·  PAUSE", UiFont.Cond, 13, Ui.A(Ui.Bone, 0.55f), 1100, 860, 460, 20, TextAnchor.MiddleRight, 2.4f);
         }
 
         public override void Tick()

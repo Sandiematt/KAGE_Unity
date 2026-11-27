@@ -1,17 +1,16 @@
-"""The SAN-72 helmet designs, by tier (docs/research/helmet-design.md). Head frame: u head radii to the face, v down, origin at the
-head centre. Kage's head runs from u -0.65 (back) to 1.1 (nose), v -0.95 (crown) to 0.96 (chin); his eye is u 0.30..0.60,
-v -0.12..0.21 and must stay on bare black face. Orders: 83 soft pieces behind the head, 85..95 on the head (over the hair at 84,
-under the eye at 96), 103 the neck wrap on the chest (over the scarf wrap, under the near arm).
+"""The 5-tier helmet designs (Common, Rare, Epic, Trophy, Legendary).
+Head frame: u in head radii towards the face, v down, origin at the head centre.
+Kage's head runs from u -0.65 (back) to 1.1 (nose), v -0.95 (crown) to 0.96 (chin);
+his eye is u 0.30..0.60, v -0.12..0.21 and always stays visible.
+Orders: 83 soft pieces behind the head, 85..95 on the head (over hair at 84, under eye at 96).
+Kage's flowing crimson scarf (order 100..103) stays visible below every helmet.
 
-Tier language (the owner's reference, docs/reference/helmet_tiers.png, and the research note):
-  COMMON     grey cloth, plain steel and straw; low and close to the skull; one soft accent; no glow.
-  EPIC       a dark angular shell; violet blades and fins; one glowing violet ring or line; violet wrap.
-  TROPHY     white enamel and gold; ceremonial: laurel, a star medallion, long white ribbons; white wrap.
-  LEGENDARY  black lacquer kabuto; gold crest (antlers, crescent); a red and gold mon; red lacing and tassel; red wrap.
-  GOD MODE   a black demonic shell; glowing red horns and flames; a red glow round the eye; a burning emblem; red wrap.
-Each tier step adds silhouette height, pieces and light; inside a tier the helmets differ in their main shape.
-
-The starter, Shiro Maki ("Crimson Scarf"), has no design: its look is Kage's bare hair and his own crimson scarf.
+5-Tier Roster:
+  COMMON     Crimson Scarf (bare Kage), Kuro Zukin
+  RARE       Sugegasa, Hachigane, Kasumi Veil
+  EPIC       Tetsu Kabuto, Oni Menpo, Hoshi Kabuto
+  TROPHY     Shika Kabuto, Sumi Eboshi, Hisame Zukin
+  LEGENDARY  Raijin Kabuto, Utsuro Kabuto, Shikko Zukin
 """
 import math
 from kit import *
@@ -19,23 +18,14 @@ from kit import *
 ALL = []
 
 
-def helmet(hid, look, tier, hair, summary):
-    h = Helmet(hid, look, tier, hair, summary)
+def helmet(hid, look, tier, hair, summary, eye='kept'):
+    h = Helmet(hid, look, tier, hair, summary, eye=eye)
     ALL.append(h)
     return h
 
 
-def U(x, y):
-    """Reference px to head frame (for pieces measured on Kage's reference: the neck wrap round the scarf)."""
-    return uv(x, y)
-
-
-def ref_pts(*xy):
-    return [uv(xy[i], xy[i + 1]) for i in range(0, len(xy), 2)]
-
-
-def tail(h, name, root, mid, end, w0, w1, tone, feel='Strip', order=83, w_mid=None, sd=3.0, hd=1.6, chains=1):
-    """A soft strip on chains (knot tails, ribbons, tassels, drapes): it trails, sags and takes the wind in the game."""
+def tail(h, name, root, mid, end, w0, w1, tone, feel='Strip', order=83, w_mid=None, sd=3.0, hd=1.6, chains=1, glow=1.0):
+    """A soft strip on spring chains (knot tails, ribbons, plumes, flames): trails and takes the wind in combat."""
     spine = curve(root[0], root[1], mid[0], mid[1], end[0], end[1])
     out = tine(spine, w0, w1, n=18, w_mid=w_mid)
     if chains == 1:
@@ -44,35 +34,11 @@ def tail(h, name, root, mid, end, w0, w1, tone, feel='Strip', order=83, w_mid=No
         ch = []
         for k in (-0.25, 0.25):
             off = [(p[0], p[1]) for p in sample(spine, 5)]
-            # two chains either side of the spine, a quarter of the root width out
             a, b = off[0], off[1]
-            d = norm((b[0] - a[0], b[1] - a[1])); n_ = (-d[1], d[0])
+            d = norm((b[0] - a[0], b[1] - a[1]))
+            n_ = (-d[1], d[0])
             ch.append([(p[0] + n_[0] * w0 * k, p[1] + n_[1] * w0 * k) for p in off])
-    return h.cloth(name, order, out, tone, ch, feel, sd, hd)
-
-
-def cowl(h, tone, top=0.0, folds=2, flap=1.0, back=944):
-    """The tier-coloured neck wrap, wound round the neck over the scarf wrap's front (its crimson knot and tails still show behind):
-    an upper band tucked under the jaw, a lower band, creases, and a loose end hanging over the chest on a chain (it swings)."""
-    t = top
-    pts = ref_pts(812, 258, 813, 240, 822, 226, 836, 215 - t, 864, 205 - t, 900, 199 - t, back - 8, 196 - t, back + 2, 203 - t,
-                  back + 6, 220, back, 238, 920, 247, 896, 249, 872, 255, 850, 262, 828, 266)
-    sharp = {0, 1, 2}
-    out = rounded(*[(p[0], p[1], 1) if i in sharp else p for i, p in enumerate(pts)])
-    fl = [band(curve(*U(815, 238), *U(868, 222), *U(back + 2, 214)), 0.07)]
-    if folds >= 2: fl.append(band(curve(*U(824, 254), *U(880, 238), *U(back, 232)), 0.06))
-    if folds >= 3: fl.append(band(curve(*U(846, 214 - t * 0.6), *U(890, 206 - t * 0.6), *U(back - 6, 204 - t * 0.6)), 0.045))
-    for (x0, y0, x1, y1) in ((838, 218 - t, 848, 236), (874, 206 - t, 878, 226), (906, 202 - t, 902, 222), (862, 240, 868, 258)):
-        fl.append(band(curve(*U(x0, y0), *U((x0 + x1) / 2 + 3, (y0 + y1) / 2), *U(x1, y1)), 0.035))
-    w = h.wrap('Wrap', out, tone, folds=fl)
-    if flap > 0:
-        L = 64 * flap
-        spine = [U(840, 248), U(846, 248 + L * 0.4), U(852, 248 + L * 0.75), U(858, 248 + L)]
-        fo = tine(spine, 30 / R, 0.0, n=14, w_mid=26 / R)
-        f = h.cloth('WrapEnd', 102, fo, tone, [spine], 'Strip', sd=4, hd=1.8)
-        f.bone = 'Chest'
-        f.add(band(curve(*U(838, 256), *U(846, 248 + L * 0.5), *U(854, 248 + L * 0.85)), 0.03), tone, 0)
-    return w
+    return h.cloth(name, order, out, tone, ch, feel, sd, hd, glow=glow)
 
 
 def star(cu, cv, ro, ri, n=5, rot=-90.0):
@@ -85,388 +51,459 @@ def star(cu, cv, ro, ri, n=5, rot=-90.0):
 
 
 def ring(cu, cv, ro, ri, a0=0.0, a1=360.0, n=40):
-    """An annulus (or an arc of one) as one simple polygon."""
+    """An annulus (or arc of one) as one simple polygon."""
     if abs(a1 - a0) >= 359.9:
-        # a full ring is cut open by a hair so it stays one simple outline
         a0, a1 = a0 + 0.6, a0 + 359.4
     outer = [(cu + math.cos(math.radians(a0 + (a1 - a0) * i / n)) * ro, cv + math.sin(math.radians(a0 + (a1 - a0) * i / n)) * ro) for i in range(n + 1)]
     inner = [(cu + math.cos(math.radians(a1 - (a1 - a0) * i / n)) * ri, cv + math.sin(math.radians(a1 - (a1 - a0) * i / n)) * ri) for i in range(n + 1)]
     return outer + inner
 
 
-def leaf(cu, cv, length, width, deg):
-    """A pointed leaf (laurel, flame tongue) from its stem at (cu, cv) along deg."""
-    a = math.radians(deg)
-    tip = (cu + math.cos(a) * length, cv + math.sin(a) * length)
-    mid = (cu + math.cos(a) * length * 0.5, cv + math.sin(a) * length * 0.5)
-    return tine([(cu, cv), mid, tip], width * 0.35, 0.0, n=10, w_mid=width)
-
-
-def flame(root, c1, tip, w, bend=0.0):
-    """A flame tongue: a tapering curved strip, widest a third of the way up."""
-    spine = curve(root[0], root[1], c1[0], c1[1], tip[0], tip[1])
-    return tine(spine, w * 0.8, 0.0, n=16, w_mid=w * 1.15)
+def eye_layers(h, shape, halo_k=1.42, outer_k=1.18, core_k=0.58, halo_alpha=0.45, halo_glow=2.2, outer_glow=3.0, eye_glow=3.8, core_glow=4.2, with_core=True):
+    """Builds concentric eye glow overlays matching the exact sharp pointed silhouette of the eye (no circular blobs)."""
+    cu = sum(p[0] for p in shape) / len(shape)
+    cv = sum(p[1] for p in shape) / len(shape)
+    c = (cu, cv)
+    h.flat('EyeHalo', 94, transform(shape, k=halo_k, about=c), 'glow', which=0, alpha=halo_alpha, glow=halo_glow)
+    h.flat('EyeOuter', 95, transform(shape, k=outer_k, about=c), 'glow', which=0 if with_core else 1, glow=outer_glow)
+    h.flat('Eye', 96, shape, 'glow', which=1 if with_core else 2, glow=eye_glow)
+    if with_core:
+        h.flat('EyeCore', 97, transform(shape, k=core_k, about=c), 'glow', which=2, glow=core_glow)
 
 
 def emblem(h, name, cu, cv, r, ring_tone, face_tone, mark=None, mark_tone=None, order=93, glow=1.0, halo=None):
-    """A round medallion at the temple (the owner's tier pattern): a cel ring, a flat face, a mark; a soft halo for the glowing tiers."""
     if halo:
         h.flat(name + 'Halo', order - 1, disc(cu, cv, r * 1.55), halo[0], which=halo[1], alpha=halo[2], glow=halo[3])
-    p = h.cel(name, order, disc(cu, cv, r), ring_tone, sd=2.4, hd=1.2, rim=False, glow=glow)
+    p = h.cel(name, order, disc(cu, cv, r), ring_tone, sd=2.4, hd=1.2, rim=False, glow=glow, seam=1.8)
     p.add(disc(cu, cv, r * 0.66), face_tone, 1)
-    if mark is not None: p.add(mark, mark_tone or ring_tone, 2)
+    if mark is not None:
+        p.add(mark, mark_tone or ring_tone, 2)
     return p
 
 
-def plain_cap_back(u0=-0.7):
-    return u0
-
-# ================================================================================================ COMMON
-# Grey cloth and plain steel: matte, low, close to the skull; one soft accent (knot tails, ties); no glow.
+# ================================================================================================ COMMON (#9CA3AF)
+# Crimson Scarf (shiro_maki) is bare Kage (spiky hair + glowing white eye + crimson scarf).
+# Kuro Zukin: matte charcoal shinobi hood, crisp cloth folds, tied back knot + tails, crimson scarf exposed.
 
 h = helmet('kuro_zukin', 'ronin_hood', 'common', 'hidden',
-           'Ash-grey shinobi hood wrapped to the jaw with an eye slit, a cord knotted at the back with two trailing tails, grey neck wrap.')
+           'Matte charcoal shinobi hood wrapped cleanly to the jaw with a sharp eye slit, layered cloth folds and fluttering back tails.')
+tail(h, 'TailA', (-1.06, -0.46), (-1.78, -0.78), (-2.55, -0.48), 0.24, 0.06, 'wrap', feel='Tails', w_mid=0.28)
+tail(h, 'TailB', (-1.02, -0.32), (-1.68, -0.16), (-2.32, 0.20), 0.22, 0.05, 'wrap', feel='Tails', w_mid=0.25)
 hood = h.cel('Hood', 86, rounded(
-    (1.08, -0.27, 1), (0.42, -0.25), (0.16, -0.22, 1), (0.10, 0.04), (0.18, 0.29, 1), (0.66, 0.31), (1.12, 0.30, 1),
-    (1.06, 0.62), (0.82, 0.92), (0.42, 1.06), (-0.22, 0.98), (-0.95, 0.66), (-1.18, -0.05), (-0.92, -0.86), (-0.12, -1.24),
-    (0.66, -1.1), (1.04, -0.64)), 'cloth', sd=7, hd=2.6)
-hood.add(band(curve(0.5, -1.02, -0.2, -0.95, -0.72, -0.42), 0.05), 'cloth', 2)
-hood.add(band(curve(-0.35, 0.42, -0.62, 0.2, -0.86, -0.32), 0.05), 'cloth', 0)
-hood.add(band(curve(0.25, 0.55, 0.6, 0.62, 0.98, 0.5), 0.05), 'cloth', 0)
-hood.add(band(curve(0.1, 0.78, 0.5, 0.86, 0.86, 0.78), 0.04), 'cloth', 2)
-h.cel('Cord', 88, band(curve(1.03, -0.56, 0.0, -0.84, -1.06, -0.44), 0.13), 'wrap', sd=1.5, hd=1.0, rim=False)
-h.cel('Knot', 89, rounded((-0.92, -0.62), (-1.24, -0.68), (-1.32, -0.36), (-1.04, -0.24)), 'wrap', sd=3, hd=1.4)
-tail(h, 'TailA', (-1.16, -0.5), (-1.9, -0.78), (-2.7, -0.52), 0.24, 0.06, 'wrap', w_mid=0.27)
-tail(h, 'TailB', (-1.12, -0.36), (-1.8, -0.24), (-2.45, 0.12), 0.22, 0.05, 'wrap', w_mid=0.25)
-cowl(h, 'wrap', top=3, folds=3)
+    (1.06, -0.21, 1), (0.12, -0.36, 1), (-0.18, -0.12), (0.04, 0.33, 1),
+    (1.06, 0.25, 1), (0.92, 0.68), (0.48, 1.01, 1), (-0.32, 0.88),
+    (-1.04, 0.53, 1), (-0.95, -0.11), (-1.07, -0.57, 1),
+    (-0.68, -1.00), (0.06, -1.10), (0.75, -0.93), (0.98, -0.55)), 'cloth')
+hood.add([(-0.97, 0.37), (-0.17, 0.61), (0.94, 0.36), (0.08, 0.75)], 'ink', 1)
+hood.add([(-0.86, -0.61), (-0.45, -0.91), (0.40, -0.96), (-0.39, -0.80)], 'cloth', 2)
+h.cel('Band', 88, rounded((-1.05, -0.52, 1), (-0.32, -0.70), (0.54, -0.60),
+    (1.04, -0.33, 1), (0.14, -0.48), (-1.04, -0.35, 1)), 'wrap', rim=False)
+h.cel('Knot', 89, [(-0.94, -0.51), (-1.16, -0.60), (-1.26, -0.42), (-1.08, -0.26)], 'wrap')
 
-# ------------------------------------------------------------------------------------------------ Sugegasa: the wide straw hat
-h = helmet('sugegasa', 'straw_kasa', 'common', 'hidden',
-           'A wide conical straw kasa over a grey head cloth, a chin cord, two cord tails at the nape, grey neck wrap.')
-cap = h.cel('HeadCloth', 85, rounded(
-    (1.02, -0.3, 1), (0.6, -0.36), (0.2, -0.3, 1), (0.14, 0.1), (0.26, 0.5, 1), (0.3, 0.78), (0.0, 0.96), (-0.5, 0.78),
-    (-0.92, 0.36), (-1.04, -0.3), (-0.6, -0.98), (0.3, -1.06), (0.9, -0.7)), 'cloth', sd=6, hd=2.2)
-cap.add(band(curve(-0.3, 0.6, -0.7, 0.3, -0.86, -0.2), 0.05), 'cloth', 0)
-cap.add(band(curve(0.18, 0.62, 0.0, 0.8, -0.4, 0.82), 0.04), 'cloth', 2)
-# the chin cord from under the brim, down the cheek behind the eye, under the jaw
-h.cel('ChinCord', 87, band(curve(0.0, -0.42, 0.06, 0.4, 0.46, 0.92), 0.07), 'straw', sd=1.0, hd=0.6, rim=False)
-kasa = h.cel('Kasa', 92, rounded(
-    (-2.3, -0.42, 1), (-1.2, -1.02), (-0.08, -1.78, 1), (1.1, -1.0), (2.28, -0.24, 1), (2.24, -0.1, 1), (1.0, -0.3), (0.0, -0.44),
-    (-1.1, -0.48), (-2.26, -0.3, 1)), 'straw', sd=8, hd=3.0)
-for k in (-1.7, -1.05, -0.45, 0.2, 0.85, 1.55):
-    t = (k + 2.3) / 4.58
-    bu = -2.28 + 4.54 * t
-    bv = -0.36 + 0.18 * t
-    kasa.add(band([(-0.08, -1.7), (bu * 0.55 - 0.04, -1.7 + (bv + 1.7) * 0.55), (bu, bv - 0.06)], 0.035), 'straw', 0 if k < -0.2 else 2)
-kasa.add(band(curve(-2.24, -0.34, 0.0, -0.5, 2.22, -0.18), 0.05), 'straw', 0)
-kasa.add(band(curve(-1.2, -0.92, -0.08, -1.28, 1.04, -0.92), 0.03), 'straw', 0)
-h.cel('Apex', 93, disc(-0.08, -1.74, 0.1), 'steel', sd=1.6, hd=0.8, rim=False)
-tail(h, 'CordA', (-0.82, 0.1), (-1.3, 0.3), (-1.9, 0.62), 0.09, 0.07, 'straw', feel='Tassel', w_mid=0.09)
-tail(h, 'CordB', (-0.8, 0.2), (-1.2, 0.48), (-1.6, 0.9), 0.08, 0.06, 'straw', feel='Tassel', w_mid=0.08)
-h.cel('CordKnot', 88, disc(-0.84, 0.14, 0.11), 'straw', sd=1.6, hd=0.8, rim=False)
-cowl(h, 'wrap', top=0, folds=2)
+# ================================================================================================ RARE (#38BDF8)
+# Woven straw Sugegasa, brushed steel Hachigane, armored steel Kasumi Veil.
 
-# ------------------------------------------------------------------------------------------------ Hachigane: the brow plate band
-h = helmet('hachigane', 'storm_band', 'common', 'kept',
-           'His spiky hair kept over a grey cloth band with a riveted steel brow plate, long knot tails, a grey half mask and wrap.')
+# ------------------------------------------------------------------------------------------------ Sugegasa
+h = helmet('sugegasa', 'straw_kasa', 'rare', 'hidden',
+           'Wide conical woven golden-straw kasa with crisp radial ribs, a broad shadow facet, chin cord and hanging brim tassels.')
+# Hanging straw tassel cords behind the head & down from the brim
+tail(h, 'CordBack', (-1.55, -0.34), (-1.58, 0.25), (-1.15, 0.82), 0.075, 0.055, 'straw', feel='Tassel', order=83, w_mid=0.07)
+tail(h, 'CordFront', (1.10, -0.24), (1.12, -0.12), (1.09, 0.02), 0.065, 0.03, 'straw', feel='Tassel', order=85, w_mid=0.06)
+# Thin chin cord hugging the dark silhouette cheek & jaw
+h.cel('ChinCord', 88, band(curve(-0.22, -0.44, -0.06, 0.42, 0.48, 0.94), 0.065), 'straw', sd=1.0, hd=0.6, rim=False, seam=1.2)
+h.cel('UnderBrim', 89, rounded(
+    (-2.32, -0.36, 1), (-1.15, -0.52), (0.0, -0.54), (1.15, -0.40), (2.28, -0.14, 1),
+    (2.14, -0.04, 1), (0.95, -0.24), (-0.08, -0.34), (-1.15, -0.36), (-2.24, -0.24, 1)), 'straw_dark', sd=4.0, hd=1.0, rim=False, seam=1.8)
+kasa = h.cel('Kasa', 91, rounded((-2.36, -0.36, 1), (-1.33, -0.74), (-0.58, -1.52, 1),
+    (-0.30, -1.69, 1), (0.73, -1.05), (2.34, -0.12, 1), (2.18, -0.07, 1),
+    (0.58, -0.35), (-0.75, -0.47), (-2.29, -0.26, 1)), 'straw')
+kasa.add([(-2.13, -0.39), (-0.32, -1.60), (-0.86, -0.51)], 'straw', 0)
+for x, y in ((-0.50, -0.53), (0.18, -0.49), (1.44, -0.29)):
+    kasa.add([(-0.32, -1.54), (x,y), (x+0.08,y+0.01)], 'straw_dark', 2)
+kasa.add([(-1.37, -0.72), (0.55, -0.58), (1.53, -0.39), (-1.47, -0.65)], 'straw_dark', 1)
+h.cel('Apex', 93, [(-0.83, -1.25), (-0.53, -1.58), (-0.30, -1.70),
+    (0.10, -1.43), (-0.35, -1.49)], 'straw_dark', rim=False)
+
+
+# ------------------------------------------------------------------------------------------------ Hachigane
+h = helmet('hachigane', 'storm_band', 'rare', 'kept',
+           'Kage keeps his spiky hair over a slate ninja headband with a riveted brushed-steel brow plate, incised lightning slash and trailing knot tails.')
+tail(h, 'TailA', (-1.12, -0.52), (-2.05, -0.88), (-2.95, -0.62), 0.25, 0.07, 'cloth', feel='Tails', order=83, w_mid=0.30)
+tail(h, 'TailB', (-1.08, -0.36), (-1.92, -0.24), (-2.60, 0.14), 0.22, 0.06, 'cloth', feel='Tails', order=83, w_mid=0.26)
 h.cel('Band', 86, rounded(
-    (1.06, -0.62, 1), (0.2, -0.78), (-0.66, -0.7), (-1.06, -0.62, 1), (-1.08, -0.3, 1), (-0.62, -0.36), (0.2, -0.42), (1.08, -0.3, 1)),
-    'cloth', sd=3, hd=1.4)
-plate = h.cel('Plate', 88, rounded((0.3, -0.8, 1), (0.7, -0.84), (1.12, -0.72, 1), (1.14, -0.26, 1), (0.7, -0.3), (0.3, -0.34, 1)),
-              'steel', sd=4, hd=2.0)
-for (pu, pv) in ((0.4, -0.72), (1.04, -0.64), (0.4, -0.42), (1.05, -0.36)):
-    plate.add(disc(pu, pv, 0.04), 'steel', 0)
-plate.add(band([(0.56, -0.66), (0.7, -0.5), (0.84, -0.66), (0.95, -0.44)], 0.04), 'steel', 0)
-h.cel('Knot', 89, rounded((-0.96, -0.68), (-1.3, -0.74), (-1.34, -0.3), (-1.0, -0.24)), 'cloth', sd=3, hd=1.4)
-tail(h, 'TailA', (-1.2, -0.56), (-2.1, -0.9), (-3.0, -0.7), 0.26, 0.08, 'cloth', feel='Tails', w_mid=0.3)
-tail(h, 'TailB', (-1.18, -0.4), (-2.0, -0.32), (-2.7, 0.05), 0.24, 0.07, 'cloth', feel='Tails', w_mid=0.27)
-# the half mask over the nose and mouth, up to just under the eye
-mask = h.cel('HalfMask', 90, rounded(
-    (0.2, 0.28, 1), (0.7, 0.3), (1.16, 0.32, 1), (1.08, 0.66), (0.82, 0.96), (0.4, 1.06), (0.0, 1.0), (-0.24, 0.8, 1), (0.06, 0.52)),
-    'wrap', sd=5, hd=2.0)
-mask.add(band(curve(0.24, 0.62, 0.66, 0.66, 1.04, 0.56), 0.04), 'wrap', 0)
-mask.add(band(curve(0.12, 0.84, 0.5, 0.92, 0.86, 0.82), 0.04), 'wrap', 0)
-cowl(h, 'wrap', top=2, folds=2)
+    (1.08, -0.62, 1), (0.20, -0.76), (-0.66, -0.68), (-1.04, -0.58, 1), (-1.06, -0.28, 1), (-0.60, -0.34), (0.20, -0.40), (1.08, -0.28, 1)),
+    'cloth', sd=3.5, hd=1.6, seam=2.0)
+h.cel('Knot', 87, rounded((-0.94, -0.64), (-1.26, -0.70), (-1.30, -0.28), (-0.98, -0.22)), 'cloth', sd=3.0, hd=1.4, seam=1.8)
+plate = h.cel('Plate', 89, [(-0.46, -0.58), (0.41, -0.78), (0.91, -0.70),
+    (1.16, -0.41), (1.06, -0.25), (0.42, -0.43), (-0.28, -0.37)], 'steel')
+plate.add([(-0.30, -0.55), (0.43, -0.71), (0.94, -0.63), (0.40, -0.62)], 'steel', 2)
+plate.add([(0.39, -0.54), (0.77, -0.63), (0.66, -0.54), (0.91, -0.52),
+    (0.55, -0.44), (0.64, -0.52)], 'ink', 1)
+plate.add(disc(-0.16, -0.49, 0.047), 'ink', 0)
 
-# ------------------------------------------------------------------------------------------------ Kasumi Veil: the mist veil
-h = helmet('kasumi_men', 'veil', 'common', 'hidden',
-           'A peaked grey cowl with a long drape down the back, a pale gauze veil from under the eye to a point on the chest, a thin steel circlet.')
-cowlp = h.cel('Cowl', 86, rounded(
-    (1.14, -0.22, 1), (0.94, -0.62), (0.6, -1.08), (0.0, -1.42, 1), (-0.6, -1.12), (-1.08, -0.56), (-1.18, 0.24), (-0.9, 0.9),
-    (-0.3, 1.12), (0.12, 0.86), (0.1, 0.3), (0.2, -0.2, 1)), 'cloth', sd=7, hd=2.6)
-cowlp.add(band(curve(0.0, -1.34, -0.46, -0.9, -0.84, -0.06), 0.05), 'cloth', 2)
-cowlp.add(band(curve(-0.3, 0.84, -0.76, 0.44, -0.96, -0.2), 0.05), 'cloth', 0)
-cowlp.add(band(curve(0.86, -0.62, 0.5, -0.42, 0.24, -0.2), 0.045), 'cloth', 0)
-cowlp.add(band(curve(0.1, -1.3, 0.6, -0.96, 1.08, -0.3), 0.04), 'cloth', 2)
-h.cel('Circlet', 88, band(curve(1.1, -0.44, 0.0, -0.76, -1.16, -0.34), 0.07), 'steel', sd=1.0, hd=0.6, rim=False)
-h.cel('Bead', 89, disc(0.02, -0.64, 0.1), 'steel', sd=1.6, hd=0.8, rim=False)
-# the long back drape of the cowl, on chains: it trails behind him and takes the wind
-dr = rounded((-0.4, -1.0, 1), (-1.2, -0.5), (-1.7, 0.4), (-2.3, 1.4, 1), (-1.8, 1.4), (-1.3, 1.7, 1), (-0.9, 1.1), (-0.5, 0.8, 1), (-0.9, 0.0))
-d = h.cloth('Drape', 83, dr, 'cloth', [[(-0.7, -0.7), (-1.2, -0.1), (-1.6, 0.6), (-2.0, 1.3)], [(-0.6, 0.0), (-0.9, 0.5), (-1.1, 1.0), (-1.3, 1.55)]], 'Cape', sd=6, hd=2.2)
-d.add(band(curve(-0.8, -0.3, -1.2, 0.4, -1.6, 1.2), 0.04), 'cloth', 0)
-# the veil: a soft gauze triangle from the cheek under the eye over the mouth and the scarf, on two chains (drawn over the scarf
-# wrap, at 103, below the eye so it never covers it)
-veil_out = rounded((0.16, 0.36, 1), (0.7, 0.35), (1.2, 0.38, 1), (1.22, 0.9), (1.06, 1.5, 1), (0.86, 1.34), (0.66, 1.8, 1), (0.46, 1.38), (0.24, 1.56, 1), (0.08, 1.1), (0.06, 0.6))
-v = h.cloth('Veil', 103, veil_out, 'gauze', [[(0.36, 0.4), (0.38, 0.8), (0.42, 1.2), (0.5, 1.6)], [(0.98, 0.4), (1.02, 0.8), (0.96, 1.2), (0.8, 1.6)]], 'Strip', sd=5, hd=2.0)
-v.add(band(curve(0.3, 0.6, 0.4, 1.0, 0.5, 1.5), 0.035), 'gauze', 0)
-v.add(band(curve(0.82, 0.5, 0.9, 1.0, 0.7, 1.6), 0.035), 'gauze', 0)
-v.add(band(curve(0.2, 0.42, 0.7, 0.4, 1.18, 0.44), 0.045), 'steel', 1)
-for k in range(3):
-    v.add(band(curve(0.1 + 0.05 * k, 0.7 + 0.24 * k, 0.6, 0.66 + 0.24 * k, 1.16 - 0.06 * k, 0.74 + 0.24 * k), 0.025), 'gauze', 2, 0.7)
+# ------------------------------------------------------------------------------------------------ Kasumi Veil
+h = helmet('kasumi_men', 'veil', 'rare', 'hidden',
+           'Armored gunmetal-steel hood with hinged riveted cheek plate, layered iron-cloth lower face veil and sweeping back cloth.')
+tail(h, 'BackDrape', (-0.96, 0.18), (-1.58, 0.48), (-2.18, 0.92), 0.34, 0.10, 'cloth', feel='Cape', order=83, w_mid=0.38)
+dome = h.cel('Dome', 86, rounded(
+    (1.12, -0.32, 1), (0.94, -0.84), (0.42, -1.24), (-0.18, -1.40, 1), (-0.76, -1.10), (-1.18, -0.44), (-1.46, 0.30, 1),
+    (-1.02, 0.60), (-0.52, 0.64), (-0.16, 0.34), (0.14, -0.22, 1)), 'steel', sd=7.5, hd=3.0, seam=2.2)
+dome.add(band(curve(-0.18, -1.34, -0.62, -0.86, -1.04, 0.08), 0.05), 'steel', 2)
+dome.add(band(curve(-0.14, -1.28, 0.42, -0.96, 0.98, -0.42), 0.045), 'steel', 2)
+dome.add(band(curve(-0.24, -0.52, 0.36, -0.54, 1.06, -0.40), 0.048), 'ink', 1)
+# Brow plate above the eye slit
+brow = h.cel('Brow', 88, rounded(
+    (0.14, -0.44, 1), (0.68, -0.46), (1.16, -0.34, 1), (1.12, -0.18, 1), (0.66, -0.24), (0.16, -0.24, 1)), 'steel', sd=3.0, hd=1.8, seam=1.8)
+brow.add(band([(0.24, -0.32), (0.72, -0.34), (1.08, -0.26)], 0.032), 'steel', 2)
+# Layered lower face armor-veil mask wrapping nose & jaw
+mask = h.cel('Mask', 90, rounded(
+    (0.16, 0.24, 1), (0.68, 0.26), (1.18, 0.28, 1), (1.14, 0.56), (0.86, 0.96), (0.48, 1.18, 1), (0.04, 0.96), (-0.30, 0.58, 1), (0.0, 0.36)),
+    'cloth', sd=5.5, hd=2.4, seam=2.0)
+mask.add(band(curve(0.16, 0.46, 0.66, 0.50, 1.10, 0.42), 0.045), 'ink', 1)
+mask.add(band(curve(0.06, 0.72, 0.56, 0.78, 0.96, 0.68), 0.045), 'ink', 1)
+mask.add(band(curve(0.24, 0.32, 0.68, 0.34, 1.08, 0.32), 0.035), 'steel', 2)
+# Hinged steel ear/cheek armor plate with rivets
+cheek = h.cel('CheekPlate', 92, rounded((-0.76, -0.36, 1), (-0.30, -0.66),
+    (0.18, -0.55, 1), (0.04, -0.08, 1), (-0.50, 0.50, 1), (-0.39, 0.05, 1),
+    (-0.80, 0.21, 1)), 'steel')
+cheek.add([(-0.66, -0.31), (0.09, -0.49), (-0.53, 0.29), (-0.17, -0.26)], 'steel', 0)
+cheek.add(disc(-0.29, -0.42, 0.06), 'ink', 0)
 
-# ================================================================================================ EPIC
-# A dark, sleek, angular shell; violet blade fins; one glowing violet ring; violet wrap.
+# ================================================================================================ EPIC (#A855F7)
+# Forged iron Tetsu Kabuto with twin horns & stern iron face mask, dark Oni Menpo with fierce iron horns & fanged snarl,
+# Hoshi Kabuto with faceted studded bowl & lush sweeping arcane-violet horsehair plume.
 
-def epic_ring(h, cu=0.02, cv=-0.02, r=0.22):
-    h.flat('RingHalo', 92, disc(cu, cv, r * 1.6), 'glow', which=0, alpha=0.28, glow=1.6)
-    h.cel('Ring', 93, ring(cu, cv, r, r * 0.64), 'shell', sd=1.6, hd=1.0, rim=False)
-    h.flat('RingGlow', 94, ring(cu, cv, r * 0.9, r * 0.74), 'glow', which=1, glow=2.6)
-    h.flat('RingCore', 94, disc(cu, cv, r * 0.3), 'glow', which=2, glow=2.2)
-
-# ------------------------------------------------------------------------------------------------ Tetsu Kabuto: the blade-finned helm
+# ------------------------------------------------------------------------------------------------ Tetsu Kabuto
 h = helmet('tetsu_kabuto', 'iron_kabuto', 'epic', 'hidden',
-           'A sleek black helm with a pointed brow, four violet blade fins swept back off the crown, a glowing violet ring at the ear, violet wrap.')
-for i, (r0, c, t, w) in enumerate((((-0.1, -1.0), (-1.2, -1.9), (-2.5, -1.9), 0.42), ((-0.4, -0.9), (-1.5, -1.4), (-2.7, -1.0), 0.38),
-                                    ((-0.6, -0.6), (-1.6, -0.7), (-2.6, -0.2), 0.34), ((-0.7, -0.3), (-1.4, -0.1), (-2.2, 0.4), 0.28))):
-    p = h.cel('Fin%d' % i, 85, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w, 0.0, n=18, w_mid=w * 0.9), 'blade', sd=5, hd=2.0)
-    p.add(band(curve(r0[0] - 0.1, r0[1], c[0], c[1] + 0.03, t[0] * 0.8 + r0[0] * 0.2, t[1] * 0.8 + r0[1] * 0.2), 0.035), 'blade', 2)
-shell = h.cel('Shell', 87, rounded(
-    (1.3, -0.26, 1), (0.92, -0.34), (0.56, -0.24, 1), (0.22, -0.18), (0.16, 0.3, 1), (0.42, 0.62), (1.0, 0.7, 1), (0.66, 0.96),
-    (0.1, 1.04, 1), (-0.6, 0.78), (-1.02, 0.24, 1), (-1.04, -0.5), (-0.5, -1.16), (0.3, -1.22), (0.9, -0.86)), 'shell', sd=7, hd=2.6)
-shell.add(band([(0.5, -1.12), (0.1, -0.7), (-0.6, -0.56), (-0.98, -0.6)], 0.04), 'plate', 2)
-shell.add(band([(0.2, 0.3), (-0.2, 0.36), (-0.6, 0.62)], 0.04), 'plate', 2)
-shell.add(band([(0.5, -0.32), (0.86, -0.42), (1.16, -0.38)], 0.035), 'plate', 2)
-h.flat('Seam', 89, band([(0.3, -0.98), (-0.08, -0.72), (-0.7, -0.62)], 0.035), 'glow', which=1, glow=2.0)
-h.flat('Jaw', 89, band([(0.22, 0.42), (0.5, 0.64), (0.9, 0.7)], 0.03), 'glow', which=1, glow=2.0)
-epic_ring(h, 0.0, -0.06, 0.22)
-cowl(h, 'wrap', top=4, folds=3)
-
-# ------------------------------------------------------------------------------------------------ Oni Menpo: the violet oni
-h = helmet('oni_menpo', 'oni_mask', 'epic', 'hidden',
-           'A black skull cap with two violet horns hooking forward, an angular oni mask on the jaw with glowing violet fangs, violet wrap.')
-cap = h.cel('Cap', 86, rounded(
-    (1.1, -0.36, 1), (0.7, -0.4), (0.3, -0.3, 1), (0.1, 0.1), (-0.3, 0.5, 1), (-0.8, 0.5), (-1.08, -0.1, 1), (-0.9, -0.84),
-    (-0.2, -1.22), (0.6, -1.08), (1.02, -0.7)), 'shell', sd=7, hd=2.6)
-cap.add(band([(0.98, -0.5), (0.3, -0.52), (-0.5, -0.36), (-1.0, -0.12)], 0.05), 'plate', 2)
-for i, (r0, c, t, w) in enumerate((((-0.1, -1.0), (-0.3, -2.0), (0.5, -2.4), 0.36), ((0.4, -0.96), (0.5, -1.8), (1.2, -2.0), 0.3))):
-    p = h.cel('Horn%d' % i, 88 + i, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w, 0.0, n=18), 'blade', sd=5, hd=2.0)
-    p.add(band(curve(r0[0] + 0.08, r0[1] - 0.1, c[0] + 0.1, c[1], t[0] * 0.85 + r0[0] * 0.15, t[1] * 0.85 + r0[1] * 0.15), 0.035), 'glow', 1)
-menpo = h.cel('Menpo', 90, rounded(
-    (0.2, 0.26, 1), (0.6, 0.3, 1), (0.8, 0.22, 1), (1.24, 0.34, 1), (1.1, 0.56, 1), (1.2, 0.72, 1), (0.98, 0.98, 1), (0.6, 1.12, 1),
-    (0.1, 1.06, 1), (-0.3, 0.7, 1), (0.0, 0.5, 1)), 'plate', sd=5, hd=2.2)
-menpo.add(band([(0.3, 0.4), (0.62, 0.46), (0.9, 0.36)], 0.035), 'plate', 2)
-h.flat('Mouth', 91, rounded((0.56, 0.72, 1), (1.12, 0.66, 1), (1.04, 0.8, 1), (0.6, 0.84, 1)), 'glow', which=1, glow=2.4)
-for (fu, fv, fd) in ((0.7, 0.86, -1), (0.92, 0.84, -1), (0.76, 0.62, 1), (0.98, 0.6, 1)):
-    h.flat('Fang', 92, [(fu - 0.05, fv), (fu + 0.05, fv), (fu, fv + 0.16 * fd)], 'shell', which=2)
-h.flat('CheekLine', 92, band([(0.06, 0.56), (0.36, 0.8), (0.5, 1.0)], 0.03), 'glow', which=1, glow=2.0)
-cowl(h, 'wrap', top=2, folds=2)
-
-# ------------------------------------------------------------------------------------------------ Hoshi Kabuto: the star sentinel
-h = helmet('hoshi_kabuto', 'sentinel_helm', 'epic', 'hidden',
-           'A faceted black bowl studded with glowing violet star rivets, a tall bladed crest along the crown, a long visor, a violet cord, violet wrap.')
-crest = h.cel('Crest', 85, rounded(
-    (0.62, -1.08, 1), (0.5, -1.9), (0.0, -2.36, 1), (-0.5, -2.3), (-1.1, -2.1, 1), (-0.9, -1.96, 1), (-1.6, -1.9, 1), (-1.3, -1.7, 1), (-2.2, -1.6, 1),
-    (-1.2, -1.3), (-0.8, -0.86, 1)), 'blade', sd=6, hd=2.2)
-crest.add(band(curve(0.4, -1.2, 0.2, -1.9, -0.4, -2.1), 0.04), 'blade', 2)
-crest.add(band(curve(-0.2, -1.2, -0.6, -1.6, -1.4, -1.7), 0.035), 'blade', 0)
-h.flat('CrestEdge', 86, band(curve(0.56, -1.1, 0.44, -1.9, -0.05, -2.28), 0.035), 'glow', which=1, glow=2.2)
+           'Riveted forged-iron samurai kabuto with swept twin iron blades, brass brow stud, tiered iron shikoro and stern iron menpo mask.')
+tail(h, 'Cord', (-1.05, -0.10), (-1.68, 0.16), (-2.18, 0.72), 0.14, 0.07, 'wrap', feel='Tassel', order=83, w_mid=0.15)
+# Tiered riveted iron shikoro neck guard
 shik = h.cel('Shikoro', 86, rounded(
-    (-0.2, -0.6, 1), (-0.9, -0.5, 1), (-1.5, 0.0, 1), (-1.7, 0.66, 1), (-0.9, 0.84, 1), (-0.4, 0.4, 1), (-0.1, 0.0, 1)), 'plate', sd=6, hd=2.2)
-for k in (0.25, 0.5, 0.75):
-    shik.add(band([(-0.2 - 0.15 * k, -0.5 + 0.9 * k), (-0.9 - 0.3 * k, -0.4 + 0.86 * k), (-1.5 - 0.2 * k, 0.0 + 0.66 * k)], 0.035), 'shell', 0)
+    (-0.18, -0.56, 1), (-0.98, -0.46, 1), (-1.48, 0.08, 1), (-1.64, 0.66, 1), (-0.90, 0.80, 1), (-0.34, 0.38, 1), (-0.10, -0.04, 1)),
+    'steel', sd=6.5, hd=2.6, seam=2.0)
+for k in (0.26, 0.52, 0.78):
+    shik.add(band([(-0.22 - 0.12 * k, -0.46 + 0.90 * k), (-0.96 - 0.18 * k, -0.36 + 0.86 * k), (-1.44 - 0.16 * k, 0.10 + 0.54 * k)], 0.048), 'iron_dark', 0)
+    shik.add(band([(-0.24 - 0.12 * k, -0.40 + 0.90 * k), (-0.98 - 0.18 * k, -0.30 + 0.86 * k), (-1.44 - 0.16 * k, 0.16 + 0.54 * k)], 0.032), 'steel', 2)
+# Far horn (behind bowl)
+h.cel('HornFar', 85, tine(curve(0.46, -0.96, -0.37, -1.44, -0.70, -2.06), 0.22, 0.0, n=14), 'steel', sd=3.0, hd=1.8, rim=False, seam=1.8)
+# Domed ribbed iron bowl
 bowl = h.cel('Bowl', 87, rounded(
-    (1.12, -0.36, 1), (0.9, -0.98, 1), (0.3, -1.3, 1), (-0.5, -1.2, 1), (-1.1, -0.7, 1), (-1.16, -0.32, 1), (0.1, -0.44, 1)), 'shell', sd=7, hd=2.6)
-bowl.add(band([(0.3, -1.26), (0.2, -0.9), (0.24, -0.46)], 0.03), 'plate', 2)
-bowl.add(band([(-0.5, -1.16), (-0.42, -0.8), (-0.4, -0.42)], 0.03), 'plate', 2)
-for (su, sv) in ((0.7, -0.92), (0.66, -0.62), (0.0, -1.06), (-0.04, -0.72), (-0.74, -0.88), (-0.8, -0.56)):
-    h.flat('Star', 89, star(su, sv, 0.08, 0.035), 'glow', which=1, glow=2.4)
-h.cel('Visor', 88, rounded((0.0, -0.5, 1), (0.9, -0.5, 1), (1.6, -0.36, 1), (1.5, -0.22, 1), (0.8, -0.3, 1), (0.0, -0.3, 1)), 'plate', sd=3, hd=1.4)
-h.flat('VisorLine', 89, band([(0.2, -0.36), (0.9, -0.38), (1.5, -0.3)], 0.03), 'glow', which=1, glow=2.0)
-h.cel('Fuki', 90, rounded((0.24, -0.46, 1), (0.36, -0.1, 1), (0.1, 0.28, 1), (-0.3, 0.2, 1), (-0.2, -0.4, 1)), 'shell', sd=4, hd=1.8)
-epic_ring(h, 0.02, -0.08, 0.17)
-tail(h, 'Cord', (-1.2, -0.4), (-1.8, -0.2), (-2.3, 0.5), 0.14, 0.1, 'wrap', feel='Tassel', w_mid=0.14)
-cowl(h, 'wrap', top=1, folds=2)
+    (1.12, -0.36, 1), (0.98, -0.94), (0.36, -1.32), (-0.42, -1.28), (-1.04, -0.84), (-1.16, -0.34, 1), (0.0, -0.50)),
+    'steel', sd=7.5, hd=3.2, seam=2.2)
+for x in (-0.58, -0.14, 0.32, 0.72):
+    bowl.add(band(curve(0.16, -1.24, x * 0.96, -0.92, x * 1.10, -0.48), 0.038), 'iron_dark', 0)
+    bowl.add(band(curve(0.19, -1.24, x * 0.96 + 0.04, -0.92, x * 1.10 + 0.04, -0.48), 0.025), 'steel', 2)
+# Brow rim & curved iron visor
+h.cel('BrowRim', 88, band(curve(-1.14, -0.42, 0.0, -0.58, 1.10, -0.40), 0.13), 'iron_dark', sd=2.0, hd=1.2, rim=False, seam=1.8)
+visor = h.cel('Visor', 89, rounded(
+    (0.06, -0.52, 1), (0.92, -0.50, 1), (1.46, -0.28, 1), (1.36, -0.14, 1), (0.82, -0.26, 1), (0.08, -0.30, 1)),
+    'steel', sd=3.5, hd=2.0, seam=2.0)
+visor.add(band([(0.22, -0.34), (0.86, -0.34), (1.34, -0.20)], 0.035), 'steel', 2)
+# Front crescent horn & gold/brass stud with subtle arcane purple glint
+h.cel('HornNear', 91, tine(curve(0.92, -0.78, 0.34, -1.08, 0.16, -1.90), 0.24, 0.0, n=14), 'steel', sd=3.2, hd=2.0, seam=1.8)
+h.cel('Stud', 92, disc(0.92, -0.68, 0.15), 'gold', sd=2.2, hd=1.2, rim=False, seam=1.6)
+h.flat('ArcaneGem', 93, disc(0.92, -0.68, 0.075), 'glow', which=2, glow=2.4)
+# Stern sculpted iron face mask (menpo)
+menpo = h.cel('Menpo', 90, rounded(
+    (0.18, 0.24, 1), (0.64, 0.28), (1.16, 0.30, 1), (1.10, 0.56, 1), (1.16, 0.70, 1), (0.96, 0.98, 1), (0.56, 1.10, 1), (0.10, 1.00, 1), (-0.22, 0.62, 1)),
+    'steel', sd=5.5, hd=2.4, seam=2.0)
+menpo.add(band([(0.28, 0.42), (0.68, 0.48), (1.02, 0.40)], 0.04), 'iron_dark', 0)
+menpo.add(band([(0.54, 0.72), (0.82, 0.68), (1.04, 0.74)], 0.048), 'iron_dark', 0)
+menpo.add(band([(0.34, 0.88), (0.68, 0.92), (0.92, 0.84)], 0.035), 'steel', 2)
+# Ear guard (fukigaeshi) with arcane glow ring
+fuki = h.cel('Fuki', 91, rounded((0.20, -0.48, 1), (0.34, -0.06, 1), (0.08, 0.30, 1), (-0.34, 0.24, 1), (-0.24, -0.42, 1)), 'iron_dark', sd=4.0, hd=1.8, seam=1.8)
+h.flat('EarGlow', 92, ring(-0.04, -0.08, 0.14, 0.08), 'glow', which=1, glow=2.4)
 
-# ================================================================================================ TROPHY
-# White enamel and gold, ceremonial: laurel, star medallions, long white ribbons; white wrap.
+# ------------------------------------------------------------------------------------------------ Oni Menpo
+h = helmet('oni_menpo', 'oni_mask', 'epic', 'hidden',
+           'Dark forged iron oni helm with twin curving demon horns, tiered iron neck plates, fierce arcane-lit oni eye and fanged face guard.',
+           eye='replaced')
+tail(h, 'Cord', (-1.02, -0.08), (-1.62, 0.18), (-2.12, 0.72), 0.14, 0.07, 'wrap', feel='Tassel', order=83, w_mid=0.15)
+shik = h.cel('Shikoro', 86, rounded(
+    (-0.20, -0.52, 1), (-0.98, -0.44, 1), (-1.42, 0.10, 1), (-1.52, 0.64, 1), (-0.84, 0.76, 1), (-0.30, 0.36, 1)),
+    'iron_dark', sd=6.0, hd=2.4, seam=2.0)
+for k in (0.28, 0.56, 0.82):
+    shik.add(band([(-0.24 - 0.10 * k, -0.42 + 0.84 * k), (-0.94 - 0.16 * k, -0.34 + 0.80 * k), (-1.38 - 0.12 * k, 0.12 + 0.48 * k)], 0.045), 'shell', 0)
+    shik.add(band([(-0.26 - 0.10 * k, -0.37 + 0.84 * k), (-0.96 - 0.16 * k, -0.29 + 0.80 * k), (-1.38 - 0.12 * k, 0.17 + 0.48 * k)], 0.028), 'steel', 1)
+# Twin fierce curved oni horns
+for i, (r0, c, t, w, o) in enumerate((
+        ((0.06, -1.04), (-0.80, -1.46), (-0.94, -2.26), 0.42, 85),
+        ((0.52, -0.94), (1.16, -1.26), (1.20, -2.04), 0.38, 91))):
+    p = h.cel('Horn%d' % i, o, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w, 0.0, n=16), 'iron_dark', sd=4.5, hd=2.2, seam=2.0)
+    p.add(band(curve(r0[0] + 0.05, r0[1] - 0.08, c[0] + 0.06, c[1], t[0] * 0.82 + r0[0] * 0.18, t[1] * 0.82 + r0[1] * 0.18), 0.036), 'plume', 2)
+# Sculpted dark iron skull cap & angry brow ridge
+cap = h.cel('Cap', 87, rounded(
+    (1.16, -0.30, 1), (0.86, -0.38), (0.48, -0.24, 1), (0.14, -0.20, 1), (0.04, 0.24), (-0.34, 0.48, 1), (-0.86, 0.46),
+    (-1.12, -0.14, 1), (-0.92, -0.84), (-0.18, -1.24), (0.64, -1.10), (1.08, -0.68)), 'iron_dark', sd=7.5, hd=3.0, seam=2.2)
+cap.add(band([(1.06, -0.44), (0.42, -0.50), (-0.42, -0.38), (-1.02, -0.16)], 0.055), 'steel', 1)
+cap.add(band([(0.24, -1.16), (0.14, -0.80), (0.16, -0.46)], 0.035), 'steel', 1)
+# Sculpted fanged iron Oni face mask
+menpo = h.cel('Menpo', 90, rounded(
+    (0.18, 0.22, 1), (0.64, 0.28, 1), (0.90, 0.18, 1), (1.26, 0.32, 1), (1.14, 0.56, 1), (1.24, 0.72, 1), (1.02, 1.00, 1),
+    (0.60, 1.14, 1), (0.08, 1.06, 1), (-0.30, 0.66, 1), (0.0, 0.44, 1)), 'iron_dark', sd=5.5, hd=2.6, seam=2.0)
+menpo.add(band([(0.24, 0.36), (0.64, 0.44), (0.98, 0.32)], 0.042), 'steel', 2)
+menpo.add(band([(0.12, 0.64), (0.42, 0.82), (0.56, 1.04)], 0.036), 'steel', 1)
+# Snarling mouth opening with arcane purple energy & sharp fangs
+h.flat('Mouth', 91, rounded((0.52, 0.68, 1), (1.14, 0.62, 1), (1.08, 0.84, 1), (0.56, 0.86, 1)), 'glow', which=1, glow=2.5)
+for (fu, fv, fd) in ((0.68, 0.86, -1), (1.00, 0.82, -1)):
+    h.flat('Fang', 92, [(fu - 0.048, fv), (fu + 0.048, fv), (fu, fv + 0.34 * fd)], 'steel', which=2)
+h.flat('BrowGlow', 92, band([(0.22, -0.30), (0.64, -0.34), (1.06, -0.30)], 0.032), 'glow', which=1, glow=2.2)
+# Custom fierce narrowed pointed arcane-violet Oni eye (exact matching pointed layers, no circles)
+oni_eye_pts = rounded((0.22, -0.05, 1), (0.50, -0.04), (0.76, 0.05, 1), (0.52, 0.12), (0.34, 0.08))
+eye_layers(h, oni_eye_pts, halo_k=1.38, outer_k=1.16, halo_alpha=0.42, halo_glow=2.0, outer_glow=2.8, eye_glow=3.5, with_core=False)
 
-def laurel(h, name, root, end, side=1, n=6, order=92, size=0.3):
-    """A gold laurel branch along a curve: a stem and paired leaves pointing to its end."""
-    spine = curve(root[0], root[1], (root[0] + end[0]) / 2 + 0.1 * side, (root[1] + end[1]) / 2 - 0.25, end[0], end[1])
-    p = h.cel(name, order, tine(spine, 0.06, 0.03, n=12, tip=False), 'gold', sd=1.0, hd=0.6, rim=False)
-    s = sample(spine, n)
-    for i in range(1, n + 1):
-        a, b = s[i - 1], s[i]
-        deg = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
-        k = size * (1.0 - 0.35 * i / n)
-        h.cel(name + 'L%d' % i, order, leaf(b[0], b[1], k, k * 0.42, deg - 38), 'gold', sd=1.6, hd=0.8, rim=False)
-        h.cel(name + 'R%d' % i, order, leaf(b[0], b[1], k, k * 0.42, deg + 38), 'gold', sd=1.6, hd=0.8, rim=False)
-    return p
+# ------------------------------------------------------------------------------------------------ Hoshi Kabuto
+h = helmet('hoshi_kabuto', 'sentinel_helm', 'epic', 'hidden',
+           'Studded obsidian-iron sentinel kabuto crowned with a sweeping arcane-violet horsehair plume, pointed visor and layered purple collar.')
+# Lush sweeping arcane-violet plume (4 cel layers + flowing soft plume tip on chains!)
+tail(h, 'PlumeTail', (-0.82, -1.18), (-1.75, -1.42), (-2.62, -0.96), 0.46, 0.04, 'plume', feel='Tails', order=83, w_mid=0.52)
+for i, (r0, c, t, w) in enumerate((
+        ((0.42, -1.08), (-0.68, -2.12), (-2.32, -2.18), 0.65),
+        ((0.06, -1.06), (-1.12, -1.60), (-2.54, -1.65), 0.48),
+        ((-0.44, -0.84), (-1.42, -1.12), (-2.42, -0.44), 0.44))):
+    pl = h.cel('Plume%d' % i, 85, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w, 0.0, n=18, w_mid=w * 0.96), 'plume', sd=5.5, hd=2.6, seam=2.0)
+    pl.add(band(curve(r0[0] - 0.06, r0[1] - 0.04, c[0], c[1] + 0.05, t[0] * 0.8 + r0[0] * 0.2, t[1] * 0.8 + r0[1] * 0.2), 0.042), 'glow', 2)
+# Layered purple collar folds tucked neatly on the head/neck behind & above the crimson scarf
+collar = h.cel('Collar', 86, rounded(
+    (-0.24, 0.46, 1), (0.36, 0.72), (0.56, 0.94, 1), (0.04, 1.06), (-0.78, 0.94), (-1.46, 0.56, 1), (-1.28, -0.24), (-0.64, -0.46)),
+    'wrap', sd=5.5, hd=2.4, seam=2.0)
+for k in (0.25, 0.55, 0.82):
+    collar.add(band(curve(-1.32 + 0.16 * k, 0.10 + 0.50 * k, -0.66 + 0.20 * k, 0.34 + 0.48 * k, 0.34 * k, 0.54 + 0.42 * k), 0.048), 'shell', 0)
+# Faceted studded obsidian-iron bowl
+bowl = h.cel('Bowl', 88, rounded(
+    (1.10, -0.34, 1), (0.94, -0.96), (0.30, -1.32), (-0.48, -1.24), (-1.10, -0.76), (-1.18, -0.30, 1), (0.08, -0.46)),
+    'shell', sd=7.5, hd=2.8, seam=2.2)
+for x in (-0.54, -0.06, 0.40):
+    bowl.add(band(curve(0.10, -1.26, x, -0.90, x * 1.08, -0.46), 0.036), 'steel', 1)
+# Raised glowing arcane star rivets (hoshi)
+for (su, sv) in ((0.68, -0.92), (0.64, -0.60), (0.02, -1.06), (-0.02, -0.72), (-0.70, -0.88), (-0.76, -0.54)):
+    h.flat('Hoshi', 90, star(su, sv, 0.085, 0.038), 'glow', which=2, glow=2.5)
+# Sweeping visor + glowing brow line
+h.cel('Visor', 89, rounded(
+    (0.02, -0.50, 1), (0.92, -0.50, 1), (1.58, -0.34, 1), (1.46, -0.20, 1), (0.82, -0.28, 1), (0.02, -0.30, 1)), 'iron_dark', sd=3.2, hd=1.8, seam=2.0)
+h.flat('VisorGlow', 90, band([(0.20, -0.36), (0.88, -0.36), (1.46, -0.26)], 0.036), 'glow', which=1, glow=2.4)
+# Ornate ear plate
+h.cel('Fuki', 91, rounded((0.24, -0.48, 1), (0.36, -0.08, 1), (0.10, 0.28, 1), (-0.30, 0.20, 1), (-0.22, -0.42, 1)), 'shell', sd=4.0, hd=1.8, seam=1.8)
+h.flat('EarGlow', 92, ring(0.02, -0.08, 0.14, 0.08), 'glow', which=1, glow=2.4)
 
-# ------------------------------------------------------------------------------------------------ Hisame Zukin: the ceremonial hood
-h = helmet('hisame_zukin', 'rain_hood', 'trophy', 'hidden',
-           'A white enamel hood edged in gold, a gold laurel over the brow set with a pale rain-drop gem, a gold star medallion, white ribbons, white wrap.')
-for i, (r0, c, t, w) in enumerate((((-0.9, -0.5), (-1.8, -0.9), (-2.9, -0.5), 0.3), ((-0.9, -0.3), (-1.7, -0.1), (-2.6, 0.5), 0.26))):
-    tail(h, 'Ribbon%d' % i, r0, c, t, w, w * 0.8, 'ribbon', feel='Tails', w_mid=w * 1.05)
-hood = h.cel('Hood', 86, rounded(
-    (1.14, -0.3, 1), (0.6, -0.3), (0.2, -0.2, 1), (0.14, 0.3), (0.3, 0.62, 1), (0.2, 0.96), (-0.4, 0.9), (-0.98, 0.4), (-1.1, -0.4),
-    (-0.6, -1.12), (0.3, -1.24), (0.96, -0.82)), 'shell', sd=7, hd=2.6)
-hood.add(band(curve(1.1, -0.36, 0.4, -0.34, 0.22, -0.16), 0.06), 'gold', 1)
-hood.add(band(curve(0.18, -0.1, 0.12, 0.3, 0.28, 0.6), 0.06), 'gold', 1)
-hood.add(band(curve(0.3, -1.18, -0.5, -0.9, -0.9, -0.2), 0.04), 'shell', 0)
-laurel(h, 'Laurel', (0.0, -0.5), (0.9, -1.1), side=1, n=6, size=0.3)
-h.cel('Gem', 93, rounded((0.9, -0.62), (1.02, -0.5, 1), (0.9, -0.3, 1), (0.78, -0.5, 1)), 'glass', sd=1.6, hd=0.8, rim=False, glow=1.4)
-emblem(h, 'Medal', -0.18, -0.02, 0.2, 'gold', 'ribbon', mark=star(-0.18, -0.02, 0.11, 0.05), mark_tone='gold')
-cowl(h, 'wrap', top=3, folds=3)
 
-# ------------------------------------------------------------------------------------------------ Sumi Eboshi: the ink court cap
+# ================================================================================================ TROPHY (#EAB308)
+# Ceremonial ivory-white enamel, warm imperial gold, branching stag antlers, filigree scrolls & white ribbons.
+
+# ------------------------------------------------------------------------------------------------ Shika Kabuto
+h = helmet('shika_kabuto', 'sage_antlers', 'trophy', 'hidden',
+           'Ceremonial white-enamel peaked kabuto with tall branching golden-bronze stag antlers, red-and-gold laced shikoro and ivory ribbons.')
+tail(h, 'Ribbon', (-1.04, -0.62), (-1.86, -0.82), (-2.72, -0.48), 0.24, 0.16, 'ribbon', feel='Tails', order=83, w_mid=0.26)
+# Red-and-gold laced tiered shikoro at the back
+shik = h.cel('Shikoro', 86, rounded(
+    (-0.18, -0.50, 1), (-0.98, -0.42, 1), (-1.54, 0.14, 1), (-1.78, 0.72, 1), (-0.86, 0.88, 1), (-0.28, 0.42, 1), (-0.08, -0.04, 1)),
+    'crimson', sd=6.0, hd=2.4, seam=2.0)
+for k in (0.24, 0.50, 0.76):
+    shik.add(band([(-0.22 - 0.10 * k, -0.40 + 0.90 * k), (-0.96 - 0.20 * k, -0.32 + 0.88 * k), (-1.52 - 0.22 * k, 0.16 + 0.54 * k)], 0.052), 'gold', 2)
+    shik.add(band([(-0.24 - 0.10 * k, -0.34 + 0.90 * k), (-0.98 - 0.20 * k, -0.26 + 0.88 * k), (-1.52 - 0.22 * k, 0.22 + 0.54 * k)], 0.036), 'ink', 0)
+# Crisp ivory cloth collar fold resting cleanly over the crimson scarf
+neck = h.cel('NeckFold', 87, rounded(
+    (0.06, 0.52, 1), (0.64, 0.78), (0.86, 0.98, 1), (0.28, 1.12), (-0.58, 0.96), (-1.18, 0.62, 1), (-0.72, 0.44)),
+    'wrap', sd=4.5, hd=2.0, seam=1.8)
+neck.add(band(curve(-0.98, 0.66, -0.24, 0.86, 0.68, 0.92), 0.042), 'enamel', 0)
+# Towering branching golden-bronze stag antlers (breaking high above the top frame!)
+for side, (ox, k, o) in enumerate(((-0.46, 0.88, 85), (0.14, 0.98, 92))):
+    def T(*q):
+        return [(ox + q[i] * k + (q[i+1] + 1.14) * (0.54 if side == 0 else 0.18), -1.14 + (q[i + 1] + 1.14) * k) for i in range(0, len(q), 2)]
+    h.cel('Antler%d' % side, o, tine(T(0.18, -1.14, 0.40, -1.92, 0.24, -2.64, 0.58, -3.16), 0.24 * k, 0.05, n=16), 'antler', sd=3.2, hd=1.8, rim=side == 1, seam=1.8)
+    for j, q in enumerate((
+            (0.36, -1.82, 0.86, -2.14, 1.14, -1.98),
+            (0.28, -2.38, -0.10, -2.76, -0.24, -3.06),
+            (0.42, -2.82, 0.84, -3.04, 0.96, -3.22))):
+        h.cel('Antler%dT%d' % (side, j), o, tine(T(*q), 0.14 * k, 0.0, n=12), 'antler', sd=2.2, hd=1.2, rim=side == 1, seam=1.5)
+# Tall peaked ivory-white enamel kabuto crown with dark lacquer trim stripes
+bowl = h.cel('Crown', 88, rounded(
+    (1.10, -0.34, 1), (1.02, -1.04), (0.53, -1.42), (-0.03, -1.64, 1), (-0.60, -1.44), (-0.88, -1.08), (-1.12, -0.34, 1), (0.04, -0.52)),
+    'enamel', sd=8.0, hd=3.0, seam=2.2)
+bowl.add(band(curve(-0.88, -1.02, 0.04, -1.24, 0.96, -0.96), 0.075), 'ink', 0)
+bowl.add([(-0.03, -1.60), (0.11, -1.38), (0.42, -0.61), (0.30, -0.60)], 'enamel', 0)
+
+# Gleaming imperial gold brow band, visor & crest stud
+h.cel('GoldBand', 89, band(curve(-1.12, -0.44, 0.04, -0.64, 1.10, -0.42), 0.16), 'gold', sd=2.4, hd=1.4, rim=False, seam=1.8)
+h.cel('Visor', 90, rounded((0.18, -0.54, 1), (1.02, -0.50, 1), (1.46, -0.32, 1), (1.34, -0.18, 1), (0.86, -0.28, 1), (0.18, -0.32, 1)), 'gold', sd=3.2, hd=1.8, seam=1.8)
+emblem(h, 'Crest', 0.02, -0.06, 0.19, 'gold', 'crimson', mark=star(0.02, -0.06, 0.10, 0.045, 4, -90), mark_tone='gold', order=93)
+
+# ------------------------------------------------------------------------------------------------ Sumi Eboshi
 h = helmet('sumi_eboshi', 'sumi_eboshi', 'trophy', 'hidden',
-           'A tall white lacquer court cap swept back, crossed by one black ink stroke, a gold brow band and star medallion, two long white ribbons.')
-tail(h, 'RibbonA', (-1.0, -1.2), (-1.8, -1.5), (-2.8, -1.2), 0.22, 0.2, 'ribbon', feel='Tails', w_mid=0.24)
-tail(h, 'RibbonB', (-1.0, -0.9), (-1.7, -0.8), (-2.5, -0.3), 0.2, 0.18, 'ribbon', feel='Tails', w_mid=0.22)
+           'Tall ceremonial ivory-lacquer court cap swept high, slashed with a bold sumi-ink brushstroke, imperial gold brow band and long white ribbons.')
+tail(h, 'RibbonA', (-0.98, -1.16), (-1.82, -1.52), (-2.80, -1.18), 0.24, 0.18, 'ribbon', feel='Tails', order=83, w_mid=0.26)
+tail(h, 'RibbonB', (-0.98, -0.84), (-1.72, -0.74), (-2.52, -0.24), 0.20, 0.15, 'ribbon', feel='Tails', order=83, w_mid=0.22)
 eb = h.cel('Cap', 87, rounded(
-    (1.06, -0.34, 1), (0.96, -1.2), (0.5, -2.0), (-0.2, -2.62), (-0.9, -2.86), (-1.18, -2.4), (-1.12, -1.5), (-1.08, -0.8), (-1.04, -0.24, 1),
-    (0.0, -0.5)), 'shell', sd=8, hd=3.0)
-eb.add(band(curve(0.1, -0.6, 0.1, -1.7, -0.7, -2.6), 0.04), 'shell', 0)
-eb.add(band(curve(-0.5, -0.5, -0.7, -1.5, -0.98, -2.5), 0.04), 'shell', 0)
-stroke = tine(curve(-1.02, -1.3, -0.1, -1.98, 0.86, -1.3), 0.14, 0.02, n=16, w_mid=0.24)
-eb.add(stroke, 'ink', 1)
-eb.add(band(curve(-0.84, -1.36, -0.1, -1.8, 0.56, -1.44), 0.03), 'ink', 2)
-h.cel('Band', 88, band(curve(-1.02, -0.36, 0.0, -0.62, 1.06, -0.4), 0.16), 'gold', sd=2.0, hd=1.0, rim=False)
-h.cel('Crease', 89, band(curve(-0.96, -2.7, -0.5, -2.4, -0.06, -2.5), 0.05), 'gold', sd=0.8, hd=0.4, rim=False)
-emblem(h, 'Medal', -0.1, -0.24, 0.19, 'gold', 'ink', mark=star(-0.1, -0.24, 0.1, 0.045), mark_tone='gold')
-h.cel('ChinCord', 86, band(curve(-0.1, -0.1, -0.04, 0.6, 0.44, 0.94), 0.06), 'gold', sd=1.0, hd=0.6, rim=False)
-cowl(h, 'wrap', top=1, folds=2)
+    (1.06, -0.34, 1), (0.96, -1.22), (0.48, -2.04), (-0.42, -2.59), (-1.65, -2.91, 1), (-1.34, -2.32, 1), (-1.55, -2.40, 1), (-1.12, -1.50), (-1.06, -0.78),
+    (-1.04, -0.24, 1), (0.0, -0.50)), 'enamel', sd=8.5, hd=3.2, seam=2.2)
+eb.add(band(curve(0.10, -0.60, 0.10, -1.72, -0.70, -2.64), 0.042), 'enamel', 0)
+eb.add(band(curve(-0.50, -0.52, -0.70, -1.52, -0.98, -2.52), 0.042), 'enamel', 0)
+stroke = tine(curve(-1.02, -1.32, -0.10, -2.00, 0.86, -1.30), 0.16, 0.02, n=16, w_mid=0.26)
+eb.add(stroke, 'ink', 0)
+eb.add(band(curve(-0.84, -1.38, -0.10, -1.82, 0.56, -1.44), 0.032), 'ink', 2)
+h.cel('GoldBand', 88, band(curve(-1.04, -0.36, 0.0, -0.64, 1.06, -0.40), 0.18), 'gold', sd=2.4, hd=1.4, rim=False, seam=1.8)
+h.cel('GoldPeak', 89, band(curve(-1.53, -2.83, -0.93, -2.64, -0.30, -2.42), 0.06), 'gold', sd=1.0, hd=0.6, rim=False, seam=1.4)
+emblem(h, 'Medal', -0.08, -0.22, 0.20, 'gold', 'ink', mark=star(-0.08, -0.22, 0.11, 0.048), mark_tone='gold', order=92)
+h.cel('ChinCord', 86, band(curve(-0.08, -0.08, -0.04, 0.58, 0.44, 0.94), 0.065), 'gold', sd=1.2, hd=0.6, rim=False, seam=1.4)
 
-# ================================================================================================ LEGENDARY
-# Black lacquer kabuto; a gold crest; a red and gold mon; red lacing; a red tassel; red wrap.
+# ------------------------------------------------------------------------------------------------ Hisame Zukin
+h = helmet('hisame_zukin', 'rain_hood', 'trophy', 'hidden',
+           'Ivory-white ceremonial cloth hood adorned with gold rain embroidery, draped white neck folds and long fluttering white ribbons.')
+tail(h, 'RibbonA', (-0.88, -0.54), (-1.82, -0.96), (-2.88, -0.58), 0.30, 0.20, 'ribbon', feel='Tails', order=83, w_mid=0.32)
+tail(h, 'RibbonB', (-0.86, -0.30), (-1.70, -0.12), (-2.56, 0.44), 0.26, 0.18, 'ribbon', feel='Tails', order=83, w_mid=0.28)
+# Sculpted white cloth hood framing the black silhouette face & glowing white eye
+hood = h.cel('Hood', 87, rounded(
+    (1.16, -0.38, 1), (0.86, -0.34), (0.44, -0.26, 1), (0.20, 0.06), (0.26, 0.50), (0.58, 0.78), (0.94, 0.94, 1),
+    (0.46, 1.18), (-0.34, 1.06), (-0.98, 0.56), (-1.16, -0.24), (-1.43, -0.93, 1), (-0.55, -0.99), (0.04, -1.32, 1), (0.88, -1.00), (1.14, -0.66)),
+    'enamel', sd=8.0, hd=3.0, seam=2.2)
+# Soft ivory cloth fold shadows
+hood.add(band(curve(0.18, -1.24, -0.54, -0.92, -0.96, -0.12), 0.052), 'enamel', 0)
+hood.add(band(curve(-0.88, 0.34, -0.28, 0.76, 0.62, 0.96), 0.055), 'enamel', 0)
+hood.add(band(curve(-0.62, 0.68, -0.06, 0.98, 0.58, 1.08), 0.048), 'enamel', 0)
+# Gold filigree trim along hood brow, face opening
+hood.add(band(curve(1.12, -0.44, 0.64, -0.38, 0.36, -0.24), 0.072), 'gold', 0)
+hood.add(band(curve(1.10, -0.44, 0.64, -0.38, 0.38, -0.25), 0.042), 'gold', 1)
+hood.add(band(curve(0.32, -0.20, 0.16, 0.16, 0.32, 0.58), 0.068), 'gold', 0)
+hood.add(band(curve(0.32, -0.18, 0.18, 0.16, 0.32, 0.56), 0.038), 'gold', 1)
+# Rain embroidery: three broken, tapering strokes follow the drape.
+for u, v in ((-0.67, -0.46), (-0.46, -0.37), (-0.26, -0.30)):
+    hood.add([(u,v), (u+0.08,v+0.14), (u-0.10,v+0.55)], 'gold', 1)
 
-def kabuto(h, lace='red', back=-1.7, bowl_top=-1.28):
-    shik = h.cel('Shikoro', 86, rounded(
-        (-0.1, -0.56, 1), (-0.9, -0.52, 1), (-1.4, -0.1, 1), (back, 0.66, 1), (-0.9, 0.86, 1), (-0.36, 0.42, 1), (-0.1, 0.0, 1)), 'shell', sd=6, hd=2.2)
-    for k in (0.25, 0.5, 0.75):
-        shik.add(band([(-0.16 - 0.12 * k, -0.48 + 0.92 * k), (-0.9 - 0.12 * k, -0.42 + 0.86 * k), (-1.4 + (back + 1.4) * k, -0.04 + 0.7 * k)], 0.05), 'gold', 0)
-        shik.add(band([(-0.18 - 0.12 * k, -0.43 + 0.92 * k), (-0.9 - 0.12 * k, -0.37 + 0.86 * k), (-1.4 + (back + 1.4) * k, 0.01 + 0.7 * k)], 0.045), lace, 1)
-    bowl = h.cel('Bowl', 87, rounded(
-        (1.1, -0.36, 1), (0.98, -1.0), (0.2, bowl_top - 0.12), (-0.7, -1.16), (-1.14, -0.36, 1), (0.0, -0.5)), 'shell', sd=7, hd=2.6)
-    for x in (-0.6, -0.2, 0.2, 0.6):
-        bowl.add(band(curve(0.15, bowl_top + 0.02, x * 1.05, -1.0, x * 1.2, -0.52), 0.03), 'shell', 2)
-    h.cel('Koshimaki', 88, band(curve(-1.14, -0.44, 0.0, -0.62, 1.1, -0.42), 0.13), 'gold', sd=1.6, hd=0.8, rim=False)
-    h.cel('Visor', 89, rounded((0.2, -0.52, 1), (1.0, -0.5, 1), (1.58, -0.34, 1), (1.48, -0.2, 1), (0.9, -0.3, 1), (0.2, -0.32, 1)), 'shell', sd=3, hd=1.4)
-    h.cel('VisorEdge', 90, band([(0.24, -0.34), (0.9, -0.33), (1.5, -0.24)], 0.05), 'gold', sd=0.8, hd=0.4, rim=False)
-    fuki = h.cel('Fuki', 90, rounded((0.26, -0.5, 1), (0.42, -0.14, 1), (0.2, 0.3, 1), (-0.36, 0.24, 1), (-0.26, -0.44, 1)), 'shell', sd=4, hd=1.8)
-    fuki.add(band([(0.4, -0.14), (0.2, 0.28), (-0.34, 0.22)], 0.05), 'gold', 1)
-    return bowl
+# Sculpted draped white cloth collar fold above crimson scarf
+cowl_fold = h.cel('NeckFold', 88, rounded(
+    (-0.84, 0.42, 1), (-0.12, 0.64), (0.76, 0.78, 1), (0.98, 1.02, 1), (0.36, 1.22), (-0.54, 1.12), (-1.12, 0.72, 1)),
+    'wrap', sd=5.0, hd=2.2, seam=2.0)
+cowl_fold.add(band(curve(-0.92, 0.66, -0.16, 0.90, 0.80, 0.98), 0.048), 'enamel', 0)
+# Gold brow finial ornament
+h.cel('BrowFinial', 91, rounded((0.76, -0.98), (1.16, -0.84, 1), (1.06, -0.54), (0.72, -0.68)), 'gold', sd=2.4, hd=1.4, rim=False, seam=1.8)
+h.flat('BrowGem', 92, disc(0.92, -0.76, 0.075), 'glow', which=2, glow=1.6)
 
 
-def mon(h, cu, cv, r, kind):
-    p = emblem(h, 'Mon', cu, cv, r, 'gold', 'red', order=92)
-    if kind == 'tomoe':
-        for k in range(3):
-            a = math.radians(k * 120 - 90)
-            c = (cu + math.cos(a) * r * 0.28, cv + math.sin(a) * r * 0.28)
-            p.add(tine(curve(c[0], c[1], cu + math.cos(a + 1.2) * r * 0.5, cv + math.sin(a + 1.2) * r * 0.5, cu + math.cos(a + 2.0) * r * 0.48, cv + math.sin(a + 2.0) * r * 0.48), r * 0.32, 0.0, n=8), 'gold', 2)
-    elif kind == 'crescent':
-        p.add(ring(cu, cv, r * 0.46, r * 0.3, 110, 400, 24), 'gold', 2)
-    else:
-        p.add(star(cu, cv, r * 0.5, r * 0.22, 4, -90), 'gold', 2)
-    return p
+# ================================================================================================ LEGENDARY (#F97316 / #EF4444)
+# Blazing crimson-gold demonic war helms with fiery horns, roaring flames, golden filigree & glowing amber-red eyes.
 
-# ------------------------------------------------------------------------------------------------ Shika Kabuto: the gold antlers
-h = helmet('shika_kabuto', 'sage_antlers', 'legendary', 'hidden',
-           'A black lacquer kabuto laced in red, a gold brow band and visor edge, branching gold antlers, a red and gold mon, a red tassel, red wrap.')
-tail(h, 'Tassel', (-1.0, -0.6), (-1.5, -0.2), (-1.7, 0.6), 0.12, 0.26, 'red', feel='Tassel', w_mid=0.14)
-kabuto(h)
-for side, (ox, k, o) in enumerate(((-0.42, 0.86, 85), (0.06, 1.0, 93))):
-    tone = 'gold'
-    def T(*q): return [(ox + q[i] * k, -1.0 + (q[i + 1] + 1.0) * k) for i in range(0, len(q), 2)]
-    a = h.cel('Antler%d' % side, o, tine(T(0.3, -1.0, 0.5, -1.7, 0.3, -2.4, 0.6, -3.0), 0.26 * k, 0.06, n=14), tone, sd=3, hd=1.4, rim=side == 1)
-    for j, q in enumerate(((0.48, -1.62, 0.9, -1.96, 1.18, -1.86), (0.34, -2.26, 0.0, -2.66, -0.12, -2.96), (0.48, -2.72, 0.86, -2.92, 0.98, -3.1))):
-        h.cel('Antler%dT%d' % (side, j), o, tine(T(*q), 0.15 * k, 0.0, n=10), tone, sd=2, hd=1.0, rim=side == 1)
-mon(h, 0.0, -0.06, 0.2, 'star')
-cowl(h, 'wrap', top=3, folds=3)
+def raijin_eye(h):
+    """Fierce pointed blazing crimson-gold demon eye for Raijin Kabuto (all overlays match exact pointed eye silhouette)."""
+    pts = rounded((0.18, -0.09, 1), (0.48, -0.05), (0.80, 0.05, 1), (0.58, 0.15), (0.34, 0.11))
+    eye_layers(h, pts, halo_k=1.42, outer_k=1.18, core_k=0.58, halo_alpha=0.48, halo_glow=2.4, outer_glow=3.2, eye_glow=3.8, core_glow=4.2)
 
-# ------------------------------------------------------------------------------------------------ Shikko Zukin: the crescent hood-kabuto
-h = helmet('shikko_zukin', 'executioner', 'legendary', 'hidden',
-           'A tall hood-shaped black lacquer kabuto whose peak curls back, a great gold crescent rising off the brow, red mon, red cords, red wrap.')
-tail(h, 'CordA', (-0.9, -0.2), (-1.4, 0.2), (-1.5, 0.9), 0.1, 0.22, 'red', feel='Tassel', w_mid=0.1)
-tail(h, 'CordB', (-1.0, -1.6), (-1.7, -1.6), (-2.3, -1.0), 0.16, 0.12, 'red', feel='Tails', w_mid=0.18)
-h.cel('Shikoro', 86, rounded((-0.1, -0.5, 1), (-1.0, -0.4, 1), (-1.5, 0.5, 1), (-0.8, 0.8, 1), (-0.3, 0.4, 1)), 'shell', sd=5, hd=2.0).add(
-    band([(-0.3, -0.1), (-1.0, 0.0), (-1.3, 0.4)], 0.05), 'red', 1)
-zk = h.cel('Zukin', 87, rounded(
-    (1.1, -0.36, 1), (1.0, -0.9), (0.6, -1.5), (0.0, -2.1), (-0.6, -2.3), (-1.1, -2.0, 1), (-0.7, -1.8), (-0.9, -1.3), (-1.14, -0.36, 1),
-    (0.0, -0.5)), 'shell', sd=8, hd=3.0)
-zk.add(band(curve(0.6, -0.5, 0.4, -1.4, -0.5, -2.1), 0.035), 'gold', 1)
-zk.add(band(curve(-0.4, -0.5, -0.7, -1.2, -0.9, -1.8), 0.03), 'shell', 2)
-h.cel('Koshimaki', 88, band(curve(-1.14, -0.44, 0.0, -0.62, 1.1, -0.42), 0.12), 'gold', sd=1.6, hd=0.8, rim=False)
-h.cel('Visor', 89, rounded((0.2, -0.52, 1), (1.0, -0.5, 1), (1.5, -0.36, 1), (1.4, -0.22, 1), (0.9, -0.3, 1), (0.2, -0.32, 1)), 'shell', sd=3, hd=1.4)
-h.cel('VisorEdge', 90, band([(0.24, -0.34), (0.9, -0.33), (1.42, -0.26)], 0.05), 'gold', sd=0.8, hd=0.4, rim=False)
-cres = ring(0.75, -1.25, 1.05, 0.78, 145, 350, 30)
-h.cel('Crescent', 93, cres, 'gold', sd=3, hd=1.6)
-h.cel('Tsunomoto', 94, disc(0.86, -0.62, 0.12), 'gold', sd=1.6, hd=0.8, rim=False)
-mon(h, -0.1, -0.02, 0.2, 'crescent')
-cowl(h, 'wrap', top=3, folds=3)
 
-# ================================================================================================ GOD MODE
-# A black demonic shell; glowing red horns and flames; a red glow round the eye; a burning emblem; red wrap.
+def utsuro_eye(h):
+    """Sharp pointed hollow blazing crimson-orange demon eye for Utsuro Kabuto (all overlays match exact pointed eye silhouette)."""
+    pts = rounded((0.20, -0.06, 1), (0.50, -0.07), (0.78, 0.04, 1), (0.56, 0.15), (0.32, 0.11))
+    eye_layers(h, pts, halo_k=1.42, outer_k=1.18, core_k=0.56, halo_alpha=0.48, halo_glow=2.4, outer_glow=3.2, eye_glow=3.8, core_glow=4.2)
 
-def god_eye(h, u0=0.24):
-    """The red glow round Kage's eye: his white eye stays on top (order 96), lit from behind."""
-    h.flat('EyeHalo', 94, ellipse(0.46, 0.04, 0.3, 0.2, -18), 'glow', which=0, alpha=0.45, glow=2.0)
-    h.flat('EyeGlow', 95, ellipse(0.45, 0.04, 0.2, 0.13, -18), 'glow', which=1, glow=2.8)
 
-def god_emblem(h, cu, cv, r):
-    h.flat('EmblemHalo', 91, disc(cu, cv, r * 1.6), 'glow', which=0, alpha=0.3, glow=1.8)
-    p = h.cel('Emblem', 92, disc(cu, cv, r), 'plate', sd=2.0, hd=1.0, rim=False)
-    p.add(disc(cu, cv, r * 0.72), 'shell', 1)
-    h.flat('EmblemRing', 93, ring(cu, cv, r * 0.88, r * 0.74), 'glow', which=1, glow=2.6)
-    h.flat('EmblemMark', 93, tine(curve(cu - r * 0.3, cv + r * 0.3, cu + r * 0.4, cv + r * 0.1, cu - r * 0.05, cv - r * 0.45), r * 0.24, 0.0, n=8), 'fire', which=2, glow=2.2)
+def shikko_eye(h):
+    """Razor-thin pointed executioner crimson-gold slash eye for Shikko Zukin (all overlays match exact pointed eye silhouette)."""
+    pts = rounded((0.14, -0.11, 1), (0.48, -0.03), (0.80, 0.06, 1), (0.56, 0.12), (0.34, 0.04))
+    eye_layers(h, pts, halo_k=1.40, outer_k=1.18, core_k=0.56, halo_alpha=0.45, halo_glow=2.2, outer_glow=3.0, eye_glow=3.8, core_glow=4.2)
 
-# ------------------------------------------------------------------------------------------------ Utsuro Kabuto: the hollow flame
-h = helmet('utsuro_kabuto', 'hollow_crest', 'god', 'hidden',
-           'A black demonic helm under a broken ring of red fire, flames streaming back off the crown, jagged neck shards, a red-lit eye, a burning emblem.')
-h.flat('HaloGlow', 83, ring(-0.5, -0.6, 1.9, 1.5, 150, 330, 36), 'glow', which=0, alpha=0.35, glow=1.8)
-h.cel('Halo', 84, ring(-0.5, -0.6, 1.8, 1.6, 156, 318, 36), 'fire', sd=1.4, hd=0.8, rim=False, glow=1.6)
-for i, (r0, c, t, w) in enumerate((((0.2, -1.1), (-0.6, -2.0), (-1.9, -2.3), 0.44), ((-0.3, -1.0), (-1.2, -1.6), (-2.4, -1.5), 0.4),
-                                    ((-0.7, -0.7), (-1.6, -0.9), (-2.6, -0.5), 0.36), ((0.6, -1.0), (0.4, -1.8), (-0.4, -2.5), 0.3))):
-    h.cel('Flame%d' % i, 85, flame(r0, c, t, w), 'fire', sd=4, hd=2.0, rim=False, glow=1.8)
-    h.flat('FlameCore%d' % i, 85, flame(r0, ((r0[0] + c[0]) / 2, (r0[1] + c[1]) / 2), ((c[0] + t[0]) / 2, (c[1] + t[1]) / 2), w * 0.45), 'glow', which=2, glow=2.2)
-h.cel('Shards', 86, rounded((-0.2, -0.5, 1), (-1.0, -0.4, 1), (-1.5, 0.2, 1), (-1.3, 0.3, 1), (-1.7, 0.7, 1), (-1.2, 0.66, 1), (-1.1, 0.9, 1),
-                            (-0.7, 0.62, 1), (-0.5, 0.86, 1), (-0.3, 0.4, 1)), 'plate', sd=5, hd=2.0)
-helm = h.cel('Helm', 87, rounded(
-    (1.18, -0.3, 1), (0.9, -0.36, 1), (0.6, -0.2, 1), (0.24, -0.26, 1), (0.14, 0.2, 1), (0.3, 0.5, 1), (0.9, 0.56, 1), (1.12, 0.74, 1), (0.7, 1.0, 1),
-    (0.1, 1.02, 1), (-0.6, 0.7, 1), (-1.06, 0.0, 1), (-0.96, -0.8, 1), (-0.3, -1.2, 1), (0.5, -1.14, 1), (1.0, -0.74, 1)), 'shell', sd=7, hd=2.6)
-helm.add(band([(0.4, -1.04), (0.0, -0.66), (-0.7, -0.5)], 0.04), 'plate', 2)
-helm.add(band([(0.3, 0.5), (0.0, 0.62), (-0.5, 0.6)], 0.04), 'plate', 2)
-h.flat('Crack', 88, band([(0.9, -0.66), (0.5, -0.6), (0.3, -0.8), (-0.2, -0.82)], 0.035), 'glow', which=1, glow=2.6)
-h.flat('Teeth', 88, [(0.36, 0.56), (0.5, 0.74), (0.6, 0.58), (0.72, 0.78), (0.84, 0.6), (0.98, 0.78), (1.06, 0.7), (0.9, 0.56)], 'glow', which=1, glow=2.2)
-god_eye(h)
-god_emblem(h, -0.12, -0.04, 0.19)
-cowl(h, 'wrap', top=3, folds=3)
 
-# ------------------------------------------------------------------------------------------------ Raijin Kabuto: the thunder god
-h = helmet('raijin_kabuto', 'raijin_kabuto', 'god', 'hidden',
-           'A black horned war helm: two great red glowing horns, a lightning crest between them, a fanged jaw guard, a red-lit eye, the thunder-drum emblem burning.')
-tail(h, 'FireA', (-1.0, -0.4), (-1.9, -0.6), (-2.8, -0.2), 0.3, 0.02, 'fire', feel='Tails', w_mid=0.32)
-tail(h, 'FireB', (-0.9, -0.1), (-1.7, 0.1), (-2.4, 0.6), 0.26, 0.02, 'fire', feel='Tails', w_mid=0.28)
-h.cel('Shikoro', 86, rounded((-0.1, -0.56, 1), (-0.9, -0.5, 1), (-1.4, -0.1, 1), (-1.3, 0.1, 1), (-1.7, 0.5, 1), (-1.2, 0.5, 1), (-1.2, 0.8, 1),
-                             (-0.7, 0.62, 1), (-0.4, 0.8, 1), (-0.2, 0.2, 1)), 'plate', sd=6, hd=2.2)
-for i, (r0, c, t, w, o) in enumerate((((-0.3, -1.0), (-0.9, -2.0), (-0.2, -3.2), 0.46, 85), ((0.5, -1.0), (0.4, -2.1), (1.4, -3.0), 0.42, 93))):
-    h.flat('HornGlow%d' % i, o - 1 if o > 85 else 83, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w * 1.7, 0.1, n=18), 'glow', which=0, alpha=0.32, glow=1.8)
-    p = h.cel('Horn%d' % i, o, tine(curve(r0[0], r0[1], c[0], c[1], t[0], t[1]), w, 0.0, n=18), 'fire', sd=5, hd=2.4, rim=False, glow=1.7)
-    h.flat('HornCore%d' % i, o, tine(curve(r0[0] + 0.05, r0[1] - 0.1, c[0] + 0.05, c[1], t[0] * 0.8 + r0[0] * 0.2, t[1] * 0.8 + r0[1] * 0.2), w * 0.3, 0.0, n=14), 'glow', which=2, glow=2.4)
+def forged_crest(h, name, order, outline, bevel, groove, metal):
+    plate = h.cel(name, order, outline, metal, sd=4, hd=2, seam=1.7)
+    plate.add(bevel, 'gold', 1)
+    plate.add(groove, 'fire', 2)
+
+# ------------------------------------------------------------------------------------------------ Raijin Kabuto
+h = helmet('raijin_kabuto', 'raijin_kabuto', 'legendary', 'hidden',
+           'Blazing demonic war kabuto with twin forked thunder horns, inset ember grooves, fanged demon jaw and blazing crimson-gold demon eye.',
+           eye='replaced')
+# Flowing flame ribbons behind
+tail(h, 'FlameTailA', (-0.98, -0.56), (-1.92, -0.96), (-2.88, -0.54), 0.34, 0.02, 'fire', feel='Tails', order=83, w_mid=0.38, glow=1.9)
+tail(h, 'FlameTailB', (-0.94, -0.18), (-1.78, 0.06), (-2.52, 0.58), 0.28, 0.02, 'fire', feel='Tails', order=83, w_mid=0.32, glow=1.7)
+# Two lightning-shaped horn blades share the bowl; open sky separates the tips.
+forged_crest(h, 'ThunderFar', 85,
+    [(-0.19, -0.92), (-0.86, -1.44), (-1.08, -1.98), (-0.91, -1.89),
+     (-1.24, -3.15), (-0.64, -2.22), (-0.48, -2.24), (-0.38, -1.65), (0.12, -1.09)],
+    [(-1.18, -3.00), (-0.72, -2.18), (-0.86, -2.12)],
+    [(-0.83, -1.84), (-0.44, -1.49), (-0.29, -1.14)], 'horn')
+
+# Tiered crimson & gold laced shikoro
+shik = h.cel('Shikoro', 86, rounded(
+    (-0.14, -0.54, 1), (-0.96, -0.46, 1), (-1.46, 0.04, 1), (-1.68, 0.64, 1), (-0.92, 0.84, 1), (-0.28, 0.44, 1), (-0.12, -0.02, 1)),
+    'crimson', sd=6.0, hd=2.4, seam=2.0)
+for k in (0.26, 0.54, 0.80):
+    shik.add(band([(-0.18 - 0.10 * k, -0.44 + 0.88 * k), (-0.94 - 0.18 * k, -0.36 + 0.84 * k), (-1.44 - 0.18 * k, 0.08 + 0.52 * k)], 0.055), 'gold', 2)
+forged_crest(h, 'ThunderNear', 92,
+    [(0.42, -0.74), (0.14, -1.44), (0.35, -2.06), (0.49, -1.91),
+     (0.89, -3.15), (0.86, -2.19), (1.02, -2.38), (0.84, -1.63), (0.71, -0.83)],
+    [(0.48, -1.36), (0.64, -1.79), (0.82, -2.74), (0.77, -1.73)],
+    [(0.50, -0.92), (0.42, -1.38), (0.58, -1.72)], 'horn')
+
+# Lacquered demonic bowl + gold ribs
 bowl = h.cel('Bowl', 87, rounded(
-    (1.16, -0.34, 1), (1.0, -0.9, 1), (0.5, -1.24, 1), (-0.2, -1.28, 1), (-0.8, -1.0, 1), (-1.14, -0.36, 1), (0.0, -0.5, 1)), 'shell', sd=7, hd=2.6)
-bowl.add(band([(0.5, -1.2), (0.3, -0.8), (0.32, -0.46)], 0.035), 'plate', 2)
-bowl.add(band([(-0.2, -1.24), (-0.3, -0.8), (-0.4, -0.44)], 0.035), 'plate', 2)
-bolt = [(0.2, -1.2), (0.0, -1.7), (0.24, -1.7), (0.0, -2.3), (0.5, -1.62), (0.26, -1.62), (0.44, -1.2)]
-h.flat('Bolt', 88, bolt, 'glow', which=1, glow=2.6)
-h.cel('Visor', 89, rounded((0.1, -0.52, 1), (1.0, -0.5, 1), (1.62, -0.26, 1), (1.44, -0.2, 1), (0.9, -0.3, 1), (0.1, -0.32, 1)), 'shell', sd=3, hd=1.4)
-h.flat('VisorLine', 90, band([(0.24, -0.36), (0.9, -0.36), (1.5, -0.24)], 0.035), 'glow', which=1, glow=2.2)
-jaw = h.cel('Jaw', 90, rounded((0.2, 0.32, 1), (1.16, 0.34, 1), (1.04, 0.5, 1), (1.2, 0.64, 1), (0.98, 0.98, 1), (0.5, 1.1, 1), (0.0, 0.96, 1), (-0.3, 0.6, 1)),
-             'shell', sd=5, hd=2.0)
-jaw.add(band([(0.3, 0.42), (0.7, 0.46), (1.04, 0.42)], 0.03), 'plate', 2)
-h.flat('Fangs', 91, [(0.5, 0.66), (0.6, 0.84), (0.7, 0.66), (0.8, 0.86), (0.9, 0.66), (1.0, 0.82), (1.08, 0.64), (0.98, 0.58), (0.56, 0.58)], 'glow', which=1, glow=2.4)
-god_eye(h)
-god_emblem(h, -0.1, -0.02, 0.2)
-cowl(h, 'wrap', top=3, folds=3)
+    (1.16, -0.34, 1), (1.00, -0.94), (0.46, -1.30), (-0.28, -1.32), (-0.90, -0.98), (-1.16, -0.36, 1), (0.02, -0.50)),
+    'shell', sd=7.5, hd=3.0, seam=2.2)
+bowl.add(band([(0.48, -1.24), (0.28, -0.82), (0.30, -0.46)], 0.042), 'gold', 1)
+bowl.add(band([(-0.24, -1.26), (-0.34, -0.82), (-0.42, -0.44)], 0.042), 'gold', 1)
+
+
+h.cel('Visor', 89, rounded((0.12, -0.52, 1), (1.02, -0.50, 1), (1.60, -0.26, 1), (1.42, -0.16, 1), (0.88, -0.26, 1), (0.12, -0.30, 1)), 'crimson', sd=3.2, hd=1.6, seam=2.0)
+h.cel('VisorTrim', 90, band([(0.18, -0.32), (0.88, -0.30), (1.48, -0.20)], 0.055), 'gold', sd=1.0, hd=0.6, rim=False, glow=1.4, seam=1.4)
+# Snarling gilded demon jaw guard (menpo) with glowing molten fangs
+jaw = h.cel('Jaw', 90, rounded(
+    (0.18, 0.28, 1), (0.72, 0.30, 1), (1.18, 0.34, 1), (1.08, 0.54, 1), (1.22, 0.68, 1), (1.00, 1.02, 1), (0.50, 1.14, 1), (0.0, 0.98, 1), (-0.30, 0.58, 1)),
+    'crimson', sd=5.5, hd=2.4, seam=2.0)
+jaw.add(band([(0.24, 0.38), (0.72, 0.44), (1.08, 0.38)], 0.048), 'gold', 2)
+h.flat('Fangs', 91, [(0.50, 0.64), (0.60, 0.86), (0.70, 0.64), (0.82, 0.88), (0.94, 0.64), (1.04, 0.82), (1.12, 0.64), (1.00, 0.58), (0.54, 0.58)], 'glow', which=2, glow=2.6)
+raijin_eye(h)
+
+# ------------------------------------------------------------------------------------------------ Utsuro Kabuto
+h = helmet('utsuro_kabuto', 'hollow_crest', 'legendary', 'hidden',
+           'Obsidian demonic war helm with a swept, split-vane crest, magma cracks and hollow fiery eye.',
+           eye='replaced')
+tail(h, 'FlameTail', (-1.04, -0.38), (-1.94, -0.62), (-2.84, -0.16), 0.32, 0.02, 'fire', feel='Tails', order=83, w_mid=0.36, glow=1.8)
+# Overlapping swept vanes form the hollow crest with a deep open notch.
+forged_crest(h, 'VaneFar', 84,
+    [(-0.89, -0.71), (-1.48, -1.03), (-2.50, -2.02), (-1.56, -1.64),
+     (-1.82, -2.08), (-0.57, -1.47), (0.09, -0.90)],
+    [(-2.32, -1.92), (-1.23, -1.44), (-0.77, -1.05)],
+    [(-1.59, -1.85), (-0.79, -1.42), (-0.60, -1.21)], 'crimson')
+forged_crest(h, 'VaneNear', 85,
+    [(0.64, -0.80), (-0.22, -1.12), (-1.03, -1.89), (-1.80, -2.80),
+     (-0.79, -2.19), (-0.94, -2.51), (-0.23, -2.03), (0.34, -1.65)],
+    [(-1.64, -2.64), (-0.42, -1.83), (0.45, -1.03), (-0.59, -1.83)],
+    [(-0.79, -2.34), (-0.25, -1.97), (0.05, -1.60)], 'shell')
+
+shards = h.cel('Shards', 86, rounded(
+    (-0.18, -0.52, 1), (-1.00, -0.40, 1), (-1.52, 0.18, 1), (-1.30, 0.30, 1), (-1.70, 0.70, 1), (-1.20, 0.66, 1), (-1.10, 0.90, 1),
+    (-0.70, 0.62, 1), (-0.50, 0.86, 1), (-0.28, 0.40, 1)), 'crimson', sd=5.5, hd=2.2, seam=2.0)
+shards.add(band([(-0.42, -0.24), (-1.04, -0.14), (-1.42, 0.24)], 0.045), 'gold', 1)
+helm = h.cel('Helm', 87, rounded(
+    (1.20, -0.30, 1), (0.90, -0.36, 1), (0.58, -0.20, 1), (0.24, -0.26, 1), (0.14, 0.20, 1), (0.30, 0.50, 1), (0.92, 0.56, 1),
+    (1.14, 0.74, 1), (0.72, 1.02, 1), (0.10, 1.04, 1), (-0.60, 0.70, 1), (-1.08, 0.0, 1), (-0.98, -0.82, 1), (-0.30, -1.24, 1),
+    (0.52, -1.18, 1), (1.02, -0.74, 1)), 'shell', sd=7.5, hd=2.8, seam=2.2)
+helm.add(band([(0.44, -1.06), (0.02, -0.68), (-0.70, -0.52)], 0.048), 'gold', 1)
+helm.add(band([(0.30, 0.50), (0.0, 0.62), (-0.52, 0.60)], 0.042), 'gold', 1)
+h.flat('Crack', 88, band([(0.92, -0.66), (0.52, -0.60), (0.30, -0.82), (-0.22, -0.84)], 0.04), 'glow', which=2, glow=2.8)
+h.flat('Teeth', 88, [(0.36, 0.56), (0.50, 0.76), (0.60, 0.58), (0.72, 0.80), (0.84, 0.60), (0.98, 0.78), (1.08, 0.70), (0.90, 0.56)], 'glow', which=2, glow=2.5)
+utsuro_eye(h)
+
+# ------------------------------------------------------------------------------------------------ Shikko Zukin
+h = helmet('shikko_zukin', 'executioner', 'legendary', 'hidden',
+           'Tall curved obsidian-crimson executioner kabuto with a single molten-gold blade crest, razor-thin fiery eye and crimson cords.',
+           eye='replaced')
+tail(h, 'CordA', (-0.92, -0.18), (-1.48, 0.20), (-1.66, 0.92), 0.12, 0.22, 'crimson', feel='Tassel', order=83, w_mid=0.14)
+tail(h, 'FlameCord', (-1.00, -1.58), (-1.82, -1.68), (-2.56, -1.02), 0.22, 0.05, 'fire', feel='Tails', order=83, w_mid=0.24, glow=1.8)
+
+
+shik = h.cel('Shikoro', 86, rounded((-0.12, -0.50, 1), (-1.00, -0.40, 1), (-1.54, 0.52, 1), (-0.80, 0.82, 1), (-0.28, 0.40, 1)), 'shell', sd=5.5, hd=2.2, seam=2.0)
+shik.add(band([(-0.30, -0.10), (-1.00, 0.0), (-1.34, 0.42)], 0.055), 'crimson', 2)
+shik.add(band([(-0.28, -0.26), (-0.98, -0.18), (-1.38, 0.22)], 0.042), 'gold', 1)
+zk = h.cel('Zukin', 87, rounded(
+    (1.12, -0.36, 1), (1.02, -0.94), (0.62, -1.58), (0.02, -2.20), (-0.64, -2.42, 1), (-1.14, -2.08, 1), (-0.72, -1.84),
+    (-0.92, -1.32), (-1.16, -0.36, 1), (0.0, -0.50)), 'shell', sd=8.5, hd=3.0, seam=2.2)
+zk.add(band(curve(0.62, -0.52, 0.42, -1.44, -0.52, -2.20), 0.048), 'gold', 2)
+zk.add(band(curve(-0.40, -0.50, -0.70, -1.24, -0.92, -1.86), 0.042), 'crimson', 2)
+h.cel('Koshimaki', 88, band(curve(-1.16, -0.44, 0.0, -0.64, 1.12, -0.42), 0.14), 'gold', sd=2.0, hd=1.0, rim=False, seam=1.8)
+h.cel('Visor', 89, rounded((0.20, -0.52, 1), (1.02, -0.50, 1), (1.54, -0.34, 1), (1.42, -0.18, 1), (0.90, -0.28, 1), (0.20, -0.30, 1)), 'shell', sd=3.2, hd=1.6, seam=2.0)
+h.cel('VisorEdge', 90, band([(0.24, -0.32), (0.90, -0.31), (1.44, -0.24)], 0.055), 'gold', sd=1.0, hd=0.6, rim=False, glow=1.4, seam=1.4)
+# A long single cutting edge locked into the executioner's conical crown.
+forged_crest(h, 'BladeCrest', 93,
+    [(0.70, -0.60), (0.42, -1.24), (-0.14, -1.97), (-1.46, -3.12),
+     (-0.67, -2.85), (0.03, -2.40), (0.61, -1.88), (0.92, -1.14), (0.96, -0.66)],
+    [(-1.32, -3.03), (-0.29, -2.48), (0.50, -1.86), (0.81, -1.16), (0.43, -1.80)],
+    [(-0.44, -2.50), (0.38, -1.84), (0.66, -1.30)], 'gold')
+
+shikko_eye(h)

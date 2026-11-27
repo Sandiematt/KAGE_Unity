@@ -26,7 +26,7 @@ public enum CombatEventType
     GuardBroken,      // Target's posture filled (SAN-86)
     PerfectDodged,    // Target perfect-dodged Source's MoveId (SAN-92)
     KnockedOut,       // Target was knocked out; Source landed the last hit
-    RageArt,          // Source started a rage art: MoveId = "crimsonMoon" | "thousandShadows"
+    RageArt,          // Source started a rage art: MoveId = "crimsonMoon" | "silentMoon" | "swallowStorm" | "hellSplitter" | "waterDragon" | "reaperRequiem" | "thousandShadows"
     BossPhaseChanged, // Target entered phase Index (Name = JS phase name) (SAN-102)
     WaveStarted,      // Index = wave number in the stretch, Name = encounter id (SAN-89)
     WaveCleared,      // same fields (SAN-89)

@@ -118,7 +118,8 @@ namespace Kage.Tests
         [TestCase("K", 0, -1, "tachi.lowKick")]
         [TestCase("S", 0, 0, "tachi.cut1")]
         [TestCase("S", 1, 0, "tachi.thrust")]
-        [TestCase("S", 0, -1, "tachi.sweep")]
+        [TestCase("S", 0, -1, "tachi.crownWheel")]
+        [TestCase("P", -1, 0, "tachi.tameCut")]
         [TestCase("S", -1, 0, "tachi.guard")]
         public void Each_ground_button_and_direction_starts_its_tachi_move(string button, int fwd, int dy, string expected)
         {
@@ -212,9 +213,9 @@ namespace Kage.Tests
         {
             var f = Duel();
             f.Run(20);
-            f.KageInput.Add(1, dy: -1, buttons: "S");
+            f.KageInput.Add(1, fwd: -1, buttons: "K");
             f.RunUntil(() => f.Ronin.state == FState.Down, 160);
-            Assert.AreEqual(FState.Down, f.Ronin.state, "the sweep puts the Ronin on the floor");
+            Assert.AreEqual(FState.Down, f.Ronin.state, "the heel drop puts the Ronin on the floor");
             f.RunUntil(() => f.Kage.state != FState.Attack, 100);
             Assert.AreEqual(FState.Down, f.Ronin.state, "still down");
             f.KageInput.Add(1, dy: -1, buttons: "P");
@@ -461,7 +462,7 @@ namespace Kage.Tests
 
             Press(gp.buttonNorth); src.Sample(); Release(gp.buttonNorth);
             Assert.IsTrue(src.Poll(f.Kage).s, "Y / triangle is the weapon button");
-            Assert.AreSame(set.sweep, set.Select(Btn.S, 0, -1, false, f.Kage), "with the stick down");
+            Assert.AreSame(set.crownWheel, set.Select(Btn.S, 0, -1, false, f.Kage), "with the stick down");
             Assert.AreSame(set.thrust, set.Select(Btn.S, 1, 0, false, f.Kage), "with the stick forward");
 
             Press(gp.buttonWest); src.Sample(); Release(gp.buttonWest);

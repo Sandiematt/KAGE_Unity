@@ -39,6 +39,23 @@ namespace Kage
         /// ability itself on its next frame, out of the hit-stun or through its armour (Fighter.Ascendant.cs). The AI never picks it in neutral. 0: not an escape.
         /// </summary>
         public int escapeAfterHits;
+        /// <summary>How often the AI picks it among the abilities it could use, against the others' weights (1 = as often as any). Raikon's later phases weight their own kit up.</summary>
+        public float weight = 1f;
+        /// <summary>
+        /// A boss string: the abilities the AI may go straight into when this one's move (or its <see cref="MoveDef.then"/> links) ends, in order of preference;
+        /// the first that is enabled, ready, in its distance band and whose <see cref="when"/> holds is taken, after <see cref="chainBeat"/> frames, on a
+        /// <see cref="chainChance"/> roll. Not after a knockdown, a KO or a blow that stunned the fighter. Null: none.
+        /// </summary>
+        public string[] chain;
+        /// <summary>The chance a <see cref="chain"/> is followed, asked of the fighter (by boss phase); null = 0.6.</summary>
+        public System.Func<Fighter, float> chainChance;
+        /// <summary>Frames the AI holds between the end of this ability and the chained one (the string's beat), asked of the fighter; null = 8.</summary>
+        public System.Func<Fighter, int> chainBeat;
+        /// <summary>
+        /// The <see cref="chain"/> is followed only when the move that just ended passes this (Raikon's Tsuba Press: only a whiffed shove, which ends as the
+        /// press itself; a connected one became the cleave). Null: whatever ended.
+        /// </summary>
+        public System.Func<MoveDef, bool> chainIf;
     }
 
     /// <summary>
@@ -52,5 +69,7 @@ namespace Kage
         public static void Register(AbilityDef d) => Defs[d.id] = d;
         public static bool Unregister(string id) => Defs.Remove(id);
         public static AbilityDef Get(string id) => id != null && Defs.TryGetValue(id, out var d) ? d : null;
+        /// <summary>Every registered ability (for the tests that sweep every boss and sub-boss move).</summary>
+        public static IEnumerable<AbilityDef> All => Defs.Values;
     }
 }

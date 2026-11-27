@@ -84,18 +84,21 @@ namespace Kage.Tests
         public void The_catalog_registers_replaces_and_falls_back_to_the_JS_data()
         {
             Assert.AreEqual(2, BossCatalog.Get(FootmanBoss.Id).Count, "the test boss is registered");
-            Assert.AreEqual(2, BossCatalog.Get("hisame").Count, "an unregistered JS boss uses the plain table");
             Assert.IsNull(BossCatalog.Get("order_footman"));
             Assert.IsNull(BossCatalog.Get(null));
             try
             {
+                BossCatalog.Unregister("hisame");
+                Assert.AreEqual(2, BossCatalog.Get("hisame").Count, "an unregistered JS boss uses the plain table");
+                Assert.AreEqual(1f, BossCatalog.Get("hisame").phases[1].speedMul);
+
                 var tuned = BossDef.FromJs("hisame");
                 tuned.phases[1].speedMul = 1.2f;
                 BossCatalog.Register(tuned);
                 Assert.AreEqual(1.2f, BossCatalog.Get("hisame").phases[1].speedMul);
             }
-            finally { BossCatalog.Unregister("hisame"); }
-            Assert.AreEqual(1f, BossCatalog.Get("hisame").phases[1].speedMul, "back to the table");
+            finally { BossCatalog.Register(Hisame.Boss()); }
+            Assert.AreEqual(SubBossTier.Hisame.phase2Speed, BossCatalog.Get("hisame").phases[1].speedMul, "restored (her rung's Phase 2 speed-up)");
             Assert.Throws<InvalidOperationException>(() => BossCatalog.Register(Boss(0.5f)), "an invalid boss is refused");
         }
 

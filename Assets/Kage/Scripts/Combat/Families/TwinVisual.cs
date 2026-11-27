@@ -79,6 +79,11 @@ namespace Kage
 
         static void Blade(FighterRig rig, string side, B bone, Vector2 origin, Vector2 dir, Look look)
         {
+            if (look == Look.Fans && rig.def.name == "HISAME")
+            {
+                SubBossBlades.RainBlade(new BladePen(rig, $"RainBlade_{side}", bone, origin, dir, TwinMoves.BladeLength / 100f));
+                return;
+            }
             if (look == Look.Tsubame) { Tsubame(new BladePen(rig, $"Twin_{side}Blade", bone, origin, dir, TwinMoves.BladeLength / 64f)); return; }
             Vector2 perp = new(-dir.y, dir.x);
             Vector2[] Poly(params float[] uv)

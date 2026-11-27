@@ -12,7 +12,7 @@ namespace Kage
     /// shape for shape, in JS draw order. A kabuto with a tall silver crescent maedate, a flared shikoro of laced lames and a cloth
     /// hood under it, over a stern hook-nosed face; a full dō laced in crimson with the Order mark; big sode; two kusazuri plates in
     /// front and two behind, hung from a dark belt; kote and suneate over a slate gi and hakama; straw sandals; and the thing that
-    /// names him, a tall lacquered tate of iron-banded planks with the Order mark, strapped to the near forearm in front of the body.
+    /// names him, a tapered, iron-banded tate with the Order mark. A crimson-lined field cloak trails from the shoulders.
     /// The spear is the spear family's (<c>sentinel_spear</c>), drawn by <see cref="SpearVisual"/>.
     /// <para>
     /// Every piece is built on the bone it moves with, from the JS drawing's own numbers: limbs run pivot to pivot (<see cref="U"/>
@@ -76,6 +76,7 @@ namespace Kage
             d.scarf = false;
             d.softCoat = false;
 
+            FieldCloak(d);
             Arm(d, far: true);
             Leg(d, far: true);
             Pelvis(d);
@@ -320,12 +321,16 @@ namespace Kage
                 AddCel(d, s + "_Cuff", lower, slot + 1, cuff, Lining, 1.6f * Ua, 0f, 2, false);
             }
 
-            // the glove round the grip: a rounded block along the forearm, the fingers implied by one line
+            // Curled fingers and the thumb crossing the grip, drawn in the wrist frame.
             {
                 Vector2 u = ex.normalized, nn = new(-u.y, u.x);
                 float r = 2.9f * Ua * 1.35f;
                 Vector2 c = ha + u * r * 0.25f;
-                var glove = Oval(c.x, c.y, r, r * 0.82f, Mathf.Atan2(u.y, u.x) * Mathf.Rad2Deg);
+                var palm = new Frame(c, u * r, nn * r);
+                var glove = new Outline(palm).MoveTo(-1, -.36f).QuadTo(-.91f, -.95f, -.39f, -.89f)
+                    .QuadTo(.02f, -1.19f, .47f, -.88f).QuadTo(.96f, -.91f, 1.08f, -.42f)
+                    .QuadTo(1.39f, -.11f, 1.12f, .29f).QuadTo(1.08f, .7f, .68f, .69f)
+                    .QuadTo(.22f, 1.04f, -.07f, .73f).QuadTo(-.89f, .88f, -1, .39f).Bind();
                 Vector2 f0 = ha + u * 1.6f * Ua * 1.35f + nn * 2.3f * Ua * 1.35f, f1 = ha + u * 1.6f * Ua * 1.35f - nn * 2.3f * Ua * 1.35f;
                 AddCel(d, far ? "HandF" : "HandN_Fist", hand, far ? Slot.FarArm + 2 : Slot.NearHand, glove, GloveT, 1.4f * Ua, 0.6f * Ua,
                     0, true, Stroke(glove, new[] { new Line(Xy(f0, f1), 0.7f * Js, GloveT.lit) }), swordLayer: sw);
@@ -589,23 +594,44 @@ namespace Kage
                 .Bind();
         }
 
+        static void FieldCloak(RigDef d)
+        {
+            var hem = new Outline().MoveTo(839, 232).QuadTo(887, 207, 932, 252)
+                .CubicTo(969, 302, 953, 431, 1000, 538).QuadTo(1022, 601, 1063, 635)
+                .QuadTo(1022, 633, 995, 609).QuadTo(999, 630, 1017, 652)
+                .CubicTo(956, 639, 921, 599, 905, 545).QuadTo(878, 425, 839, 232).Bind();
+            var lining = new Outline().MoveTo(919, 288).CubicTo(951, 382, 946, 524, 1047, 627)
+                .QuadTo(985, 602, 950, 526).QuadTo(921, 435, 919, 288).Bind();
+            AddCloth(d, "FieldCloak", B.Chest, 0, hem, Fab, 13, 3, SoftPresets.Cape,
+                new[] { new float[] { 851, 232, 881, 357, 908, 471, 918, 555, 985, 634 },
+                        new float[] { 915, 244, 938, 351, 954, 459, 977, 554, 1051, 631 } },
+                rim: false, detail: new[] { (lining, O.Lacing) }, seamPx: 0f);
+        }
+
         // ---------------------------------------------------------------------------------------------- the tate
         /// <summary>
-        /// The JS <c>orderShield</c>: a tall lacquered plank shield, bowed at top and bottom, two plank seams, two iron bands with
-        /// silver rivets, the Order mark and a crimson brush stroke; centred a little in front of the near hand and strapped to the near
-        /// forearm, so it follows the arm. The JS shield (26 x 80 JS px) at the scale that makes it about a sixth taller than the JS
-        /// proportion of the body, so it reads at fighting distance: 107 px wide, about 345 px tall.
+        /// A lacquered tate carried on the near forearm. The pointed foot and arched crown frame the Order mark.
+        /// Curved inlays run between the riveted iron bands.
         /// </summary>
         static void Tate(RigDef d)
         {
             Vector2 c = Pv(d, B.HandN) + new Vector2(-24f, 0f);
             const float k = 4.125f, w = 13f * k, h = 40f * k;
             var f = new Frame(c, Vector2.right, Vector2.up);
-            var shape = new Outline(f).MoveTo(-w, -h + 4f * k).QuadTo(0f, -h - 3f * k, w, -h + 4f * k).LineTo(w * 0.92f, h - 2f * k)
-                .QuadTo(0f, h + 3f * k, -w * 0.92f, h - 2f * k).Bind();
+            var shape = new Outline(f).MoveTo(-w * 1.08f, -h * .76f)
+                .QuadTo(-w * .95f, -h * .93f, -w * .22f, -h * 1.02f)
+                .QuadTo(w * .44f, -h * .99f, w * 1.05f, -h * .76f)
+                .CubicTo(w * 1.14f, -h * .31f, w * .98f, h * .54f, w * .72f, h * .74f)
+                .QuadTo(w * .38f, h * .93f, -w * .16f, h * 1.04f)
+                .QuadTo(-w * .79f, h * .86f, -w * .94f, h * .60f)
+                .QuadTo(-w * 1.16f, h * .12f, -w * 1.08f, -h * .76f).Bind();
             var detail = new List<(Vector2[] pts, Color col)>();
             var lines = new List<Line>();
-            foreach (float x in new[] { -w / 3f, w / 3f }) lines.Add(new Line(f.Xy(x, -h, x * 0.95f, h), 1f * k, Seam));
+            foreach (float side in new[] { -1f, 1f })
+            {
+                lines.Add(new Line(QuadXy(f, -w * .22f, -h, side * w * 1.38f, -h * .48f, -w * .16f, h, 32), 1.2f * k, O.SilverDark));
+                lines.Add(new Line(QuadXy(f, -w * .22f, -h, side * w * 1.18f, -h * .48f, -w * .16f, h, 32), .65f * k, Acc));
+            }
             detail.AddRange(Stroke(shape, lines));
             foreach (float y in new[] { -h * 0.62f, h * 0.62f })
             {

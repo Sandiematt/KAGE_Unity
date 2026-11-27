@@ -41,6 +41,20 @@ namespace Kage
         public string ThreatLabel;
         /// <summary>The act boss whose art card shows under the stage card ("raikon"), or null.</summary>
         public string BossArt;
+        /// <summary>A sub-boss stage's foe (its character id, "kuroe"), drawn live in the card's portrait; null for other stages.</summary>
+        public string PortraitFoe;
+        /// <summary>The sub-boss's name, title and taunt for the portrait's nameplate and the card's quote (empty when it has none).</summary>
+        public string FoeName, FoeTitle, Taunt;
+        /// <summary>The gear the stage gives on its first clear, in the order the rules grant it.</summary>
+        public StageSpoil[] Spoils = new StageSpoil[0];
+    }
+
+    /// <summary>One item a stage gives when it is cleared, and whether the player has it already.</summary>
+    public sealed class StageSpoil
+    {
+        public GearKind Kind;
+        public string Id, Name;
+        public bool Owned;
     }
 
     /// <summary>
@@ -154,6 +168,7 @@ namespace Kage
                 if (foe != null && !string.IsNullOrEmpty(foe.Taunt)) desc += " “" + foe.Taunt + "”";
             }
 
+            bool sub = sel.Kind == "subboss";
             double lit = ch.Diff + (foe != null && foe.Type == "boss" ? 1 : foe != null && foe.Type == "sub" ? 0.5 : 0);
             int dl = (int)Math.Max(0, Math.Min(4, lit));
             var reward = GameRules.StageRewardPreview(save, sel.Id);
@@ -172,7 +187,33 @@ namespace Kage
                 Threat = Math.Min(3, Math.Max(1, dl)),
                 ThreatLabel = ThreatLabels[dl],
                 BossArt = sel.Kind == "boss" && ch.Id == ActBoss[0] ? ActBoss[1] : null,
+                PortraitFoe = sub ? sel.Enemy : null,
+                FoeName = sub ? (sel.Foe ?? (foe != null ? foe.Name : sel.Name)) : "",
+                FoeTitle = sub ? (sel.FoeTitle ?? (foe != null ? foe.Title : null)) ?? "" : "",
+                Taunt = sub && foe != null && !string.IsNullOrEmpty(foe.Taunt) ? foe.Taunt : "",
+                Spoils = SpoilsOf(save, sel),
             };
+        }
+
+        /// <summary>What the stage's first clear grants (GameRules.GrantStageReward): withheld items and New Game+ drops outside it are left out.</summary>
+        static StageSpoil[] SpoilsOf(SaveData save, JsStage st)
+        {
+            var list = new System.Collections.Generic.List<StageSpoil>();
+            if (st.Reward == null) return list.ToArray();
+            void Add(GearKind kind, string[] ids)
+            {
+                if (ids == null) return;
+                foreach (var id in ids)
+                {
+                    var it = GameRules.Item(kind, id);
+                    if (it == null || GameRules.IsWithheld(kind, id) || (it.NgOnly && save.ng <= 0)) continue;
+                    list.Add(new StageSpoil { Kind = kind, Id = id, Name = it.Name, Owned = GameRules.Owns(save, kind, id) });
+                }
+            }
+            Add(GearKind.Weapons, st.Reward.Weapons);
+            Add(GearKind.Helmets, st.Reward.Helmets);
+            Add(GearKind.Armors, st.Reward.Armors);
+            return list.ToArray();
         }
     }
 }

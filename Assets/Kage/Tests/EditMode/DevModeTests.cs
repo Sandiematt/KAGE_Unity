@@ -78,7 +78,7 @@ namespace Kage.Tests
         public void Dev_mode_keeps_the_starter_loadout_equipped()
         {
             var s = DevSave();
-            Assert.AreEqual("kagetsu", s.equipped.weapon);
+            Assert.AreEqual("mumei", s.equipped.weapon);
             Assert.AreEqual("shiro_maki", s.equipped.helmet);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
         }
@@ -112,7 +112,7 @@ namespace Kage.Tests
             Assert.AreEqual(1, real.owned.weapons.Count);
             Assert.AreEqual(1, real.owned.helmets.Count);
             Assert.AreEqual(1, real.owned.armors.Count);
-            Assert.AreEqual("kagetsu", real.equipped.weapon);
+            Assert.AreEqual("mumei", real.equipped.weapon);
         }
 
         [Test]

@@ -35,11 +35,11 @@ namespace Kage.Tests
             Assert.AreEqual("Hisame", d.displayName);
             Assert.AreEqual("the Rain Courier", d.title);
             Assert.AreEqual(375f, d.jsHealth, "41-styles/hisame.js raises 10-data.js's 330 to 375");
-            Assert.AreEqual(375f * 1.2f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
+            Assert.AreEqual(375f * 1.35f * 100f / 232f, d.MaxHealth(), 1e-3, "through the shared health scale");
             Assert.AreEqual(0.04f, d.defense, 1e-6);
             Assert.AreEqual(0.95f, d.damageMul, 1e-6);
             Assert.AreEqual(1.16f, d.speedMul, 1e-6);
-            Assert.AreEqual(0.95f, d.bodyScale, 1e-6);
+            Assert.AreEqual(1.24f, d.bodyScale, 1e-6);
             Assert.AreEqual((CharacterFlags)0, d.flags & (CharacterFlags.Armour | CharacterFlags.NoGrab), "no heavy armour, and a throw takes her");
             Assert.IsFalse(d.IsPlayer);
         }
@@ -57,11 +57,12 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void She_is_a_boss_with_the_JS_abilities_in_slot_order()
+        public void She_is_a_boss_with_the_JS_abilities_in_slot_order_then_her_tessenjutsu_kit()
         {
             var d = Def();
             Assert.AreEqual(Id, d.bossId);
-            CollectionAssert.AreEqual(new[] { "lightningCut", "hisameKocho", "smokeBomb" }, d.abilities, "the JS phases' abilities in first-use order");
+            CollectionAssert.AreEqual(new[] { "lightningCut", "hisameKocho", "smokeBomb" }, d.abilities.Take(3).ToArray(), "the JS phases' abilities in first-use order");
+            CollectionAssert.AreEqual(HisameAbilities.ExtraIds, d.abilities.Skip(3).ToArray());
         }
 
         // ---------------------------------------------------------------- phases
@@ -76,11 +77,11 @@ namespace Kage.Tests
             Assert.AreEqual(2, b.Count);
             Assert.AreEqual("Rainfall", b.phases[0].name);
             Assert.AreEqual(1f, b.phases[0].at);
-            CollectionAssert.AreEquivalent(new[] { "lightningCut", "hisameKocho" }, b.phases[0].abilities);
+            CollectionAssert.AreEquivalent(new[] { "lightningCut", "hisameKocho", HisameAbilities.KasumiMaiId, HisameAbilities.RainGustId }, b.phases[0].abilities);
             Assert.IsFalse(b.phases[0].berserk);
             Assert.AreEqual("Downpour", b.phases[1].name);
             Assert.AreEqual(0.5f, b.phases[1].at, "the JS threshold");
-            CollectionAssert.AreEquivalent(new[] { "lightningCut", "smokeBomb", "hisameKocho" }, b.phases[1].abilities, "phase two adds Smoke Bomb");
+            CollectionAssert.AreEquivalent(new[] { "lightningCut", "smokeBomb", "hisameKocho", HisameAbilities.KasumiMaiId, HisameAbilities.RainGustId, HisameAbilities.InazumaStepId }, b.phases[1].abilities, "phase two adds Smoke Bomb and Inazuma Mist Step");
             Assert.IsTrue(b.phases[1].berserk, "and the JS berserk flag");
             Assert.IsNull(b.phases[1].aiProfile, "she stays on the agile profile");
             Assert.IsFalse(b.phases[0].aggressive || b.phases[1].aggressive);
@@ -182,8 +183,8 @@ namespace Kage.Tests
             Assert.IsNotNull(m);
             Assert.AreEqual(8, m.vaultFrom, "the fans spread: 0.14 x 0.98 s");
             Assert.AreEqual(28, m.vaultTo, "...then the JS 0.34 s arc");
-            Assert.AreEqual(110f * 0.95f * Px, m.vaultPast, 1e-4, "she lands 110 px x her scale past him");
-            Assert.AreEqual(150f * 0.95f * Px, m.vaultHeight, 1e-4, "an arc 150 px x her scale high");
+            Assert.AreEqual(110f * Hisame.BodyScale * Px, m.vaultPast, 1e-4, "she lands 110 px x her scale past him");
+            Assert.AreEqual(150f * Hisame.BodyScale * Px, m.vaultHeight, 1e-4, "an arc 150 px x her scale high");
             Assert.IsTrue(Enumerable.Range(0, 29).All(m.Invulnerable), "invulnerable from the start to the landing (JS invuln W + E)");
             Assert.IsFalse(m.Invulnerable(29), "not through the cut");
             var glint = m.cues.Single(c => c.cue == HisameAbilities.KochoGlintCue);
@@ -224,7 +225,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Her_part_set_draws_her_hood_visor_mino_and_tube_on_Kages_skeleton_in_her_own_palette()
+        public void Her_part_set_draws_her_hood_ribbons_and_courier_tube_on_Kages_skeleton_in_her_own_palette()
         {
             var d = Def();
             Assert.AreEqual(Id, d.partSet);
@@ -238,7 +239,7 @@ namespace Kage.Tests
                 bool drawn = p.pts != null ? p.pts.Length >= 3 : p.polys != null && p.polys.Count > 0;
                 Assert.IsTrue(drawn, "part " + p.name + " has no shape");
             }
-            foreach (var name in new[] { "Hood", "Visor", "FaceCloth", "Capelet", "Mino_Upper", "Mino_Lower", "Tube" })
+            foreach (var name in new[] { "Hood", "RainScarf", "FaceCloth", "Capelet", "CourierRibbon", "Tube" })
                 Assert.IsTrue(rig.parts.Any(p => p.name == name), "her " + name);
             foreach (var other in new[] { Kuroe.Id, Garan.Id, "order_footman" })
             {

@@ -136,7 +136,8 @@ namespace Kage
         {
             Phase = HazardPhase.Done;
             Ctx.Hazards.Remove(this);
-            Destroy(gameObject);
+            if (Application.isPlaying) Destroy(gameObject);
+            else DestroyImmediate(gameObject);      // an EditMode test ticking it outside play mode (as Projectile)
         }
 
         // ---- placeholder cues ----

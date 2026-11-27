@@ -36,7 +36,7 @@ namespace Kage
                 float e = KMath.Apply(Ease.InOutQuad, u);
                 Vector2 p = Pos + new Vector2(facing * Mathf.Lerp(m.carryFrom, m.carryTo, e), Mathf.Sin(e * Mathf.PI) * m.carryHeight + 0.02f);
                 _victim.rb.MovePosition(p);
-                _victim._thrownSpin = e * 200f;
+                _victim._thrownSpin = e * 90f;         // tipped onto its back over the carry, never turned upside down (no flip)
             }
             if (Passed(m.releaseFrame)) ReleaseVictim(true);
         }
@@ -95,7 +95,7 @@ namespace Kage
             v.rig.Flash(Color.white, 0.9f);
             v.JoltSoftParts(info, 1.3f);
             if (v.health <= 0f) v.KnockOut(info);
-            else { v.Launch(info); v._tumbleVel = Mathf.Abs(v._tumbleVel) * 0.5f; }
+            else { v.Launch(info); v._tumbleVel = Mathf.Abs(v._tumbleVel) * 0.5f; v._tumbleTo = Mathf.Abs(v._tumbleTo); }    // thrown: onto its back
             v._bounces = -1;
             comboCount++;
             GameFeel.Hitstop(8);

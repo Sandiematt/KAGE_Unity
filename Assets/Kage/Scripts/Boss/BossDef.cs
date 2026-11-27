@@ -26,6 +26,8 @@ namespace Kage
         public float moveRateMul = 1f;
         /// <summary>Multiplies <see cref="CharacterDef.damageMul"/>.</summary>
         public float damageMul = 1f;
+        /// <summary>Multiplies every ability cooldown while the phase lasts (with <see cref="berserk"/>'s on top): a sub-boss's rank (<see cref="SubBossTier"/>).</summary>
+        public float cooldownMul = 1f;
         /// <summary>Flags added to and removed from <see cref="CharacterDef.flags"/> while the phase lasts (armour, no-grab).</summary>
         public CharacterFlags addFlags, removeFlags;
         /// <summary>JS flag: the AI is bolder (<see cref="AIInputSource.aggressive"/>, SAN-95).</summary>
@@ -111,8 +113,10 @@ namespace Kage
             _defs = new Dictionary<string, BossDef>();
             // ---- one line per tuned boss ----
             Register(FootmanBoss.Boss());          // the test boss (SAN-102)
-            Register(Garan.Boss());                // Garan: the JS phases with his clinch in both (SAN-104)
-            Register(Shiden.Boss());               // Shiden: the JS phases with his charging thrust in both (SAN-106)
+            Register(Kuroe.Boss());                // Kuroe: Bōjutsu calligraphy ink kit + Raikon's Thunder Redaction
+            Register(Garan.Boss());                // Garan: Karate · Sumō kit + broken vanguard lightning (SAN-104)
+            Register(Hisame.Boss());               // Hisame: Tessenjutsu rain-mist kit + Raikon's Inazuma Step (SAN-105)
+            Register(Shiden.Boss());               // Shiden: Hōzōin-ryū sōjutsu kit + Vanguard Raijin Arc (SAN-106)
             Register(Raikon.Boss());               // Raikon: the Lightning Ascendant's three phases and the Final Overload
         }
 

@@ -167,6 +167,41 @@ namespace Kage
             return g;
         }
 
+        /// <summary>A focus ring that follows a polygon (the brush-stroke plates), <paramref name="gap"/> px outside it, <paramref name="t"/> px thick; clear until coloured.</summary>
+        public static PolyRing Ring(Transform parent, float w, float h, Vector2[] pts, float gap = 2f, float t = 2f)
+        {
+            var rt = Node(parent, "Ring", 0, 0, w, h);
+            var g = rt.gameObject.AddComponent<PolyRing>();
+            g.raycastTarget = false;
+            g.Set(pts, gap, t);
+            g.color = Color.clear;
+            return g;
+        }
+
+        /// <summary>A mitered closed polygon outline with no corner gaps or double-alpha overlap.</summary>
+        public static PolyRing Stroke(Transform parent, float x, float y, float w, float h, Vector2[] pts, float t, Color c, float gap = 0f, string name = "Stroke")
+        {
+            var rt = Node(parent, name, x, y, w, h);
+            var g = rt.gameObject.AddComponent<PolyRing>();
+            g.raycastTarget = false;
+            g.Set(pts, gap, t);
+            g.color = c;
+            return g;
+        }
+
+        /// <summary>An 8-point chamfered rectangle in px (clockwise, y down) for crisp beveled cards and plates.</summary>
+        public static Vector2[] Chamfer(float x, float y, float w, float h, float c)
+        {
+            float b = Mathf.Min(c, Mathf.Min(w, h) * 0.45f);
+            return new[]
+            {
+                new Vector2(x + b, y), new Vector2(x + w - b, y),
+                new Vector2(x + w, y + b), new Vector2(x + w, y + h - b),
+                new Vector2(x + w - b, y + h), new Vector2(x + b, y + h),
+                new Vector2(x, y + h - b), new Vector2(x, y + b),
+            };
+        }
+
         public static RawImage Pic(Transform parent, string tex, float x, float y, float w, float h, Color? tint = null)
         {
             var rt = Node(parent, "Pic", x, y, w, h);
@@ -438,6 +473,51 @@ namespace Kage
         }
     }
 
+    /// <summary>The outline of a polygon (points in px, y down, like <see cref="ShapeGraphic"/>), mitred at the corners, offset outward.</summary>
+    [AddComponentMenu("")]
+    public sealed class PolyRing : MaskableGraphic
+    {
+        [SerializeField] Vector2[] pts = new Vector2[0];
+        [SerializeField] float gap = 2f, thick = 2f;
+
+        public void Set(Vector2[] points, float gapPx, float thickPx)
+        {
+            pts = points; gap = gapPx; thick = thickPx;
+            SetVerticesDirty();
+        }
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            int n = pts == null ? 0 : pts.Length;
+            if (n < 3) return;
+            // Drop duplicate closing point if caller passed a closed polyline so the join miters cleanly
+            if (n >= 4 && (pts[0] - pts[n - 1]).sqrMagnitude < 0.01f) n--;
+            float area = 0f;
+            for (int i = 0; i < n; i++) { var a = pts[i]; var b = pts[(i + 1) % n]; area += a.x * b.y - b.x * a.y; }
+            // In y-down screen coordinates a clockwise polygon has positive signed area and (e.y, -e.x) already points outward
+            float side = area >= 0f ? 1f : -1f;
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 p = pts[i], prev = pts[(i + n - 1) % n], next = pts[(i + 1) % n];
+                Vector2 e0 = (p - prev).normalized, e1 = (next - p).normalized;
+                Vector2 n0 = new Vector2(e0.y, -e0.x) * side, n1 = new Vector2(e1.y, -e1.x) * side;
+                Vector2 sum = n0 + n1;
+                Vector2 m = sum.sqrMagnitude > 1e-5f ? sum.normalized : n0;
+                float k = Mathf.Clamp(1f / Mathf.Max(0.25f, Vector2.Dot(m, n0)), 1f, 2.5f);
+                Vector2 inner = p + m * gap * k, outer = p + m * (gap + thick) * k;
+                vh.AddVert(new Vector3(inner.x, -inner.y), color, Vector2.zero);
+                vh.AddVert(new Vector3(outer.x, -outer.y), color, Vector2.zero);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                int a = i * 2, b = ((i + 1) % n) * 2;
+                vh.AddTriangle(a, a + 1, b + 1);
+                vh.AddTriangle(a, b + 1, b);
+            }
+        }
+    }
+
     /// <summary>A rectangle with a gradient of two to three stops, horizontal or vertical.</summary>
     [AddComponentMenu("")]
     public sealed class GradRect : MaskableGraphic
@@ -590,6 +670,12 @@ namespace Kage
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
+            if (pts == null || pts.Length < 2) return;
+            if (dash <= 0f)
+            {
+                BuildSolidMitred(vh);
+                return;
+            }
             float cursor = 0f;
             for (int i = 0; i + 1 < pts.Length; i++)
             {
@@ -597,7 +683,6 @@ namespace Kage
                 float len = Vector2.Distance(a, b);
                 if (len < 0.01f) continue;
                 Vector2 dir = (b - a) / len;
-                if (dash <= 0f) { Seg(vh, a, b); cursor += len; continue; }
                 // dashes sit at [k period + phase, k period + phase + dash] along the whole path
                 float period = dash + gap;
                 int k = Mathf.FloorToInt((cursor - phase - dash) / period);
@@ -609,6 +694,62 @@ namespace Kage
                     if (hi > lo) Seg(vh, a + dir * (lo - cursor), a + dir * (hi - cursor));
                 }
                 cursor += len;
+            }
+        }
+
+        // Solid polylines use mitered joins so corners never split open with triangular cracks or double-alpha hot spots
+        void BuildSolidMitred(VertexHelper vh)
+        {
+            var clean = new List<Vector2>(pts.Length);
+            for (int i = 0; i < pts.Length; i++)
+                if (clean.Count == 0 || (pts[i] - clean[clean.Count - 1]).sqrMagnitude > 0.0004f)
+                    clean.Add(pts[i]);
+            int n = clean.Count;
+            if (n < 2) return;
+            bool closed = n >= 4 && (clean[0] - clean[n - 1]).sqrMagnitude < 0.01f;
+            if (closed) n--;
+            float half = width * 0.5f;
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 p = clean[i];
+                bool hasPrev = closed || i > 0;
+                bool hasNext = closed || i < n - 1;
+                Vector2 n0 = Vector2.zero, n1 = Vector2.zero;
+                if (hasPrev)
+                {
+                    Vector2 d0 = (p - clean[(i + n - 1) % n]).normalized;
+                    n0 = new Vector2(-d0.y, d0.x);
+                }
+                if (hasNext)
+                {
+                    Vector2 d1 = (clean[(i + 1) % n] - p).normalized;
+                    n1 = new Vector2(-d1.y, d1.x);
+                }
+                Vector2 off;
+                if (hasPrev && hasNext)
+                {
+                    Vector2 sum = n0 + n1;
+                    if (sum.sqrMagnitude < 1e-5f) off = n0 * half;
+                    else
+                    {
+                        Vector2 m = sum.normalized;
+                        float k = Mathf.Clamp(1f / Mathf.Max(0.35f, Vector2.Dot(m, n0)), 1f, 2.2f);
+                        off = m * (half * k);
+                    }
+                }
+                else off = (hasPrev ? n0 : n1) * half;
+
+                Vector2 pPos = new Vector2(p.x + off.x, -(p.y + off.y));
+                Vector2 pNeg = new Vector2(p.x - off.x, -(p.y - off.y));
+                vh.AddVert(pPos, color, Vector2.zero);
+                vh.AddVert(pNeg, color, Vector2.zero);
+            }
+            int segs = closed ? n : n - 1;
+            for (int i = 0; i < segs; i++)
+            {
+                int a = i * 2, b = ((i + 1) % n) * 2;
+                vh.AddTriangle(a, a + 1, b + 1);
+                vh.AddTriangle(a, b + 1, b);
             }
         }
 

@@ -11,10 +11,23 @@ namespace Kage
         static Dictionary<string, CharacterDef> _defs;
         static Dictionary<string, IPartSet> _partSets;
 
+        /// <summary>
+        /// A fresh save holding Kagetsu, the katana family's reference weapon (ADR-0006). A new player starts with the plain Mumei
+        /// (<see cref="Rules.GameRules.StarterWeaponId"/>), but the catalog's Kage is the reference fighter every fight test, the baseline
+        /// replay and the dev arena measure against, so he keeps the weapon the numbers are x1 for.
+        /// </summary>
+        static Rules.SaveData ReferenceSave()
+        {
+            var s = Rules.GameRules.DefaultSave(false);
+            s.owned.weapons["kagetsu"] = 1;
+            s.equipped.weapon = "kagetsu";
+            return s;
+        }
+
         static void Register()
         {
             // ---- characters ----
-            Add(KageCharacter.Def());
+            Add(KageCharacter.Def(ReferenceSave()));     // the reference Kage: Kagetsu, the katana family's x1 weapon (tests, the dev arena's default)
             Add(Ronin.Def());              // dev only: today's recolour
             Add(TestHeavy.Def());          // dev only: the mass-3 dummy (SAN-68)
             Add(OrderFootman.Def());

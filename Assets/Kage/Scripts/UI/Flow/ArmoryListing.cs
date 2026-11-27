@@ -31,7 +31,7 @@ namespace Kage
         public static IEnumerable<GearItem> Candidates(GearKind kind)
         {
             IEnumerable<string> ids = kind == GearKind.Weapons
-                ? JsTables.Weapons.Select(w => w.Id)
+                ? JsTables.AllWeapons.Select(w => w.Id)
                 : kind == GearKind.Helmets ? JsTables.Helmets.Select(g => g.Id) : JsTables.Armors.Select(g => g.Id);
             return ids.Select(id => GameRules.Item(kind, id));
         }
@@ -58,7 +58,7 @@ namespace Kage
                 case GearKind.Weapons:
                     return !StandIns.Contains(it.Id) && WeaponFamilies.Get(WeaponFamilies.FamilyIdOf(it.Id)) != null;
                 case GearKind.Helmets:
-                    return it.Tier == "starter" || HelmetVisuals.Has(it.Id);
+                    return it.Id == "shiro_maki" || it.Tier == "starter" || HelmetVisuals.Has(it.Id);
                 default:
                     return it.Tier == "starter" || ArmorVisuals.Has(it.Id);
             }

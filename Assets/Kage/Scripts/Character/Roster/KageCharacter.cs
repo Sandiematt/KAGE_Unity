@@ -24,7 +24,7 @@ namespace Kage
             save ??= GameRules.DefaultSave(false);
             var stats = GameRules.PlayerCombatStats(save);
             var perks = GearPerks.FromJs(stats.Perks);
-            string weapon = save.equipped?.weapon ?? "kagetsu";
+            string weapon = save.equipped?.weapon ?? GameRules.StarterWeaponId;
             int weaponLevel = save.owned != null && save.owned.weapons.TryGetValue(weapon, out var lv) && lv > 0 ? lv : 1;
             return new CharacterDef
             {

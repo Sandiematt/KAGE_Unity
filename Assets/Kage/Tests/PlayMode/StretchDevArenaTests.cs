@@ -21,7 +21,7 @@ namespace Kage.Tests
         {
             if (_game != null) Object.DestroyImmediate(_game);
             KageGame.NextStretchId = null;
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
         }
 
         sealed class WorldWalk : IInputSource

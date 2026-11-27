@@ -37,6 +37,11 @@ namespace Kage
         public Vector2[] samples;
         /// <summary>Cue ids (<see cref="EffectCues"/>). Flight plays at spawn and rides the projectile; hit at the contact; end where it ends.</summary>
         public string flightCue, hitCue, endCue;
+        /// <summary>
+        /// Gameplay told where and how it ended (Arc Anchor's thrown tachi: where Raikon blinks to, and whether a parry knocked it down): the projectile,
+        /// the point it ended at. Null: nothing. <see cref="Projectile.Deflected"/> is set before it is called.
+        /// </summary>
+        public System.Action<Projectile, Vector2> onEnd;
     }
 
     /// <summary>
@@ -62,6 +67,8 @@ namespace Kage
         /// <summary>Fight-loop frames it has lived.</summary>
         public int Age { get; private set; }
         public int HitsLanded { get; private set; }
+        /// <summary>True once a parry or a counter knocked it out of the air (it ends there).</summary>
+        public bool Deflected { get; private set; }
         public Vector2 Position => _pos;
         public bool Alive => !_done;
 
@@ -204,14 +211,17 @@ namespace Kage
             HitsLanded++;
             EffectCues.Play(Def.hitCue, contact, new CueArgs { owner = Owner, dir = new Vector2(Dir, 0f), scale = 1f });
             // a countered or parried projectile is destroyed; otherwise it is spent after its last target
-            if (result == HitResult.Countered || result == HitResult.Parried || HitsLanded >= Def.maxHits) { End(_pos); return true; }
+            if (result == HitResult.Countered || result == HitResult.Parried) Deflected = true;
+            if (Deflected || HitsLanded >= Def.maxHits) { End(_pos); return true; }
             return false;
         }
 
         void End(Vector2 at)
         {
             _done = true;
+            _pos = at;
             Ctx.Projectiles.Remove(this);
+            Def.onEnd?.Invoke(this, at);
             EffectCues.Play(Def.endCue, at, new CueArgs { owner = Owner, dir = new Vector2(Dir, 0f), scale = 1f });
             if (Application.isPlaying) Destroy(gameObject);
             else DestroyImmediate(gameObject);      // an EditMode test ticking it outside play mode

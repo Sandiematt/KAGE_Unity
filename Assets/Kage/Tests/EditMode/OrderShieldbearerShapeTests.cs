@@ -82,6 +82,7 @@ namespace Kage.Tests
 
         static readonly (string prefix, B bone)[] Bones =
         {
+            ("FieldCloak", B.Chest),
             ("ArmF_Sleeve", B.ArmFU), ("ArmF_Sode", B.ArmFU), ("ArmF_Kote", B.ArmFL), ("ArmF_Forearm", B.ArmFL), ("HandF", B.HandF),
             ("ArmN_Sleeve", B.ArmNU), ("ArmN_Sode", B.ArmNU), ("ArmN_Kote", B.ArmNL), ("ArmN_Forearm", B.ArmNL), ("ArmN_Cuff", B.ArmNL),
             ("HandN", B.HandN), ("Tate", B.ArmNL),

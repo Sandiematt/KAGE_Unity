@@ -20,7 +20,7 @@ namespace Kage.Tests
             if (_game != null) Object.DestroyImmediate(_game);
             KageGame.NextFoeId = null;
             KageGame.NextGroupSize = null;
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
         }
 
         KageGame Start(string foeId)

@@ -67,6 +67,7 @@ namespace Kage
                 if (state is FState.Idle or FState.Crouch) SetState(state);     // blend into (or out of) the guard pose
             }
             if (!guarding) return false;
+            TryGuardTurn(inp);                    // Guard + a fresh Back press: turn to the foe behind (Fighter.Counter.cs)
             _walkHeld = 0f;
             var want = inp.dy < 0 ? FState.Crouch : FState.Idle;
             if (state != want) SetState(want);
@@ -106,9 +107,12 @@ namespace Kage
             Knock(new Vector2(KnockVelocity(new Vector2(info.kb.x * 0.55f + Mathf.Sign(info.kb.x) * 0.8f, 0f)).x, rb.linearVelocity.y));
             health = Mathf.Max(1f, health - (w.sword ? Mathf.Ceil(info.dmg * t.chipFactor) : 0f));
             rig.Flash(new Color(0.85f, 0.9f, 1f), 0.35f);
+            rig.Impulse(new Vector2(-facing * (w.heavy ? 4.8f : 2.6f), 1.0f), 1.15f);
             if (w.breaksWeapon) BreakSword();
             meter = Mathf.Min(100f, meter + BlockRageGain(info.dmg));      // blocking builds Rage, more with the blockRage perk (SAN-84)
-            AddPosture(info.dmg * t.blockPostureFactor * w.postureMul, true, info);
+            AddPosture(info.dmg * t.blockPostureFactor * w.postureMul * info.PostureScale * PressureMul(info.attacker), true, info);   // a string of guarded blows weighs more (Fighter.Flow.cs)
+            NoteDefended();                                                // a guard opens the weapon's riposte (Fighter.Style.cs)
+            TurnAfterBlock(info);                                          // a blow from behind turns the guard round (Fighter.Counter.cs)
             return true;
         }
     }

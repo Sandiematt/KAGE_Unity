@@ -156,8 +156,8 @@ namespace Kage
             // ---------- scarf wrap (tails are simulated by ScarfRibbon) ----------
             if (!ronin)
             {
-                Part("Scarf_Wrap", B.Chest, 25, trim, PartRole.Trim, V(818,232, 836,221, 860,213, 890,207, 920,203, 946,205, 958,217, 955,236, 940,244, 912,240, 884,242, 856,248, 834,254, 820,250), rimCol: Palette.TrimBright);
-                Part("Scarf_Fold", B.Chest, 25, trimDeep, PartRole.TrimDeep, V(830,240, 858,232, 890,226, 925,222, 948,224, 946,231, 924,229, 890,233, 858,239, 832,247), false, 1);
+                Part("Scarf_Wrap", B.Chest, 25, trim, PartRole.Trim, V(818,228, 843,223, 871,214, 915,203, 946,207, 958,217, 953,233, 927,237, 900,234, 865,242, 832,254, 822,245), rimCol: Palette.TrimBright);
+                Part("Scarf_Fold", B.Chest, 25, trimDeep, PartRole.TrimDeep, V(823,233, 853,230, 889,217, 936,211, 905,219, 876,231, 850,238, 830,246), false, 1);
                 Part("Scarf_Knot", B.Chest, 25, trim, PartRole.Trim, V(942,204, 960,207, 968,220, 962,236, 948,234, 944,220), false, 2);
                 Part("Scarf_KnotShade", B.Chest, 25, trimDeep, PartRole.TrimDeep, V(950,214, 962,218, 960,230, 952,228), false, 3);
                 d.scarf = true;

@@ -5,21 +5,21 @@ using UnityEngine;
 namespace Kage
 {
     /// <summary>
-    /// The five rarity tiers a helmet is drawn in (SAN-72 tier redesign, the owner's reference <c>docs/reference/helmet_tiers.png</c>).
-    /// Each tier has its own palette and rim light (<see cref="HelmetTiers"/>); silhouette, pieces and glow grow tier by tier.
+    /// The five rarity tiers a helmet belongs to: Common, Rare, Epic, Trophy, and Legendary.
+    /// Each tier has its own palette and rim light (<see cref="HelmetTiers"/>); silhouette, detail and glow grow tier by tier.
     /// </summary>
     public enum HelmetTier
     {
-        /// <summary>Grey cloth, plain steel and straw: low, close to the skull, no glow.</summary>
+        /// <summary>Steel gray (#9CA3AF): matte cloth and dark silhouette, close to the skull, no glow.</summary>
         Common,
-        /// <summary>A dark angular shell with violet blades and one glowing violet ring.</summary>
+        /// <summary>Ice blue (#38BDF8): detailed woven straw, steel brow plate and armored veil with crisp outlines.</summary>
+        Rare,
+        /// <summary>Arcane purple (#A855F7): layered iron kabuto plates, horned oni masks and sweeping violet plumes.</summary>
         Epic,
-        /// <summary>White enamel and gold, ceremonial: laurel, star medallions, white ribbons.</summary>
+        /// <summary>Imperial gold (#EAB308): ceremonial white enamel, branching golden antlers, filigree and ribbons.</summary>
         Trophy,
-        /// <summary>A black lacquer kabuto with a gold crest, a red and gold mon, red lacing.</summary>
+        /// <summary>Blazing crimson-gold (#F97316 / #EF4444): demonic lacquered shells, fiery horns, molten flames and glowing eyes.</summary>
         Legendary,
-        /// <summary>A black demonic shell with glowing red horns and flames and a red glow round the eye.</summary>
-        GodMode,
     }
 
     /// <summary>How a helmet piece is painted.</summary>
@@ -84,11 +84,12 @@ namespace Kage
         public readonly string id, look;
         public readonly HelmetTier tier;
         public readonly HairUnderHelmet hair;
+        public readonly EyeUnderHelmet eye;
         public readonly HelmetPiece[] pieces;
 
-        public HelmetDesign(string id, string look, HelmetTier tier, HairUnderHelmet hair, HelmetPiece[] pieces)
+        public HelmetDesign(string id, string look, HelmetTier tier, HairUnderHelmet hair, HelmetPiece[] pieces, EyeUnderHelmet eye = EyeUnderHelmet.Kept)
         {
-            this.id = id; this.look = look; this.tier = tier; this.hair = hair; this.pieces = pieces;
+            this.id = id; this.look = look; this.tier = tier; this.hair = hair; this.eye = eye; this.pieces = pieces;
         }
     }
 
@@ -118,16 +119,29 @@ namespace Kage
         public OpponentKit.Tone Tone(string tone) => new(Colour(tone, 0), Colour(tone, 1), Colour(tone, 2));
     }
 
-    /// <summary>The tier palettes (generated with the designs) and the tiers' names in the owner's reference order.</summary>
+    /// <summary>The tier palettes (generated with the designs) and the tiers' names in rarity order.</summary>
     public static partial class HelmetTiers
     {
-        /// <summary>The tiers in the owner's order: Common, Epic, Trophy, Legendary, God Mode.</summary>
-        public static readonly HelmetTier[] All = { HelmetTier.Common, HelmetTier.Epic, HelmetTier.Trophy, HelmetTier.Legendary, HelmetTier.GodMode };
+        /// <summary>The five rarity tiers in progression order: Common, Rare, Epic, Trophy, Legendary.</summary>
+        public static readonly HelmetTier[] All = { HelmetTier.Common, HelmetTier.Rare, HelmetTier.Epic, HelmetTier.Trophy, HelmetTier.Legendary };
 
         public static HelmetPalette Palette(HelmetTier t) => Palettes[t];
 
-        /// <summary>The tier's name as the owner's sheet writes it.</summary>
-        public static string Label(HelmetTier t) => t == HelmetTier.GodMode ? "GOD MODE" : t.ToString().ToUpperInvariant();
+        /// <summary>The tier's display label in uppercase.</summary>
+        public static string Label(HelmetTier t) => t.ToString().ToUpperInvariant();
+
+        /// <summary>Maps a rules tier id ("common", "rare", "epic", "trophy", "legendary") to a <see cref="HelmetTier"/>.</summary>
+        public static HelmetTier FromId(string id)
+        {
+            switch (id)
+            {
+                case "rare": return HelmetTier.Rare;
+                case "epic": return HelmetTier.Epic;
+                case "trophy": return HelmetTier.Trophy;
+                case "legendary": return HelmetTier.Legendary;
+                default: return HelmetTier.Common;
+            }
+        }
     }
 
     /// <summary>Every helmet design by JS helmet id (generated: <c>HelmetDesigns.g.cs</c>).</summary>

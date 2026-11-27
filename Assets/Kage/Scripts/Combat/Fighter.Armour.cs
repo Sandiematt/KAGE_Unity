@@ -50,6 +50,7 @@ namespace Kage
             if (resistsFlinch || info.w == null) return;
             bool light = !info.w.heavy;
             if (light && MoveArmoured) resistsFlinch = true;          // a move's armour frames (SAN-80)
+            else if (light && StyleArmoured) resistsFlinch = true;    // the weapon's armoured swings (Onikiri, docs/weapon-styles.md)
             else if (light && Has(CharacterFlags.Armour)) resistsFlinch = true;    // the character-wide flag, from the data or a boss phase (SAN-102)
             else if (light && Has(CharacterFlags.FrontalArmour) && !_hitOnBrokenGuard && HitFromFront(info)) resistsFlinch = true;    // a shield: light hits from the front, never after a guard-break (SAN-98)
         }

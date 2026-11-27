@@ -14,7 +14,7 @@ namespace Kage
             for (int i = 0; i < def.hurt.Count; i++)
             {
                 var h = def.hurt[i];
-                _hurtboxes.Add(Hurtbox.Add(rig.Bone(h.bone), h.local, h.radius, h.zone, i, this));
+                _hurtboxes.Add(Hurtbox.Add(rig.Bone(h.bone), h.local, h.radius * _contactScale, h.zone, i, this));
             }
         }
 

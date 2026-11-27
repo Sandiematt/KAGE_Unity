@@ -142,8 +142,9 @@ namespace Kage.Tests
                     Assert.AreEqual(bare.hurt[i].local, d.hurt[i].local, id);
                     Assert.AreEqual(bare.hurt[i].radius, d.hurt[i].radius, id);
                 }
-                // everything that isn't the head or its hair is exactly as before
-                var body = Fingerprints(bare).Where(f => !f.StartsWith("Head_Hair|")).ToList();
+                // everything that isn't the head, its hair, or a helmet-replaced eye is exactly as before
+                bool replacesEye = HelmetVisuals.EyeUnder(id) == EyeUnderHelmet.Replaced;
+                var body = Fingerprints(bare).Where(f => !f.StartsWith("Head_Hair|") && (!replacesEye || !f.StartsWith("Eye|"))).ToList();
                 var now = Fingerprints(d).Where(f => body.Contains(f)).ToList();
                 CollectionAssert.AreEquivalent(body, now, $"{id}: the body changed");
             }
@@ -244,16 +245,23 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void TheWhiteEyeStaysOnTopUnderEveryHelmet()
+        public void TheWhiteEyeStaysOnTopOrIsCleanlyReplacedByTheHelmetsCustomEye()
         {
             var bare = Bare();
             var eye0 = bare.parts.First(p => p.name == "Eye");
             foreach (var id in Drawn)
             {
                 var d = Kage(id);
-                var eye = d.parts.First(p => p.name == "Eye");
+                var eye = d.parts.Single(p => p.name == "Eye");
+                Assert.AreEqual(HelmetVisuals.EyeOrder, eye.order, id);
+                Assert.AreEqual(PartRole.Eye, eye.role, id);
+                if (HelmetVisuals.EyeUnder(id) == EyeUnderHelmet.Replaced)
+                {
+                    Assert.AreNotEqual(Fingerprint(eye0), Fingerprint(eye), $"{id}: custom eye should replace default white eye");
+                    Assert.Greater(eye.glow, 3f, $"{id}: custom eye glows");
+                    continue;
+                }
                 Assert.AreEqual(Fingerprint(eye0), Fingerprint(eye), $"{id}: the eye is drawn as before");
-                Assert.AreEqual(HelmetVisuals.EyeOrder, eye.order);
                 foreach (var p in Added(d, bare).Where(p => p.order >= eye.order))
                     foreach (var poly in Polys(p))
                         foreach (var v in eye.pts) Assert.IsFalse(Inside(poly, v), $"{id}/{p.name} is drawn over the eye");
@@ -297,7 +305,10 @@ namespace Kage.Tests
                     Assert.Greater(part.chainFeel.drag, 0f, $"{id}/{piece.name}");
                 }
                 foreach (var piece in design.pieces.Where(p => p.glow > 1f))
-                    Assert.AreEqual(piece.glow, added.Single(p => p.name == $"Helmet_{design.look}_{piece.name}").glow, $"{id}/{piece.name}");
+                {
+                    string expectedName = piece.name == "Eye" ? "Eye" : $"Helmet_{design.look}_{piece.name}";
+                    Assert.AreEqual(piece.glow, added.Single(p => p.name == expectedName).glow, $"{id}/{piece.name}");
+                }
             }
         }
 

@@ -182,12 +182,16 @@ namespace Kage.Tests
             var reachable = new HashSet<MoveDef>();
             foreach (var b in new[] { Btn.P, Btn.K, Btn.S, Btn.X })
                 foreach (int fwd in new[] { -1, 0, 1 })
-                    foreach (int dy in new[] { -1, 0 })
+                    foreach (int dy in new[] { -1, 0, 1 })
                         foreach (bool air in new[] { false, true })
                         {
                             var m = set.Select(b, fwd, dy, air, f.Kage);
                             if (m != null) reachable.Add(m);
                         }
+            // Dash Attack (Vaulting Skewer) is reached via Dash + S
+            f.KageInput.Add(1, fwd: 1, dash: true).Add(5, fwd: 1).Add(1, buttons: "S");
+            f.Run(20);
+            if (Started(f).Contains(set.dashSkewer.id)) reachable.Add(set.dashSkewer);
             var queue = new Queue<MoveDef>(reachable);
             while (queue.Count > 0)
                 foreach (var next in queue.Dequeue().chain.Values)
@@ -272,7 +276,7 @@ namespace Kage.Tests
         {
             var f = Alone();
             var set = (SpearMoves)f.Kage.moves;
-            foreach (var m in new[] { set.jab, set.poke2, set.stepPoke, set.lowPoke, set.skewer, set.kick, set.pushKick, set.lowKick, set.thrust, set.lunge, set.sweep, set.guardRaise })
+            foreach (var m in new[] { set.jab, set.poke2, set.stepPoke, set.lowPoke, set.skewer, set.kick, set.pushKick, set.lowKick, set.thrust, set.twinFang, set.crescentCleave, set.lunge, set.sweep, set.dashSkewer, set.guardRaise })
             {
                 f.Kage.EquipWeapon("mizuchi");
                 f.Run(30);
@@ -448,7 +452,7 @@ namespace Kage.Tests
         {
             var f = Alone();
             var set = (SpearMoves)f.Kage.moves;
-            foreach (var m in new[] { set.jab, set.poke2, set.stepPoke, set.lowPoke, set.skewer, set.thrust, set.lunge, set.sweep, set.vault, set.airPoke, set.airDive, set.airSweep })
+            foreach (var m in new[] { set.jab, set.poke2, set.stepPoke, set.lowPoke, set.skewer, set.thrust, set.twinFang, set.crescentCleave, set.lunge, set.sweep, set.vault, set.dashSkewer, set.airPoke, set.airDive, set.airSweep })
                 foreach (var w in m.hits)
                 {
                     CollectionAssert.AreEqual(new[] { HitPoint.Blade }, w.points, m.id);

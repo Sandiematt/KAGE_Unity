@@ -62,6 +62,7 @@ namespace Kage
         Volume _volume;
         ChromaticAberration _ca;
         Vignette _vig;
+        Bloom _bloom;
         Transform _shadowP, _shadowE;
         bool _paused, _koHandled, _controlWas, _tutorialHold;
         FightStatsRecorder _stats;
@@ -110,6 +111,7 @@ namespace Kage
             var vfxGo = new GameObject("VFX");
             vfxGo.transform.SetParent(transform, false);
             vfxGo.AddComponent<Vfx>();
+            fight.Context.Audio = vfxGo.AddComponent<KageAudio>();
 
             var arena = new GameObject("Stage");
             arena.transform.SetParent(transform, false);
@@ -438,7 +440,7 @@ namespace Kage
             _volume.isGlobal = true;
             _volume.priority = 10f;
             var p = ScriptableObject.CreateInstance<VolumeProfile>();
-            var bloom = p.Add<Bloom>(true);
+            var bloom = _bloom = p.Add<Bloom>(true);
             bloom.threshold.Override(0.92f);
             bloom.intensity.Override(1.15f);
             bloom.scatter.Override(0.68f);
@@ -496,8 +498,7 @@ namespace Kage
 
         void UpdatePost()
         {
-            if (_ca != null) _ca.intensity.Override(Mathf.Clamp01(GameFeel.aberration));
-            if (_vig != null) _vig.intensity.Override(0.34f + (Player != null && Player.state == FState.Ultimate ? 0.22f : 0f));
+            GameFeel.ApplyPost(_bloom, _vig, _ca, Player);
             if (Player != null && Foe != null)
             {
                 bool pFront = Player.IsAttacking || !Foe.IsAttacking;

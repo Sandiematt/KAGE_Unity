@@ -35,6 +35,8 @@ namespace Kage
             // top left: seal, name, level, xp
             var seal = Ui.Node(Root, "Seal", 48, 16, 56, 56);
             Ui.Box(seal, 0, 0, 56, 56, Ui.Acc);
+            Ui.Frame(seal, 0, 0, 56, 56, 1.5f, Ui.A(Ui.Gold, 0.72f));
+            Ui.Frame(seal, 4, 4, 48, 48, 1f, Ui.A(Ui.Bone, 0.22f));
             Ui.Label(seal, "影", UiFont.Brush, 36, Ui.Bone, 0, 0, 56, 56, TextAnchor.MiddleCenter);
             Ui.Label(Root, "KAGE", UiFont.Title, 26, Ui.Bone, 122, 14, 200, 34, TextAnchor.MiddleLeft, 1.56f);
             Ui.Label(Root, "Lv. " + save.level, UiFont.Title, 22, Ui.Gold, 232, 17, 120, 30, TextAnchor.MiddleLeft);
@@ -46,9 +48,9 @@ namespace Kage
 
             if (save.devMode)
             {
-                var badge = Ui.Node(Root, "DevBadge", 690, 14, 220, 26);
-                Ui.Box(badge, 0, 0, 220, 26, Ui.Acc);
-                Ui.Frame(badge, 0, 0, 220, 26, 1, Ui.Bone);
+                var badge = Ui.Node(Root, "DevBadge", 690, 26, 220, 26);
+                Ui.Box(badge, 0, 0, 220, 26, Ui.A(Ui.Acc, 0.92f));
+                Ui.Frame(badge, 0, 0, 220, 26, 1, Ui.Gold);
                 Ui.Label(badge, "DEV · EVERYTHING UNLOCKED", UiFont.Cond, 13, Ui.Bone, 0, 0, 220, 26, TextAnchor.MiddleCenter, 1.2f);
             }
 
@@ -105,29 +107,28 @@ namespace Kage
             foreach (var s in new[] { new Vector4(660, 814, 240, 4), new Vector4(690, 828, 190, 3), new Vector4(640, 842, 260, 3), new Vector4(710, 858, 140, 3), new Vector4(680, 874, 200, 2) })
                 Ui.Box(p, s.x, s.y, s.z, s.w, Ui.A(Ui.Acc, 0.35f));
 
-            // far clouds, behind the hero
+            // far clouds and breathing moon glow sit BEHIND the hero so Kage's face stays razor-sharp (never hazed over)
             Color dark = Ui.Mix(Ui.Ground, Color.black, 0.7f), lit = Ui.Mix(Ui.Hot, Ui.Hex("#d8b4aa"), 0.45f);
             UiCloudView.Build(p, "CloudsFar", new[]
             {
-                Cloud(150, 560, 140, -30, 0.5f, false), Cloud(420, 700, 170, -110, 0.42f, false), Cloud(96, 420, 120, -85, 0.35f, false),
+                Cloud(150, 560, 140, -30, 0.36f, false), Cloud(420, 700, 170, -110, 0.30f, false), Cloud(96, 420, 120, -85, 0.25f, false),
             }, dark, lit);
+            UiFx.Loop(Ui.Glow(p, 730, 290, 250, Ui.A(Ui.Hot, 0.28f), 1.45f).transform, UiAnims.HmMoon());
 
-            // the painted hero fades in; the red moon behind his head breathes over him
-            var hero = Ui.Pic(p, "ui_hero", 340, 20, 692, 880);
-            if (fresh) UiFx.In(hero.transform, UiAnims.WFade(.9f));
-            UiFx.Loop(Ui.Glow(p, 730, 300, 262, Ui.A(Ui.Hot, 0.34f), 1.4f).transform, UiAnims.HmMoon());
+            // Static feathered scene (ui_hero_bg) behind cut-out animated Kage (ui_hero_char): top/side cuts dissolved cleanly, only Kage moves
+            var hero = TitleHeroLive.Build(p, "ui_hero_bg", "ui_hero_char", 340, 20, 692, 880);
+            if (fresh) UiFx.In(hero, UiAnims.WFade(.9f));
 
-            // near clouds, then the soft fade from the hero into the right column
+            // restrained low atmospheric drift well clear of Kage's head
             UiCloudView.Build(p, "CloudsNear", new[]
             {
-                Cloud(236, 520, 95, -20, 0.55f, false), Cloud(318, 380, 75, -60, 0.32f, true), Cloud(170, 300, 85, -12, 0.22f, true), Cloud(470, 640, 110, -70, 0.45f, false),
+                Cloud(560, 520, 95, -20, 0.28f, false), Cloud(650, 640, 110, -70, 0.24f, false),
             }, dark, lit);
-            Ui.Grad(p, 968, 700, 96, 200, Color.clear, Color.clear, true, Ui.A(Ui.Sky2, 0.8f));
 
             // sakura petals falling across the whole stage
             UiPetalView.Build(p, "Petals", 0, 0, 1600, 900, new PetalField(26, 1600f, 900f, PetalField.Direction.Fall), 14f, 10f, Ui.Hot, Ui.Hex("#d9302a"));
             // the dark side behind the menu
-            Ui.Grad(p, 0, 0, 620, 900, Ui.A(Ui.Sky3, 0.86f), Color.clear, true, Ui.A(Ui.Sky3, 0.55f));
+            Ui.Grad(p, 0, 0, 620, 900, Ui.A(Ui.Sky3, 0.88f), Color.clear, true, Ui.A(Ui.Sky3, 0.56f));
         }
 
         static CloudBand Cloud(float y, float w, float seconds, float delay, float opacity, bool lit)
@@ -141,18 +142,22 @@ namespace Kage
         {
             var rt = Ui.Node(Root, "Row_" + key, 40, 300 + index * 82, 380, 64);
             Enter(rt, UiAnims.WRise(.6f, delay));
-            var wedge = Ui.Shape(rt, 18, 8, 320, 48, Ui.Poly(320, 48, 0, 18, 6, 4, 62, 0, 96, 10, 84, 30, 100, 48, 88, 64, 98, 86, 58, 100, 4, 94, 0, 76),
-                Ui.Acc, Ui.Deep, Ui.A(Ui.Deep, 0f), true, "Wedge");
-            var dia = Ui.Diamond(rt, 47, 32, 40, Ui.PanelA(0.8f), Ui.GoldDim, 1.5f, true);
+            // Clean katana-tapered crimson pennant (zero sawtooth cracks)
+            var wedge = Ui.Shape(rt, 24, 10, 316, 44, Ui.Poly(316, 44, 0, 0, 90, 0, 100, 50, 90, 100, 0, 100),
+                Ui.A(Ui.Acc, 0.92f), Ui.A(Ui.Deep, 0.65f), Ui.A(Ui.Deep, 0f), true, "Wedge");
+            var accent = Ui.Box(rt, 24, 10, 3, 44, Color.clear, "Accent");
+            var dia = Ui.Diamond(rt, 47, 32, 40, Ui.PanelA(0.88f), Ui.GoldDim, 1.5f, true);
             Ui.Label(rt, glyph, UiFont.Mincho, 22, Ui.Bone, 18, 0, 58, 64, TextAnchor.MiddleCenter);
             var lb = Ui.Label(rt, label.ToUpperInvariant(), UiFont.Title, 22, Ui.Bone, 106, 0, 260, 64, TextAnchor.MiddleLeft, 0.88f);
             var row = new MenuRow { home = on };
             // JS: the wedge grows from the left in .28 s, the label slides 4 px in .2 s, the diamond lights
             row.tween = UiFocusTween.On(rt, .28f, v =>
             {
-                wedge.rectTransform.localScale = new Vector3(Mathf.Max(0.001f, UiEase.Ease.Evaluate(v)), 1f, 1f);
-                lb.rectTransform.anchoredPosition = new Vector2(106f + 4f * UiEase.Ease.Evaluate(v), 0f);
-                dia.SetColors(Color.Lerp(Ui.PanelA(0.8f), Ui.Acc, v), Color.Lerp(Ui.GoldDim, Ui.Bone, v));
+                float e = UiEase.Ease.Evaluate(v);
+                wedge.rectTransform.localScale = new Vector3(Mathf.Max(0.001f, e), 1f, 1f);
+                accent.color = Ui.A(Ui.Gold, 0.9f * e);
+                lb.rectTransform.anchoredPosition = new Vector2(106f + 4f * e, 0f);
+                dia.SetColors(Color.Lerp(Ui.PanelA(0.88f), Ui.Acc, v), Color.Lerp(Ui.GoldDim, Ui.Gold, v));
             });
             rows.Add(row);
             UiParts.Make(rt, Nav, key, onSubmit, f =>
@@ -203,19 +208,23 @@ namespace Kage
             Ui.Ground2(rt, new float[] { 0, 196, 110, 174, 230, 186, 350, 172, 450, 182, 556, 178 }, 214, Ui.Mix(Ui.Ground, Color.black, 0.62f)).rectTransform.sizeDelta = new Vector2(556, 214);
             // petals blowing from the right (the wind variant)
             UiPetalView.Build(rt, "Petals", 0, 0, 556, 214, new PetalField(16, 556f, 214f, PetalField.Direction.Wind), 18f, 13f, Ui.Hot, Ui.Hex("#d9302a"));
-            Ui.Grad(rt, 0, 0, 417, 214, Ui.PanelA(0.9f), Ui.PanelA(0f), true, Ui.PanelA(0.55f));
+            Ui.Grad(rt, 0, 0, 420, 214, Ui.PanelA(0.92f), Ui.PanelA(0f), true, Ui.PanelA(0.62f));
             var eye = Ui.Label(rt, "CONTINUE", UiFont.Title, 16, Ui.Gold, 36, 24, 200, 24, TextAnchor.MiddleLeft, 1.92f);
             float ew = UiParts.Width(eye, 1.92f);
             Ui.Label(rt, "›", UiFont.Title, 16, Ui.Gold, 36 + ew + 14, 24, 20, 24, TextAnchor.MiddleLeft);
             Ui.Label(rt, eyebrow, UiFont.Title, 16, Ui.Gold, 36 + ew + 14 + 20 + 14, 24, 300, 24, TextAnchor.MiddleLeft, 1.92f);
-            Ui.Label(rt, title, UiFont.Mincho, 38, Ui.Bone, 36, 52, 380, 100, TextAnchor.UpperLeft, 0, true, 0.95f);
-            // the play button's glow pulses (wGlow, 2.4 s)
-            UiFx.Loop(Ui.Disc(rt, 504, 162, 30, Ui.A(Ui.Gold, 0.35f)).transform, UiAnims.WGlow(2.4f));
-            Ui.Disc(rt, 504, 162, 30, Ui.Gold);
-            Ui.Disc(rt, 504, 162, 27.5f, Ui.Mix(Ui.Panel, Color.black, 0.9f));
+            var ttl = Ui.Label(rt, title, UiFont.Mincho, 38, Ui.Bone, 36, 54, 380, 100, TextAnchor.UpperLeft, 0, true, 0.95f);
+            var ttlSh = ttl.gameObject.AddComponent<Shadow>();
+            ttlSh.effectColor = new Color(0f, 0f, 0f, 0.8f);
+            ttlSh.effectDistance = new Vector2(0f, -2f);
+            // Crisp play button with subtle pulsing gold ring
+            Ui.Disc(rt, 504, 162, 29, Ui.Gold);
+            Ui.Disc(rt, 504, 162, 26.5f, Ui.Mix(Ui.Panel, Color.black, 0.92f));
             Ui.Shape(rt, 0, 0, 556, 214, new[] { new Vector2(498, 150), new Vector2(516, 162), new Vector2(498, 174) }, Ui.Gold);
+            Ui.Box(rt, 0, 0, 556, 2, Ui.Gold);
             Color edge = Ui.Mix(Ui.Hot, Ui.Gold, 0.55f);
-            Ui.Frame(rt, 0, 0, 556, 214, 2, edge);
+            Ui.Frame(rt, 0, 0, 556, 214, 1.5f, edge);
+            Ui.Frame(rt, 4, 4, 548, 206, 1f, Ui.A(Ui.Gold, 0.2f));
             // hover: the card lifts 3 px in .2 s
             var lift = UiFocusTween.On(rt, .2f, v => UiOffsets.Of(rt).SetFocus(new Vector2(0f, 3f * v)));
             UiParts.Make(rt, Nav, "continue", () => C.Continue(), f => lift.Set(f));
@@ -224,25 +233,29 @@ namespace Kage
         void ArmoryTile()
         {
             var rt = Ui.Node(Root, "ArmoryTile", 1000, 538, 176, 184);
+            rt.gameObject.AddComponent<RectMask2D>();
             Enter(rt, UiAnims.WRise(.6f, 0f));
-            Ui.Box(rt, 0, 0, 176, 184, Ui.Mix(Ui.Sky1, Ui.Panel, 0.9f));
-            Ui.Glow(rt, 88, 100, 90, Ui.A(Ui.Acc, 0.45f), 1.2f);
-            var bladeNode = Ui.Node(rt, "BladeBox", 8, 30, 160, 94);
+            Ui.Grad(rt, 0, 0, 176, 184, Ui.Mix(Ui.Sky1, Ui.Panel, 0.65f), Ui.PanelA(0.95f), false);
+            Ui.Glow(rt, 88, 84, 72, Ui.A(Ui.Acc, 0.28f), 1.5f);
+            var bladeNode = Ui.Node(rt, "BladeBox", 8, 26, 160, 94);
             bladeNode.pivot = new Vector2(0.5f, 0.5f);
-            bladeNode.anchoredPosition = new Vector2(8 + 80, -(30 + 47));
+            bladeNode.anchoredPosition = new Vector2(8 + 80, -(26 + 47));
             var blade = bladeNode.gameObject.AddComponent<RawImage>();
             blade.texture = Ui.Tex("ui_w_kagetsu");
             blade.raycastTarget = false;
+            Ui.Box(rt, 0, 138, 176, 46, Ui.PanelA(0.88f));
+            Ui.Box(rt, 16, 138, 144, 1, Ui.A(Ui.GoldDim, 0.45f));
+            Ui.Box(rt, 0, 0, 176, 2, Ui.Gold);
             var edge = Ui.Node(rt, "Edge", 0, 0, 176, 184);
-            Ui.Frame(edge, 0, 0, 176, 184, 2, Ui.GoldDim);
-            var label = Ui.Label(rt, "ARMORY", UiFont.Title, 17, Ui.A(Ui.Bone, 0.6f), 0, 150, 176, 24, TextAnchor.MiddleCenter, 2f);
-            // hover: the tile lifts 4 px, the blade turns 6 degrees more (JS .hm-tile:hover .blade), the frame and label light, all in .2 to .3 s
+            Ui.Frame(edge, 0, 0, 176, 184, 1.5f, Ui.GoldDim);
+            var label = Ui.Label(rt, "ARMORY", UiFont.Title, 17, Ui.A(Ui.Bone, 0.78f), 0, 149, 176, 24, TextAnchor.MiddleCenter, 2f);
+            // hover: the tile lifts 4 px, the blade turns 6 degrees more, the frame and label light
             var tween = UiFocusTween.On(rt, .25f, v =>
             {
                 UiOffsets.Of(rt).SetFocus(new Vector2(0f, 4f * v));
                 bladeNode.localRotation = Quaternion.Euler(0f, 0f, 6f * v);
-                blade.color = Ui.A(Color.white, Mathf.Lerp(0.5f, 0.9f, v));
-                label.color = Ui.A(Ui.Bone, Mathf.Lerp(0.6f, 1f, v));
+                blade.color = Ui.A(Color.white, Mathf.Lerp(0.7f, 1f, v));
+                label.color = Color.Lerp(Ui.A(Ui.Bone, 0.78f), Ui.Gold, v);
                 foreach (var img in edge.GetComponentsInChildren<Image>()) img.color = Color.Lerp(Ui.GoldDim, Ui.Gold, v);
             });
             UiParts.Make(rt, Nav, "armory-tile", () => C.OpenArmory(), f => tween.Set(f));
@@ -288,7 +301,9 @@ namespace Kage
                 float cx = 1217 + i * 100f, cy = 856f;
                 string key = keys[i];
                 var rt = Ui.Node(Root, "Util_" + key, cx - 39, cy - 39, 78, 78);
-                var dia = Ui.Diamond(rt, 39, 39, 54, Ui.PanelA(0.82f), Ui.GoldDim, 1.5f, true);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = new Vector2(cx, -cy);
+                var dia = Ui.Diamond(rt, 39, 39, 54, Ui.PanelA(0.88f), Ui.GoldDim, 1.5f, true);
                 Color ink = Ui.Bone;
                 switch (i)
                 {

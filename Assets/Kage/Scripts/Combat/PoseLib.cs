@@ -79,14 +79,30 @@ namespace Kage
         public static Pose HurtLow() => new Pose().Hip(-0.02f, -0.22f, -2f).Chest(-14f).Head(12f)
             .FootN(0.28f, 0.16f, 30f).FootF(-0.24f, 0.13f).HandN(0.12f, 1.0f).HandF(0.1f, 0.8f).Blade(-60f);
 
-        public static Pose Tumble() => new Pose().Hip(0f, 0f, 35f).Chest(20f).Head(18f)
-            .LegN(60f, -40f).LegF(35f, -30f).ArmN(150f, 30f).ArmF(120f, 20f);
+        // Falls (docs/combat-flow.md): the shapes the physical fall's muscles pull towards. A body knocked down is never a plank or a
+        // jack-knife: the spine keeps a soft curve, the knees and elbows stay a little bent, and every joint stays inside its human range.
 
-        public static Pose Lie() => new Pose().Hip(0.25f, -0.54f, 90f).Chest(0f).Head(-8f)
-            .ArmN(30f, 10f).ArmF(-30f, 10f).LegN(0f, 0f).LegF(10f, 0f);
+        /// <summary>
+        /// Knocked backwards, turning onto the back: the chin tucked and the back gently rounded (the head kept off the floor), the hips and
+        /// knees softly bent, the arms thrown forward to slap the ground.
+        /// </summary>
+        public static Pose Tumble() => new Pose().Hip(0f, 0f, 35f).Chest(-10f).Neck(-8f).Head(-10f)
+            .LegN(40f, -46f).LegF(20f, -30f).ArmN(112f, 36f).ArmF(78f, 30f);
 
-        public static Pose LieFront() => new Pose().Hip(-0.2f, -0.56f, -90f).Chest(0f).Head(14f)
-            .ArmN(-40f, -20f).ArmF(40f, -30f).LegN(0f, 0f).LegF(-8f, 0f);
+        /// <summary>
+        /// Knocked forwards, turning onto the front: the back slightly arched and the head up (the face kept off the floor), the hips open
+        /// and the knees bent so the shins trail, both arms reaching down ahead to break the fall. Never a fold at the hips.
+        /// </summary>
+        public static Pose TumbleFront() => new Pose().Hip(0f, 0f, -35f).Chest(8f).Neck(4f).Head(14f)
+            .LegN(-6f, -28f).LegF(-18f, -46f).ArmN(100f, 24f).ArmF(70f, 30f);
+
+        /// <summary>On the back: flat but not stiff, the knees a little bent, the arms loose along the body, the head resting.</summary>
+        public static Pose Lie() => new Pose().Hip(0.25f, -0.54f, 90f).Chest(-3f).Neck(-4f).Head(-6f)
+            .ArmN(14f, 22f).ArmF(-8f, 16f).LegN(0f, -14f).LegF(16f, -10f);
+
+        /// <summary>On the front: the head turned up off the floor, the hands drawn in by the shoulders (forearms flat), the knees soft.</summary>
+        public static Pose LieFront() => new Pose().Hip(-0.2f, -0.56f, -90f).Chest(4f).Neck(2f).Head(16f)
+            .ArmN(41f, 135f).ArmF(38f, 128f).LegN(-4f, -10f).LegF(14f, -14f);
 
         public static Pose Thrown(float spin) => new Pose().Hip(0f, 0f, spin).Chest(18f).Head(16f)
             .LegN(50f, -60f).LegF(30f, -40f).ArmN(140f, 40f).ArmF(110f, 30f);

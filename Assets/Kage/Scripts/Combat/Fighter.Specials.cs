@@ -23,7 +23,6 @@ namespace Kage
             SetFacing(Mathf.Sign(attacker.Pos.x - x), true);
             attacker.Stagger(24);
             StartMove(moves.counterSlash);
-            KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.2f, "COUNTER!", fxMain, 1.1f);
             KageGame.I?.Audio?.Play(SfxKind.Counter, 1f);
         }
 
@@ -48,7 +47,6 @@ namespace Kage
             GameFeel.Shake(0.2f);
             rig.Flash(fxMain, 0.4f, 10f);
             StartMove(answer);
-            KageGame.I?.Hud?.Float(Pos + Vector2.up * 2.3f, "COUNTERED", fxMain, 1f);
             KageGame.I?.Audio?.Play(SfxKind.Counter, 0.9f);
         }
 
@@ -112,16 +110,20 @@ namespace Kage
             GameFeel.SlowMo(0.5f, 0.35f);
             GameFeel.Punch(0.18f);
             ctx?.Events.Publish(CombatEvent.RageArt(ctx.Clock.Frame, this, art));
-            KageGame.I?.Hud?.Banner(art == CrimsonMoon ? "CRIMSON MOON" : "THOUSAND SHADOWS", fxMain, 1.4f);
+            var look = RageArtLook.ForHud(art);
+            ArtHud?.CutIn(look.name.ToUpperInvariant(), look.kanji, RageArtCues.FormatCutInCaption(look, WeaponId), look.col, look.hot, 0.72f, look.legendary, look.deep);
             KageGame.I?.Audio?.Play(SfxKind.Ultimate, 1f);
         }
 
         void UltimateUpdate()
         {
             if (_cmActive) { CrimsonMoonUpdate(); return; }
+            if (_art != null) { CinematicUpdate(); return; }        // the other weapons' arts (Fighter.RageArts.cs)
             _ultFrame++;
             int f = _ultFrame;
-            if (opponent == null) { SetState(FState.Idle); return; }
+            if (opponent == null) { ArtHud?.ArtGrade(Color.black, 0f); SetState(FState.Idle); return; }
+            var look = RageArtLook.ForHud(_artId);
+            ArtHud?.ArtGrade(look.deep, f < 84 ? 0.75f : 0.35f);
             if (f <= 12)
             {
                 Vfx.I?.ChargeDark(rig.World(B.Chest, Vector2.zero), fxMain, fxDark);
@@ -180,6 +182,7 @@ namespace Kage
                 Vfx.I?.SlashLine(_ultAnchor + new Vector2(-1.3f, 0.3f), _ultAnchor + new Vector2(1.3f, 1.8f), fxMain, Color.white);
                 Vfx.I?.SlashLine(_ultAnchor + new Vector2(-1.3f, 1.8f), _ultAnchor + new Vector2(1.3f, 0.3f), fxMain, Color.white);
                 GameFeel.Flash(new Color(1f, 0.25f, 0.25f, 0.45f), 0.25f);
+                ArtHud?.ArtStamp(look.stamp, look.kanji, RageArtCues.FormatStampCaption(look, WeaponId), look.col, look.hot, 1.25f, look.legendary, look.deep);
                 var info = new HitInfo
                 {
                     attacker = this,
@@ -192,7 +195,11 @@ namespace Kage
                 OnHitResolved(opponent, info, res);
                 comboCount++;
             }
-            if (f >= 110) SetState(FState.Idle);
+            if (f >= 110)
+            {
+                ArtHud?.ArtGrade(Color.black, 0f);
+                SetState(FState.Idle);
+            }
         }
     }
 }

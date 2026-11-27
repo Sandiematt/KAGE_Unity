@@ -14,11 +14,11 @@ import kit, helmets
 POSES = ['idle', 'walk', 'attack', 'hit', 'wind']
 BG = (17, 13, 15, 255)
 TIER_LINES = {
-    'common': 'Grey cloth, plain steel, straw. No glow.',
-    'epic': 'Dark angular shell, violet blades, a violet glow.',
-    'trophy': 'White enamel and gold. Ceremonial.',
-    'legendary': 'Black lacquer kabuto, gold crest, red mon.',
-    'god': 'Demonic shell, burning red horns and flames.',
+    'common': 'Charcoal cloth and crimson scarf.',
+    'rare': 'Straw, brushed steel and slate cloth.',
+    'epic': 'Forged iron and violet plume.',
+    'trophy': 'Ivory enamel and gold fittings.',
+    'legendary': 'Crimson lacquer and ember-cut crests.',
 }
 
 

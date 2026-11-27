@@ -26,6 +26,8 @@ namespace Kage
     {
         public MoveDef pommel, hiltRise, stepPommel, lowPommel, groundStab, kick, pushKick, lowKick, heelDrop;
         public MoveDef cut1, cut2, overhead, thrust, sweep, guard;
+        /// <summary>The reference kata on the odachi: Tempest Coil (the Crown Wheel) and Thunder Poise (the Poised Fang).</summary>
+        public MoveDef crownWheel, tameCut;
         public MoveDef airHilt, airKick, airCleave;
 
         /// <summary>Metres from the guard to the tip: the longest blade of the families (the katana's is 0.72, the spear's 1.45).</summary>
@@ -136,6 +138,51 @@ namespace Kage
             m.cut1.chain[Btn.S] = m.cut2;
             m.cut2.chain[Btn.S] = m.overhead;
 
+            // ===================== REFERENCE KATA (the heavy odachi) =====================
+            // Tempest Coil: the Crown Wheel on the long blade. The blade carried low behind the hip is swept round the shins (it
+            // passes over, not into, the floor), lifted steeply behind, cocked over the crown and whipped flat across it into a
+            // stepping level cut at chest height. Both beats heavy.
+            m.crownWheel = new MoveDef("tachi.crownWheel", "Tempest Coil", 56)
+                .Key(6, Hold(P().Hip(-0.04f, -0.32f, 0f).Chest(-22f).Head(14f).FootN(0.25f, 0.13f).FootF(-0.3f, 0.15f, -22f), 0.02f, 0.74f, 150f), Ease.InOutQuad)
+                .Key(11, Hold(P().Hip(-0.04f, -0.4f, 0f).Chest(-26f).Head(16f).FootN(0.24f, 0.13f).FootF(-0.3f, 0.15f, -30f), -0.1f, 0.66f, 176f), Ease.OutQuad)
+                .Key(15, Hold(P().Hip(0.06f, -0.42f, -6f).Chest(-32f).Head(18f).FootN(0.32f, 0.13f).FootF(-0.3f, 0.15f, -30f), 0.5f, 0.54f, -6f), Ease.OutExpo)
+                .Key(19, Hold(P().Hip(0.06f, -0.42f, -6f).Chest(-32f).Head(18f).FootN(0.32f, 0.13f).FootF(-0.29f, 0.15f, -30f), 0.5f, 0.52f, -2f))
+                .Key(25, Hold(P().Hip(-0.04f, -0.12f, 4f).Chest(6f).Head(-4f).Feet(0.26f, -0.3f), 0f, 1.5f, 104f), Ease.InOutQuad)
+                .Key(29, Hold(P().Hip(-0.05f, -0.08f, 6f).Chest(12f).Head(-8f).Feet(0.26f, -0.3f), -0.02f, 1.68f, 138f), Ease.OutQuad)
+                .Key(32, Hold(P().Hip(0.04f, -0.12f, -6f).Chest(-10f).Head(4f).Feet(0.34f, -0.28f), 0.14f, 1.56f, 84f), Ease.InQuad)
+                .Key(36, Hold(Lunge(0.1f, -0.14f, 0.42f, -0.28f), 0.54f, 1.06f, 10f), Ease.OutExpo)
+                .Key(40, Hold(Lunge(0.1f, -0.14f, 0.42f, -0.28f), 0.52f, 1.04f, 6f))
+                .Key(56, Stance(), Ease.InOutQuad)
+                .Hit(13, 18, Blade, 10, HitLevel.Low, new Vector2(0.6f, 0f), stun: 30, hitstop: 8, shake: 0.2f, heavy: true, radius: 0.08f, postureMul: 2.2f)
+                .Hit(34, 39, Blade, 18, HitLevel.Mid, new Vector2(3.0f, 0.5f), stun: 26, hitstop: 11, shake: 0.34f, heavy: true, radius: 0.09f, postureMul: 2.4f)
+                .Move(30, 36, 3.0f)
+                .Impulse(13, new Vector2(-4.2f, 1.4f)).Impulse(34, new Vector2(-6.4f, 2.2f))
+                .Fx(11, 19, FxKind.TrailBlade).Fx(30, 40, FxKind.TrailBlade).Fx(28, 28, FxKind.Glint).Fx(13, 13, FxKind.Dust).Fx(30, 30, FxKind.Dust)
+                .Sword().Cancel(40).ProfiledOnly();
+
+            // Thunder Poise: the Poised Fang on the long blade. Drawn into the centre, lifted to the brow, held long behind the crown with a
+            // last cock-back and a glint, then the kiri-oroshi on a stepping foot, stopped dead at chest height
+            m.tameCut = new MoveDef("tachi.tameCut", "Thunder Poise", 58)
+                .Key(8, Hold(P().Hip(-0.02f, -0.12f, -2f).Chest(-4f).Head(3f).Feet(0.22f, -0.3f), 0.16f, 0.96f, 12f), Ease.InOutQuad)
+                .Key(15, Hold(P().Hip(-0.04f, -0.14f, 0f).Chest(2f).Head(0f).Feet(0.22f, -0.3f), 0.14f, 0.94f, -10f), Ease.InOutQuad)
+                .Key(20, Hold(P().Hip(-0.03f, -0.08f, 2f).Chest(8f).Head(-5f).Feet(0.24f, -0.3f), 0.1f, 1.5f, 62f), Ease.OutQuad)
+                .Key(24, Hold(P().Hip(-0.03f, -0.06f, 4f).Chest(12f).Head(-8f).Feet(0.24f, -0.3f), 0.04f, 1.66f, 142f), Ease.OutQuad)
+                .Key(31, Hold(P().Hip(-0.05f, -0.06f, 6f).Chest(12f).Head(-8f).Feet(0.22f, -0.32f), -0.01f, 1.66f, 156f), Ease.InOutQuad)
+                .Key(37, Hold(Lunge(0.1f, -0.16f, 0.42f, -0.26f), 0.54f, 1.12f, 24f), Ease.OutExpo)
+                .Key(44, Hold(Lunge(0.1f, -0.15f, 0.4f, -0.26f), 0.52f, 1.1f, 22f))
+                .Key(58, Stance(), Ease.InOutQuad)
+                .Hit(35, 40, Blade, 24, HitLevel.Overhead, new Vector2(2.0f, 0.3f), stun: 30, hitstop: 13, shake: 0.45f, heavy: true, radius: 0.1f, postureMul: 2.6f)
+                .Move(31, 36, 2.6f)
+                .Impulse(35, new Vector2(-6.4f, 2.2f))
+                .Fx(31, 40, FxKind.TrailBlade).Fx(27, 27, FxKind.Glint).Fx(31, 31, FxKind.Dust)
+                .Sword().ProfiledOnly();
+
+            m.crownWheel.chain[Btn.S] = m.tameCut;
+            m.cut1.chain[Btn.P] = m.crownWheel;                 // S, P
+            m.sweep.Cancel(25);
+            m.sweep.chain[Btn.S] = m.crownWheel;                // Down + S, S
+            m.cut2.chain[Btn.P] = m.tameCut;                    // S, S, P
+
             // ===================== PUNCH BUTTON: HILT STRIKES =====================
             // Pommel Strike: the blade swung back, the far hand driving the hilt into the foe
             m.pommel = new MoveDef("tachi.pommel", "Pommel Strike", 26)
@@ -217,6 +264,7 @@ namespace Kage
                 .Key(26, Crouch(), Ease.InOutQuad)
                 .Hit(8, 12, FootN, 4, HitLevel.Low, new Vector2(0.9f, 0f), stun: 14, hitstop: 4, shake: 0.06f, radius: 0.1f)
                 .Fx(7, 12, FxKind.TrailFootN).Cancel(12);
+            m.lowKick.chain[Btn.S] = m.sweep;
 
             // Heel Drop (back + kick): the leg raised and brought down on the foe
             m.heelDrop = new MoveDef("tachi.heelDrop", "Heel Drop", 38)
@@ -265,6 +313,7 @@ namespace Kage
                 case Btn.P:
                     if (dy < 0) return oppDown && dist < 1.7f ? groundStab : lowPommel;
                     if (fwd > 0) return dist < 0.85f && opp != null && opp.CanBeThrown ? throwGrab : stepPommel;
+                    if (fwd < 0 && !LegacyAi(self)) return tameCut;      // Back + P: Thunder Poise
                     return pommel;
                 case Btn.K:
                     if (dy < 0) return lowKick;
@@ -272,7 +321,7 @@ namespace Kage
                     if (fwd < 0) return heelDrop;
                     return kick;
                 case Btn.S:
-                    if (dy < 0) return sweep;
+                    if (dy < 0) return LegacyAi(self) ? sweep : crownWheel;       // S + L (Down + Weapon): Tempest Coil directly (legacy AI keeps Low Sweep)
                     if (fwd > 0) return thrust;
                     if (fwd < 0) return guard;
                     return cut1;
@@ -293,7 +342,7 @@ namespace Kage
                 var list = new List<MoveDef>
                 {
                     pommel, hiltRise, stepPommel, lowPommel, groundStab, kick, pushKick, lowKick, heelDrop,
-                    cut1, cut2, overhead, thrust, sweep, guard,
+                    cut1, cut2, overhead, thrust, sweep, guard, crownWheel, tameCut,
                     airHilt, airKick, airCleave,
                     throwGrab, throwWhiff, roll, backflip, getUp, getUpFront,
                 };

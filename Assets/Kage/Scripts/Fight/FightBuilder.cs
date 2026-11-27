@@ -92,7 +92,9 @@ namespace Kage
             var go = new GameObject(def.displayName);
             go.transform.SetParent(_root, false);
             var f = go.AddComponent<Fighter>();
+            f.ctx = Context;
             f.Setup(def, rigDef, team == 0 ? PlayerSortOrder : FoeSortOrder);
+            ArmorAura.AttachIfLegendary(f, def.armor);
             if (def.bodyScale != 1f) go.transform.localScale = new Vector3(def.bodyScale, def.bodyScale, 1f);
             f.input = input;
             (input as AIInputSource)?.Configure(def);
@@ -102,7 +104,6 @@ namespace Kage
             _spawned[def.id] = copies + 1;
             f.CharacterId = def.id;
             f.FighterId = copies == 0 ? def.id : def.id + "#" + (copies + 1);
-            f.ctx = Context;
             f.EquipWeapon(def.weaponId, def.weaponLevel);
             Context.Fighters.Add(f);
             if (def.bossId != null)

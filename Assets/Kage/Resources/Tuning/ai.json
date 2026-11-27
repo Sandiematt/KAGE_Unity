@@ -29,5 +29,16 @@
     "aggressiveAbilityMul": 1.3,
     "heavyThinkMul": 1.3,
     "tradeChance": 0.4,
-    "unblockableDodgeBonus": 0.3
+    "unblockableDodgeBonus": 0.3,
+    "readWindowFrames": 240,
+    "readHistory": 6,
+    "readPerRepeat": 0.12,
+    "readMax": 0.36,
+    "stanceParry": 0.3,
+    "parrySkillRegular": 0.25,
+    "parrySkillElite": 0.6,
+    "parrySkillSub": 0.9,
+    "parrySkillBoss": 1.1,
+    "parryCap": 0.55,
+    "answerChance": 0.85
 }

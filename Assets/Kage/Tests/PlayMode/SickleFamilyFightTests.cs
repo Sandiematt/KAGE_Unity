@@ -115,7 +115,8 @@ namespace Kage.Tests
         [TestCase("S", 0, 0, "chain.reap")]
         [TestCase("S", 1, 0, "chain.lash")]
         [TestCase("S", 0, -1, "chain.graveHook")]
-        [TestCase("S", -1, 0, "chain.crescentLift")]
+        [TestCase("S", -1, 0, "chain.cyclone")]
+        [TestCase("S", 0, 1, "chain.crescentLift")]
         public void Each_ground_button_and_direction_starts_its_chain_move(string button, int fwd, int dy, string expected)
         {
             var f = Alone();
@@ -186,13 +187,13 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Cuts_chain_into_the_rising_reap_and_the_pull_into_the_reap()
+        public void Cuts_chain_into_the_whip_lash_and_pull_finisher()
         {
             var f = Alone();
             f.Run(10);
-            f.KageInput.Add(1, buttons: "S").Add(9).Add(1, buttons: "S");
-            f.Run(100);
-            CollectionAssert.AreEqual(new[] { "chain.reap", "chain.reapUp" }, Started(f));
+            f.KageInput.Add(1, buttons: "S").Add(9).Add(1, buttons: "S").Add(13).Add(1, buttons: "S");
+            f.Run(130);
+            CollectionAssert.AreEqual(new[] { "chain.reap", "chain.lash", "chain.pull" }, Started(f));
             Done(f);
 
             f = Alone();
@@ -204,8 +205,8 @@ namespace Kage.Tests
 
             f = Alone();
             f.Run(10);
-            f.KageInput.Add(1, fwd: 1, buttons: "P").Add(15).Add(1, buttons: "S");
-            f.Run(100);
+            f.KageInput.Add(1, fwd: 1, buttons: "P").Add(24).Add(1, buttons: "S");
+            f.Run(110);
             CollectionAssert.AreEqual(new[] { "chain.pull", "chain.reap" }, Started(f), "the pull drags the foe in, the reap cuts him");
         }
 
@@ -217,12 +218,15 @@ namespace Kage.Tests
             var reachable = new HashSet<MoveDef>();
             foreach (var b in new[] { Btn.P, Btn.K, Btn.S, Btn.X })
                 foreach (int fwd in new[] { -1, 0, 1 })
-                    foreach (int dy in new[] { -1, 0 })
+                    foreach (int dy in new[] { -1, 0, 1 })
                         foreach (bool air in new[] { false, true })
                         {
                             var m = set.Select(b, fwd, dy, air, f.Kage);
                             if (m != null) reachable.Add(m);
                         }
+            f.KageInput.Add(1, fwd: 1, dash: true).Add(5, fwd: 1).Add(1, buttons: "S");
+            f.Run(20);
+            if (Started(f).Contains(set.dashHook.id)) reachable.Add(set.dashHook);
             var queue = new Queue<MoveDef>(reachable);
             while (queue.Count > 0)
                 foreach (var next in queue.Dequeue().chain.Values)
@@ -250,7 +254,7 @@ namespace Kage.Tests
                 foreach (var w in m.hits)
                 {
                     if (k.moveFrame < w.from || k.moveFrame > w.to || !w.points.Contains(HitPoint.Blade)) continue;
-                    best = Mathf.Max(best, ((Vector2)k.rig.World(B.Sword, k.BladeTipLocal) - k.Pos).x * k.facing);
+                    best = Mathf.Max(best, (k.ActiveWeaponTipWorld(w) - k.Pos).x * k.facing);
                 }
             }
             return best;
@@ -301,7 +305,7 @@ namespace Kage.Tests
         {
             var f = Alone();
             var set = (ChainMoves)f.Kage.moves;
-            foreach (var m in new[] { set.reap, set.reapUp, set.lash, set.pull, set.graveHook, set.crescentLift, set.groundHook, set.airReap, set.shadowFall })
+            foreach (var m in new[] { set.reap, set.reapUp, set.lash, set.pull, set.cyclone, set.graveHook, set.crescentLift, set.dashHook, set.groundHook, set.airReap, set.shadowFall })
                 foreach (var w in m.hits)
                 {
                     CollectionAssert.AreEqual(new[] { HitPoint.Blade }, w.points, m.id);
@@ -350,18 +354,20 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void The_drawn_sickle_sits_at_the_end_of_the_hit_line()
+        public void The_drawn_weight_sits_at_the_end_of_the_hit_line()
         {
             var f = Alone();
             f.Run(10);
-            f.Kage.StartMove(((ChainMoves)f.Kage.moves).lash);
+            var set = (ChainMoves)f.Kage.moves;
+            f.Kage.StartMove(set.lash);
             f.RunUntil(() => f.Kage.moveFrame >= 10, 40);
             var line = ChainVisual.LineOf(f.Kage.rig);
             line.Refresh();
-            Vector2 pivot = f.Kage.rig.World(B.Sword, Vector2.zero);
-            Vector2 tip = f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal);
-            Assert.AreEqual(f.Kage.BladeExtension, line.HeadDistance, 0.02f, "the line draws the extension the hit line has");
-            Assert.Greater((tip - pivot).magnitude, 1.2f);
+            Vector2 hand = f.Kage.rig.World(B.HandN, f.Kage.def.fistLocal);
+            Vector2 tip = f.Kage.ActiveWeaponTipWorld(set.lash.hits[0]);
+            Assert.AreEqual(f.Kage.BladeExtension, line.HeadDistance, 0.03f, "the chain line draws the exact extension the hit line has");
+            Assert.Less((line.WeightWorld - tip).magnitude, 0.02f, "the iron fundo sits at the hit-line tip");
+            Assert.Greater((tip - hand).magnitude, 1.2f);
         }
 
         [Test]
@@ -464,7 +470,7 @@ namespace Kage.Tests
         {
             var f = Alone();
             var set = (ChainMoves)f.Kage.moves;
-            foreach (var m in new[] { set.jab, set.reap, set.reapUp, set.lash, set.pull, set.graveHook, set.crescentLift, set.groundHook })
+            foreach (var m in new[] { set.jab, set.reap, set.reapUp, set.lash, set.pull, set.cyclone, set.graveHook, set.crescentLift, set.dashHook, set.groundHook })
             {
                 f.Kage.EquipWeapon("yamigama");
                 f.Run(30);
@@ -474,8 +480,9 @@ namespace Kage.Tests
                 {
                     f.Run(1);
                     // while a hit window is on (the blend between two keys may swing the point through the floor for a frame or two)
-                    if (m.hits.Any(w => f.Kage.moveFrame >= w.from && f.Kage.moveFrame <= w.to))
-                        lowest = Mathf.Min(lowest, f.Kage.rig.World(B.Sword, f.Kage.BladeTipLocal).y);
+                    var active = m.hits.FirstOrDefault(w => f.Kage.moveFrame >= w.from && f.Kage.moveFrame <= w.to);
+                    if (active != null)
+                        lowest = Mathf.Min(lowest, f.Kage.ActiveWeaponTipWorld(active).y);
                 }
                 Assert.Greater(lowest, -0.06f, $"{m.id}: the tip's lowest point");
             }

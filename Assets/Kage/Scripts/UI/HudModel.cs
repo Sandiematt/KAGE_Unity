@@ -28,6 +28,10 @@ namespace Kage
         public int Kunai;
         public float Posture;
         public bool PostureBroken;
+        /// <summary>Minimal 3-dot timing indicator state under Kage's bar (Ready / Window / Perfect).</summary>
+        public HudTimingState TimingState;
+        /// <summary>0..1 glow pulse when Perfect Timing lands (falls cleanly back to 0).</summary>
+        public float TimingPulse;
     }
 
     /// <summary>The boss bar: art card, phase marks, title, name, health track.</summary>
@@ -86,7 +90,7 @@ namespace Kage
     /// </summary>
     public sealed class FightHudModel
     {
-        public const float HurtSeconds = 0.32f, BumpSeconds = 0.22f, ReadyPopSeconds = 0.4f, GlitchSeconds = 0.7f, WavePulseSeconds = 1f, ComboFadePerSecond = 4f;
+        public const float HurtSeconds = 0.32f, BumpSeconds = 0.22f, ReadyPopSeconds = 0.4f, GlitchSeconds = 0.7f, WavePulseSeconds = 1f, ComboFadePerSecond = 4f, TimingPulseSeconds = 0.55f;
         const float Low = 0.25f;
 
         public HudLayout Layout { get; private set; }
@@ -95,6 +99,9 @@ namespace Kage
         public readonly HudClockView Clock = new();
         public readonly HudRoadView Road = new();
         public readonly HudComboView Combo = new();
+        public readonly HudCalloutQueue Callouts = new();
+        /// <summary>The cue over a boss that would take the rage art now (HudRageCue.cs).</summary>
+        public readonly HudRageCueView RageCue = new();
         readonly List<HudMiniBar> _mini = new();
         /// <summary>The foes' small bars in a stretch.</summary>
         public IReadOnlyList<HudMiniBar> MiniBars => _mini;
@@ -137,12 +144,15 @@ namespace Kage
             Finished = Cleared = false;
             Road.WaveNumber = 0;
             Road.WavePulse = 0f;
-            Player.Hurt = Foe.Hurt = Boss.Hurt = Boss.PhaseGlitch = 0f;
+            Player.Hurt = Foe.Hurt = Boss.Hurt = Boss.PhaseGlitch = Player.TimingPulse = 0f;
+            Player.TimingState = HudTimingState.Ready;
+            Callouts.Clear();
+            RageCue.Reset();
             if (_boss != null) SetPhase(0);
         }
 
         /// <summary>One combat event from the fight's stream. Only reads: it moves view values, never the fight.</summary>
-        public void Handle(in CombatEvent e)
+        public void Handle(in CombatEvent e, bool perfectParry = false)
         {
             switch (e.Type)
             {
@@ -151,6 +161,52 @@ namespace Kage
                     if (e.TargetId == Player.Id) Player.Hurt = 1f;
                     else if (_boss != null && e.TargetId == _boss.Id) Boss.Hurt = 1f;
                     else if (e.TargetId == Foe.Id) Foe.Hurt = 1f;
+                    break;
+                case CombatEventType.Parried:
+                    if (!string.IsNullOrEmpty(Player.Id))
+                    {
+                        bool hasPos = e.Contact != Vector2.zero;
+                        if (e.TargetId == Player.Id)
+                        {
+                            Callouts.Push(perfectParry ? CombatCalloutKind.PerfectParry : CombatCalloutKind.Parry, e.Contact, hasPos);
+                            Player.TimingPulse = 1f;
+                            Player.TimingState = HudTimingState.Perfect;
+                        }
+                        else if (e.SourceId == Player.Id) Callouts.Push(CombatCalloutKind.Parried, e.Contact, hasPos);
+                    }
+                    break;
+                case CombatEventType.PerfectDodged:
+                    if (!string.IsNullOrEmpty(Player.Id) && e.TargetId == Player.Id)
+                    {
+                        Callouts.Push(CombatCalloutKind.Dodge, e.Contact, e.Contact != Vector2.zero);
+                        Player.TimingPulse = 1f;
+                        Player.TimingState = HudTimingState.Perfect;
+                    }
+                    break;
+                case CombatEventType.CounterHit:
+                    if (!string.IsNullOrEmpty(Player.Id) && e.SourceId == Player.Id)
+                        Callouts.Push(CombatCalloutKind.Counter, e.Contact, e.Contact != Vector2.zero);
+                    break;
+                case CombatEventType.Countered:
+                    if (!string.IsNullOrEmpty(Player.Id))
+                    {
+                        bool hasPos = e.Contact != Vector2.zero;
+                        if (e.TargetId == Player.Id) Callouts.Push(CombatCalloutKind.Counter, e.Contact, hasPos);
+                        else if (e.SourceId == Player.Id)       // a boss turning his rage art aside says so (Fighter.RageArtCounter.cs)
+                            Callouts.Push(Fighter.IsRageArtId(e.MoveId) ? CombatCalloutKind.RageCountered : CombatCalloutKind.Countered, e.Contact, hasPos);
+                    }
+                    break;
+                case CombatEventType.Clashed:
+                    if (!string.IsNullOrEmpty(Player.Id) && (e.SourceId == Player.Id || e.TargetId == Player.Id))
+                        Callouts.Push(CombatCalloutKind.Clash, e.Contact, e.Contact != Vector2.zero);
+                    break;
+                case CombatEventType.GuardBroken:
+                    if (!string.IsNullOrEmpty(Player.Id))
+                    {
+                        bool hasPos = e.Contact != Vector2.zero;
+                        if (e.TargetId == Player.Id) Callouts.Push(CombatCalloutKind.GuardBroken, e.Contact, hasPos);
+                        else if (e.SourceId == Player.Id || !string.IsNullOrEmpty(e.TargetId)) Callouts.Push(CombatCalloutKind.GuardBreak, e.Contact, hasPos);
+                    }
                     break;
                 case CombatEventType.BossPhaseChanged:
                     if (_boss == null || e.TargetId != _boss.Id) break;
@@ -221,6 +277,8 @@ namespace Kage
             UpdateClock(f);
             UpdateRoad(f);
             UpdateCombo(f.Player.Combo, dt);
+            Callouts.Tick(dt);
+            RageCue.Step(dt, f.RageCue);
 
             _mini.Clear();
             if (f.Layout == HudLayout.Stretch && f.MiniBars != null) for (int i = 0; i < f.MiniBars.Count; i++) _mini.Add(f.MiniBars[i]);
@@ -233,6 +291,7 @@ namespace Kage
             Boss.Hurt = Mathf.Max(0f, Boss.Hurt - dt / HurtSeconds);
             Boss.PhaseGlitch = Mathf.Max(0f, Boss.PhaseGlitch - dt / GlitchSeconds);
             Player.RageReadyPop = Mathf.Max(0f, Player.RageReadyPop - dt / ReadyPopSeconds);
+            Player.TimingPulse = Mathf.Max(0f, Player.TimingPulse - dt / TimingPulseSeconds);
             Road.WavePulse = Mathf.Max(0f, Road.WavePulse - dt / WavePulseSeconds);
             Combo.Bump = Mathf.Max(0f, Combo.Bump - dt / BumpSeconds);
         }
@@ -263,6 +322,7 @@ namespace Kage
             v.RageReady = ready;
             v.KunaiShown = s.HasKunai;
             v.Kunai = s.Kunai;
+            v.TimingState = v.TimingPulse > 0f ? HudTimingState.Perfect : s.InTimingWindow ? HudTimingState.Window : HudTimingState.Ready;
         }
 
         void UpdateClock(in HudFrame f)

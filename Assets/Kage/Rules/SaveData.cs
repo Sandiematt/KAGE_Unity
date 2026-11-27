@@ -19,7 +19,7 @@ namespace Kage.Rules
 
     public sealed class Equipped
     {
-        public string weapon = "kagetsu";
+        public string weapon = GameRules.StarterWeaponId;
         public string helmet = "shiro_maki";
         public string armor = "tachibana_yoroi";
     }

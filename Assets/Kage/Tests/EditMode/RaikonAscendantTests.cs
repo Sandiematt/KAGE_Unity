@@ -72,7 +72,7 @@ namespace Kage.Tests
             var d = CharacterCatalog.Get(Raikon.Id);
             CollectionAssert.AreEqual(new[] { "thunderSwing", "stormBreak", "skyfall", "redlineCounter" }, d.abilities.Take(4).ToArray(), "the old slots keep their numbers");
             CollectionAssert.AreEqual(RaikonAscendant.AllIds.ToArray(), d.abilities.Skip(4).ToArray());
-            Assert.AreEqual(14, RaikonAscendant.AllIds.Count());
+            Assert.AreEqual(23, RaikonAscendant.AllIds.Count(), "fourteen, and the expansion's nine");
             foreach (var id in RaikonAscendant.AllIds)
             {
                 var a = AbilityCatalog.Get(id);
@@ -119,13 +119,20 @@ namespace Kage.Tests
         [Test]
         public void Phase_one_throws_no_lightning()
         {
-            foreach (var m in new[] { RaikonAscendant.KesaGiri, RaikonAscendant.PommelKick, RaikonAscendant.CrimsonFlash, RaikonAscendant.LowSweep, RaikonAscendant.RisingCut, RaikonAscendant.IronGuard, RaikonAscendant.IronGuardSlash })
+            foreach (var m in new[]
+            {
+                RaikonAscendant.KesaGiri, RaikonAscendant.PommelKick, RaikonAscendant.CrimsonFlash, RaikonAscendant.LowSweep, RaikonAscendant.RisingCut, RaikonAscendant.IronGuard,
+                RaikonAscendant.IronGuardSlash, RaikonAscendant.SheatheCross, RaikonAscendant.TsubaPress, RaikonAscendant.OverheadCleave, RaikonAscendant.WhirlwindFeint,
+            })
             {
                 Assert.IsNull(m.projectile, m.id);
                 Assert.IsEmpty(m.extraThrows, m.id);
                 Assert.IsNull(m.hazard, m.id);
                 Assert.IsEmpty(m.extraHazards, m.id);
+                Assert.IsEmpty(m.steps, m.id + ": no blinks or teleports");
+                Assert.Less(m.vaultFrom, 0, m.id + ": no blinks");
                 Assert.IsFalse(m.cues.Any(c => c.cue == RaikonAscendant.AuraCue), m.id + ": no unblockable lightning");
+                Assert.IsFalse(m.hits.Any(w => w.level == HitLevel.Unblockable), m.id);
             }
         }
 
@@ -170,7 +177,7 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Ascendant_Rush_is_elbow_low_sweep_rising_kick_air_spin_heavy_slam()
+        public void Ascendant_Rush_is_elbow_low_sweep_rising_kick_air_cut_heavy_slam()
         {
             var h = RaikonAscendant.AscendantRush.hits;
             Assert.AreEqual(5, h.Count);
@@ -250,8 +257,13 @@ namespace Kage.Tests
                 RaikonAscendant.LowSweep, RaikonAscendant.IronGuardSlash, RaikonAscendant.RaijinArc, RaikonAscendant.ThunderStep, RaikonAscendant.SkySplitter,
                 RaikonAscendant.StaticPalm, RaikonAscendant.TempestWheel, RaikonAscendant.BlinkFlurry, RaikonAscendant.BlinkFlurry2, RaikonAscendant.BlinkFlurry3,
                 RaikonAscendant.HeavensVerdict, RaikonAscendant.AscendantRush, RaikonAscendant.AfterimageFeint, RaikonAscendant.FinalOverload,
+                // the expansion
+                RaikonAscendant.SheatheCross, RaikonAscendant.SheatheCrossStorm, RaikonAscendant.TsubaPress, RaikonAscendant.TsubaPressStorm,
+                RaikonAscendant.OverheadCleave, RaikonAscendant.OverheadCleaveStorm, RaikonAscendant.WhirlwindFeint, RaikonAscendant.FulminationDrag,
+                RaikonAscendant.FulminationDragStorm, RaikonAscendant.ArcAnchor, RaikonAscendant.GaleSever, RaikonAscendant.GaleSeverStorm,
+                RaikonAscendant.TempestCage, RaikonAscendant.ZenithGuillotine, RaikonAscendant.MirageSeverance,
             };
-            var steel = new[] { RaikonAscendant.SteelCue, RaikonAscendant.SteelHandCue, RaikonAscendant.SteelFootCue };
+            var steel = new[] { RaikonAscendant.SteelCue, RaikonAscendant.SteelHandCue, RaikonAscendant.SteelFootCue, RaikonAscendant.SteelSayaCue };
             foreach (var m in kit)
             {
                 bool Told(string[] ids, int before) => m.cues.Any(c => ids.Contains(c.cue) && c.frame < before);
@@ -284,13 +296,20 @@ namespace Kage.Tests
                 RaikonAscendant.SkySplitter, RaikonAscendant.StaticPalm, RaikonAscendant.TempestWheel, RaikonAscendant.BlinkFlurry, RaikonAscendant.BlinkFlurry2,
                 RaikonAscendant.BlinkFlurry3, RaikonAscendant.HeavensVerdict, RaikonAscendant.AscendantRush, RaikonAscendant.AfterimageFeint,
                 RaikonAscendant.StormKindling, RaikonAscendant.Ascension, RaikonAscendant.FinalOverload,
+                RaikonAscendant.SheatheCross, RaikonAscendant.SheatheCrossStorm, RaikonAscendant.TsubaPress, RaikonAscendant.TsubaPressStorm,
+                RaikonAscendant.OverheadCleave, RaikonAscendant.OverheadCleaveStorm, RaikonAscendant.WhirlwindFeint, RaikonAscendant.FulminationDrag,
+                RaikonAscendant.FulminationDragStorm, RaikonAscendant.ArcAnchor, RaikonAscendant.ArcAnchorRecall, RaikonAscendant.GaleSever,
+                RaikonAscendant.GaleSeverStorm, RaikonAscendant.TempestCage, RaikonAscendant.ZenithGuillotine, RaikonAscendant.MirageSeverance,
             })
                 foreach (var c in m.cues) used.Add(c.cue);
-            foreach (var h in new[] { RaikonAscendant.FloorSparkLine, RaikonAscendant.TrailArc, RaikonAscendant.VerticalBolt, RaikonAscendant.SkyBolt, RaikonAscendant.FlurrySlash, RaikonAscendant.FlurrySlam, RaikonAscendant.PlantShock, RaikonAscendant.SpiralKnock })
+            foreach (var h in new[] { RaikonAscendant.FloorSparkLine, RaikonAscendant.TrailArc, RaikonAscendant.VerticalBolt, RaikonAscendant.SkyBolt, RaikonAscendant.FlurrySlash, RaikonAscendant.FlurrySlam, RaikonAscendant.PlantShock, RaikonAscendant.SpiralKnock }
+                .Concat(RaikonAscendant.ExpansionHazards))
             {
                 if (!string.IsNullOrEmpty(h.telegraphCue)) used.Add(h.telegraphCue);
                 if (!string.IsNullOrEmpty(h.strikeCue)) used.Add(h.strikeCue);
             }
+            foreach (var p in RaikonAscendant.ExpansionProjectiles)
+                foreach (var id in new[] { p.flightCue, p.hitCue, p.endCue }) if (!string.IsNullOrEmpty(id)) used.Add(id);
             foreach (var id in used) Assert.IsTrue(EffectCues.IsRegistered(id), id);
         }
 
@@ -307,9 +326,15 @@ namespace Kage.Tests
         [Test]
         public void Bursts_dashes_blinks_and_slams_kick_the_soft_parts()
         {
-            foreach (var m in new[] { RaikonAscendant.CrimsonFlash, RaikonAscendant.ThunderStep, RaikonAscendant.RaijinArc, RaikonAscendant.BlinkFlurry, RaikonAscendant.BlinkFlurry3, RaikonAscendant.AfterimageFeint, RaikonAscendant.StormKindling, RaikonAscendant.Ascension, RaikonAscendant.FinalOverload, RaikonAscendant.KesaGiri })
+            foreach (var m in new[]
+            {
+                RaikonAscendant.CrimsonFlash, RaikonAscendant.ThunderStep, RaikonAscendant.RaijinArc, RaikonAscendant.BlinkFlurry, RaikonAscendant.BlinkFlurry3,
+                RaikonAscendant.AfterimageFeint, RaikonAscendant.StormKindling, RaikonAscendant.Ascension, RaikonAscendant.FinalOverload, RaikonAscendant.KesaGiri,
+                RaikonAscendant.SheatheCross, RaikonAscendant.TsubaPress, RaikonAscendant.OverheadCleave, RaikonAscendant.WhirlwindFeint, RaikonAscendant.FulminationDrag,
+                RaikonAscendant.ArcAnchor, RaikonAscendant.GaleSever, RaikonAscendant.TempestCage, RaikonAscendant.ZenithGuillotine, RaikonAscendant.MirageSeverance,
+            })
                 Assert.IsNotEmpty(m.impulses, m.id);
-            foreach (var m in new[] { RaikonAscendant.CrimsonFlash, RaikonAscendant.ThunderStep, RaikonAscendant.BlinkFlurry, RaikonAscendant.AfterimageFeint, RaikonAscendant.FinalOverload })
+            foreach (var m in new[] { RaikonAscendant.CrimsonFlash, RaikonAscendant.ThunderStep, RaikonAscendant.BlinkFlurry, RaikonAscendant.AfterimageFeint, RaikonAscendant.FinalOverload, RaikonAscendant.TempestCage, RaikonAscendant.MirageSeverance })
                 Assert.IsTrue(m.cues.Any(c => c.cue == RaikonAscendant.GhostCue), m.id + " leaves afterimages");
         }
 
@@ -369,7 +394,9 @@ namespace Kage.Tests
             Run(loop, 2);
             Assert.AreEqual(3, raikon.Phases.Index);
             Assert.AreEqual(RaikonAscendant.FinalOverload, raikon.move);
-            Run(loop, RaikonAscendant.FinalOverload.total + 4, keepKage);
+            // its length, plus the hit-stop of whatever blows it lands on Kage (frozen frames step the loop too)
+            for (int i = 0; i < RaikonAscendant.FinalOverload.total + 60 && raikon.move == RaikonAscendant.FinalOverload; i++) Run(loop, 1, keepKage);
+            Assert.AreNotEqual(RaikonAscendant.FinalOverload, raikon.move, "the Final Overload ran out");
             raikon.health = raikon.maxHealth * 0.05f;
             Run(loop, 2);
             Assert.AreNotEqual(RaikonAscendant.FinalOverload, raikon.move, "once only");

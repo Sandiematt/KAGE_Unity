@@ -78,7 +78,7 @@ namespace Kage
         public static string[] PlayableWeapons()
         {
             var list = new List<string>();
-            foreach (var w in JsTables.Weapons)
+            foreach (var w in JsTables.AllWeapons)
                 if (!w.Enemy && Get(FamilyIdOf(w.Id)) != null) list.Add(w.Id);
             return list.ToArray();
         }

@@ -27,6 +27,27 @@ namespace Kage
         int _stateEntries;
         int _perfectDodgeSpentAt = -1;
 
+        bool _dodgeAfterglow;
+        int _ghostsLeft;
+        Vector2 _lastGhost;
+        float _nextGhost;
+        internal bool InDodgeAfterglow => _dodgeAfterglow && ctx != null && ctx.Clock.WorldScale > 0f &&
+            ctx.Clock.WorldScale < 1f && ctx.Clock.WorldExempt == this;
+
+        void UpdateDodgeAfterimages()
+        {
+            if (!_dodgeAfterglow) return;
+            if (!InDodgeAfterglow) { _dodgeAfterglow = false; return; }
+            if (_ghostsLeft <= 0 || Time.time < _nextGhost || Vfx.I == null) return;
+            var t = DodgeT;
+            Vector2 at = rig.Bone(B.Hips).position;
+            if ((at - _lastGhost).sqrMagnitude < t.afterimageSpacing * t.afterimageSpacing) return;
+            Vfx.I.Ghost(rig, t.afterimageTint, t.afterimageLife);
+            _lastGhost = at;
+            _nextGhost = Time.time + 0.045f;
+            _ghostsLeft--;
+        }
+
         static DodgeTuning DodgeT => Tuning.Get<DodgeTuning>();
 
         /// <summary>The perfect-dodge window in frames: the tuning's, plus the dash perk's bonus (SAN-84's <see cref="DashBonus"/> hook).</summary>
@@ -90,12 +111,13 @@ namespace Kage
             var f = a.owner;
             if (f == null || f.rig == null) return;
             var t = DodgeT;
-            // each ghost is a snapshot of the rig now, spread back along the dodge so they read as a trail
-            for (int i = 0; i < t.afterimages; i++)
-                Vfx.I.Ghost(f.rig, t.afterimageTint, t.afterimageLife * (1f - 0.2f * i), a.dir * (t.afterimageSpacing * i));
+            f._dodgeAfterglow = true;
+            f._ghostsLeft = Mathf.Max(0, t.afterimages - 1);
+            f._lastGhost = f.rig.Bone(B.Hips).position;
+            f._nextGhost = Time.time + 0.045f;
+            if (t.afterimages > 0) Vfx.I.Ghost(f.rig, t.afterimageTint, t.afterimageLife);
             GameFeel.Flash(t.screenTint, t.screenTintSeconds);
-            KageGame.I?.Hud?.Float(pos + Vector2.up * 2.0f, "EVADE", t.afterimageTint.WithA(1f), 1.0f);
-            KageGame.I?.Audio?.Play(SfxKind.Whoosh, 0.7f);
+            f.CombatAudio?.Play(SfxKind.TimeSlice, 0.7f);
         }
     }
 }

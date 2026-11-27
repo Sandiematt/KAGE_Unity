@@ -33,7 +33,7 @@ namespace Kage.Tests
         {
             if (flow != null) Object.DestroyImmediate(flow.gameObject);
             if (game != null) Object.DestroyImmediate(game);
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
             Time.timeScale = 1f;
             GameFeel.paused = false;
             KageGame.SaveSource = savedSource;

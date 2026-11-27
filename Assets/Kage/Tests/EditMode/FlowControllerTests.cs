@@ -317,7 +317,7 @@ namespace Kage.Tests
         {
             var f = NewFlow();
             Assert.IsFalse(f.EquipWeapon("tsubame"));
-            Assert.AreEqual("kagetsu", f.Save.equipped.weapon);
+            Assert.AreEqual("mumei", f.Save.equipped.weapon);
         }
 
         // ---- dev mode ----

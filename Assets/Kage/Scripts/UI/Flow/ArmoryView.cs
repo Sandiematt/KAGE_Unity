@@ -33,7 +33,7 @@ namespace Kage
     /// <summary>One item in the row of tiles (or cards) at the bottom of the screen.</summary>
     public sealed class ArmoryTile
     {
-        public string Id, Name;
+        public string Id, Name, TierId;
         /// <summary>The drawn item the tile shows: the sword, the helmet or the armour itself.</summary>
         public TileArt Art;
         public bool Owned, Equipped, Locked, Selected;
@@ -113,11 +113,41 @@ namespace Kage
         /// (<see cref="ArmoryListing"/>); enemy-only gear and bare hands are left out. There is one armour list: an Act I reward
         /// armour (Ikazuchi-do, Shiden Yoroi) is in it after the shop armours once the save owns it, and not before.
         /// </summary>
+        static int HelmetSortIndex(string id)
+        {
+            int idx = Array.IndexOf(GameRules.HelmetOrder, id);
+            return idx >= 0 ? idx : GameRules.HelmetOrder.Length;
+        }
+
+        static int ArmorSortIndex(string id)
+        {
+            int idx = Array.IndexOf(GameRules.ArmorOrder, id);
+            return idx >= 0 ? idx : GameRules.ArmorOrder.Length;
+        }
+
         public static string[] Items(ArmoryTab tab, SaveData save)
         {
             var kind = KindOf(tab);
             var items = ArmoryListing.Candidates(kind).Where(i => !i.Enemy && ArmoryListing.Listed(kind, i.Id));
-            if (kind == GearKind.Armors) items = items.Where(i => !i.Exclusive || GameRules.Owns(save, kind, i.Id));
+            if (kind == GearKind.Armors)
+            {
+                return items
+                    .Where(i => !i.Exclusive || GameRules.Owns(save, kind, i.Id))
+                    .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
+                    .ThenBy(i => ArmorSortIndex(i.Id))
+                    .ThenBy(Cost)
+                    .Select(i => i.Id)
+                    .ToArray();
+            }
+            if (kind == GearKind.Helmets)
+            {
+                return items
+                    .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
+                    .ThenBy(i => HelmetSortIndex(i.Id))
+                    .ThenBy(Cost)
+                    .Select(i => i.Id)
+                    .ToArray();
+            }
             return items
                 .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
                 .ThenBy(Cost)
@@ -140,9 +170,10 @@ namespace Kage
                 case ArmoryTab.Weapons: preview.equipped.weapon = id; break;
                 case ArmoryTab.Helmets: preview.equipped.helmet = id; break;
                 default:
-                    // the armour cards wear the Crimson Scarf, so every card shows the armour alone (JS startArmorCards)
+                    // the armour cards wear the Crimson Scarf with no weapon, so every card displays the armour alone without blade overlap
                     preview.equipped.armor = id;
                     preview.equipped.helmet = "shiro_maki";
+                    preview.equipped.weapon = "fists";
                     break;
             }
             return preview;
@@ -245,6 +276,7 @@ namespace Kage
                 {
                     Id = tid,
                     Name = it.Name,
+                    TierId = GameRules.ItemTier(kind, tid, Math.Max(1, lvl)),
                     Level = lvl,
                     Owned = lvl > 0,
                     Equipped = EquippedId(save, kind) == tid,
@@ -300,7 +332,7 @@ namespace Kage
     {
         static readonly Dictionary<string, string> WeaponKanji = new Dictionary<string, string>
         {
-            { "kagetsu", "影月" }, { "tsubame", "燕" }, { "shizuka", "静" }, { "onikiri", "鬼斬" }, { "mizuchi", "蛟" },
+            { "mumei", "無銘" }, { "kagetsu", "影月" }, { "tsubame", "燕" }, { "shizuka", "静" }, { "onikiri", "鬼斬" }, { "mizuchi", "蛟" },
             { "yamigama", "闇鎌" }, { "iwakudaki", "岩砕き" }, { "shinsen", "神閃" },
         };
 
@@ -308,13 +340,14 @@ namespace Kage
         static readonly Dictionary<string, string[]> Rage = new Dictionary<string, string[]>
         {
             { "fists", new[] { "Shadow Palm", "A burst of ink that hurls the enemy away." } },
+            { "mumei", new[] { "Thousand Shadows", "Kage vanishes into the dark: five cuts from nowhere, then the finisher. Unblockable." } },
             { "kagetsu", new[] { "Crimson Moon", "A blood moon rises. Three crimson crescent cuts from both sides, then the blade is sheathed and the giant crescent falls through the enemy. Unblockable." } },
             { "tsubame", new[] { "Thousand Swallows", "Strike from eight directions in a blink, leaving lightning afterimages that all strike at once in a lightning X. Unblockable." } },
             { "shizuka", new[] { "Silent Moon", "The world goes silent. One unseen draw, a lattice of violet cuts, and they all open as the blade clicks home. Unblockable." } },
-            { "onikiri", new[] { "Hell Splitter", "A demon leap and an overhead that splits the ground: fissures race both ways and lava pillars erupt along them. Unblockable." } },
+            { "onikiri", new[] { "Hell Splitter", "A demon aura and a flaming leap; the cleaver splits the floor, fire runs along the fissures and lava pillars erupt. Unblockable." } },
             { "mizuchi", new[] { "Rising Water Dragon", "The arena floods. A giant water dragon bursts from the spear, coils round the enemy and crashes down on them. Unblockable." } },
             { "yamigama", new[] { "Reaper's Requiem", "Darkness falls and three shadow clones rise: they chain the enemy and cut in turn, then two enormous scythe crescents carve down. Unblockable." } },
-            { "iwakudaki", new[] { "Golden Earthbreaker", "Rocks rise and the ground trembles; one slam sends three golden shockwaves racing out. Every grounded enemy is stunned. Unblockable." } },
+            { "iwakudaki", new[] { "Earthsplitter", "Runes wake and rocks rise; one slam on the enemy cracks the ground open and three golden shockwaves race out. If it kills, the whole screen shatters like glass. Unblockable." } },
             { "shinsen", new[] { "Final Flow", "Rising, overhead and diagonal cuts from both sides, then one decisive horizontal cut. Unblockable." } },
             { "raiko_no_tachi", new[] { "Thunder Swing", "A wide arc that sends red lightning racing along the ground. Unblockable." } },
             { "kagehira_yurei", new[] { "Smoke Step", "Vanish in a puff of smoke, leave an afterimage behind, and strike from behind the enemy. Unblockable." } },

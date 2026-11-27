@@ -29,7 +29,7 @@ namespace Kage.Tests
         public override void TearDown()
         {
             if (flow != null) Object.DestroyImmediate(flow.gameObject);
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
             Time.timeScale = 1f;
             GameFeel.paused = false;
             try { Directory.Delete(dir, true); } catch { }
@@ -171,15 +171,21 @@ namespace Kage.Tests
             {
                 Assert.AreEqual(ids[i], flow.ArmoryWorld.Fighters[i].Character.armor, "card " + i);
                 Assert.AreEqual("shiro_maki", flow.ArmoryWorld.Fighters[i].Character.helmet);
+                Assert.AreEqual("fists", flow.ArmoryWorld.Fighters[i].Character.weaponId, "armor card " + i + " must not equip a weapon");
+                Assert.IsFalse(flow.ArmoryWorld.Fighters[i].rig.SwordVisible, "armor card " + i + " must hide any weapon mesh");
             }
             // picking another card keeps the same fighters
             int builds = flow.ArmoryWorld.Builds;
             Armory.Select("ronin_yoroi");
             yield return null;
             Assert.AreEqual(builds, flow.ArmoryWorld.Builds);
-            // the reward armours stand after the shop armours in the same row
-            Assert.AreEqual("ikazuchi_do", flow.ArmoryWorld.Fighters[8].Character.armor);
-            Assert.AreEqual("shiden_yoroi", flow.ArmoryWorld.Fighters[9].Character.armor);
+            // five-tier rarity progression: Trophy rewards precede the two Legendary armours, which carry ArmorAura
+            Assert.AreEqual("ikazuchi_do", flow.ArmoryWorld.Fighters[6].Character.armor);
+            Assert.AreEqual("shiden_yoroi", flow.ArmoryWorld.Fighters[7].Character.armor);
+            Assert.AreEqual("yurei_yoroi", flow.ArmoryWorld.Fighters[8].Character.armor);
+            Assert.AreEqual("mugen_yoroi", flow.ArmoryWorld.Fighters[9].Character.armor);
+            Assert.IsNotNull(flow.ArmoryWorld.Fighters[8].GetComponent<ArmorAura>());
+            Assert.IsNotNull(flow.ArmoryWorld.Fighters[9].GetComponent<ArmorAura>());
         }
 
         // ---- buying, upgrading, equipping ----

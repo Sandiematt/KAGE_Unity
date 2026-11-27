@@ -21,11 +21,6 @@ namespace Kage
         GameObject _moveListPanel;
         float _announceT = 99f, _announceDur = 1f, _bannerT = 99f, _bannerDur = 1f;
         Sprite _circle;
-        // the rage art's cut-in band (SAN-82)
-        RectTransform _cutBand;
-        Text _cutName, _cutKanji, _cutSub;
-        Image _cutEdgeTop, _cutEdgeBot;
-        float _cutT = 99f, _cutDur = 1f;
 
         class Floater { public Text t; public Vector2 world; public float age, life, scale; public Color c; }
         readonly List<Floater> _floats = new();
@@ -69,38 +64,6 @@ namespace Kage
             _events = null;
             _pl?.cam?.Dispose();
             _pr?.cam?.Dispose();
-        }
-
-        /// <summary>
-        /// The cut-in band (JS <c>RageArts.drawCutIn</c>): a dark band slanted a little across the frame at a third of the way down, an
-        /// edge line in the art's colour top and bottom, the kanji left of centre and the name and its caption on the right.
-        /// </summary>
-        void BuildCutIn()
-        {
-            var go = new GameObject("CutIn", typeof(RectTransform));
-            go.transform.SetParent(_root, false);
-            _cutBand = (RectTransform)go.transform;
-            Place(_cutBand, new Vector2(0.5f, 0.64f), Vector2.zero, new Vector2(2400, 150));
-            _cutBand.localRotation = Quaternion.Euler(0f, 0f, 2.5f);
-            var bg = MakeImage("Bg", _cutBand, new Color(0.024f, 0.016f, 0.016f, 0.92f));
-            Stretch(bg.rectTransform);
-            _cutEdgeTop = MakeImage("EdgeTop", _cutBand, Color.white);
-            _cutEdgeTop.rectTransform.anchorMin = new Vector2(0f, 1f); _cutEdgeTop.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _cutEdgeTop.rectTransform.pivot = new Vector2(0.5f, 1f); _cutEdgeTop.rectTransform.sizeDelta = new Vector2(0f, 5f); _cutEdgeTop.rectTransform.anchoredPosition = Vector2.zero;
-            _cutEdgeBot = MakeImage("EdgeBot", _cutBand, Color.white);
-            _cutEdgeBot.rectTransform.anchorMin = new Vector2(0f, 0f); _cutEdgeBot.rectTransform.anchorMax = new Vector2(1f, 0f);
-            _cutEdgeBot.rectTransform.pivot = new Vector2(0.5f, 0f); _cutEdgeBot.rectTransform.sizeDelta = new Vector2(0f, 5f); _cutEdgeBot.rectTransform.anchoredPosition = Vector2.zero;
-            _cutKanji = MakeText("Kanji", _cutBand, 118, TextAnchor.MiddleCenter, Color.white, new Vector2(0.5f, 0.5f), new Vector2(-150, 2), new Vector2(520, 140), false);
-            _cutName = MakeText("Name", _cutBand, 64, TextAnchor.MiddleRight, Color.white, new Vector2(1f, 0.5f), new Vector2(-270, 14), new Vector2(900, 80), true);
-            _cutSub = MakeText("Sub", _cutBand, 24, TextAnchor.MiddleRight, Color.white, new Vector2(1f, 0.5f), new Vector2(-274, -36), new Vector2(900, 30), false);
-            // the name and its caption hang from the band's right end (pivot on the right), clear of the screen's edge
-            _cutName.rectTransform.pivot = _cutSub.rectTransform.pivot = new Vector2(1f, 0.5f);
-            _cutName.rectTransform.anchoredPosition = new Vector2(-270f, 14f);
-            _cutSub.rectTransform.anchoredPosition = new Vector2(-274f, -36f);
-            // the kanji needs an OS font with Japanese glyphs when one exists (as the names, SetNames)
-            var jp = Font.CreateDynamicFontFromOSFont(new[] { "Yu Gothic UI", "Yu Gothic", "Meiryo", "MS Gothic", "Noto Sans CJK JP", "Arial Unicode MS", "Arial" }, 96);
-            if (jp != null) _cutKanji.font = jp;
-            go.SetActive(false);
         }
 
         static void Place(RectTransform r, Vector2 anchor, Vector2 pos, Vector2 size)
@@ -170,20 +133,22 @@ namespace Kage
                 "  ← + K ................ Axe Kick         air K .......... Flying Kick\n\n" +
                 "<b><color=#F06F6E>KATANA</color></b>\n" +
                 "  L · L · L ............ Iai Draw → Rising Moon (launcher) → Kage Cleave (overhead)\n" +
-                "  → + L ................ Shadow Step (dash through)   ↓ + L .... Low Reap\n" +
-                "  ← + L ................ Mirror Guard (parry → Kage Counter)   air L .. Crescent Spin\n" +
-                "  air ↓ + L ............ Kage Cleave from a jump (overhead, knockdown)\n\n" +
+                "  → + L ................ Shadow Step (dash through)   S / ↓ + L .... Crown Wheel (low → mid)\n" +
+                "  ← + L ................ Mirror Guard (parry → Kage Counter)   ← + J .. Poised Fang (held overhead)\n" +
+                "  air L ................ Crescent Cut                 air ↓ + L .... Kage Cleave from a jump\n\n" +
                 "<b><color=#F06F6E>GUARD</color></b>  (O or B · gamepad RB / RT)\n" +
                 "  hold O ............... Guard: blocks high and mid hits; overheads too   O + ↓ .. Low guard: blocks lows, not overheads\n" +
                 "  Guarding fills POSTURE; a full bar breaks the guard (helpless, next hit is a CRITICAL). It drains after a second.\n" +
-                "  Walking backward no longer guards. Attack, dash, roll or jump straight out of the guard.\n\n" +
+                "  Walking backward no longer guards. Attack, dash, slide or jump straight out of the guard.\n" +
+                "  tap O just before a blow: PARRY, then a COUNTER.   PARRIED by a foe: hold O or dash to recover early\n" +
+                "  A blow that connects can dash out of its recovery. A whiff can't: PUNISH a foe's whiff\n\n" +
                 "<b><color=#F06F6E>SHADOW ARTS</color></b>\n" +
                 "  I (35% meter) ........ Crimson Crescent (projectile)\n" +
                 "  ↓ + I (100% meter) ... Thousand Shadows\n\n" +
                 "<b><color=#F06F6E>MOVEMENT</color></b>\n" +
                 "  hold → walk, keep holding to run   Shift dash (→ / ← / air)   dash + hold → sprint\n" +
                 "  W / Space jump (tap = short hop), again in the air = double jump   ← walk back\n" +
-                "  →→ Shadow Roll (passes through)   ←← Backflip\n" +
+                "  →→ Shadow Slide (passes through)   ←← Back Step\n" +
                 "  When knocked down press any button for a quick kip-up.\n" +
                 "  Mixing J / K / L chains is allowed: J→K, J→L, K→L, J·J→K …";
             _moveListPanel.SetActive(false);
@@ -244,9 +209,15 @@ namespace Kage
         Fighter _lFighter, _rFighter;
         public void Bind(Fighter left) => _lFighter = left;
 
+        /// <summary>
+        /// The HUD's frame time: real (unscaled) time, capped, or the fixed capture step when frames are being captured
+        /// (<see cref="Time.captureDeltaTime"/>, the review harness: unscaled time ignores it, so the HUD barely moved in a render).
+        /// </summary>
+        internal static float UiDeltaTime => Mathf.Min(0.1f, Time.captureDeltaTime > 0f ? Time.captureDeltaTime : Time.unscaledDeltaTime);
+
         public void Tick(Fighter l, Fighter r, float timer, int round, bool showTimer)
         {
-            float dt = Mathf.Min(0.1f, Time.unscaledDeltaTime);
+            float dt = UiDeltaTime;
             ResizeJs();
             _rFighter = r;
             _model.Tick(dt, ReadFrame(l, r, timer, showTimer));
@@ -257,6 +228,8 @@ namespace Kage
             ApplyRoad(_model.Road);
             ApplyPauseButton(_model.Layout == HudLayout.Stretch);
             ApplyCombo(_model.Combo);
+            ApplyCallouts(_model.Callouts);
+            ApplyRageCue(_model.RageCue);
             ApplyMiniBars(_model.MiniBars);
             _mode.enabled = _hint.enabled = _training.enabled = _devText;
             TickStageCard(dt);
@@ -274,6 +247,7 @@ namespace Kage
 
             UpdateCutIn(dt);
             TickInk(dt);
+            TickArtStamp(dt);       // a rage art's finisher word and its grade (Hud.RageArt.cs)
 
             _bannerT += dt;
             if (_bannerT < _bannerDur)
@@ -308,42 +282,6 @@ namespace Kage
             _announce.color = c;
             _announceT = 0f;
             _announceDur = dur;
-        }
-
-        /// <summary>
-        /// A rage art's cut-in band (SAN-82): slides in from the right with the art's <paramref name="name"/>, its <paramref name="kanji"/> and a
-        /// caption, in the art's colours, stays for <paramref name="seconds"/> in all and slides out. On unscaled time, like the banner.
-        /// </summary>
-        public void CutIn(string name, string kanji, string caption, Color col, Color hot, float seconds)
-        {
-            _cutName.text = name; _cutName.color = col;
-            _cutKanji.text = kanji; _cutKanji.color = new Color(hot.r, hot.g, hot.b, 0.85f);
-            _cutSub.text = caption; _cutSub.color = hot;
-            _cutEdgeTop.color = col; _cutEdgeBot.color = col;
-            _cutT = 0f;
-            _cutDur = Mathf.Max(0.3f, seconds);
-            _cutBand.gameObject.SetActive(true);
-            UpdateCutIn(0f);
-        }
-
-        /// <summary>The cut-in band is on screen.</summary>
-        public bool CutInShowing => _cutT < _cutDur;
-        public string CutInName => _cutName != null ? _cutName.text : null;
-        public string CutInKanji => _cutKanji != null ? _cutKanji.text : null;
-
-        void UpdateCutIn(float dt)
-        {
-            if (_cutBand == null) return;
-            if (_cutT >= _cutDur) { if (_cutBand.gameObject.activeSelf) _cutBand.gameObject.SetActive(false); return; }
-            _cutT += dt;
-            // JS: in over 0.16 s (out cubic), out over the last 0.18 s; the band's height follows
-            float inK = KMath.Apply(Ease.OutCubic, Mathf.Clamp01(_cutT / 0.16f));
-            float outK = Mathf.Clamp01((_cutT - (_cutDur - 0.23f)) / 0.18f);
-            float k = inK * (1f - outK);
-            _cutBand.localScale = new Vector3(1f, Mathf.Max(0.001f, k), 1f);
-            _cutName.rectTransform.anchoredPosition = new Vector2(-270f + (1f - inK) * 300f, 14f);
-            _cutSub.rectTransform.anchoredPosition = new Vector2(-274f + (1f - inK) * 300f, -36f);
-            if (_cutT >= _cutDur) _cutBand.gameObject.SetActive(false);
         }
 
         public void Banner(string text, Color c, float dur)

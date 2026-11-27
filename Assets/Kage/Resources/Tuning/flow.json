@@ -1,0 +1,19 @@
+{
+    "turnDeadZone": 0.12,
+    "turnHoldFrames": 8,
+    "turnForceDistance": 0.6,
+    "turnOnMoveStart": true,
+    "turnToBlowFromBehind": true,
+    "tumbleRestAngle": 90.0,
+    "tumbleMaxSpeed": 300.0,
+    "dashCancelOnContact": true,
+    "guardCancelOnHit": true,
+    "whiffPunishDamageMul": 1.25,
+    "whiffPunishStunBonus": 6,
+    "whiffPunishHitstopFrames": 2,
+    "foesPunishWhiffs": false,
+    "punishTint": { "r": 0.55, "g": 0.85, "b": 1.0, "a": 1.0 },
+    "pressureWindowFrames": 40,
+    "pressureStep": 0.15,
+    "pressureMaxMul": 1.6
+}

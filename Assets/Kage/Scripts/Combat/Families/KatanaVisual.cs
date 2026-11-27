@@ -25,8 +25,46 @@ namespace Kage
             switch (weaponId)
             {
                 case "kagetsu": rig.SetBaseSwordHidden(true); Kagetsu(Pen(rig)); break;
-                case "shizuka": rig.SetBaseSwordHidden(true); Shizuka(Pen(rig)); break;
+                case "shizuka": rig.SetBaseSwordHidden(true); Shizuka(Pen(rig)); Saya(rig); break;
             }
+        }
+
+        // ---- Shizuka's saya (docs/weapon-styles.md): worn at the left hip, the mouth at the front of the sash, edge up ----
+        // Hips-bone metres, facing right: the mouth (koiguchi) sits at the sash, the saya runs back and down behind the body. The
+        // scabbard is always drawn; the hilt at its mouth shows only while the blade is home (FighterRig.SetSheathed).
+        static readonly Vector2 SayaMouth = new(0.13f, 0.1f), SayaEnd = new(-0.6f, -0.24f);
+
+        static void Saya(FighterRig rig)
+        {
+            Color lacquer = KMath.Hex("#1c1626"), sheen = KMath.Hex("#4a3a63"), cord = KMath.Hex("#9c78d8"), violet = KMath.Hex("#a46bff");
+            Vector2 d = (SayaEnd - SayaMouth).normalized, n = new(-d.y, d.x);
+            float len = (SayaEnd - SayaMouth).magnitude;
+            Vector2 At(float u, float w) => SayaMouth + d * (len * u) + n * w;
+            // the lacquered body, a little thicker at the mouth, the kojiri rounded off
+            var body = new List<Vector2>();
+            for (int i = 0; i <= 10; i++) { float u = i / 10f; body.Add(At(u, Mathf.Lerp(0.024f, 0.019f, u))); }
+            body.Add(At(1.02f, 0f));
+            for (int i = 10; i >= 0; i--) { float u = i / 10f; body.Add(At(u, -Mathf.Lerp(0.024f, 0.019f, u))); }
+            rig.AddFamilyPart("Saya_Body", body.ToArray(), lacquer, PartRole.Detail, 0, true, 1f, B.Hips, SheathPart.Saya);
+            rig.AddFamilyPart("Saya_Sheen", new[] { At(0.06f, 0.012f), At(0.9f, 0.009f), At(0.9f, 0.004f), At(0.06f, 0.006f) }, sheen, PartRole.Trim, 1, false, 1f, B.Hips, SheathPart.Saya);
+            // the koiguchi's gold band and the violet cord (sageo) wound under it
+            rig.AddFamilyPart("Saya_Mouth", new[] { At(-0.01f, 0.028f), At(0.045f, 0.028f), At(0.045f, -0.028f), At(-0.01f, -0.028f) }, Gold, PartRole.Metal, 2, false, 1f, B.Hips, SheathPart.Saya);
+            rig.AddFamilyPart("Saya_Cord", new[] { At(0.1f, 0.03f), At(0.16f, 0.03f), At(0.2f, -0.03f), At(0.14f, -0.03f) }, cord, PartRole.Trim, 2, false, 1.2f, B.Hips, SheathPart.Saya);
+            rig.AddFamilyPart("Saya_Kojiri", new[] { At(0.95f, 0.021f), At(1.02f, 0f), At(0.95f, -0.021f) }, Gold, PartRole.Metal, 2, false, 1f, B.Hips, SheathPart.Saya);
+            // the hilt at the mouth while the blade is home: the guard across the mouth, the tsuka forward and up, the pommel ring
+            Vector2 up = -d, un = new(-up.y, up.x);
+            Vector2 H(float m, float w) => SayaMouth + up * m + un * w;
+            rig.AddFamilyPart("Saya_Guard", new[] { H(-0.006f, 0.05f), H(0.012f, 0.05f), H(0.012f, -0.05f), H(-0.006f, -0.05f) }, Gold, PartRole.Metal, 3, true, 1f, B.Hips, SheathPart.Hilt);
+            rig.AddFamilyPart("Saya_Tsuka", new[] { H(0.012f, 0.018f), H(0.25f, 0.016f), H(0.25f, -0.016f), H(0.012f, -0.018f) }, KMath.Hex("#2f2738"), PartRole.Detail, 3, true, 1f, B.Hips, SheathPart.Hilt);
+            for (int i = 0; i < 4; i++)
+            {
+                float m0 = 0.04f + i * 0.055f;
+                rig.AddFamilyPart("Saya_Ito" + i, new[] { H(m0, 0.017f), H(m0 + 0.022f, -0.017f), H(m0 + 0.032f, -0.017f), H(m0 + 0.01f, 0.017f) }, Gold, PartRole.Trim, 4, false, 1f, B.Hips, SheathPart.Hilt);
+            }
+            var ring = new List<Vector2>();
+            for (int i = 0; i < 12; i++) { float a = i / 12f * Mathf.PI * 2f; ring.Add(H(0.27f + Mathf.Cos(a) * 0.022f, Mathf.Sin(a) * 0.022f)); }
+            rig.AddFamilyPart("Saya_Pommel", ring.ToArray(), Gold, PartRole.Metal, 4, false, 1f, B.Hips, SheathPart.Hilt);
+            rig.AddFamilyPart("Saya_Gem", new[] { H(-0.004f, 0.012f), H(0.008f, 0f), H(-0.004f, -0.012f), H(-0.016f, 0f) }, violet, PartRole.Trim, 5, false, 1.6f, B.Hips, SheathPart.Hilt);
         }
 
         public void Detach(FighterRig rig) => rig.ClearFamilyParts();

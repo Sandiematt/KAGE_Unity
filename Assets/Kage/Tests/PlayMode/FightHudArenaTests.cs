@@ -24,7 +24,7 @@ namespace Kage.Tests
             KageGame.NextStretchId = null;
             KageGame.NextGroupSize = null;
             GameFeel.paused = false;
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
         }
 
         KageGame Start()

@@ -1,0 +1,11 @@
+{
+    "enabled": true,
+    "staggerFrames": 48,
+    "postureShare": 0.3,
+    "pushback": 3.2,
+    "lungeStop": 1.1,
+    "hitstopFrames": 12,
+    "shake": 0.45,
+    "flashTint": { "r": 0.75, "g": 0.08, "b": 0.1, "a": 0.3 },
+    "flashSeconds": 0.2
+}

@@ -12,6 +12,15 @@ namespace Kage
         Kept,
     }
 
+    /// <summary>What Kage's default glowing white eye does under a helmet.</summary>
+    public enum EyeUnderHelmet
+    {
+        /// <summary>Kept: Kage's own glowing white eye stays on top at order 96.</summary>
+        Kept,
+        /// <summary>Replaced: Kage's default white eye is removed and replaced by the helmet's custom eye design.</summary>
+        Replaced,
+    }
+
     /// <summary>
     /// Helmet visuals, the gear layer on Kage's part set (SAN-72, ADR-0005). Every Act I helmet but the starter has a design in one of
     /// the five rarity tiers (<see cref="HelmetDesigns"/>, authored in <c>Tools/helmet_art</c>): cel-shaded pieces on the head bone over
@@ -37,16 +46,20 @@ namespace Kage
         /// <summary>What happens to Kage's hair under this helmet; <see cref="HairUnderHelmet.Kept"/> for a helmet with no design.</summary>
         public static HairUnderHelmet HairUnder(string helmetId) => Has(helmetId) ? HelmetDesigns.Get(helmetId).hair : HairUnderHelmet.Kept;
 
+        /// <summary>What happens to Kage's default white eye under this helmet; <see cref="EyeUnderHelmet.Kept"/> for a helmet with no design.</summary>
+        public static EyeUnderHelmet EyeUnder(string helmetId) => Has(helmetId) ? HelmetDesigns.Get(helmetId).eye : EyeUnderHelmet.Kept;
+
         /// <summary>
-        /// Layers the helmet on Kage's rig: a bare head instead of the hair when the design hides it, then the design's pieces as parts
-        /// named <c>Helmet_&lt;look&gt;_&lt;piece&gt;</c>. Returns false and leaves the rig exactly as it was when the helmet has no design
-        /// (null, the starter, a later-act helmet, an unknown id).
+        /// Layers the helmet on Kage's rig: a bare head instead of the hair when the design hides it, replaces the default white eye
+        /// when the design supplies its own eye, then adds the design's pieces as parts. Returns false and leaves the rig unchanged
+        /// when the helmet has no design (null, the starter, a later-act helmet, an unknown id).
         /// </summary>
         public static bool Apply(RigDef rig, string helmetId)
         {
             var design = HelmetDesigns.Get(helmetId);
             if (design == null) return false;
             if (design.hair == HairUnderHelmet.Hidden) HideHair(rig);
+            if (design.eye == EyeUnderHelmet.Replaced) ReplaceEye(rig);
             var pal = HelmetTiers.Palette(design.tier);
             foreach (var piece in design.pieces) rig.parts.Add(Build(piece, design.look, pal));
             return true;
@@ -75,7 +88,17 @@ namespace Kage
         public static PartDef Build(HelmetPiece p, string look, HelmetPalette pal)
         {
             var shape = Pts(p.outline);
-            var part = new PartDef { name = $"Helmet_{look}_{p.name}", bone = p.bone, order = p.order, role = PartRole.Trim, rim = false, glow = p.glow };
+            bool isMainEye = p.name == "Eye";
+            bool isEyeLayer = isMainEye || p.name.StartsWith("Eye");
+            var part = new PartDef
+            {
+                name = isMainEye ? "Eye" : $"Helmet_{look}_{p.name}",
+                bone = p.bone,
+                order = p.order,
+                role = isEyeLayer ? PartRole.Eye : PartRole.Trim,
+                rim = false,
+                glow = p.glow,
+            };
             switch (p.kind)
             {
                 case PieceKind.Flat:
@@ -127,6 +150,12 @@ namespace Kage
             {
                 name = "Head", bone = B.Head, order = hair.order, color = Palette.Body, role = PartRole.Body, rim = true, pts = Pts(BareHead),
             };
+        }
+
+        /// <summary>Removes Kage's default white eye so a helmet with custom eye art supplies its own Eye part.</summary>
+        static void ReplaceEye(RigDef rig)
+        {
+            rig.parts.RemoveAll(p => p.name == "Eye" || p.role == PartRole.Eye);
         }
     }
 }

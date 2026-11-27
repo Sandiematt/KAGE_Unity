@@ -133,6 +133,7 @@ namespace Kage
             float tr = GameFeel.trauma * GameFeel.trauma;
             float t = Time.unscaledTime * 22f;
             Vector2 shake = new Vector2(Mathf.PerlinNoise(t, 1.3f) - 0.5f, Mathf.PerlinNoise(4.1f, t) - 0.5f) * 2f * tr * 0.32f;
+            shake += GameFeel.kick;
             float rot = (Mathf.PerlinNoise(t * 0.7f, 9.2f) - 0.5f) * 2f * tr * 2.2f;
             float size = _size * (1f - GameFeel.punch * 0.6f);
             cam.orthographicSize = size;

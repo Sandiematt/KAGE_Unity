@@ -84,10 +84,21 @@ namespace Kage
             // staggered in place, open to the attacker: most of the block's push-back is cancelled
             if (rb.bodyType == RigidbodyType2D.Dynamic) rb.linearVelocity = new Vector2(rb.linearVelocity.x * t.breakPushKept, rb.linearVelocity.y);
             rig.Squash(0.08f);
-            rig.Flash(new Color(1f, 0.35f, 0.3f), 0.8f, 10f);
-            Vfx.I?.Shockwave(source.contact, 0.6f, new Color(1f, 0.85f, 0.6f));
-            GameFeel.Shake(0.25f);
-            KageGame.I?.Audio?.Play(SfxKind.HitHeavy, 0.9f);
+            if (PresentsCombat)
+            {
+                Vector2 dir = ImpactDirection(source, source.attacker != null ? source.attacker.facing : -facing);
+                rig.Flash(new Color(1f, 0.35f, 0.3f), 0.8f, 10f);
+                const float hold = 9f / 60f;
+                rig.HitShake(dir, 0.062f, hold, holdPose: true);
+                source.attacker?.rig?.HitShake(-dir, 0.022f, hold, holdPose: true);
+                Vfx.I?.PostureShatter(source.contact, dir);
+                GameFeel.Shake(0.25f);
+                GameFeel.Punch(0.15f);
+                GameFeel.Kick(dir, 0.15f);
+                GameFeel.ImpactFrame(new Color(0.13f, 0.017f, 0.025f, 0.84f), 2f / 60f);
+                CombatAudio?.Play(SfxKind.Shatter, 0.92f);
+                CombatAudio?.Play(SfxKind.Thud, 0.67f);
+            }
             _breakPending = true;
             _breakBy = source.attacker;
             _breakMove = source.moveId;
@@ -118,9 +129,9 @@ namespace Kage
         }
 
         /// <summary>Step 7's posture: a clean hit adds a little, never past full, never a break.</summary>
-        void CleanHitPosture(in HitInfo info)
+        void CleanHitPosture(in HitInfo info, float extra = 1f)
         {
-            float mul = info.w != null ? info.w.postureMul : 1f;
+            float mul = (info.w != null ? info.w.postureMul : 1f) * info.PostureScale * extra;
             AddPosture(info.dmg * Tuning.Get<GuardTuning>().hitPostureFactor * mul, false, info);
         }
 

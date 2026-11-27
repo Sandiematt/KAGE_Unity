@@ -46,7 +46,7 @@ namespace Kage
         {
             if (string.IsNullOrEmpty(cueId)) return;
             Played?.Invoke(cueId, pos, args);
-            if (Vfx.I == null) return;
+            if (Vfx.I == null || !Application.isPlaying || (args.owner != null && !args.owner.PresentsCombat)) return;
             if (Players.TryGetValue(cueId, out var player)) { player(pos, args); return; }
             if (Warned.Add(cueId)) Debug.LogWarning($"EffectCues: no cue registered for '{cueId}'; playing the placeholder star.");
             Color main = args.tint ?? (args.owner != null ? args.owner.fxMain : Color.white);

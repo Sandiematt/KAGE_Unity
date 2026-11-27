@@ -3,12 +3,15 @@ using UnityEngine;
 
 namespace Kage
 {
+    /// <summary>What a weapon family's part is to the scabbard rule (<see cref="FighterRig.SetSheathed"/>): the drawn blade (None), the saya, or the hilt at its mouth.</summary>
+    public enum SheathPart { None, Saya, Hilt }
+
     /// <summary>
     /// Runtime skeleton + meshes of a fighter. Builds bone transforms and polygon parts from a
     /// <see cref="RigDef"/>, applies poses, keeps the back-light rim offset in world space, and
     /// drives secondary motion: hair as a spring/wind rotation field (<see cref="HairField"/>),
     /// the coat as a small cloth simulation (<see cref="CoatCloth"/>), the scarf on a verlet
-    /// ribbon (<see cref="ScarfRibbon"/>), plus a tweened turn-around and squash and stretch.
+    /// ribbon (<see cref="ScarfRibbon"/>), plus a crisp left/right flip and squash and stretch.
     /// </summary>
     public class FighterRig : MonoBehaviour
     {
@@ -25,6 +28,7 @@ namespace Kage
             public Transform jiggle;
             public float jAngle, jVel;
             public bool family;         // drawn by a weapon family (AddFamilyPart), not by the character's part set
+            public SheathPart sheath;   // a scabbard part (Shizuka's saya): shown by its own rule, not with the drawn blade
         }
 
         readonly List<PartRT> _parts = new();
@@ -36,7 +40,9 @@ namespace Kage
 
         // spring state
         float _headAngPrev, _headAngVel;
-        Vector2 _prevHips;
+        Vector2 _prevHips, _prevBodyVel;
+        float _prevFacing = 1f;
+        bool _softPrimed;
         readonly List<HairField> _hair = new();
         readonly CoatCloth[] _cloths = new CoatCloth[2];
         readonly List<SoftChains> _chains = new();
@@ -46,13 +52,96 @@ namespace Kage
         public float groundY;
         /// <summary>The wind on this fighter's spring chains (SAN-76; <see cref="Kage.Wind"/>). Calm by default: nothing moves differently.</summary>
         public Wind wind;
-        float _vis = 1f;                    // visual facing, tweened through 0 for a paper-flip turn
+        Vector2 _gustVel;
+        float _gustTime, _gustDur;
+        /// <summary>Current decaying directional swing-gust velocity in world m/s (zero when inactive).</summary>
+        public Vector2 ActiveGust
+        {
+            get
+            {
+                if (_gustTime <= 0f || _gustDur <= 0f) return Vector2.zero;
+                float k = Mathf.Clamp01(_gustTime / _gustDur);
+                return _gustVel * (k * k);
+            }
+        }
+        float _vis = 1f;                    // visual facing: always the logical facing (SetFacing flips it at once)
         float _sq, _sqVel;                  // squash (+) / stretch (-) spring
         Vector3 _baseScale = Vector3.one;
         float _flash, _flashDecay = 18f;
         Color _flashColor = Color.white;
         float _alpha = 1f;
         public Vector2 lightDir = new(-0.0055f, 0.0055f);   // back-top rim light (root space)
+
+        // Only mesh leaves participate. Hit points, hurt circles, push colliders and ragdoll bodies all read the bones.
+        struct PaintedPose
+        {
+            public Transform mesh;
+            public Vector3 local, world;
+            public Quaternion localRotation, worldRotation;
+        }
+        readonly List<PaintedPose> _impactParts = new();
+        Vector2 _impactAxis;
+        float _impactStart, _impactDuration, _vibration;
+        bool _holdPainting, _paintOffset;
+        internal Vector2 PaintOffset { get; private set; }
+
+        public void HitShake(Vector2 dir, float amplitude, float duration, bool holdPose = false)
+        {
+            if (duration <= 0f || (_impactParts.Count > 0 && Time.unscaledTime < _impactStart + _impactDuration &&
+                (_holdPainting || _vibration > amplitude))) return;
+            ClearImpactPose();
+            _holdPainting = holdPose;
+            _impactAxis = dir.normalized;
+            _impactStart = Time.unscaledTime;
+            _impactDuration = duration;
+            _vibration = amplitude;
+            foreach (var renderer in _all)
+            {
+                var t = renderer.transform;
+                _impactParts.Add(new PaintedPose { mesh = t, world = t.position, worldRotation = t.rotation });
+            }
+        }
+
+        internal void RestorePainting()
+        {
+            if (!_paintOffset) return;
+            foreach (var part in _impactParts)
+                if (part.mesh != null) part.mesh.SetLocalPositionAndRotation(part.local, part.localRotation);
+            _paintOffset = false;
+            PaintOffset = Vector2.zero;
+        }
+
+        internal void DrawImpactPose()
+        {
+            if (_impactParts.Count == 0) return;
+            float age = Time.unscaledTime - _impactStart;
+            if (age >= _impactDuration || (!_holdPainting && !GameFeel.InHitstop))
+            {
+                ClearImpactPose();
+                return;
+            }
+            float fade = 1f - age / _impactDuration;
+            Vector3 offset = _impactAxis * (_vibration * fade * fade * Mathf.Cos(2f * Mathf.PI * 24f * age));
+            for (int i = 0; i < _impactParts.Count; i++)
+            {
+                var part = _impactParts[i];
+                var t = part.mesh;
+                if (t == null) continue;
+                part.local = t.localPosition;
+                part.localRotation = t.localRotation;
+                _impactParts[i] = part;
+                if (_holdPainting) t.SetPositionAndRotation(part.world + offset, part.worldRotation);
+                else t.position += offset;
+            }
+            _paintOffset = true;
+            PaintOffset = offset;
+        }
+
+        internal void ClearImpactPose()
+        {
+            RestorePainting();
+            _impactParts.Clear();
+        }
 
         public Transform Bone(B b) => bones[(int)b];
 
@@ -172,23 +261,48 @@ namespace Kage
             ApplyOrders();
         }
 
+        Transform _sling;
+        bool _slung;
+
+        // Only the painted weapon moves to the shoulder. The sword bone stays on the far wrist.
+        public void PrepareBackSling()
+        {
+            if (_sling != null) return;
+            _sling = new GameObject("GreatswordMount").transform;
+            _sling.SetParent(Bone(B.Sword), false);
+        }
+
+        public void SetSlung(bool slung)
+        {
+            if (_sling == null || slung == _slung) return;
+            _slung = slung;
+            _sling.SetParent(Bone(slung ? B.Chest : B.Sword), false);
+            _sling.localPosition = slung ? new Vector3(-0.14f, 0.23f, 0f) : Vector3.zero;
+            _sling.localRotation = slung ? Quaternion.Euler(0, 0, -112f - def.bladeBindAngle) : Quaternion.identity;
+            ApplyOrders();
+        }
+
         void ApplyOrders()
         {
             foreach (var p in _parts)
             {
                 int o = p.def.order + (p.def.swordLayer && (swordFront || _frontAlways) ? 30 * 4 : 0);
-                p.main.sortingOrder = baseOrder + o * 3 + 2 + Mathf.Clamp(p.def.underSlot, -1, 0);
+                if (_slung && p.family && p.def.bone == B.Sword) o = p.def.order % 4 - 8;
+                p.main.sortingOrder = baseOrder + o * 3 + 2 + Mathf.Clamp(p.def.underSlot, -2, 0);
                 if (p.rim != null) p.rim.sortingOrder = baseOrder + (o - o % 4) * 3;
             }
             if (scarf != null) scarf.SetOrder(baseOrder + 3);
         }
 
-        /// <summary>Turns the fighter. The logical facing flips at once; the visual scale tweens
-        /// through zero over ~7 frames (a paper-flip turn) unless instant is set.</summary>
+        /// <summary>
+        /// Turns the fighter: a crisp horizontal flip (scale x = +1 or -1) on this frame, logical and visual together
+        /// (docs/combat-flow.md). The old paper-flip tween through zero read as the body spinning round, so it is gone;
+        /// <paramref name="instant"/> is kept for the callers and changes nothing.
+        /// </summary>
         public void SetFacing(float f, bool instant = false)
         {
             facing = Mathf.Sign(f);
-            if (instant) SnapFacing();
+            SnapFacing();
         }
 
         public void SnapFacing()
@@ -211,8 +325,23 @@ namespace Kage
             foreach (var c in _chains) c.AddImpulse(world, tipBias);
             foreach (var f in _flows) f.AddImpulse(world, tipBias);
             foreach (var c in _cloths) c?.AddImpulse(world, tipBias);
+            scarf?.AddImpulse(world, tipBias);
             var local = new Vector2(world.x * facing, world.y);
             foreach (var h in _hair) h.AddImpulse(local);
+        }
+
+        /// <summary>
+        /// Fires a directional air-pressure gust across hair, scarf, coat and soft chains for an attack strike:
+        /// applies an immediate velocity kick plus a brief decaying directional wind overlay so thrusts produce sharp
+        /// linear gusts and heavy slams throw downward shock bursts.
+        /// </summary>
+        public void SwingGust(Vector2 worldGust, float duration = 0.16f, float tipBias = 1.15f)
+        {
+            if (worldGust.sqrMagnitude < 1e-6f) return;
+            Impulse(worldGust * 0.6f, tipBias);
+            _gustVel = worldGust;
+            _gustDur = Mathf.Max(0.04f, duration);
+            _gustTime = _gustDur;
         }
 
         /// <summary>How many soft parts this rig moves (spring-chain parts, coat cloth patches, hair fields).</summary>
@@ -254,6 +383,12 @@ namespace Kage
             foreach (var c in _chains) c.Reset();
             foreach (var f in _flows) f.Reset();
             _prevHips = Bone(B.Hips).position;
+            _prevBodyVel = Vector2.zero;
+            _prevFacing = facing;
+            _softPrimed = false;
+            _gustTime = 0f;
+            _gustDur = 0f;
+            _gustVel = Vector2.zero;
         }
 
         /// <summary>Applies a (resolved) pose to the bone transforms.</summary>
@@ -270,6 +405,14 @@ namespace Kage
             // the katana turned over (Pose.edgeUp, SAN-118): the sword bone mirrored across the blade's own line, so the edge is
             // drawn on the other side while the blade's line (and its hit points) stays put: a turn of 2 x the bind angle and a flip
             var sw = bones[(int)B.Sword];
+            Vector3 swordPos = _bindLocal[(int)B.Sword];
+            if (p.shaftSlide != 0f)
+            {
+                Vector2 slide = KMath.Dir(p.a[(int)B.Sword] + def.bladeBindAngle) * p.shaftSlide;
+                swordPos.x += slide.x;
+                swordPos.y += slide.y;
+            }
+            sw.localPosition = swordPos;
             if (p.edgeUp)
             {
                 sw.localRotation = Quaternion.Euler(0f, 0f, p.a[(int)B.Sword] + 2f * def.bladeBindAngle);
@@ -288,10 +431,10 @@ namespace Kage
         public void Secondary(float dt, Vector2 bodyVelocity)
         {
             if (dt <= 0f) return;
-            // --- turn-around tween + squash and stretch ---
+            // --- facing (a crisp flip, never tweened) + squash and stretch ---
             if (!Mathf.Approximately(_vis, facing) || Mathf.Abs(_sq) > 0.0005f || Mathf.Abs(_sqVel) > 0.005f)
             {
-                _vis = Mathf.MoveTowards(_vis, facing, dt * 18f);
+                _vis = facing;
                 Spring(ref _sq, ref _sqVel, 0f, 320f, 15f, dt);
                 ApplyScale();
             }
@@ -299,7 +442,35 @@ namespace Kage
             Vector2 hipsNow = Bone(B.Hips).position;
             Vector2 hv = Vector2.ClampMagnitude((hipsNow - _prevHips) / dt, 18f);
             _prevHips = hipsNow;
+
+            // Dynamic direction-flip & sudden-stop snap whips (never on initial spawn/reset)
+            if (_softPrimed)
+            {
+                if (!Mathf.Approximately(facing, _prevFacing))
+                    Impulse(new Vector2(-facing * 5.0f, 1.35f), 1.15f);
+                else
+                {
+                    float dvx = hv.x - _prevBodyVel.x;
+                    if (Mathf.Abs(_prevBodyVel.x) > 3.2f && dvx * _prevBodyVel.x < -2.2f)
+                    {
+                        float snap = Mathf.Clamp(Mathf.Abs(dvx) * 0.55f, 1.8f, 4.8f);
+                        Impulse(new Vector2(Mathf.Sign(_prevBodyVel.x) * snap, 0.85f), 1.15f);
+                    }
+                }
+            }
+            _prevFacing = facing;
+            _prevBodyVel = hv;
+            _softPrimed = true;
+
             Vector2 vLocal = new Vector2(hv.x * facing, hv.y);
+            Wind effWind = wind;
+            if (_gustTime > 0f)
+            {
+                float k = Mathf.Clamp01(_gustTime / Mathf.Max(0.01f, _gustDur));
+                effWind.steady += _gustVel * (k * k);
+                _gustTime = Mathf.Max(0f, _gustTime - dt);
+                if (_gustTime <= 0f) _gustVel = Vector2.zero;
+            }
 
             // --- hair: lag behind head motion, sway in the wind ---
             float headAng = current.a[(int)B.Hips] + current.a[(int)B.Chest] + current.a[(int)B.Neck] + current.a[(int)B.Head];
@@ -308,7 +479,7 @@ namespace Kage
             _headAngVel = Mathf.Lerp(_headAngVel, Mathf.Clamp(dA / dt, -900f, 900f), 0.5f);
             foreach (var h in _hair)
             {
-                h.worldWind = wind;
+                h.worldWind = effWind;
                 h.Tick(dt, vLocal, _headAngVel, facing, 0f, hipsNow);
             }
             float drive = -_headAngVel * 0.04f - vLocal.x * 1.2f + hv.y * -1.4f;
@@ -325,21 +496,21 @@ namespace Kage
             {
                 if (c == null) continue;
                 c.groundY = groundY;
-                c.wind = wind;
+                c.wind = effWind;
                 c.Tick(dt, facing, hv);
             }
             // --- spring chains (the Hollow and Order SVG rigs' cloth and plates) ---
             foreach (var c in _chains)
             {
                 c.groundY = groundY;
-                c.wind = wind;
+                c.wind = effWind;
                 c.Tick(dt, facing, hv);
             }
             // --- flow fields (Raikon's ponytail, ribbons, tassels, fur, cape, apron, skirt and hem): Kage's hair motion ---
             foreach (var f in _flows)
             {
                 f.groundY = groundY;
-                f.wind = wind;
+                f.wind = effWind;
                 f.Tick(dt, facing, hv);
             }
 
@@ -377,6 +548,15 @@ namespace Kage
         {
             _flashColor = c;
             _flash = Mathf.Max(_flash, amount);
+            _flashDecay = decay;
+            ApplyTint();
+        }
+
+        /// <summary>Sets the flash to exactly <paramref name="amount"/> of <paramref name="c"/>, lower than it was too (a rage art's held foe).</summary>
+        public void SetFlash(Color c, float amount, float decay = 18f)
+        {
+            _flashColor = c;
+            _flash = amount;
             _flashDecay = decay;
             ApplyTint();
         }
@@ -424,10 +604,26 @@ namespace Kage
             foreach (var p in _parts)
             {
                 if (p.def.bone != B.Sword && !p.family) continue;       // family parts on another bone (the second blade on HandN) show and hide with the sword
-                bool on = v && (p.family || !_baseSwordHidden);
+                bool on = p.sheath switch
+                {
+                    SheathPart.Saya => true,                           // the scabbard is always worn
+                    SheathPart.Hilt => v && Sheathed,                  // the hilt at the saya's mouth: only while the blade is home
+                    _ => v && !Sheathed && (p.family || !_baseSwordHidden),
+                };
                 p.main.enabled = on;
                 if (p.rim != null) p.rim.enabled = on;
             }
+        }
+
+        /// <summary>The blade is in its scabbard: the drawn blade is hidden and the hilt shows at the saya's mouth (Shizuka's noto, Silent Moon).</summary>
+        public bool Sheathed { get; private set; }
+
+        /// <summary>Puts the blade in its scabbard or draws it. A rig with no scabbard parts just hides and shows the blade.</summary>
+        public void SetSheathed(bool sheathed)
+        {
+            if (Sheathed == sheathed) return;
+            Sheathed = sheathed;
+            SetSwordVisible(SwordVisible);
         }
 
         // ---- a weapon family's own drawing on the Sword bone (ADR-0006) ----
@@ -471,14 +667,14 @@ namespace Kage
         /// With <paramref name="bone"/> = <see cref="B.HandN"/> (the second blade of the twin family) the points are
         /// HandN-local metres with no turn (the near hand's own axis is the blade's) and the part is drawn just above the near fist.
         /// </summary>
-        public void AddFamilyPart(string name, Vector2[] axisPts, Color color, PartRole role, int sub = 0, bool rim = false, float glow = 1f, B bone = B.Sword)
+        public void AddFamilyPart(string name, Vector2[] axisPts, Color color, PartRole role, int sub = 0, bool rim = false, float glow = 1f, B bone = B.Sword, SheathPart sheath = SheathPart.None)
         {
             var local = new Vector2[axisPts.Length];
             bool onSword = bone == B.Sword;
             for (int i = 0; i < local.Length; i++) local[i] = onSword ? KMath.Rot(axisPts[i], def.bladeBindAngle) : axisPts[i];
             var pd = new PartDef { name = name, bone = bone, order = onSword ? 4 * 4 + sub : 28 * 4 + 1 + sub, color = color, role = role, rim = rim, rimGrow = 0.003f, rimColor = KMath.Hex("#050304"), glow = glow, swordLayer = onSword };
-            var rt = new PartRT { def = pd, family = true };
-            Transform parent = bones[(int)bone];
+            var rt = new PartRT { def = pd, family = true, sheath = sheath };
+            Transform parent = onSword && _sling != null ? _sling : bones[(int)bone];
             rt.main = MeshKit.MakeRenderer(name, parent, MeshKit.Poly(local, color, name), MeshKit.Alpha, 0);
             _all.Add(rt.main);
             if (rim)
@@ -496,8 +692,7 @@ namespace Kage
             }
             ApplyOrders();
             ApplyTint();
-            rt.main.enabled = SwordVisible;
-            if (rt.rim != null) rt.rim.enabled = SwordVisible;
+            SetSwordVisible(SwordVisible);         // the new part follows the blade's (or the scabbard's) rule at once
         }
 
         /// <summary>Removes every part added with <see cref="AddFamilyPart"/> and shows the character's own weapon again.</summary>
@@ -510,6 +705,8 @@ namespace Kage
                 Discard(rt.rim);
             }
             _familyParts.Clear();
+            SetSlung(false);
+            Sheathed = false;
             SetBaseSwordHidden(false);
         }
 

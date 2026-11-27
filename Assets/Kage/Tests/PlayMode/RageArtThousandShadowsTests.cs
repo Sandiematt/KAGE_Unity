@@ -7,9 +7,9 @@ using UnityEngine;
 namespace Kage.Tests
 {
     /// <summary>
-    /// Thousand Shadows for every family but the katana's (SAN-82, ADR-0006): Special + Down with full Rage starts it, one weapon
-    /// per family, read from the family's <c>rageArt</c> and not from the weapon id. Its own timeline (five cuts and a finisher, unblockable)
-    /// is the fight-harness test <c>ThousandShadowsPublishesRageArtThenItsCuts</c>.
+    /// Thousand Shadows for a weapon with no art of its own (SAN-82, ADR-0006; docs/weapon-styles.md): bare hands and the heavy tachi.
+    /// Every shop weapon has its own art now (<c>WeaponRageArtTests</c>). Its own timeline (five cuts and a finisher, unblockable) is the
+    /// fight-harness test <c>ThousandShadowsPublishesRageArtThenItsCuts</c>.
     /// </summary>
     public class RageArtThousandShadowsTests
     {
@@ -30,14 +30,10 @@ namespace Kage.Tests
             return f;
         }
 
-        // one weapon per family (the reference weapon of each)
+        // the weapons with no style of their own: their family's art
         [TestCase("fists", "fists")]
-        [TestCase("tsubame", "twin")]
-        [TestCase("mizuchi", "spear")]
-        [TestCase("onikiri", "cleaver")]
-        [TestCase("yamigama", "chain")]
         [TestCase("raiko_no_tachi", "tachi")]
-        public void A_full_meter_with_any_other_family_triggers_Thousand_Shadows(string weapon, string family)
+        public void A_full_meter_with_a_weapon_without_its_own_art_triggers_Thousand_Shadows(string weapon, string family)
         {
             var f = Duel(weapon);
             Assert.AreEqual(family, f.Kage.Family.id);

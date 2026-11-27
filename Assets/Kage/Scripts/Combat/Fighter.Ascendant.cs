@@ -41,6 +41,8 @@ namespace Kage
             _lastTakenFrame = -9999;
             System.Array.Clear(_lightStarts, 0, _lightStarts.Length);
             _lightNext = 0;
+            if (_vanished && rig != null) rig.SetVisible(true);
+            _vanished = false;
         }
 
         /// <summary>At the top of a frame: starts the queued forced move when the fighter can take it. True when it started.</summary>
@@ -58,6 +60,58 @@ namespace Kage
             _stun = 0;
             StartMove(m);
             return true;
+        }
+
+        // ---------------------------------------------------------------- the expansion's frame actions (MoveDef.Step)
+        /// <summary>The stage's left and right walls for this fighter, metres.</summary>
+        public float StageLeft => StageMin;
+        public float StageRight => StageMax;
+
+        /// <summary>True while the move holds the fighter out of sight (<see cref="MoveDef.vanishFrom"/>): the eye trail and the aura go with it.</summary>
+        public bool Vanished => rig != null && _vanished;
+        bool _vanished;
+
+        /// <summary>
+        /// Puts the fighter at <paramref name="at"/> at once (a blink: Arc Anchor's arrival at the blade, Tempest Cage's chord ends, Zenith Guillotine's
+        /// drop point), x inside the stage, its velocity cleared, and turned to face <paramref name="faceX"/> unless that is NaN.
+        /// </summary>
+        public void Warp(Vector2 at, float faceX = float.NaN)
+        {
+            at.x = Mathf.Clamp(at.x, StageMin, StageMax);
+            rb.position = at;
+            transform.position = new Vector3(at.x, at.y, transform.position.z);
+            rb.linearVelocity = Vector2.zero;
+            if (!float.IsNaN(faceX))
+            {
+                float to = Mathf.Sign(faceX - at.x);
+                if (to != 0f) SetFacing(to, true);
+            }
+        }
+
+        /// <summary>Lays <paramref name="def"/> on the floor at <paramref name="x"/> (inside the stage), owned by this fighter.</summary>
+        public Hazard LayHazard(HazardDef def, float x)
+        {
+            if (ctx == null || def == null) return null;
+            return Hazard.Spawn(ctx, this, def, new Vector2(Mathf.Clamp(x, StageMin, StageMax), Pos.y));
+        }
+
+        /// <summary>
+        /// Once a frame: a fighter with no weapon style (Raikon) shows its blade sheathed on a move's sheathed frames (the style's own step does it for the
+        /// rest), and the rig hides on a move's vanished frames and shows again as soon as they are over, whatever ended the move.
+        /// </summary>
+        void AscendantTick()
+        {
+            if (rig == null) return;
+            bool attacking = state == FState.Attack && move != null;
+            if (Style == null)
+            {
+                bool sheathed = attacking && move.Sheathed(moveFrame);
+                if (rig.Sheathed != sheathed) rig.SetSheathed(sheathed);
+            }
+            bool vanish = attacking && move.Vanished(moveFrame);
+            if (vanish == _vanished) return;
+            _vanished = vanish;
+            rig.SetVisible(!vanish);
         }
 
         // ---------------------------------------------------------------- hazards, throws, the pull

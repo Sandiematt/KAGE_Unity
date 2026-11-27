@@ -13,14 +13,14 @@ namespace Kage.Tests
     /// </summary>
     public class HelmetDesignTests
     {
-        // the 13 designed Act I helmets and their tiers (the starter Shiro Maki is Kage's bare hair and crimson scarf: no design)
+        // the 13 designed Act I helmets and their 5-tier rarity assignments (the starter Shiro Maki is Kage's bare hair and crimson scarf: Common, no extra design)
         static readonly (string id, HelmetTier tier)[] Tiers =
         {
-            ("kuro_zukin", HelmetTier.Common), ("sugegasa", HelmetTier.Common), ("hachigane", HelmetTier.Common), ("kasumi_men", HelmetTier.Common),
+            ("kuro_zukin", HelmetTier.Common),
+            ("sugegasa", HelmetTier.Rare), ("hachigane", HelmetTier.Rare), ("kasumi_men", HelmetTier.Rare),
             ("tetsu_kabuto", HelmetTier.Epic), ("oni_menpo", HelmetTier.Epic), ("hoshi_kabuto", HelmetTier.Epic),
-            ("hisame_zukin", HelmetTier.Trophy), ("sumi_eboshi", HelmetTier.Trophy),
-            ("shika_kabuto", HelmetTier.Legendary), ("shikko_zukin", HelmetTier.Legendary),
-            ("utsuro_kabuto", HelmetTier.GodMode), ("raijin_kabuto", HelmetTier.GodMode),
+            ("shika_kabuto", HelmetTier.Trophy), ("sumi_eboshi", HelmetTier.Trophy), ("hisame_zukin", HelmetTier.Trophy),
+            ("raijin_kabuto", HelmetTier.Legendary), ("utsuro_kabuto", HelmetTier.Legendary), ("shikko_zukin", HelmetTier.Legendary),
         };
 
         static IEnumerable<Vector2> Points(float[] xy)
@@ -68,8 +68,11 @@ namespace Kage.Tests
         {
             foreach (var (id, tier) in Tiers) Assert.AreEqual(tier, HelmetDesigns.Get(id).tier, id);
             foreach (var t in HelmetTiers.All) Assert.IsTrue(HelmetDesigns.All.Any(d => d.tier == t), $"no helmet in {t}");
-            // the order of the owner's sheet, and its labels
-            CollectionAssert.AreEqual(new[] { "COMMON", "EPIC", "TROPHY", "LEGENDARY", "GOD MODE" }, HelmetTiers.All.Select(HelmetTiers.Label));
+            CollectionAssert.AreEqual(new[] { "COMMON", "RARE", "EPIC", "TROPHY", "LEGENDARY" }, HelmetTiers.All.Select(HelmetTiers.Label));
+            // rules tier matches design tier for every Act I helmet
+            Assert.AreEqual("common", GameRules.Item(GearKind.Helmets, "shiro_maki").Tier);
+            foreach (var (id, tier) in Tiers)
+                Assert.AreEqual(tier, HelmetTiers.FromId(GameRules.Item(GearKind.Helmets, id).Tier), $"{id} rules tier matches design tier");
         }
 
         [Test]
@@ -103,21 +106,25 @@ namespace Kage.Tests
             {
                 switch (d.tier)
                 {
-                    case HelmetTier.Common: Assert.AreEqual(1f, Glow(d), $"{d.id}: common gear does not glow"); break;
+                    case HelmetTier.Common:
+                    case HelmetTier.Rare:
+                        Assert.AreEqual(1f, Glow(d), $"{d.id}: {d.tier} gear does not bloom"); break;
                     case HelmetTier.Epic:
-                    case HelmetTier.GodMode: Assert.Greater(Glow(d), 2f, $"{d.id}: {d.tier} gear glows"); break;
+                    case HelmetTier.Legendary:
+                        Assert.Greater(Glow(d), 2f, $"{d.id}: {d.tier} gear glows"); break;
                     case HelmetTier.Trophy:
                         Assert.IsTrue(d.pieces.Any(p => p.tone == "gold") && d.pieces.Any(p => p.tone == "ribbon"), $"{d.id}: gold and white ribbons"); break;
-                    case HelmetTier.Legendary:
-                        Assert.IsTrue(d.pieces.Any(p => p.tone == "gold") && d.pieces.Any(p => p.tone == "red"), $"{d.id}: a gold crest and red cords"); break;
                 }
             }
-            // the god-mode helmets light his eye from behind
-            foreach (var d in HelmetDesigns.All.Where(d => d.tier == HelmetTier.GodMode))
-                Assert.IsTrue(d.pieces.Any(p => p.name == "EyeGlow"), d.id);
-            // a tier up is more drawn: common helmets have fewer pieces on average than god-mode ones
+            // the legendary helmets replace Kage's default white eye with their own fiery custom eye
+            foreach (var d in HelmetDesigns.All.Where(d => d.tier == HelmetTier.Legendary))
+            {
+                Assert.AreEqual(EyeUnderHelmet.Replaced, d.eye, d.id);
+                Assert.IsTrue(d.pieces.Any(p => p.name == "Eye" && p.order == HelmetVisuals.EyeOrder && p.glow > 3f), d.id);
+            }
+            // a tier up is more drawn: common helmets have fewer pieces on average than legendary ones
             float Mean(HelmetTier t) => (float)HelmetDesigns.All.Where(d => d.tier == t).Average(d => d.pieces.Length);
-            Assert.Less(Mean(HelmetTier.Common), Mean(HelmetTier.GodMode));
+            Assert.Less(Mean(HelmetTier.Common), Mean(HelmetTier.Legendary));
         }
 
         [Test]
@@ -178,6 +185,11 @@ namespace Kage.Tests
                         continue;
                     }
                     Assert.AreEqual(B.Head, p.bone, $"{d.id}/{p.name}");
+                    if (d.eye == EyeUnderHelmet.Replaced && (p.name == "Eye" || p.name.StartsWith("Eye")))
+                    {
+                        Assert.That(p.order, Is.InRange(94, 97), $"{d.id}/{p.name}: custom eye layer order");
+                        continue;
+                    }
                     if (p.order >= HelmetVisuals.EyeOrder)
                         Assert.AreEqual(PieceKind.Cloth, p.kind, $"{d.id}/{p.name}: only a face veil hangs in front of the scarf");
                     else

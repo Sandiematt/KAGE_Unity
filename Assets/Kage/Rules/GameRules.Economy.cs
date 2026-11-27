@@ -28,7 +28,10 @@ namespace Kage.Rules
         public static int UpgradeCost(GearKind kind, string id, int level)
         {
             var item = Item(kind, id);
-            double basis = item.Price > 0 ? item.Price : item.Gems > 0 ? item.Gems * 60 : 500;
+            // a weapon upgrades at its JS price, not the shop price Unity's tiers gave it: Kagetsu, the old starter (JS price 0), now
+            // sold, still upgrades exactly as it did, and Mumei, the new starter, as the old starter did
+            int price = item.Weapon != null && WeaponPrices.ContainsKey(id) ? item.Weapon.Price : item.Price;
+            double basis = price > 0 ? price : item.Gems > 0 ? item.Gems * 60 : 500;
             return JsRound(Math.Max(160, basis * (0.35 + 0.3 * level)) / 10) * 10;
         }
 

@@ -126,7 +126,7 @@ namespace Kage.Tests
         [Test]
         public void The_dev_weapon_cycle_offers_the_player_weapons_of_the_registered_families()
         {
-            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "yamigama", "iwakudaki", "shizuka", "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha" }, WeaponFamilies.PlayableWeapons());
+            CollectionAssert.AreEqual(new[] { "fists", "tsubame", "kagetsu", "onikiri", "mizuchi", "yamigama", "iwakudaki", "shizuka", "shinsen", "raiko_no_tachi", "kagehira_yurei", "mugen_no_ha", "mumei" }, WeaponFamilies.PlayableWeapons());
         }
 
         // ---- the heavy tachi (SAN-81) ----

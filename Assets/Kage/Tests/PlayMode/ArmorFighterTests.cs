@@ -147,6 +147,48 @@ namespace Kage.Tests
         }
 
         [Test]
+        public void LegendaryArmoursAttachPrestigeAuraAndNonLegendaryDoNot()
+        {
+            foreach (var id in new[] { "yurei_yoroi", "mugen_yoroi" })
+            {
+                using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: KageWearing(id));
+                var aura = fight.Kage.GetComponent<ArmorAura>();
+                Assert.IsNotNull(aura, $"{id} should carry ArmorAura");
+                Assert.AreNotEqual(ArmorAuraKind.None, aura.Kind, id);
+                fight.Run(15);
+                AssertAllFinite(fight.Kage, id + " aura");
+            }
+            foreach (var id in new[] { "tachibana_yoroi", "ronin_yoroi", "yami_yoroi", "shinsen_yoroi", "raiko_yoroi", "kagehira_yoroi", "ikazuchi_do", "shiden_yoroi" })
+            {
+                using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: KageWearing(id));
+                Assert.IsNull(fight.Kage.GetComponent<ArmorAura>(), $"{id} should not carry Legendary ArmorAura");
+            }
+        }
+
+        [Test]
+        public void SplitHaoriTailsAndCapesReactToDashFlipAndHeavyAttacksWithoutJitter()
+        {
+            foreach (var id in new[] { "yami_yoroi", "raiko_yoroi", "shiden_yoroi", "yurei_yoroi", "mugen_yoroi" })
+            {
+                using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -0.8f, 0.8f, kageDef: KageWearing(id));
+                fight.Run(8);
+                var tail = fight.Kage.rig.GetComponentsInChildren<MeshFilter>(true).First(m => m.name.Contains("HaoriTailNear"));
+                var before = tail.sharedMesh.vertices.ToArray();
+                // Dash forward, stop, heavy slash, and turn around
+                fight.KageInput.Add(1, fwd: 1, dash: true).Add(14, fwd: 1).Add(1, buttons: "S").Add(25);
+                fight.RoninInput.Add(100);
+                fight.Run(45);
+                fight.Kage.SetFacing(-fight.Kage.facing);
+                fight.Run(15);
+                var after = tail.sharedMesh.vertices;
+                float moved = 0f;
+                for (int i = 0; i < before.Length; i++) moved = Mathf.Max(moved, (after[i] - before[i]).magnitude);
+                Assert.Greater(moved, 0.004f, $"{id}: split haori tail did not react to dash/slash/flip");
+                AssertAllFinite(fight.Kage, id + " dynamic cloth");
+            }
+        }
+
+        [Test]
         public void EveryHelmetAndArmourCombinationSpawnsAndStandsStill()
         {
             var helmets = new[] { null, "shiro_maki", "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "sumi_eboshi", "hisame_zukin", "raijin_kabuto" };

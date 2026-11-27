@@ -47,7 +47,7 @@ namespace Kage.Tests
             Assert.AreEqual(3, back.level);
             Assert.IsTrue(back.cleared["prologue.1"]);
             Assert.AreEqual(2, back.defeated["prologue.1"]);
-            Assert.AreEqual(1, back.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, back.owned.weapons["mumei"]);
             Assert.AreEqual(4, back.owned.weapons["tsubame"]);
             Assert.AreEqual(2, back.owned.helmets["kuro_zukin"]);
             Assert.AreEqual(5, back.owned.armors["mugen_yoroi"]);
@@ -88,7 +88,7 @@ namespace Kage.Tests
             StringAssert.Contains("\"coins\": 250", json);
             StringAssert.Contains("\"gems\": 5", json);
             StringAssert.Contains("\"equipped\"", json);
-            StringAssert.Contains("\"weapon\": \"kagetsu\"", json);
+            StringAssert.Contains("\"weapon\": \"mumei\"", json);
             StringAssert.Contains("\"helmet\": \"shiro_maki\"", json);
             StringAssert.Contains("\"armor\": \"tachibana_yoroi\"", json);
             StringAssert.Contains("\"seenRewards\"", json);

@@ -58,7 +58,7 @@ Bindings move into one table, `KeyBindings` (`Scripts/Combat/KeyBindings.cs`, cr
 
 `Fighter.TrySpecialDown()` (in `Fighter.Specials.cs`) decides, in this order:
 
-1. If the fighter can use a rage art (Kage), Rage is full (100) and the fighter is grounded: the weapon family's rage art (ADR-0006). Crimson Moon for the katana family, Thousand Shadows for every other family.
+1. If the fighter can use a rage art (Kage), Rage is full (100) and the fighter is grounded: the weapon's rage art: its style's (each shop weapon has its own, docs/weapon-styles.md), else its family's (ADR-0006): Crimson Moon for the katana family, Thousand Shadows for every other family. Against a sub-boss or the boss that isn't open, the press is spent and the art is turned aside instead (GLOSSARY: rage art read, `Fighter.RageArtCounter.cs`).
 2. Else, if the fighter has kunai left: throw a kunai (SAN-88).
 3. Else: nothing happens, and the press is consumed.
 

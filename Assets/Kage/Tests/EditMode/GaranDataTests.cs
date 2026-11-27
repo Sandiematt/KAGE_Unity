@@ -38,37 +38,38 @@ namespace Kage.Tests
             Assert.AreEqual(0.1f, d.defense, 1e-6);
             Assert.AreEqual(1.1f, d.damageMul, 1e-6);
             Assert.AreEqual(0.92f, d.speedMul, 1e-6);
-            Assert.AreEqual(1.18f, d.bodyScale, 1e-6);
+            Assert.AreEqual(1.35f, d.bodyScale, 1e-6);
             Assert.IsTrue((d.flags & CharacterFlags.Armour) != 0, "JS heavyArmor: light hits don't flinch him");
             Assert.IsTrue((d.flags & CharacterFlags.NoGrab) == 0, "he can be thrown");
             Assert.IsFalse(d.IsPlayer);
         }
 
         [Test]
-        public void He_fights_with_the_iron_fists_on_the_fists_set_and_the_heavy_profile_with_heavy_mass()
+        public void He_wields_a_greatsword_on_the_cleaver_set_and_the_heavy_profile_with_heavy_mass()
         {
             var d = Def();
-            Assert.AreEqual("iron_fists", d.weaponId);
-            Assert.AreEqual(WeaponFamilies.Fists, d.family);
-            Assert.AreEqual(WeaponFamilies.Fists, WeaponFamilies.FamilyIdOf(d.weaponId), "the JS weapon's family is the fists set");
+            Assert.AreEqual("onikiri", d.weaponId);
+            Assert.AreEqual(WeaponFamilies.Cleaver, d.family);
+            Assert.AreEqual(WeaponFamilies.Cleaver, WeaponFamilies.FamilyIdOf(d.weaponId), "the greatsword uses the heavy two-handed grip");
             Assert.AreEqual("heavy", d.aiProfile);
             Assert.Greater(d.mass, 1.5f, "heavy: well over Kage's 1");
             Assert.Greater(d.mass, CharacterCatalog.Get(Kuroe.Id).mass, "heavier than Kuroe");
         }
 
         [Test]
-        public void He_is_a_boss_with_the_JS_abilities_in_slot_order_then_his_clinch()
+        public void He_is_a_boss_with_the_JS_abilities_in_slot_order_then_his_clinch_and_martial_kit()
         {
             var d = Def();
             Assert.AreEqual(Id, d.bossId);
-            CollectionAssert.AreEqual(new[] { "stormFist", "garanTsuppari", "charge", "garan.clinch" }, d.abilities,
+            CollectionAssert.AreEqual(new[] { "stormFist", "garanTsuppari", "charge", "garan.clinch" }, d.abilities.Take(4).ToArray(),
                 "the JS phases' abilities in first-use order, then the clinch the SAN-104 comment adds");
+            CollectionAssert.AreEqual(GaranAbilities.ExtraIds, d.abilities.Skip(4).ToArray());
         }
 
         // ---------------------------------------------------------------- phases
 
         [Test]
-        public void His_boss_data_is_the_two_JS_phases_with_the_clinch_in_both()
+        public void His_boss_data_is_the_two_JS_phases_with_the_clinch_and_martial_kit()
         {
             var b = BossCatalog.Get(Id);
             Assert.IsNotNull(b);
@@ -77,10 +78,10 @@ namespace Kage.Tests
             Assert.AreEqual(2, b.Count);
             Assert.AreEqual("Thunderstruck", b.phases[0].name);
             Assert.AreEqual(1f, b.phases[0].at);
-            CollectionAssert.AreEquivalent(new[] { "stormFist", "garanTsuppari", "garan.clinch" }, b.phases[0].abilities);
+            CollectionAssert.AreEquivalent(new[] { "stormFist", "garanTsuppari", "garan.clinch", GaranAbilities.GedanComboId, GaranAbilities.ShikoStompId }, b.phases[0].abilities);
             Assert.AreEqual("Stormbroken", b.phases[1].name);
             Assert.AreEqual(0.5f, b.phases[1].at, "the JS threshold");
-            CollectionAssert.AreEquivalent(new[] { "stormFist", "charge", "garanTsuppari", "garan.clinch" }, b.phases[1].abilities, "phase two adds the charge");
+            CollectionAssert.AreEquivalent(new[] { "stormFist", "charge", "garanTsuppari", "garan.clinch", GaranAbilities.GedanComboId, GaranAbilities.ShikoStompId, GaranAbilities.BrokenPalmId }, b.phases[1].abilities, "phase two adds the charge and Broken Static Palm");
             Assert.IsNull(b.phases[1].aiProfile, "he stays on the heavy profile");
             Assert.IsFalse(b.phases[0].aggressive || b.phases[1].aggressive);
         }
@@ -169,7 +170,7 @@ namespace Kage.Tests
             Assert.AreEqual(18, m.hazard.strikeFrames, "the JS shockwave lives 0.75 x 0.4 s");
             Assert.AreEqual((228f + 68f) / 115f, m.hazard.size.x, 1e-3, "as long as the shockwave runs (760 px/s x 0.3 s) plus its width");
             Assert.AreEqual(68f / 115f, m.hazard.size.y, 1e-3, "a ground wave: jump it");
-            Assert.AreEqual((120f * 1.18f + 114f) / 115f, m.hazardAhead, 1e-3, "from where the fists land, forward");
+            Assert.AreEqual((120f * Garan.BodyScale + 114f) / 115f, m.hazardAhead, 1e-3, "from where the fists land, forward");
             Assert.AreNotEqual(HitLevel.Unblockable, m.hazard.hit.level, "the JS shock is blockable");
             Assert.IsTrue(m.hazard.hit.knockdown);
         }

@@ -27,7 +27,7 @@ namespace Kage
         readonly float _reach, _seed;
         readonly float _k, _damp, _swing, _maxAng, _wave, _hang, _windGain, _angLag;
 
-        float _time, _lag, _lagVel, _prevAng, _angVel, _mirror;
+        float _time, _wavePhase, _lag, _lagVel, _prevAng, _angVel, _mirror;
         bool _hasPrev;
         Vector2 _trail, _trailVel, _bodyVel;
         Vector2 _pendingImpulse;
@@ -81,13 +81,13 @@ namespace Kage
                 _phi[i] = Mathf.Atan2(Cross(_axis, d),Vector2.Dot(_axis, d));
             }
 
-            // the preset as spring, swing, wave and hang (Kage's hair: k 150, a 5.5 deg wave, 3.2 deg per m/s)
+            // the preset as spring, swing, wave and hang (smooth flowing wave and graceful damping)
             float loose = 1f - Mathf.Clamp01(feel.stiffRoot);
             _k = 40f + 300f * feel.stiffRoot;
-            _damp = 2f * Mathf.Sqrt(_k) * 0.42f;
+            _damp = 2f * Mathf.Sqrt(_k) * 0.62f;
             _swing = 5f * feel.drag * loose;
             _maxAng = 12f + 60f * loose * loose;
-            _wave = 5.5f * feel.breeze;
+            _wave = 2.8f * feel.breeze;
             _hang = Mathf.Clamp01(feel.gravity / 9f) * loose;
             _windGain = 1.6f * feel.drag;
             _angLag = 0.06f * loose;
@@ -114,6 +114,7 @@ namespace Kage
         public void Reset()
         {
             _lag = _lagVel = 0f;
+            _wavePhase = 0f;
             _trail = _trailVel = Vector2.zero;
             _bodyVel = Vector2.zero;
             _pendingImpulse = Vector2.zero;
@@ -149,8 +150,9 @@ namespace Kage
             // the drives, in world degrees (anticlockwise on screen): the air drags the free end back from the motion, the wind blows
             // it along, gravity keeps it hanging as drawn while the body tilts, and it lags behind the bone's turning
             Vector2 windV = wind.IsCalm ? Vector2.zero : wind.At(_time, rootW.x);
-            float windBoost = 1f + Mathf.Clamp(windV.magnitude * 0.22f, 0f, 1.8f);
-            Vector2 restW = _rig != null ? ((Vector2)_rig.TransformDirection(_axis)).normalized : axisW;
+            float windBoost = 1f + Mathf.Clamp(windV.magnitude * 0.10f, 0f, 0.75f);
+            _wavePhase += dt * (1f + Mathf.Clamp((windBoost - 1f) * 0.28f, 0f, 0.28f));
+            Vector2 restW = _rig != null ? ((Vector2)_rig.localToWorldMatrix.MultiplyVector(_axis)).normalized : axisW;
             float hang = Vector2.SignedAngle(axisW, restW) * _hang;
             float drive = Cross(axisW, -_bodyVel) * _swing + Cross(axisW, windV) * _windGain + hang - _angVel * _angLag;
             float target = Mathf.Clamp(drive, -_maxAng, _maxAng) * mirror;        // world turn to the bone's own turn
@@ -184,16 +186,17 @@ namespace Kage
                 return;
             }
 
-            // Kage's hair wave: a slow gust and a wave travelling out from the root, stronger in the wind
-            float gust = (Mathf.PerlinNoise(_time * 0.9f, 3.7f + _seed) - 0.5f) * 1.6f * _wave * windBoost;
+            // Smooth outward-travelling wind wave: slow swell and phase-locked ripple flowing from root to free end
+            float gust = (Mathf.PerlinNoise(_time * 0.22f, 3.7f + _seed) - 0.5f) * 0.9f * _wave * windBoost;
             float amp = _wave * windBoost;
-            float tm = _time + _seed;
+            float tm = _wavePhase + _seed;
             for (int i = 0; i < _base.Length; i++)
             {
                 float w = _w[i];
                 if (w <= 0.0005f) { _out[i] = _base[i]; continue; }
                 float u = _u[i], phi = _phi[i];
-                float wave = Mathf.Sin(tm * 5.2f + phi * 2.1f - u * 6f) * amp + Mathf.Sin(tm * 8.7f + phi * 5f - u * 3f) * amp * 0.35f;
+                float wave = Mathf.Sin(tm * 1.20f + phi * 1.5f - u * 4.4f) * amp
+                           + Mathf.Sin(tm * 1.95f + phi * 2.6f - u * 7.2f) * amp * 0.18f;
                 float a = (_lag + gust + wave) * w * Mathf.Deg2Rad;
                 float cs = Mathf.Cos(a), sn = Mathf.Sin(a);
                 float dx = _base[i].x - _root.x, dy = _base[i].y - _root.y;

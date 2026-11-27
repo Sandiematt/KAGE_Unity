@@ -17,7 +17,7 @@ namespace Kage.Tests
         public void Every_weapon_tile_shows_a_drawn_sword_that_exists()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Weapons);
-            Assert.AreEqual(7, v.Tiles.Length);
+            Assert.AreEqual(8, v.Tiles.Length, "Mumei and the seven shop weapons");
             foreach (var t in v.Tiles)
             {
                 Assert.IsNotNull(t.Art, t.Id);
@@ -30,7 +30,7 @@ namespace Kage.Tests
         public void The_six_listed_shop_swords_use_the_design_renders()
         {
             var v = ArmoryView.Build(Save(), ArmoryTab.Weapons);
-            foreach (var id in new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" })
+            foreach (var id in new[] { "mumei", "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" })
             {
                 var t = v.Tiles.Single(x => x.Id == id);
                 Assert.AreEqual(ArtSource.WeaponRender, t.Art.Source, id);

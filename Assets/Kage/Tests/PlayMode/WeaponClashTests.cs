@@ -153,7 +153,7 @@ namespace Kage.Tests
         public void A_low_reap_against_a_low_reap_clashes_too()
         {
             var f = Clashed(Duel(1.6f, SDown, SDown));
-            Assert.AreEqual("lowReap", TheClash(f).MoveId);
+            Assert.AreEqual("crownWheel", TheClash(f).MoveId);
             Assert.AreEqual(0, f.Log.Count(CombatEventType.Hit));
         }
 

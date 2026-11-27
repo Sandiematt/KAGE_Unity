@@ -13,6 +13,8 @@ namespace Kage
         // frame passes each frame and playback is the authored one.
         float _moveTime;
         int _movePrev, _moveTicks;
+        /// <summary>Move frames the current move advanced this logic frame (the playback rate with the style's), for a touch part way through it.</summary>
+        float _moveRateNow = 1f;
 
         /// <summary>The move's time in (fractional) frames.</summary>
         public float MoveTime => _moveTime;
@@ -40,6 +42,8 @@ namespace Kage
         bool TryBuffered(FrameInput inp, int fwd)
         {
             if (_bufferAge > 8 || _buffer == Btn.None) return false;
+            if (TryRiposte()) return true;                       // after a guard or a parry, the weapon's iai counter (Fighter.Style.cs)
+            if (FaceTargetForAttack()) { fwd = -fwd; _bufferFwd = -_bufferFwd; }    // the target is behind: turn between animations; a held direction reads on the new side (Fighter.Facing.cs)
             int dy = inp.dy != 0 ? inp.dy : _bufferDy;
             int f = fwd != 0 ? fwd : _bufferFwd;
             // Special + Down is the rage art / a kunai; a full Rage bar also spends itself on a plain Special press (the player's I),
@@ -70,10 +74,13 @@ namespace Kage
             _movePrev = 0;
             _moveTicks = 0;
             moveHit = false;
+            _moveContact = false;
             _hitLog.Clear();
             _sweepPrev.Clear();
             ctx?.Events.Publish(CombatEvent.MoveStarted(ctx.Clock.Frame, this, m.id));
             NoteMoveStart(m);
+            WarnBackAttack(m);           // a foe behind Kage winds up: a "!" (Fighter.Counter.cs)
+            AnswerTell(m);              // a foe's answer to its own parry: a glint and a "!" as it winds up (Fighter.Parry.cs)
             rig.SetSwordFront(m.swordFront);
             rig.SnapFacing();
             if (Grounded && !m.airborne) rb.linearVelocity = new Vector2(rb.linearVelocity.x * 0.3f, rb.linearVelocity.y);
@@ -85,7 +92,8 @@ namespace Kage
             var m = move;
             if (m == null) { SetState(FState.Idle); return; }
             if (ContactFollowUp(m)) return;                       // a blow of a move with onContact landed: its follow-up plays (SAN-104)
-            float rate = PlaybackRate;
+            float rate = PlaybackRate * StyleRate(m);           // the twin blades' momentum (Fighter.Style.cs); 1 for every other weapon
+            _moveRateNow = rate;
             _movePrev = moveFrame;
             _moveTicks++;
             _moveTime += rate;
@@ -97,9 +105,13 @@ namespace Kage
             if (_bufferAge <= 10 && _buffer != Btn.None && f >= m.cancelFrom && m.chain.TryGetValue(_buffer, out var next) && (next = Armed(next)) != null)
             {
                 ConsumeBuffer();
+                if (!next.airborne) FaceTargetForAttack();             // the next link faces its target before its wind-up, never during it (Fighter.Facing.cs)
                 StartMove(next);
                 return;
             }
+
+            if (DashCancelStep(m, fwd)) return;                        // a landed twin cut flows into a dash (Fighter.Style.cs)
+            if (RecoveryCancel(m, fwd)) return;                        // a move that connected: dash or guard out of its recovery (Fighter.Flow.cs)
 
             // launchers: after a hit, jump cancels the recovery so the launch can be chased
             if (moveHit && m.jumpCancelFrom >= 0 && f >= m.jumpCancelFrom && Grounded && (_jumpBuf <= 6 || inp.dy > 0))
@@ -141,6 +153,12 @@ namespace Kage
                 }
             }
 
+            foreach (var s in m.steps)                                // frame actions (Raikon's blinks, ring lock, vanish): before the frame's cues
+            {
+                if (!Passed(s.frame)) continue;
+                s.act(this);
+                if (move != m || state != FState.Attack) return;      // the action started another move (a recall) or ended this one
+            }
             foreach (var c in m.cues) if (Passed(c.frame)) PlayMoveCue(c.cue);
 
             // hit windows: pose the rig at this exact logic frame before testing
@@ -152,7 +170,16 @@ namespace Kage
                 ApplyGrip(_display);
                 rig.Apply(_display);
                 foreach (var w in m.hits)
+                {
+                    if (Passed(w.from) && m.impulses.Count == 0 && m.gusts.Count == 0)
+                    {
+                        // Anime-style cloth/cape whip at the strike's active onset, scaled by move weight
+                        float whipX = (w.heavy || w.launch || w.knockdown) ? 6.4f : w.sword ? 3.4f : 1.8f;
+                        float whipY = (w.heavy || w.launch || w.knockdown) ? 2.2f : w.sword ? 1.1f : 0.5f;
+                        rig?.Impulse(new Vector2(-facing * whipX, whipY), 1.15f);
+                    }
                     if (Touches(w.from, w.to)) WindowActive(w);
+                }
             }
 
             if (m.projectileFrame >= 0 && Passed(m.projectileFrame))
@@ -165,6 +192,7 @@ namespace Kage
             if (m.hazard != null && Passed(m.hazardFrame)) SpawnMoveHazard(m);
             foreach (var h in m.extraHazards) if (Passed(h.frame)) SpawnMoveHazard(h.def, h.ahead, h.onTarget);   // more bolts and slashes (Raikon)
             foreach (var k in m.impulses) if (Passed(k.frame)) rig?.Impulse(new Vector2(k.impulse.x * facing, k.impulse.y));
+            foreach (var g in m.gusts) if (Passed(g.frame)) rig?.SwingGust(new Vector2(g.gust.x * facing, g.gust.y), g.duration);
             if (m.pullTo >= m.pullFrom && m.pullFrom >= 0 && Touches(m.pullFrom, m.pullTo)) PullTarget(m.pullSpeed);
             if (m.selfPosture.Count > 0) ApplySelfPosture(m);
             if (m.isThrow) ThrowUpdate();

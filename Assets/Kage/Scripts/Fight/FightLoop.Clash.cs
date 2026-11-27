@@ -72,9 +72,14 @@ namespace Kage
             fa.FlushGuardBreak();
             fb.FlushGuardBreak();
             GameFeel.Hitstop(t.hitstopFrames);
-            GameFeel.Shake(t.shake);
-            if (t.punch > 0f) GameFeel.Punch(t.punch);
-            EffectCues.Play(ClashCues.Clash, contact, new CueArgs { owner = fa, dir = new Vector2(Mathf.Sign(fb.Pos.x - fa.Pos.x), 0f), scale = 1f });
+            Vector2 dir = new Vector2(Mathf.Sign(fb.Pos.x - fa.Pos.x), 0f);
+            if (fa.PresentsCombat)
+            {
+                GameFeel.Shake(t.shake);
+                fa.rig.HitShake(-dir, 0.024f, 0.12f);
+                fb.rig.HitShake(dir, 0.024f, 0.12f);
+            }
+            EffectCues.Play(ClashCues.Clash, contact, new CueArgs { owner = fa, dir = dir, scale = 1f });
         }
     }
 }

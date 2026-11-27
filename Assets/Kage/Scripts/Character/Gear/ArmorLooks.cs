@@ -145,16 +145,25 @@ namespace Kage
 
         public static void Dress(ArmorArt a, ArmorTheme t)
         {
+            DressCoatAndStrands(a, t);
+            Chest(a, t);
+            Sode(a, t);
+            if (t.halo) Halo(a, t);
+        }
+
+        /// <summary>Applies only the coat hem teeth, coat motif art, and extra scarf strands (used for Ronin's tattered base coat).</summary>
+        public static void DressCoatAndStrands(ArmorArt a, ArmorTheme t)
+        {
             var side = new HemLine(928, 740, 964, 744, 1010, 738, 1056, 726);
             var back = new HemLine(906, 744, 950, 750, 1000, 746, 1046, 734, 1082, 726);
             Teeth(a, "Coat_Back", back, t, 11f, t.coatLo.Mul(0.8f), false, false);
             Teeth(a, "Coat_Side", side, t, 0f, t.tooth, t.fringe, true);
             Motif(a, t, side);
-            Chest(a, t);
-            Sode(a, t);
             Strands(a.Rig, t);
-            if (t.halo) Halo(a, t);
         }
+
+        /// <summary>Applies only the extra scarf strands (used when structured split haori tails replace the old coat hem teeth).</summary>
+        public static void DressStrandsOnly(RigDef d, ArmorTheme t) => Strands(d, t);
 
         // ---------------------------------------------------------------- the hem
 

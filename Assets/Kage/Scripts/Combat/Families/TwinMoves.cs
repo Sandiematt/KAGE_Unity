@@ -240,12 +240,15 @@ namespace Kage
                 .Hit(3, 18, FootN, 4, HitLevel.Overhead, new Vector2(2.0f, 1.2f), stun: 16, hitstop: 4, shake: 0.1f, radius: 0.11f)
                 .Fx(3, 12, FxKind.TrailFootN).Air();
 
-            // both blades out wide, turning one full revolution: a cut on each half
+            // both blades crossed high, then scissored out through the foe in two flat cuts, the body upright (no whole-body spin):
+            // the far blade sweeps forward, then the near blade answers on the way back
             m.airSpin = new MoveDef("twin.airSpin", "Whirl", 24)
-                .Key(2, T().Hip(0f, 0f, 0f).Chest(-10f).LegN(90f, -120f).LegF(80f, -110f).HandN(0.5f, 1.2f).BladeN(10f).HandF(-0.3f, 1.2f).Blade(170f))
-                .Key(16, T().Hip(0f, 0f, 0f).Chest(-12f).LegN(92f, -122f).LegF(82f, -112f).HandN(0.5f, 1.2f).BladeN(10f).HandF(-0.3f, 1.2f).Blade(170f), Ease.Linear)
+                .Key(2, T().Hip(0f, 0f, 4f).Chest(6f).Head(-4f).LegN(90f, -120f).LegF(80f, -110f).HandN(0.1f, 1.3f).BladeN(150f).HandF(-0.1f, 1.3f).Blade(160f), Ease.OutQuad)
+                .Key(6, T().Hip(0f, 0f, -10f).Chest(-16f).Head(8f).LegN(90f, -120f).LegF(80f, -110f).HandN(0.16f, 1.24f).BladeN(130f).HandF(0.56f, 1.12f).Blade(-6f), Ease.OutExpo)
+                .Key(8, T().Hip(0f, 0f, -10f).Chest(-16f).Head(8f).LegN(90f, -120f).LegF(80f, -110f).HandN(0.18f, 1.22f).BladeN(120f).HandF(0.5f, 1.04f).Blade(-20f))
+                .Key(12, T().Hip(0f, 0f, -12f).Chest(-20f).Head(10f).LegN(92f, -122f).LegF(82f, -112f).HandN(0.6f, 1.12f).BladeN(-4f).HandF(0.2f, 1.1f).Blade(60f), Ease.OutExpo)
+                .Key(16, T().Hip(0f, 0f, -8f).Chest(-14f).Head(8f).LegN(92f, -122f).LegF(82f, -112f).HandN(0.52f, 1.04f).BladeN(-18f).HandF(0.16f, 1.1f).Blade(70f))
                 .Key(24, T().Hip(0f, 0f, 0f).Chest(5f).LegN(40f, -60f).LegF(20f, -50f).HandN(0.4f, 1.1f).BladeN(10f).HandF(-0.2f, 1.1f).Blade(170f))
-                .Spin(2, 15, -360f)
                 .Hit(3, 8, Blades, 3, HitLevel.Overhead, new Vector2(1.0f, 0.8f), stun: 12, hitstop: 3, shake: 0.05f, radius: 0.07f)
                 .Hit(9, 14, Blades, 3, HitLevel.Overhead, new Vector2(1.6f, 2.0f), stun: 16, hitstop: 4, shake: 0.08f, knockdown: true, radius: 0.07f)
                 .Fx(3, 15, FxKind.TrailBlade).Fx(3, 15, FxKind.TrailBladeN).Sword().Air().Normalize();

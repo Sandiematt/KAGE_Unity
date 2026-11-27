@@ -45,9 +45,10 @@ namespace Kage
             float w = Mathf.Max(UiParts.Width(title_), UiParts.Width(eye, 2.9f)) + 52f;
             float h = 17f + 20f + 3f + 36f + 17f;
             var rt = Ui.Node(stage, "Toast", 800f - w / 2f, Top, w, h);
-            Ui.Box(rt, 0, 0, w, h, Ui.Charcoal).transform.SetAsFirstSibling();
-            Ui.Box(rt, 0, 0, w, 2, red ? Ui.Hot : Ui.Gold);
-            Ui.Frame(rt, 0, 0, w, h, 1, Ui.A(Color.black, 0.35f));
+            Ui.Box(rt, -3, 3, w + 6, h + 3, new Color(0f, 0f, 0f, 0.45f), "Shadow").transform.SetAsFirstSibling();
+            Ui.Box(rt, 0, 0, w, h, Ui.Charcoal);
+            Ui.Box(rt, 0, 0, w, 2.5f, red ? Ui.Hot : Ui.Gold);
+            Ui.Frame(rt, 0, 0, w, h, 1, Ui.A(red ? Ui.Hot : Ui.GoldDim, 0.72f));
             title_.transform.SetParent(rt, false);
             title_.rectTransform.anchoredPosition = new Vector2(26, -(17 + 20 + 3));
             eye.transform.SetParent(rt, false);

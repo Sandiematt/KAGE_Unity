@@ -30,6 +30,10 @@ namespace Kage
         public float swNAbs;
         /// <summary>Where the near hand sits on the handle (sword-axis metres behind the far hand) and how far back it can slide (SAN-78: a polearm holds its hands further apart).</summary>
         public float gripSpacing = GripSpacing, gripPommel = GripPommel;
+        /// <summary>True when a move pose explicitly authored its grip span (<see cref="GripSpan"/>), so static family grip defaults won't overwrite a sliding polearm grip.</summary>
+        public bool hasCustomGrip;
+        /// <summary>Translation of the sword/shaft bone along its own blade axis (metres, positive = forward through the lead hand for sliding-grip spear thrusts).</summary>
+        public float shaftSlide;
         /// <summary>
         /// The katana turned over on its own axis (SAN-118, hasuji): its edge on the side its spine is drawn on. A rising cut
         /// (kiri-age, gyaku-kesa), a draw from the hip and Kasumi lead with the edge this way; the rig mirrors the sword bone
@@ -77,6 +81,17 @@ namespace Kage
         public Pose Sword(float rel) { a[(int)B.Sword] = rel; hasSwAbs = false; return this; }
         /// <summary>Blade direction in root space, degrees (0 = pointing forward, 90 = up).</summary>
         public Pose Blade(float worldDeg) { hasSwAbs = true; swAbs = worldDeg; return this; }
+        /// <summary>Slides the weapon shaft along its blade axis (metres, positive = forward through the lead hand).</summary>
+        public Pose ShaftSlide(float metres) { shaftSlide = metres; _resolved = false; return this; }
+        /// <summary>Sets a custom two-handed grip span along the weapon shaft behind the shifted shaft pivot.</summary>
+        public Pose GripSpan(float spacing, float pommel = 0f)
+        {
+            gripSpacing = spacing;
+            gripPommel = pommel < 0f ? pommel : Mathf.Min(spacing - 0.16f, PolearmPommel);
+            hasCustomGrip = true;
+            _resolved = false;
+            return this;
+        }
         /// <summary>Turns the katana over so its edge faces the other way (<see cref="edgeUp"/>): edge up when the blade points forward.</summary>
         public Pose EdgeUp(bool up = true) { edgeUp = up; return this; }
 
@@ -133,14 +148,16 @@ namespace Kage
             swNAbs = o.swNAbs;
             gripSpacing = o.gripSpacing;
             gripPommel = o.gripPommel;
+            hasCustomGrip = o.hasCustomGrip;
+            shaftSlide = o.shaftSlide;
             edgeUp = o.edgeUp;
             _resolved = o._resolved;
         }
 
         public void MarkDirty() => _resolved = false;
 
-        /// <summary>Rotates the whole pose rigidly about the hips: hip angle, IK goals, foot and blade
-        /// angles all turn together, so flips and rolls spin as one body.</summary>
+        /// <summary>Tilts the whole pose rigidly about the hips: hip angle, IK goals, foot and blade
+        /// angles all turn together. Only for a small lean (the air tilt, a few degrees); no move spins the body.</summary>
         public void SpinAbout(RigDef d, float deg)
         {
             if (deg == 0f) return;
@@ -230,8 +247,8 @@ namespace Kage
             handWorld = rHandF;
             Vector2 elbow = shF + KMath.Rot(d.BindLocal(B.ArmFL), rArmFU);
             Vector2 wristF = elbow + KMath.Rot(d.BindLocal(B.HandF), rArmFL);
-            Vector2 pivot = wristF + KMath.Rot(d.BindLocal(B.Sword), rHandF);
             Vector2 axis = KMath.Dir(rHandF + a[(int)B.Sword] + d.bladeBindAngle);
+            Vector2 pivot = wristF + KMath.Rot(d.BindLocal(B.Sword), rHandF) + axis * shaftSlide;
             Vector2 fistToWrist = -KMath.Rot(d.fistLocal, rHandF);
             float reach = (d.BindLocal(B.ArmNL).magnitude + d.BindLocal(B.HandN).magnitude) * 0.995f;
             Vector2 fist = pivot + axis * gripSpacing;
@@ -308,6 +325,8 @@ namespace Kage
             output.grip = (p.grip && q.grip) || (t >= 1f && q.grip) || (t <= 0f && p.grip);
             output.gripSpacing = Mathf.LerpUnclamped(p.gripSpacing, q.gripSpacing, t);
             output.gripPommel = Mathf.LerpUnclamped(p.gripPommel, q.gripPommel, t);
+            output.hasCustomGrip = p.hasCustomGrip || q.hasCustomGrip;
+            output.shaftSlide = Mathf.LerpUnclamped(p.shaftSlide, q.shaftSlide, t);
             // the blade turns over half way through a blend (te-gaeshi): a quick roll of the wrists, drawn as one flip
             output.edgeUp = t >= 0.5f ? q.edgeUp : p.edgeUp;
             output._resolved = false;

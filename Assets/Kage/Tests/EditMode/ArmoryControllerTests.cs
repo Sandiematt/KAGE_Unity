@@ -95,6 +95,7 @@ namespace Kage.Tests
         {
             var save = Money(1000, 0);
             save.owned.weapons["kagetsu"] = 3;
+            save.equipped.weapon = "kagetsu";        // the Armory opens on the worn weapon; Kagetsu still upgrades at its JS cost
             var a = New(save);
             Assert.IsTrue(a.Upgrade());
             Assert.AreEqual(370, save.coins, "630 coins");
@@ -107,9 +108,9 @@ namespace Kage.Tests
         {
             var save = Money(300, 0);
             var a = New(save);
-            Assert.IsFalse(a.Upgrade(), "Kagetsu level 1 costs 320");
+            Assert.IsFalse(a.Upgrade(), "Mumei, the starter, level 1 costs 320 (the old starter's cost)");
             save.coins = 99999;
-            save.owned.weapons["kagetsu"] = 8;
+            save.owned.weapons["mumei"] = 8;
             Assert.IsFalse(a.Upgrade());
             Assert.AreEqual(99999, save.coins);
             Assert.AreEqual(0, saved.Count);
@@ -168,7 +169,7 @@ namespace Kage.Tests
             var save = Money(0, 0);
             var a = New(save);
             Assert.AreEqual(ArmoryTab.Weapons, a.Tab);
-            Assert.AreEqual("kagetsu", a.View.SelectedId);
+            Assert.AreEqual("mumei", a.View.SelectedId);
             a.SelectTab(ArmoryTab.Helmets);
             Assert.AreEqual("shiro_maki", a.View.SelectedId);
             a.Select("kuro_zukin");
@@ -210,11 +211,11 @@ namespace Kage.Tests
         {
             var a = New(Money(0, 0));
             a.Select("fists");
-            Assert.AreEqual("kagetsu", a.View.SelectedId);
+            Assert.AreEqual("mumei", a.View.SelectedId);
             a.Select("raikon_tachi");
-            Assert.AreEqual("kagetsu", a.View.SelectedId);
+            Assert.AreEqual("mumei", a.View.SelectedId);
             a.Select("shinsen");
-            Assert.AreEqual("kagetsu", a.View.SelectedId, "a later-act weapon is not listed, so it cannot be selected");
+            Assert.AreEqual("mumei", a.View.SelectedId, "a later-act weapon is not listed, so it cannot be selected");
         }
     }
 }

@@ -111,11 +111,19 @@ namespace Kage
         /// <summary>
         /// One whole frame of a headless fight (manual clock): <see cref="Step"/>, then
         /// a physics step of the fight's physics scene (<see cref="FightContext.Physics"/>), then each fighter's pose output at that exact frame (what LateUpdate does in play).
+        /// A frame the clock holds (hit-stop) poses only a fighter whose parry is in motion (<see cref="Fighter.PoseHitstopTick"/>).
         /// </summary>
         public bool StepHeadless()
         {
+            bool wasHitstop = Context != null && Context.Clock.InHitstop;
             bool ran = Step();
-            if (!ran) return false;
+            if (!ran)
+            {
+                // a held frame: nothing of the fight moves, but a parry's clash pose snaps in and holds through hit-stop, as it does on real
+                // time in play (Fighter.PoseHitstopTick; slow-mo skipped frames and fighters with no parry in motion stay untouched)
+                if (wasHitstop && Context != null) foreach (var f in Context.Fighters) if (Live(f)) f.PoseHitstopTick(Time.fixedDeltaTime);
+                return false;
+            }
             float dt = Time.fixedDeltaTime;
             Context.Physics.Simulate(dt);
             float t = Context.Clock.Frame * dt;

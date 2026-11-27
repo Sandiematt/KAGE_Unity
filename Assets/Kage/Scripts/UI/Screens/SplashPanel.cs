@@ -168,7 +168,9 @@ namespace Kage
         {
             var left = new Vector2[n + 1];
             var right = new Vector2[n + 1];
-            System.Func<float, Vector2> pt = u => new Vector2(Knot.x - u * len, Knot.y + u * lift + Mathf.Sin(time * 7f + u * 5f + ph) * 7f * u);
+            System.Func<float, Vector2> pt = u => new Vector2(
+                Knot.x - u * len,
+                Knot.y + u * lift + (Mathf.Sin(time * 1.35f - u * 5.2f + ph) * 5.5f + Mathf.Sin(time * 2.20f - u * 8.4f + ph * 1.3f) * 1.1f) * u);
             for (int i = 0; i <= n; i++)
             {
                 float u = i / (float)n;

@@ -30,6 +30,9 @@ namespace Kage
         string openCard;
         bool CardShown { get { return openCard != null && openCard == C.SelectedStage; } }
 
+        // the open sub-boss card's foe, drawn live in its portrait (put away when the map shows no sub-boss card)
+        ProfileKage foe;
+
         public CampaignScreen(GameFlow flow, RectTransform stage) : base(flow, stage, "Campaign") { }
 
         protected override string DefaultFocus { get { return "node:" + C.SelectedStage; } }
@@ -110,7 +113,11 @@ namespace Kage
             MapPanel(view, save);
 
             // ---- the card column ----
-            if (cardShown)
+            // a sub-boss's card shows the foe himself, live; any other card puts his studio away
+            bool subCard = cardShown && view.Card.PortraitFoe != null && CharacterCatalog.Get(view.Card.PortraitFoe) != null;
+            if (!subCard && foe != null) { Object.Destroy(foe.gameObject); foe = null; }
+            if (subCard) SubBossCardPanel(view);
+            else if (cardShown)
             {
                 bool withBoss = view.Card.BossArt != null && Ui.Tex("reveal_" + view.Card.BossArt) != null;
                 StageCardPanel(view, withBoss);
@@ -135,13 +142,14 @@ namespace Kage
             Enter(rt, UiAnims.WRise(.5f, chapterIndex * 0.04f));
             chapterIndex++;
             bool locked = c.State == ChapterState.Locked;
-            Ui.Box(rt, 0, 0, 340, 80, Ui.PanelA(0.7f));
+            Ui.Box(rt, 0, 0, 340, 80, Ui.PanelA(0.82f));
             if (c.Selected)
             {
-                Ui.Grad(rt, 0, 0, 340, 80, Ui.A(Ui.Acc, 0.42f), Ui.PanelA(0.85f), true);
+                Ui.Grad(rt, 0, 0, 340, 80, Ui.A(Ui.Acc, 0.34f), Ui.PanelA(0.90f), true);
+                Ui.Box(rt, 0, 0, 3.5f, 80, Ui.Gold);
                 Ui.Frame(rt, 0, 0, 340, 80, 1.5f, Ui.Gold);
             }
-            else Ui.Frame(rt, 0, 0, 340, 80, 1, Ui.Hair);
+            else Ui.Frame(rt, 0, 0, 340, 80, 1, Ui.A(Ui.GoldDim, 0.45f));
             float a = locked ? 0.5f : 1f;
             Ui.Label(rt, c.Name.ToUpperInvariant(), UiFont.Title, 12, Ui.A(Ui.Gold, a), 20, 16, 240, 16, TextAnchor.MiddleLeft, 3.6f);
             Ui.Label(rt, c.Title, UiFont.Mincho, 20, Ui.A(Ui.Bone, a), 20, 36, 250, 30, TextAnchor.MiddleLeft);
@@ -203,7 +211,9 @@ namespace Kage
             Ui.Box(map, 36, 124, 420, 4, new Color(0.925f, 0.898f, 0.827f, 0.16f));
             if (frac > 0f) Ui.Grad(map, 36, 124, 420 * frac, 4, Ui.Hex("#e2b56a"), Ui.Gold, true);
             Ui.Label(map, view.Chapter.Done + " / " + view.Chapter.Total, UiFont.Title, 16, Ui.Bone, 470, 114, 80, 24, TextAnchor.MiddleLeft);
-            Ui.Frame(map, 0, 0, 680, 736, 1.5f, Ui.GoldDim);
+            Ui.Box(map, 0, 0, 680, 2, Ui.Gold);
+            Ui.Frame(map, 0, 0, 680, 736, 1.5f, Ui.A(Ui.GoldDim, 0.85f));
+            Ui.Frame(map, 4, 4, 672, 728, 1f, Ui.A(Ui.Bone, 0.05f));
 
             // layout of the nodes
             int n = view.Stages.Length;
@@ -236,8 +246,8 @@ namespace Kage
             Color fill = Ui.PanelA(0.9f), edge = Ui.Hair;
             float bw = 1.5f;
             if (done) { fill = Ui.Acc; edge = Ui.Hot; }
-            if (st.Kind == "boss" && !locked) { fill = Ui.Acc; edge = Ui.Bone; bw = 2f; Ui.Glow(rt, 70, box / 2, 60, Ui.A(Ui.Acc, 0.5f), 1.6f); }
-            if (st.IsNext) { fill = Ui.InkOnGold; edge = Ui.Gold; bw = 2f; Ui.Glow(rt, 70, box / 2, 56, Ui.A(Ui.Gold, 0.45f), 1.6f); }
+            if (st.Kind == "boss" && !locked) { fill = Ui.Acc; edge = Ui.Bone; bw = 2f; Ui.Glow(rt, 70, box / 2, 42, Ui.A(Ui.Acc, 0.28f), 1.8f); }
+            if (st.IsNext) { fill = Ui.InkOnGold; edge = Ui.Gold; bw = 2f; Ui.Glow(rt, 70, box / 2, 40, Ui.A(Ui.Gold, 0.25f), 1.8f); }
             float cx = 70, cy = box / 2;
             // the current node's ring breathes (cpHalo: 2.4 s, scale 1.3 to 1.45, opacity 1 to .45)
             if (st.IsNext) UiFx.Loop(Ui.Diamond(rt, cx, cy, 56f, Color.clear, Ui.GoldHair, 1f, true).transform, UiAnims.CpHalo());
@@ -255,17 +265,25 @@ namespace Kage
                 Ui.Label(rt, CampaignView.RomanOf(st.Number), UiFont.Title, st.IsNext ? 24 : 20, nc, cx - 30, cy - 30, 60, 60, TextAnchor.MiddleCenter);
             }
 
-            // name and type under the diamond
+            // name and type under the diamond (with tight dark shadow so map paths never muddy the text)
             Color nameC = selected || st.IsNext ? Ui.Gold : locked ? Ui.Muted : Ui.Bone;
             int nameSize = st.Kind == "boss" ? 16 : st.IsNext ? 15 : 14;
             var nm = Ui.Label(rt, st.Label, UiFont.Title, nameSize, nameC, 5, box + 6, 130, 36, TextAnchor.UpperCenter, 0, true, 0.9f);
+            var nmSh = nm.gameObject.AddComponent<Shadow>();
+            nmSh.effectColor = new Color(0f, 0f, 0f, 0.92f);
+            nmSh.effectDistance = new Vector2(0f, -1.5f);
             nm.horizontalOverflow = HorizontalWrapMode.Overflow;
             float oneLine = nm.preferredWidth;
             nm.horizontalOverflow = HorizontalWrapMode.Wrap;
             int lines = Mathf.Clamp(Mathf.CeilToInt(oneLine / 116f), 1, 3);
             float nh = lines * nameSize * 1.21f;
             if (!string.IsNullOrEmpty(st.TypeLine))
-                Ui.Label(rt, st.TypeLine.ToUpperInvariant(), UiFont.Cond, 12, st.Kind == "boss" ? Ui.Hot : Ui.Muted, -10, box + 6 + nh + 4, 160, 16, TextAnchor.UpperCenter, 2.88f);
+            {
+                var tp = Ui.Label(rt, st.TypeLine.ToUpperInvariant(), UiFont.Cond, 12, st.Kind == "boss" ? Ui.Hot : Ui.Muted, -10, box + 6 + nh + 4, 160, 16, TextAnchor.UpperCenter, 2.88f);
+                var tpSh = tp.gameObject.AddComponent<Shadow>();
+                tpSh.effectColor = new Color(0f, 0f, 0f, 0.92f);
+                tpSh.effectDistance = new Vector2(0f, -1.5f);
+            }
 
             string id = st.Id;
             // the whole node is the target
@@ -333,6 +351,7 @@ namespace Kage
 
             // the strip above the body (a sunset over the bridge)
             Strip(rt, w, top);
+            Ui.Box(rt, 0, 0, w, 2, Ui.Gold);
             Ui.Frame(rt, 0, 0, w, cardH, 1.5f, Ui.Gold);
 
             // the Fight button
@@ -343,12 +362,187 @@ namespace Kage
             {
                 float ry = 124 + cardH + 18;
                 var reveal = Ui.Node(Root, "BossReveal", x, ry, 440, 293);
-                var img = Ui.Pic(reveal, "reveal_" + card.BossArt, 0, 0, 440, 293);
-                Ui.Glow(reveal, 220, 146, 330, Ui.A(Ui.Acc, 0.0f), 1f);
+                Ui.Pic(reveal, "reveal_" + card.BossArt, 0, 0, 440, 293);
                 var sheen = ButtonSheen.Add(reveal, 440, 293);
                 Ui.Frame(reveal, 0, 0, 440, 293, 1.5f, Ui.Gold);
                 if (enterCard) { UiRevealUp.On(reveal, 293); sheen.PlayAfter(1.2f, 1.4f); }
             }
+        }
+
+        // ---------------- sub-boss card ----------------
+
+        const float CardX = 1120, CardY = 124, CardW = 440, CardH = 736, PortPad = 16, SpoilH = 52;
+
+        /// <summary>
+        /// A sub-boss's card: the foe himself, live, on the screen at the top (his name and title on a nameplate, a seal over him while
+        /// the stage is locked and a defeat stamp once he is beaten), then his taunt, the threat and the pay, the gear he gives up and
+        /// the Fight button.
+        /// </summary>
+        void SubBossCardPanel(CampaignView view)
+        {
+            var card = view.Card;
+            var rt = Ui.Node(Root, "StageCard", CardX, CardY, CardW, CardH);
+            if (enterCard) UiFx.In(rt, UiAnims.WRise(.45f));
+            Ui.Box(rt, 0, 0, CardW, CardH, Ui.PanelA(0.92f));
+            Ui.Grad(rt, 0, 0, CardW, CardH, Ui.A(Ui.Acc, 0.10f), Ui.A(Ui.Acc, 0f));
+
+            // the body's texts first: the screen takes the room they leave
+            const float tx = 28, tw = CardW - 56;
+            var eye = Ui.Label(rt, card.KindLine.ToUpperInvariant(), UiFont.Title, 13, Ui.Gold, tx, 0, tw, 18, TextAnchor.MiddleLeft, 4.2f);
+            string quote = card.Taunt != "" ? "“" + card.Taunt + "”" : card.Description;
+            var q = Ui.Label(rt, quote, UiFont.Mincho, 18, Ui.A(Ui.Bone, 0.86f), tx + 14, 0, tw - 14, 60, TextAnchor.UpperLeft, 0, true, 1.25f);
+            float qH = q.preferredHeight;
+            float spoilsH = card.Spoils.Length > 0 ? 20 + card.Spoils.Length * (SpoilH + 8) : 0;
+            float bodyH = 20 + 18 + 12 + qH + 18 + 28 + 18 + spoilsH + (card.Cleared ? 26 : 0) + 6 + 66 + 26;
+            float ph = Mathf.Max(260f, CardH - PortPad - bodyH);
+            float pw = CardW - PortPad * 2;
+
+            Portrait(rt, card, PortPad, PortPad, pw, ph);
+
+            float cy = PortPad + ph + 20;
+            eye.rectTransform.anchoredPosition = new Vector2(tx, -cy); cy += 18 + 12;
+            // the taunt, with a red rule down its left like a scroll's margin
+            Ui.Box(rt, tx, cy + 2, 2, qH - 4, Ui.A(Ui.Acc, 0.8f));
+            q.rectTransform.anchoredPosition = new Vector2(tx + 14, -cy); q.rectTransform.sizeDelta = new Vector2(tw - 14, qH); cy += qH + 18;
+
+            // threat and pay
+            Ui.Box(rt, tx, cy - 9, tw, 1, Ui.Hair);
+            UiParts.Pips(rt, tx, cy + 12, card.Threat, 10f);
+            Ui.Label(rt, card.ThreatLabel.ToUpperInvariant(), UiFont.Title, 14, Ui.Bone, tx + 3 * 22 + 2 * 10 + 14, cy, 140, 28, TextAnchor.MiddleLeft, 2.8f);
+            Pay(rt, card, tx + tw, cy);
+            cy += 28 + 18;
+
+            // the gear he gives up
+            if (card.Spoils.Length > 0)
+            {
+                Ui.Label(rt, "SPOILS", UiFont.Cond, 12, Ui.Muted, tx, cy, 200, 14, TextAnchor.MiddleLeft, 3.2f);
+                cy += 20;
+                foreach (var s in card.Spoils) { SpoilRow(rt, s, tx, cy, tw); cy += SpoilH + 8; }
+            }
+            if (card.Cleared)
+            {
+                Ui.Label(rt, "DEFEATED · REPLAY ANY TIME", UiFont.Cond, 13, Ui.Hot, tx, cy, tw, 20, TextAnchor.MiddleLeft, 2.4f);
+                cy += 26;
+            }
+            cy += 6;
+
+            Ui.Frame(rt, 0, 0, CardW, CardH, 1.5f, Ui.Gold);
+            UiParts.Brush(rt, Nav, "fight", tx, cy, tw, 66, card.CanStart ? "戦" : "", card.Action.ToUpperInvariant(), 26, 28, 8.84f, !card.CanStart, () => C.BeginLoadout());
+        }
+
+        /// <summary>The screen: the foe live in front of the red sun, framed like a scroll painting, his name on a plate at the foot.</summary>
+        void Portrait(RectTransform card, StageCard c, float x, float y, float w, float h)
+        {
+            var port = Ui.Node(card, "Portrait", x, y, w, h);
+            Ui.Box(port, 0, 0, w, h, Ui.Sky3);
+            var k = ProfileKage.EnsureFoe(ref foe, flow.transform, Root, c.PortraitFoe, w, h);
+            var pic = Ui.Node(port, "Foe", 0, 0, w, h).gameObject.AddComponent<RawImage>();
+            pic.raycastTarget = false;
+            pic.texture = k != null ? k.Texture : null;
+            // locked: only his shape shows through the dark
+            pic.color = k == null ? Color.clear : c.Locked ? new Color(0.2f, 0.13f, 0.12f, 1f) : Color.white;
+
+            // the kanji of the sub-boss, faint behind the plate
+            Ui.Label(port, "鬼", UiFont.Mincho, 64, Ui.A(Ui.Bone, c.Locked ? 0.08f : 0.14f), 14, 6, 90, 90, TextAnchor.UpperLeft);
+
+            // the nameplate: a dark fade, a red tick, his name and title
+            Ui.Grad(port, 0, h - 128, w, 128, Ui.PanelA(0f), Ui.PanelA(0.94f));
+            Ui.Box(port, 20, h - 82, 3, 58, c.Locked ? Ui.Muted : Ui.Acc);
+            Ui.Label(port, c.FoeName, UiFont.Mincho, 40, c.Locked ? Ui.Muted : Ui.Bone, 34, h - 88, w - 60, 48, TextAnchor.MiddleLeft);
+            if (c.FoeTitle != "")
+                Ui.Label(port, c.FoeTitle.ToUpperInvariant(), UiFont.Title, 12, c.Locked ? Ui.A(Ui.Muted, 0.8f) : Ui.Gold, 35, h - 40, w - 60, 16, TextAnchor.MiddleLeft, 3.6f);
+
+            if (c.Locked) Seal(port, w, h);
+            else if (c.Cleared) Stamp(port, w - 82, 18);
+
+            Corners(port, w, h, 18f, c.Locked ? Ui.GoldDim : Ui.Gold);
+            Ui.Frame(port, 0, 0, w, h, 1f, Ui.A(Ui.GoldDim, 0.8f));
+            // the screen uncovers itself upward and a sheen crosses it, like the act boss's art card
+            if (enterCard)
+            {
+                var sheen = ButtonSheen.Add(port, w, h);
+                UiRevealUp.On(port, h);
+                sheen.PlayAfter(1.1f, 1.4f);
+            }
+            else port.gameObject.AddComponent<RectMask2D>();
+        }
+
+        /// <summary>A gold L at each corner of the screen.</summary>
+        static void Corners(Transform p, float w, float h, float len, Color c)
+        {
+            const float t = 2f, i = 6f;
+            Ui.Box(p, i, i, len, t, c); Ui.Box(p, i, i, t, len, c);
+            Ui.Box(p, w - i - len, i, len, t, c); Ui.Box(p, w - i - t, i, t, len, c);
+            Ui.Box(p, i, h - i - t, len, t, c); Ui.Box(p, i, h - i - len, t, len, c);
+            Ui.Box(p, w - i - len, h - i - t, len, t, c); Ui.Box(p, w - i - t, h - i - len, t, len, c);
+        }
+
+        /// <summary>A locked stage: a seal over the foe's shadow.</summary>
+        static void Seal(Transform p, float w, float h)
+        {
+            float cx = w / 2f, cy = h * 0.42f;
+            Ui.Glow(p, cx, cy, 90, Ui.A(Ui.Panel, 0.8f), 1.2f);
+            Ui.Diamond(p, cx, cy, 58, Ui.PanelA(0.92f), Ui.GoldDim, 1.5f, true);
+            LockIcon(p, cx, cy + 2, Ui.Bone);
+            Ui.Label(p, "SEALED", UiFont.Title, 13, Ui.Muted, cx - 100, cy + 40, 200, 18, TextAnchor.MiddleCenter, 4.2f);
+        }
+
+        /// <summary>A beaten foe: a red seal stamped at a slant, 討 (struck down).</summary>
+        static void Stamp(Transform p, float x, float y)
+        {
+            const float s = 62f;
+            var st = Ui.Node(p, "Defeated", x, y, s, s);
+            st.pivot = new Vector2(0.5f, 0.5f);
+            st.anchoredPosition = new Vector2(x + s / 2f, -y - s / 2f);
+            st.localRotation = Quaternion.Euler(0f, 0f, -9f);
+            Ui.Box(st, 0, 0, s, s, Ui.A(Ui.Acc, 0.16f));
+            Ui.Frame(st, 0, 0, s, s, 2.5f, Ui.A(Ui.Hot, 0.9f));
+            Ui.Frame(st, 5, 5, s - 10, s - 10, 1f, Ui.A(Ui.Hot, 0.6f));
+            Ui.Label(st, "討", UiFont.Mincho, 34, Ui.Hot, 0, 0, s, s, TextAnchor.MiddleCenter);
+        }
+
+        /// <summary>The coins and gems the stage pays, right-aligned to <paramref name="right"/>.</summary>
+        static void Pay(Transform rt, StageCard card, float right, float cy)
+        {
+            float rx = right;
+            if (card.Gems > 0)
+            {
+                var g = Ui.Label(rt, "+" + card.Gems, UiFont.Title, 18, Ui.Gold, rx - 80, cy, 80, 28, TextAnchor.MiddleRight);
+                float gw = UiParts.Width(g);
+                Ui.Diamond(rt, rx - gw - 13, cy + 14, 11, Ui.Ruby, Ui.Ruby, 0);
+                rx = rx - gw - 13 - 22;
+            }
+            var coins = Ui.Label(rt, "+" + card.Coins, UiFont.Title, 18, Ui.Gold, rx - 100, cy, 100, 28, TextAnchor.MiddleRight);
+            float cw = UiParts.Width(coins);
+            Ui.Disc(rt, rx - cw - 15, cy + 14, 9, Ui.Gold);
+            Ui.Disc(rt, rx - cw - 15, cy + 14, 5, Ui.Mix(Ui.Gold, Ui.Panel, 0.45f));
+        }
+
+        /// <summary>One item the stage gives: its picture in a well, its name, its kind and whether Kage has it already.</summary>
+        static void SpoilRow(Transform card, StageSpoil s, float x, float y, float w)
+        {
+            var row = Ui.Node(card, "Spoil_" + s.Id, x, y, w, SpoilH);
+            Ui.Box(row, 0, 0, w, SpoilH, new Color(10f / 255f, 6f / 255f, 6f / 255f, 0.6f));
+            Ui.Frame(row, 0, 0, w, SpoilH, 1, s.Owned ? Ui.Hair : Ui.GoldHair);
+            var well = Ui.Node(row, "Well", 0, 0, SpoilH, SpoilH);
+            well.gameObject.AddComponent<RectMask2D>();
+            Ui.Grad(well, 0, 0, SpoilH, SpoilH, Ui.A(Ui.Acc, 0.28f), Ui.A(Ui.Panel, 0.9f));
+            var art = GearArt.For(s.Kind, s.Id);
+            if (art.Texture != null)
+            {
+                const float pad = 6f, inner = SpoilH - pad * 2f;
+                var pic = Ui.Pic(well, art.Key, pad, pad, inner, inner, s.Owned ? new Color(1f, 1f, 1f, 0.55f) : (Color?)null);
+                var t = pic.texture;
+                float k = Mathf.Min(inner / t.width, inner / t.height);
+                float iw = t.width * k, ih = t.height * k;
+                Ui.Place(pic.rectTransform, pad + (inner - iw) / 2f, pad + (inner - ih) / 2f, iw, ih);
+            }
+            Ui.Box(row, SpoilH, 0, 1, SpoilH, Ui.Hair);
+            float lx = SpoilH + 14;
+            string kind = s.Kind == GearKind.Weapons ? "Weapon" : s.Kind == GearKind.Helmets ? "Helmet" : "Armour";
+            Ui.Label(row, s.Name, UiFont.Cond, 20, s.Owned ? Ui.Muted : Ui.Bone, lx, 6, w - lx - 110, 24, TextAnchor.MiddleLeft);
+            Ui.Label(row, kind.ToUpperInvariant(), UiFont.Cond, 12, Ui.Muted, lx, 30, 160, 16, TextAnchor.MiddleLeft, 2.8f);
+            Ui.Label(row, s.Owned ? "CLAIMED" : "FIRST CLEAR", UiFont.Cond, 12, s.Owned ? Ui.Muted : Ui.Gold, w - 120, 0, 106, SpoilH, TextAnchor.MiddleRight, 2.4f);
         }
 
         static void Strip(Transform card, float w, float h)

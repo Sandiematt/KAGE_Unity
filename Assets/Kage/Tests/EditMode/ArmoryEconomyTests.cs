@@ -15,7 +15,7 @@ namespace Kage.Tests
         [Test]
         public void Upgrade_costs_scale_with_price_and_level_and_round_to_10_coins()
         {
-            // Kagetsu has no price: base 500 -> 500 x 0.65 -> 320, then 500 x 0.95 -> 480
+            // Kagetsu upgrades at its JS price, none (it was the JS starter; Unity sells it now): base 500 -> 500 x 0.65 -> 320, then 500 x 0.95 -> 480
             Assert.AreEqual(320, GameRules.UpgradeCost(GearKind.Weapons, "kagetsu", 1));
             Assert.AreEqual(480, GameRules.UpgradeCost(GearKind.Weapons, "kagetsu", 2));
         }
@@ -57,6 +57,7 @@ namespace Kage.Tests
         [TestCase("onikiri", 1400)]
         [TestCase("mizuchi", 1700)]
         [TestCase("yamigama", 2600)]
+        [TestCase("iwakudaki", 3200)]
         public void Shop_weapons_are_bought_at_their_JS_prices(string id, int price)
         {
             var s = Fresh();
@@ -139,13 +140,14 @@ namespace Kage.Tests
         [Test]
         public void Upgrading_spends_the_upgrade_cost_and_stops_at_the_cap()
         {
+            // the starter weapon (Mumei) upgrades at the cost the old starter did: base 500
             var s = Fresh();
             s.coins = 1000000000;
-            Assert.IsTrue(GameRules.UpgradeItem(s, GearKind.Weapons, "kagetsu"));
-            Assert.AreEqual(2, s.owned.weapons["kagetsu"]);
+            Assert.IsTrue(GameRules.UpgradeItem(s, GearKind.Weapons, "mumei"));
+            Assert.AreEqual(2, s.owned.weapons["mumei"]);
             Assert.AreEqual(1000000000 - 320, s.coins);
-            while (GameRules.UpgradeItem(s, GearKind.Weapons, "kagetsu")) { }
-            Assert.AreEqual(8, s.owned.weapons["kagetsu"]);
+            while (GameRules.UpgradeItem(s, GearKind.Weapons, "mumei")) { }
+            Assert.AreEqual(8, s.owned.weapons["mumei"]);
             Assert.AreEqual(1000000000 - (320 + 480 + 630 + 770 + 930 + 1080 + 1230), s.coins, "each level costs more than the last");
         }
 
@@ -154,9 +156,9 @@ namespace Kage.Tests
         {
             var s = Fresh();
             s.coins = 319;
-            Assert.IsFalse(GameRules.UpgradeItem(s, GearKind.Weapons, "kagetsu"));
+            Assert.IsFalse(GameRules.UpgradeItem(s, GearKind.Weapons, "mumei"));
             Assert.AreEqual(319, s.coins);
-            Assert.AreEqual(1, s.owned.weapons["kagetsu"]);
+            Assert.AreEqual(1, s.owned.weapons["mumei"]);
         }
 
         [Test]
@@ -188,7 +190,7 @@ namespace Kage.Tests
         {
             var s = Fresh();
             Assert.IsFalse(GameRules.EquipItem(s, GearKind.Weapons, "iwakudaki"));
-            Assert.AreEqual("kagetsu", s.equipped.weapon);
+            Assert.AreEqual("mumei", s.equipped.weapon);
             s.owned.helmets["kuro_zukin"] = 1;
             Assert.IsTrue(GameRules.EquipItem(s, GearKind.Helmets, "kuro_zukin"));
             Assert.AreEqual("kuro_zukin", s.equipped.helmet);
@@ -205,10 +207,12 @@ namespace Kage.Tests
                 GameRules.MarkStageCleared(s, st.Id);
             }
             GameRules.MarkStageCleared(s, "act1.boss");
-            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Weapons, "raiko_no_tachi"));
-            Assert.AreEqual("raiko_no_tachi", s.equipped.weapon);
-            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Helmets, "raijin_kabuto"));
+            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Helmets, "raijin_kabuto"), "Raikon's helmet trophy is granted and wearable");
             Assert.AreEqual("raijin_kabuto", s.equipped.helmet);
+            // his blade is withheld for now (GameRules.WithheldWeapons, the owner's call): the stage keeps the reward row but never grants it
+            Assert.IsTrue(GameRules.IsWithheld(GearKind.Weapons, "raiko_no_tachi"));
+            Assert.IsFalse(GameRules.EquipItem(s, GearKind.Weapons, "raiko_no_tachi"), "a withheld blade is not owned, so it cannot be equipped");
+            Assert.AreNotEqual("raiko_no_tachi", s.equipped.weapon);
         }
     }
 }

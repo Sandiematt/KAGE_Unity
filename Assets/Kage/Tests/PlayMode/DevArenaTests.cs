@@ -19,7 +19,7 @@ namespace Kage.Tests
             // immediately: the next test may build a headless fight in this same frame
             if (_game != null) Object.DestroyImmediate(_game);
             KageGame.NextGroupSize = null;
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
         }
 
         [UnityTest]
@@ -83,6 +83,35 @@ namespace Kage.Tests
             foreach (var f in game.foes) Assert.IsTrue(f.Grounded, f.FighterId);
             CollectionAssert.AreEquivalent(game.foes, game.player.Targets);
             Assert.AreEqual(2, game.Fight.Engagement.Engaged.Count);
+        }
+
+        [UnityTest]
+        public IEnumerator GuardBreakHoldsThePaintingWhileBodyAndHurtboxesTravel()
+        {
+            _game = new GameObject("KAGE");
+            var game = _game.AddComponent<KageGame>();
+            yield return null;
+            var victim = game.enemy;
+            var hurt = victim.GetComponentInChildren<Hurtbox>();
+            var paint = System.Linq.Enumerable.First(victim.rig.Renderers, r => r.enabled && !r.name.EndsWith("_Rim")).transform;
+            Vector3 paintedAt = paint.position;
+            Vector3 rest = paint.localPosition;
+            float hurtX = hurt.transform.position.x;
+            victim.AddPosture(victim.PostureMax, game.player);
+            Assert.IsTrue(victim.GuardBroken);
+            Assert.IsFalse(GameFeel.InHitstop, "the presentation hold leaves the fight clock running");
+
+            // Move the fighter during the hold. Its painting stays at contact for the first rendered frame.
+            victim.rb.interpolation = RigidbodyInterpolation2D.None;
+            victim.rb.position += Vector2.left;
+            Physics2D.SyncTransforms();
+            yield return null;
+            Assert.That(hurt.transform.position.x, Is.LessThan(hurtX - 0.7f));
+            Assert.That(Vector2.Distance(paint.position, paintedAt), Is.LessThan(0.15f));
+
+            yield return new WaitForSecondsRealtime(0.2f);
+            yield return null;
+            Assert.That(Vector2.Distance(paint.localPosition, rest), Is.LessThan(0.001f), "the artwork rejoins the skeleton");
         }
 
         [Test]

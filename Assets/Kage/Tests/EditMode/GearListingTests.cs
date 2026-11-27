@@ -25,13 +25,16 @@ namespace Kage.Tests
         static readonly string[] ShopArmours =
             { "tachibana_yoroi", "ronin_yoroi", "yami_yoroi", "shinsen_yoroi", "raiko_yoroi", "kagehira_yoroi", "yurei_yoroi", "mugen_yoroi" };
 
+        static readonly string[] AllAct1ArmoursInTierOrder =
+            { "tachibana_yoroi", "ronin_yoroi", "yami_yoroi", "shinsen_yoroi", "raiko_yoroi", "kagehira_yoroi", "ikazuchi_do", "shiden_yoroi", "yurei_yoroi", "mugen_yoroi" };
+
         // ---- weapons ----
 
         [Test]
         public void Weapons_list_the_shop_weapons_and_nothing_else()
         {
             CollectionAssert.AreEqual(
-                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" },
+                new[] { "mumei", "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" },
                 Weapons(Dev()));
             CollectionAssert.AreEqual(Weapons(Dev()), Weapons(Fresh()), "what is owned does not change what is listed");
         }
@@ -52,19 +55,25 @@ namespace Kage.Tests
         // ---- helmets ----
 
         [Test]
-        public void Helmets_list_the_starter_the_ten_shop_helmets_and_the_three_Act_I_rewards()
+        public void Helmets_list_all_fourteen_Act_I_helmets_in_five_tier_rarity_order()
         {
-            var shop = new[] { "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto" };
-            var rewards = new[] { "sumi_eboshi", "hisame_zukin" };
-            var legendary = new[] { "utsuro_kabuto", "shikko_zukin", "raijin_kabuto" };
+            var expected = new[]
+            {
+                "shiro_maki", "kuro_zukin",
+                "sugegasa", "hachigane", "kasumi_men",
+                "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
+                "shika_kabuto", "sumi_eboshi", "hisame_zukin",
+                "raijin_kabuto", "utsuro_kabuto", "shikko_zukin",
+            };
             var listed = Helmets(Dev());
             Assert.AreEqual(14, listed.Length);
-            Assert.AreEqual("shiro_maki", listed[0], "the starter first");
-            CollectionAssert.AreEquivalent(new[] { "shiro_maki" }.Concat(shop).Concat(rewards).Concat(legendary).ToArray(), listed);
-            foreach (var r in rewards)
-                foreach (var s in shop)
-                    Assert.Less(System.Array.IndexOf(listed, s), System.Array.IndexOf(listed, r), r + " after " + s);
-            CollectionAssert.AreEquivalent(legendary, listed.Skip(listed.Length - 3).ToArray(), "the legendary helmets last");
+            CollectionAssert.AreEqual(expected, listed);
+            // Verify each tier assignment matches the 5-tier rarity roster
+            foreach (var id in new[] { "shiro_maki", "kuro_zukin" }) Assert.AreEqual("common", GameRules.Item(GearKind.Helmets, id).Tier, id);
+            foreach (var id in new[] { "sugegasa", "hachigane", "kasumi_men" }) Assert.AreEqual("rare", GameRules.Item(GearKind.Helmets, id).Tier, id);
+            foreach (var id in new[] { "tetsu_kabuto", "oni_menpo", "hoshi_kabuto" }) Assert.AreEqual("epic", GameRules.Item(GearKind.Helmets, id).Tier, id);
+            foreach (var id in new[] { "shika_kabuto", "sumi_eboshi", "hisame_zukin" }) Assert.AreEqual("trophy", GameRules.Item(GearKind.Helmets, id).Tier, id);
+            foreach (var id in new[] { "raijin_kabuto", "utsuro_kabuto", "shikko_zukin" }) Assert.AreEqual("legendary", GameRules.Item(GearKind.Helmets, id).Tier, id);
         }
 
         [TestCase("hakobi_gasa")]
@@ -89,13 +98,15 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void An_Act_I_reward_armour_joins_the_main_list_after_the_shop_armours_once_it_is_owned()
+        public void An_Act_I_reward_armour_joins_the_main_list_in_five_tier_order_once_it_is_owned()
         {
             var s = Fresh();
             s.owned.armors["ikazuchi_do"] = 1;
-            CollectionAssert.AreEqual(ShopArmours.Concat(new[] { "ikazuchi_do" }).ToArray(), Armours(s));
+            CollectionAssert.AreEqual(
+                new[] { "tachibana_yoroi", "ronin_yoroi", "yami_yoroi", "shinsen_yoroi", "raiko_yoroi", "kagehira_yoroi", "ikazuchi_do", "yurei_yoroi", "mugen_yoroi" },
+                Armours(s));
             s.owned.armors["shiden_yoroi"] = 1;
-            CollectionAssert.AreEqual(ShopArmours.Concat(new[] { "ikazuchi_do", "shiden_yoroi" }).ToArray(), Armours(s));
+            CollectionAssert.AreEqual(AllAct1ArmoursInTierOrder, Armours(s));
         }
 
         [Test]
@@ -121,7 +132,7 @@ namespace Kage.Tests
         public void Dev_mode_lists_the_two_Act_I_reward_armours_and_none_of_the_eight_later_ones()
         {
             var listed = Armours(Dev());
-            CollectionAssert.AreEqual(ShopArmours.Concat(new[] { "ikazuchi_do", "shiden_yoroi" }).ToArray(), listed);
+            CollectionAssert.AreEqual(AllAct1ArmoursInTierOrder, listed);
             foreach (var id in new[] { "shirabe_do", "kasane_haori", "tetsumon_do", "kudamaki_do", "mei_en_garb", "kysmei_robe", "kurokumo_yoroi", "shinsei_yoroi" })
             {
                 CollectionAssert.DoesNotContain(listed, id);
@@ -182,9 +193,10 @@ namespace Kage.Tests
                     all++;
                     if (ArmoryListing.Listed(kind, it.Id)) listed++;
                 }
-            // 11 weapons + 19 helmets + 18 armours (the shop and the trophies) before; 7 + 14 + 10 now (the four boss blades are withheld)
-            Assert.AreEqual(48, all);
-            Assert.AreEqual(31, listed);
+            // 11 weapons + 19 helmets + 18 armours (the shop and the trophies) before; 7 + 14 + 10 after SAN-108 (the four boss blades are
+            // withheld); then Unity's Mumei, the plain starter, joined the weapons (docs/weapon-styles.md): 12 + 19 + 18, and 8 + 14 + 10 listed
+            Assert.AreEqual(49, all);
+            Assert.AreEqual(32, listed);
         }
     }
 }

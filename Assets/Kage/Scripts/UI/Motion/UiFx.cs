@@ -176,32 +176,29 @@ namespace Kage
     }
 
     /// <summary>
-    /// The light that sweeps across a JS button on hover and after a press (<c>.btn-primary::after</c> and <c>.w-brush::after</c>): a soft slanted
-    /// bar sliding from the left edge past the right edge, clipped to the button. It is not played for a button that was only just built (a rebuild
-    /// restoring the focus), and never when motion is off.
+    /// A crisp metallic edge glint that runs along the top border of a button on hover or press — keeps the button face and label
+    /// razor-sharp with no hazy wash across the text. Never plays on the build frame or when motion is off.
     /// </summary>
     [AddComponentMenu("")]
     public sealed class ButtonSheen : MonoBehaviour
     {
         RectTransform bar;
-        float width, half, start = -99f, seconds = .45f, playAt = -1f, afterSeconds = 1.4f;
+        float width, start = -99f, seconds = .45f, playAt = -1f, afterSeconds = 1.4f;
         int born;
 
         public static ButtonSheen Add(RectTransform button, float w, float h)
         {
-            var clip = Ui.Node(button, "Sheen", 0, 0, w, h);
+            var clip = Ui.Node(button, "Sheen", 0, 0, w, 3f);
             clip.gameObject.AddComponent<RectMask2D>();
             var s = clip.gameObject.AddComponent<ButtonSheen>();
             s.width = w;
-            s.half = h * 0.5f;
             s.born = Time.frameCount;
-            float bw = Mathf.Max(60f, w * 0.34f);
-            s.bar = Ui.Node(clip, "Bar", -bw, -h * 0.3f, bw, h * 1.6f);
+            float bw = Mathf.Clamp(w * 0.24f, 44f, 96f);
+            s.bar = Ui.Node(clip, "Bar", -bw, 0f, bw, 2f);
             s.bar.pivot = new Vector2(0.5f, 0.5f);
-            s.bar.localRotation = Quaternion.Euler(0f, 0f, -16f);
             var g = s.bar.gameObject.AddComponent<GradRect>();
             g.raycastTarget = false;
-            g.Set(true, new[] { new Color(1f, 1f, 1f, 0f), new Color(1f, 1f, 1f, .3f), new Color(1f, 1f, 1f, 0f) });
+            g.Set(true, new[] { new Color(1f, 0.94f, 0.76f, 0f), new Color(1f, 0.94f, 0.76f, 0.65f), new Color(1f, 0.94f, 0.76f, 0f) });
             s.bar.gameObject.SetActive(false);
             return s;
         }
@@ -214,7 +211,7 @@ namespace Kage
             bar.gameObject.SetActive(true);
         }
 
-        /// <summary>Plays the sweep once, <paramref name="delay"/> seconds from now (the boss card's light, JS brSweep: 1.4 s after 1.2 s).</summary>
+        /// <summary>Plays the edge glint once, <paramref name="delay"/> seconds from now.</summary>
         public void PlayAfter(float delay, float duration)
         {
             playAt = UiClock.Now + delay;
@@ -236,7 +233,7 @@ namespace Kage
             if (k >= 1f) { bar.gameObject.SetActive(false); return; }
             float e = UiEase.Ease.Evaluate(Mathf.Clamp01(k));
             float x = Mathf.Lerp(-bar.rect.width * 0.5f, width + bar.rect.width * 0.5f, e);
-            bar.anchoredPosition = new Vector2(x, -half);
+            bar.anchoredPosition = new Vector2(x, -1f);
         }
     }
 
@@ -376,14 +373,9 @@ namespace Kage
                 float h = b.Width * 0.2f;
                 var n = Ui.Node(rt, "Cloud", 0, b.Y, b.Width, h);
                 Color c = b.Lit ? lit : dark;
-                // a soft edge in place of the JS 6 px blur: the same shape three times, each a little larger and fainter
-                for (int k = 0; k < 3; k++)
-                {
-                    float grow = k * 0.045f;
-                    var pts = CloudShape(b.Width * (1f + grow), h * (1f + grow * 2f));
-                    var s = Ui.Shape(n, -b.Width * grow * 0.5f, -h * grow, b.Width * (1f + grow), h * (1f + grow * 2f), pts, Ui.A(c, b.Opacity * (k == 0 ? 0.62f : 0.2f)));
-                    s.name = "Layer" + k;
-                }
+                // Clean single stylized sumi-e cloud silhouette with gentle vertical fade (no muddy triple-stacked blur halo)
+                var pts = CloudShape(b.Width, h);
+                var s = Ui.Shape(n, 0f, 0f, b.Width, h, pts, Ui.A(c, b.Opacity * 0.58f), Ui.A(c, b.Opacity * 0.22f), null, false, "CloudShape");
                 v.nodes[i] = n;
             }
             v.Tick();

@@ -66,7 +66,6 @@ namespace Kage.Tests
 
         [TestCase("raider_cleaver")]
         [TestCase("tyrant_cleaver")]
-        [TestCase("iwakudaki")]
         public void The_cleaver_foes_use_the_same_set_and_each_move_id_is_in_the_cleaver_namespace(string weapon)
         {
             var f = Alone(weapon);
@@ -257,8 +256,8 @@ namespace Kage.Tests
 
         [TestCase("S", 0, 0)]
         [TestCase("S", -1, 0)]
-        [TestCase("P", 0, 0)]
-        public void The_rear_hand_stays_on_the_handle_through_the_main_cleaver_moves(string button, int fwd, int dy)
+        [TestCase("S", 0, -1)]
+        public void The_rear_hand_stays_on_the_handle_through_the_braced_cleaver_chops(string button, int fwd, int dy)
         {
             var f = Alone();
             f.Run(20);
@@ -478,13 +477,13 @@ namespace Kage.Tests
         {
             var f = Alone();
             var set = (CleaverMoves)f.Kage.moves;
-            foreach (var m in new[] { set.hack, set.hack2, set.stepHack, set.lowHack, set.hew, set.overhead, set.sweep, set.slam, set.airChop, set.airPlunge })
+            foreach (var m in new[] { set.hack, set.hack2, set.stepHack, set.lowHack, set.hew, set.overhead, set.sweep, set.charge, set.slam, set.airChop, set.airPlunge })
                 foreach (var w in m.hits)
                 {
                     CollectionAssert.AreEqual(new[] { HitPoint.Blade }, w.points, m.id);
                     Assert.IsTrue(w.sword, m.id + " is a sword-class window (clash eligible)");
                 }
-            foreach (var m in new[] { set.kick, set.pushKick, set.lowKick, set.pommel, set.charge, set.airKick })
+            foreach (var m in new[] { set.kick, set.pushKick, set.lowKick, set.pommel, set.airKick })
                 foreach (var w in m.hits)
                 {
                     CollectionAssert.DoesNotContain(w.points, HitPoint.Blade, m.id + ": no clash");

@@ -14,12 +14,12 @@ namespace Kage
         readonly Vector3[] _base, _out;
         readonly float[] _w, _phi, _dist;
         readonly Vector2 _c;
-        float _lag, _lagVel, _time;
+        float _lag, _lagVel, _time, _wavePhase;
         Vector2 _trail, _trailVel;
         Vector2 _pendingImpulse;
         float _pendingAngImpulse;
 
-        public float wind = 5.5f;
+        public float wind = 2.6f;
         /// <summary>Optional world wind (same struct as SoftChains). Calm by default.</summary>
         public Wind worldWind;
         public float windScale = 1f;
@@ -99,8 +99,9 @@ namespace Kage
             {
                 Vector2 wWorld = worldWind.At(_time, worldPos.x) * windScale;
                 wLocal = new Vector2(wWorld.x * facing, wWorld.y);
-                windBoost = 1f + Mathf.Clamp(wWorld.magnitude * 0.22f, 0f, 1.8f);
+                windBoost = 1f + Mathf.Clamp(wWorld.magnitude * 0.10f, 0f, 0.75f);
             }
+            _wavePhase += dt * (1f + Mathf.Clamp((windBoost - 1f) * 0.28f, 0f, 0.28f));
 
             // Gravity droop when character tilts or lies down
             float droop = Mathf.Sin(headTiltDeg * Mathf.Deg2Rad) * 24f;
@@ -109,7 +110,7 @@ namespace Kage
                 vLocal.x * 3.2f + vLocal.y * 2.6f - headAngVel * 0.06f - wLocal.x * 3.4f + droop,
                 -48f, 48f
             );
-            Spring(ref _lag, ref _lagVel, target, 145f, 8.2f, dt);
+            Spring(ref _lag, ref _lagVel, target, 145f, 12.5f, dt);
 
             Vector2 tt = Vector2.ClampMagnitude(new Vector2(-vLocal.x + wLocal.x * 0.85f, -vLocal.y + wLocal.y * 0.6f) * 0.011f, 0.09f);
             int steps = Mathf.Max(1, Mathf.CeilToInt(dt / 0.008f));
@@ -123,14 +124,14 @@ namespace Kage
             if (!IsFinite(_lag) || !IsFinite(_lagVel) || !IsFinite(_trail.x) || !IsFinite(_trail.y) || !IsFinite(_trailVel.x) || !IsFinite(_trailVel.y))
                 Reset();
 
-            float gust = (Mathf.PerlinNoise(_time * 0.9f, 3.7f) - 0.5f) * 9f * windBoost;
+            float gust = (Mathf.PerlinNoise(_time * 0.22f, 3.7f) - 0.5f) * 3.0f * windBoost;
             float amp = wind * windBoost;
             for (int i = 0; i < _base.Length; i++)
             {
                 float w = _w[i];
                 if (w <= 0.0005f) { _out[i] = _base[i]; continue; }
-                float wave = Mathf.Sin(_time * 5.2f + _phi[i] * 2.1f - _dist[i] * 7f) * amp
-                           + Mathf.Sin(_time * 8.7f + _phi[i] * 5f) * amp * 0.35f;
+                float wave = Mathf.Sin(_wavePhase * 1.25f + _phi[i] * 1.6f - _dist[i] * 5.2f) * amp
+                           + Mathf.Sin(_wavePhase * 2.05f + _phi[i] * 2.6f - _dist[i] * 8.4f) * amp * 0.18f;
                 float ang = (_lag + gust + wave) * w * Mathf.Deg2Rad;
                 float cs = Mathf.Cos(ang), sn = Mathf.Sin(ang);
                 float dx = _base[i].x - _c.x, dy = _base[i].y - _c.y;
@@ -146,6 +147,7 @@ namespace Kage
         public void Reset()
         {
             _lag = _lagVel = 0f;
+            _wavePhase = 0f;
             _trail = _trailVel = Vector2.zero;
             _pendingImpulse = Vector2.zero;
             _pendingAngImpulse = 0f;
@@ -178,6 +180,7 @@ namespace Kage
         readonly float _segF, _segB;
         readonly float[] _width = new float[N];
         float _time;
+        float _wavePhase;
         public float groundY = float.MinValue;
         Vector2 _bodyVel;
 
@@ -196,7 +199,7 @@ namespace Kage
         float _swing;
 
         /// <summary>Strength of the wind-field overlay at rest: sway (deg) and hem ripple (units).</summary>
-        public float waveSway = 3.4f, waveRipple = 0.007f;
+        public float waveSway = 1.8f, waveRipple = 0.0035f;
         /// <summary>World wind (same struct as SoftChains). Calm by default.</summary>
         public Wind wind;
         public float windPush = 5.5f;
@@ -269,6 +272,7 @@ namespace Kage
             _bodyVel = Vector2.zero;
             _pendingImpulse = Vector2.zero;
             _impulseRelax = 0f;
+            _wavePhase = 0f;
         }
 
         float LegSwing()
@@ -305,6 +309,9 @@ namespace Kage
                 if (!wind.IsCalm)
                     windFreedom = Mathf.Clamp01(wind.At(_time, _f[0].x).magnitude / 8f);
 
+                float freedomNow = Mathf.Clamp01(Mathf.Max(_bodyVel.magnitude / 7f, windFreedom));
+                _wavePhase += clampedDt * (1f + 0.25f * freedomNow);
+
                 for (int s = 0; s < sub; s++) Step(h, facing, s == 0);
 
                 if (!IsFinite(_f[N - 1]) || !IsFinite(_b[N - 1])) Reset();
@@ -316,13 +323,13 @@ namespace Kage
                 _lb[i] = _hips.InverseTransformPoint(_b[i]);
             }
 
-            // Wind-field overlay: sway about belt + travelling hem ripple
+            // Wind-field overlay: slow flowing sway about belt + gentle travelling hem ripple
             float freedom = Mathf.Clamp01(Mathf.Max(_bodyVel.magnitude / 7f, windFreedom));
-            float sway = waveSway * (1f + 1.15f * freedom);
-            float ripple = waveRipple * (1f + 1.3f * freedom);
-            float gust = (Mathf.PerlinNoise(_time * 0.7f, 5.3f + _phase) - 0.5f) * 6f * (1f + windFreedom);
+            float sway = waveSway * (1f + 0.6f * freedom);
+            float ripple = waveRipple * (1f + 0.65f * freedom);
+            float gust = (Mathf.PerlinNoise(_time * 0.20f, 5.3f + _phase) - 0.5f) * 2.4f * (1f + 0.5f * windFreedom);
             Vector2 belt = Vector2.Lerp(_lf[0], _lb[0], 0.5f);
-            float tm = _time + _phase;
+            float tm = _wavePhase + _phase;
 
             foreach (var m in _meshes)
             {
@@ -333,13 +340,14 @@ namespace Kage
                     float w = Mathf.Min(1.45f, KMath.Smooth01(Mathf.InverseLerp(0.12f, 1f, t)) + Mathf.Max(0f, t - 1f) * 0.9f);
                     if (w > 0.0005f)
                     {
-                        float wave = Mathf.Sin(tm * 4.4f - t * 5.2f + u * 2.4f) + Mathf.Sin(tm * 7.3f - t * 3.1f - u * 5.5f) * 0.4f;
+                        float wave = Mathf.Sin(tm * 1.15f - t * 4.2f + u * 1.6f)
+                                   + Mathf.Sin(tm * 1.85f - t * 6.8f - u * 2.4f) * 0.18f;
                         float ang = (gust + wave * sway) * w * Mathf.Deg2Rad;
                         float cs = Mathf.Cos(ang), sn = Mathf.Sin(ang);
                         Vector2 d = q - belt;
                         q = belt + new Vector2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
-                        float ph = tm * 6.1f - u * 7.5f + t * 1.5f;
-                        q += new Vector2(Mathf.Cos(ph) * 0.5f, Mathf.Sin(ph)) * (ripple * w * w);
+                        float ph = tm * 1.35f - u * 4.2f - t * 2.2f;
+                        q += new Vector2(Mathf.Cos(ph) * 0.85f, Mathf.Sin(ph) * 0.22f) * (ripple * w * w);
                     }
                     m.outV[i] = q;
                 }
@@ -362,7 +370,7 @@ namespace Kage
         void Step(float h, float facing, bool applyImpulse)
         {
             Vector2 back = new Vector2(-facing, 0f);
-            float breeze = 0.7f + Mathf.PerlinNoise(_time * 0.8f, 1.9f + _phase) * 1.1f;
+            float breeze = 0.7f + Mathf.PerlinNoise(_time * 0.22f, 1.9f + _phase) * 0.75f;
             Vector2 air = back * breeze;
 
             bool windy = !wind.IsCalm;
@@ -378,9 +386,9 @@ namespace Kage
             float tiltScale = Mathf.Lerp(0.12f, 1f, upright);
             float impulseScale = Mathf.Lerp(1f, 0.18f, _impulseRelax);
 
-            // Framerate-independent damping (equivalent to 0.985 / 0.988 at 180Hz)
-            float dampF = Mathf.Exp(-2.72f * h);
-            float dampB = Mathf.Exp(-2.17f * h);
+            // Framerate-independent damping (silky inertia without rapid chatter)
+            float dampF = Mathf.Exp(-4.0f * h);
+            float dampB = Mathf.Exp(-3.5f * h);
 
             bool hasImpulse = applyImpulse && _pendingImpulse.sqrMagnitude > 1e-6f;
             Vector2 imp = hasImpulse ? Vector2.ClampMagnitude(_pendingImpulse, 24f) : Vector2.zero;
@@ -400,22 +408,25 @@ namespace Kage
                     _pb[i] -= imp * (iw * h);
                 }
 
-                float flutterF = Mathf.Sin(_time * 6.2f - i * 0.8f + _phase) * (5f + 9f * freedom) * k * k;
-                float flutterB = Mathf.Cos(_time * 5.1f - i * 0.75f + _phase) * (4f + 7f * freedom) * k * k;
+                float flutterF = (Mathf.Sin(_wavePhase * 1.20f - k * 4.2f + _phase)
+                                  + Mathf.Sin(_wavePhase * 1.95f - k * 6.8f + _phase * 1.7f) * 0.18f) * (1.3f + 2.2f * freedom) * k * k;
+                float flutterB = (Mathf.Sin(_wavePhase * 1.10f - k * 4.0f + _phase + 0.9f)
+                                  + Mathf.Sin(_wavePhase * 1.80f - k * 6.5f + _phase * 1.3f) * 0.18f) * (1.1f + 1.9f * freedom) * k * k;
                 float drag = Mathf.Lerp(0.9f, 4.4f, k) * Mathf.Lerp(1f, _loose, k);
                 // Falling upward billow: extra aerodynamic drag against vertical fall velocity
                 Vector2 airF = air + new Vector2(0f, fallFreedom * 2.2f * k);
                 Vector2 airB = air * 1.15f + new Vector2(0f, fallFreedom * 2.6f * k);
 
                 Vector2 accF = new Vector2(0f, -8.5f) + back * flutterF + Drag(_f[i], _pf[i], airF, drag, h);
-                Vector2 accB = new Vector2(0f, -9.0f) + back * (flutterB * 0.75f) + new Vector2(0f, flutterB * 0.6f)
+                Vector2 accB = new Vector2(0f, -9.0f) + back * (flutterB * 0.9f) + new Vector2(0f, flutterB * 0.14f)
                                + Drag(_b[i], _pb[i], airB, drag * 1.1f, h);
 
                 if (windy)
                 {
                     float wk = Mathf.Lerp(0.45f, 1.5f, k) * Mathf.Lerp(1f, _loose, k);
-                    accF += Vector2.ClampMagnitude(blow * wk, 150f);
-                    accB += Vector2.ClampMagnitude(blow * (wk * 1.1f), 150f);
+                    Vector2 windForce = new Vector2(blow.x, blow.y * 0.35f);
+                    accF += Vector2.ClampMagnitude(windForce * wk, 150f);
+                    accB += Vector2.ClampMagnitude(windForce * (wk * 1.1f), 150f);
                 }
 
                 Integrate(ref _f[i], ref _pf[i], accF, h, dampF);
@@ -433,7 +444,8 @@ namespace Kage
             }
 
             float floor = groundY + 0.02f;
-            for (int it = 0; it < 3; it++)
+            float frontSeamX = _f[0].x;
+            for (int it = 0; it < 4; it++)
             {
                 for (int i = 0; i < N - 1; i++)
                 {
@@ -441,6 +453,20 @@ namespace Kage
                     Link(ref _b[i], ref _b[i + 1], _segB, i == 0);
                 }
                 for (int i = 1; i < N; i++) Width(ref _f[i], ref _b[i], _width[i]);
+                // Keep rear coat rope from clipping forward across the front waist/tasset plane when upright
+                if (upright > 0.6f)
+                {
+                    for (int i = 1; i < N; i++)
+                    {
+                        float ahead = (_b[i].x - frontSeamX) * facing;
+                        if (ahead > 0.02f)
+                        {
+                            float clampX = frontSeamX + facing * 0.02f;
+                            _b[i].x = clampX;
+                            if ((_pb[i].x - _b[i].x) * facing < 0f) _pb[i].x = _b[i].x;
+                        }
+                    }
+                }
                 for (int i = 1; i < N; i++)
                 {
                     FloorCollide(ref _f[i], ref _pf[i], floor);
@@ -478,7 +504,7 @@ namespace Kage
 
         static void Integrate(ref Vector2 p, ref Vector2 prev, Vector2 acc, float h, float damp)
         {
-            Vector2 v = (p - prev) * damp;
+            Vector2 v = Vector2.ClampMagnitude((p - prev) * damp, 18f * h);
             prev = p;
             p += v + acc * h * h;
         }
@@ -519,6 +545,7 @@ namespace Kage
             public Vector2[] p, prev;
             public Vector2[] local;
             public float[] jointAng;
+            public bool trailingBack;   // true for capes, haori tails and sashes whose rest shape hangs behind the root
         }
 
         readonly Mesh _mesh;
@@ -530,6 +557,7 @@ namespace Kage
         readonly Vector2[] _oa, _ob;
         readonly ChainFeel _feel;
         float _time;
+        float _wavePhase;
         Vector2 _bodyVel;
         Vector2 _pendingImpulse;
         float _pendingTipBias = 1f;
@@ -559,7 +587,8 @@ namespace Kage
                     p = new Vector2[r.Length],
                     prev = new Vector2[r.Length],
                     local = new Vector2[r.Length],
-                    jointAng = new float[r.Length]
+                    jointAng = new float[r.Length],
+                    trailingBack = r.Length >= 2 && (r[r.Length - 1].x - r[0].x) < -0.02f
                 };
                 for (int i = 0; i < r.Length - 1; i++) c.restAng[i] = KMath.Ang(r[i + 1] - r[i]);
                 _c[k] = c;
@@ -623,6 +652,7 @@ namespace Kage
             _bodyVel = Vector2.zero;
             _pendingImpulse = Vector2.zero;
             _impulseRelax = 0f;
+            _wavePhase = 0f;
             Deform();
         }
 
@@ -639,6 +669,10 @@ namespace Kage
 
                 _bodyVel = Vector2.Lerp(_bodyVel, bodyVel, 1f - Mathf.Exp(-12f * clampedDt));
                 _impulseRelax = Mathf.MoveTowards(_impulseRelax, 0f, clampedDt * 2.4f);
+
+                float windFreedom = !wind.IsCalm ? Mathf.Clamp01(wind.At(_time, _c[0].p[0].x).magnitude * (_feel.drag * WindPush) / 45f) : 0f;
+                float freedomNow = Mathf.Clamp01(Mathf.Max(_bodyVel.magnitude / 7f, Mathf.Max(-_bodyVel.y / 5.5f, windFreedom)));
+                _wavePhase += clampedDt * (1f + 0.25f * freedomNow);
 
                 // Cache world segment lengths once per tick (respects bone scale without calling TransformVector in inner loop)
                 for (int k = 0; k < _c.Length; k++)
@@ -672,7 +706,7 @@ namespace Kage
             float upright = relaxOnTilt ? Mathf.Clamp01(Vector2.Dot(((Vector2)_bone.up).normalized, Vector2.up)) : 1f;
             float tiltScale = Mathf.Lerp(0.15f, 1f, upright);
             float impulseScale = Mathf.Lerp(1f, 0.2f, _impulseRelax);
-            float damp = Mathf.Exp(-2.72f * h);
+            float damp = Mathf.Exp(-4.0f * h);
 
             bool hasImpulse = applyImpulse && _pendingImpulse.sqrMagnitude > 1e-6f;
             Vector2 imp = hasImpulse ? Vector2.ClampMagnitude(_pendingImpulse, 26f) : Vector2.zero;
@@ -684,7 +718,7 @@ namespace Kage
             {
                 var c = _c[k];
                 int n = c.rest.Length;
-                float gust = _feel.breeze * (0.6f + Mathf.PerlinNoise(_time * 0.8f + k * 3.1f, 1.9f) * 0.9f);
+                float gust = _feel.breeze * (0.65f + Mathf.PerlinNoise(_time * 0.22f + k * 3.1f, 1.9f) * 0.7f);
                 Vector2 air = back * gust;
                 c.p[0] = c.prev[0] = _bone.TransformPoint(c.rest[0]);
 
@@ -704,21 +738,34 @@ namespace Kage
 
                     Vector2 target = _bone.TransformPoint(c.rest[i]);
                     Vector2 v = (c.p[i] - c.prev[i]) / h;
-                    float flutter = Mathf.Sin(_time * 5.7f - i * 1.1f + k * 2.3f) * (1.5f + 5.5f * freedom) * u * u;
+                    // Slow, phase-locked travelling wind wave along normalized length u: horizontal billow leads with minimal vertical bounce
+                    float rippleWave = Mathf.Sin(_wavePhase * 1.25f - u * 4.6f + k * 1.9f + 0.8f)
+                                       + Mathf.Sin(_wavePhase * 2.00f - u * 7.4f + k * 3.1f) * 0.16f;
+                    float breezeScale = Mathf.Clamp01(_feel.breeze * 1.15f);
+                    float flutterY = rippleWave * (0.24f * Mathf.Max(breezeScale, 0.05f) + 0.75f * freedom) * u * u;
+                    // Horizontal travelling wave along the trailing wind direction (zero when breeze == 0 so symmetric tests stay exact)
+                    float billowWave = Mathf.Sin(_wavePhase * 1.15f - u * 4.2f + k * 1.5f)
+                                       + Mathf.Sin(_wavePhase * 1.85f - u * 6.8f + k * 2.6f) * 0.18f;
+                    float flutterBack = billowWave * _feel.breeze * (1.4f + 2.2f * freedom) * u * u;
                     Vector2 airLocal = air + new Vector2(0f, fallFreedom * 2f * u);
 
                     Vector2 acc = new Vector2(0f, -_feel.gravity)
                                   + Vector2.ClampMagnitude((airLocal - v) * _feel.drag * Mathf.Lerp(0.5f, 1.5f, u), 60f)
-                                  + new Vector2(0f, flutter);
-                    if (windy) acc += Vector2.ClampMagnitude(blow * Mathf.Lerp(0.5f, 1.5f, u), 160f);
+                                  + back * flutterBack
+                                  + new Vector2(0f, flutterY);
+                    if (windy)
+                    {
+                        Vector2 windForce = new Vector2(blow.x, blow.y * 0.45f);
+                        acc += Vector2.ClampMagnitude(windForce * Mathf.Lerp(0.5f, 1.5f, u), 150f);
+                    }
 
-                    Vector2 vel = (c.p[i] - c.prev[i]) * damp;
+                    Vector2 vel = Vector2.ClampMagnitude((c.p[i] - c.prev[i]) * damp, 18f * h);
                     c.prev[i] = c.p[i];
                     c.p[i] += vel + acc * h * h;
 
                     // Framerate-independent viscoelastic shape matching
                     float stiff = Mathf.Lerp(_feel.stiffRoot, _feel.stiffTip, Mathf.Pow(u, 0.7f));
-                    stiff *= Mathf.Lerp(1f, 0.4f, freedom * u) * tiltScale * impulseScale;
+                    stiff *= Mathf.Lerp(1f, 0.38f, freedom * u) * tiltScale * impulseScale;
                     float alpha = 1f - Mathf.Pow(Mathf.Clamp01(1f - stiff), h * 180f);
 
                     Vector2 delta = (target - c.p[i]) * alpha;
@@ -726,8 +773,11 @@ namespace Kage
                     c.prev[i] += delta * 0.7f;
                 }
 
-                for (int it = 0; it < 3; it++)
+                // 4 constraint iterations keep long capes & split haori tails anchored cleanly with zero stretch or jitter
+                const float maxBendCos = 0.375f; // ~68 deg max kink between consecutive links
+                for (int it = 0; it < 4; it++)
                 {
+                    c.p[0] = _bone.TransformPoint(c.rest[0]);
                     for (int i = 0; i < n - 1; i++)
                     {
                         float rest = c.segLen[i];
@@ -737,6 +787,52 @@ namespace Kage
                         Vector2 corr = d * ((len - rest) / len);
                         if (i == 0) c.p[i + 1] -= corr;
                         else { c.p[i] += corr * 0.5f; c.p[i + 1] -= corr * 0.5f; }
+                    }
+                    // Soft angular bend clamp prevents sharp self-folding kinks during fast flips & heavy whips
+                    for (int i = 1; i < n - 1; i++)
+                    {
+                        Vector2 d0 = c.p[i] - c.p[i - 1];
+                        Vector2 d1 = c.p[i + 1] - c.p[i];
+                        float l0 = d0.magnitude, l1 = d1.magnitude;
+                        if (l0 < 1e-5f || l1 < 1e-5f) continue;
+                        Vector2 n0 = d0 / l0, n1 = d1 / l1;
+                        if (Vector2.Dot(n0, n1) < maxBendCos)
+                        {
+                            Vector2 blended = (n1 + n0 * 0.45f).normalized;
+                            c.p[i + 1] = c.p[i] + blended * c.segLen[i];
+                        }
+                    }
+                    // Strict armor-seam clearance for back-trailing capes, half-mantles, split haori tails & waist ribbons:
+                    // keeps flowing rear cloth strictly behind the armor seam plane during idle, movement, flips, attacks & parries
+                    if (c.trailingBack && upright > 0.55f)
+                    {
+                        const float maxFront = 0.015f; // ~6 ref px ahead of root anchor
+                        float limitX = c.p[0].x + facing * maxFront;
+                        for (int i = 1; i < n; i++)
+                        {
+                            float ahead = (c.p[i].x - c.p[0].x) * facing;
+                            if (ahead > maxFront)
+                            {
+                                c.p[i].x = limitX;
+                                // Project out forward-penetrating velocity so cloth slides smoothly along the seam with zero jitter
+                                if ((c.p[i].x - c.prev[i].x) * facing > 0f) c.prev[i].x = c.p[i].x;
+                            }
+                        }
+                    }
+                    // Gentle front-panel clearance for Legendary front split coat tails (only when breeze > 0.5 so symmetric test ropes stay untouched)
+                    else if (!c.trailingBack && _feel.breeze > 0.5f && upright > 0.55f && c.rest[n - 1].y < c.rest[0].y - 0.15f)
+                    {
+                        const float maxBack = 0.08f;
+                        float backLimitX = c.p[0].x - facing * maxBack;
+                        for (int i = 1; i < n; i++)
+                        {
+                            float behind = (c.p[0].x - c.p[i].x) * facing;
+                            if (behind > maxBack)
+                            {
+                                c.p[i].x = Mathf.Lerp(c.p[i].x, backLimitX, 0.5f);
+                                if ((c.prev[i].x - c.p[i].x) * facing > 0f) c.prev[i].x = c.p[i].x;
+                            }
+                        }
                     }
                     for (int i = 1; i < n; i++)
                     {

@@ -12,6 +12,8 @@ namespace Kage
     {
         /// <summary>A long cape from the shoulders (looser at the hem than Raikon's, SAN-71, so a torn cape flies).</summary>
         public static ChainFeel Cape => new() { stiffRoot = 0.18f, stiffTip = 0.02f, drag = 2.4f, gravity = 6f, breeze = 1.1f };
+        /// <summary>Structured battle haori / tailored warlord coat tails: crisp waist anchor with sweeping anime billow at the hem.</summary>
+        public static ChainFeel Haori => new() { stiffRoot = 0.24f, stiffTip = 0.025f, drag = 2.35f, gravity = 6.2f, breeze = 1.05f };
         /// <summary>Coat tails from the waist: a little firmer than a cape.</summary>
         public static ChainFeel Tails => new() { stiffRoot = 0.22f, stiffTip = 0.03f, drag = 2.2f, gravity = 6.5f, breeze = 0.9f };
         /// <summary>Short torn strips and flaps of cloth.</summary>
@@ -26,11 +28,12 @@ namespace Kage
         /// <summary>A fur mantle's tufts (Raikon's; SAN-71's first fur, heavier so its tufts hang): stiff, they ruffle rather than swing.</summary>
         public static ChainFeel Fur => new() { stiffRoot = 0.45f, stiffTip = 0.1f, drag = 2.5f, gravity = 6f, breeze = 0.5f };
 
-        public static readonly string[] Names = { "Cape", "Tails", "Strip", "Plates", "Tassel", "Hair", "Fur" };
+        public static readonly string[] Names = { "Cape", "Haori", "Tails", "Strip", "Plates", "Tassel", "Hair", "Fur" };
 
         public static ChainFeel Get(string name) => name switch
         {
             "Cape" => Cape,
+            "Haori" => Haori,
             "Tails" => Tails,
             "Strip" => Strip,
             "Plates" => Plates,

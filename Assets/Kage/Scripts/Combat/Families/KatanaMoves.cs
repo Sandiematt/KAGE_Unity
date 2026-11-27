@@ -15,6 +15,8 @@ namespace Kage
         public MoveDef jab, cross, crossFist, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
         public MoveDef airKick, airPunch, airSlash, groundPound;
         public MoveDef iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, crescent;
+        /// <summary>The two reference kenjutsu patterns: Crown Wheel (a low reverse sweep, then the crown whip into a level cut) and Poised Fang (tame-giri).</summary>
+        public MoveDef crownWheel, tameCut;
 
         /// <summary>Metres from guard to tip of Kage's drawn katana (KageModel's blade base (0.08, 0) to tip (0.80, 0.03)).</summary>
         public const float BladeLength = 0.7206f;
@@ -182,38 +184,49 @@ namespace Kage
                 .Hit(7, 12, Fist, 6, HitLevel.Overhead, new Vector2(1.4f, 0.5f), stun: 16, hitstop: 5, shake: 0.1f)
                 .Fx(6, 12, FxKind.TrailFist).Air();
 
-            m.airSlash = new MoveDef("airSlash", "Crescent Spin", 30)
-                .Key(3, P().Hip(0f, 0f, 0f).Chest(-10f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.45f, 1.15f).Blade(10f))
-                .Key(18, P().Hip(0f, 0f, 0f).Chest(-12f).LegN(92f, -122f).LegF(82f, -112f).Grip().HandF(0.46f, 1.15f).Blade(10f), Ease.Linear)
-                .Key(30, P().Hip(0f, 0f, 0f).Chest(5f).LegN(40f, -60f).LegF(20f, -50f).Grip().HandF(0.35f, 1.0f).Blade(-30f))
-                .Spin(2, 19, -360f)
+            // Crescent Cut: two clean cuts in the air with the body upright (no somersault, docs/combat-flow.md): a falling diagonal
+            // from overhead, the blade turned over at the bottom, then a rising cut edge-up back through the foe
+            m.airSlash = new MoveDef("airSlash", "Crescent Cut", 30)
+                .Key(3, P().Hip(0f, 0f, -4f).Chest(6f).Head(-4f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.1f, 1.55f).Blade(120f), Ease.OutQuad)
+                .Key(7, P().Hip(0f, 0f, -10f).Chest(-18f).Head(10f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.5f, 1.02f).Blade(-30f), Ease.OutExpo)
+                .Key(9, P().Hip(0f, 0f, -10f).Chest(-18f).Head(10f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.44f, 0.92f).Blade(-55f))
+                .Key(10, P().Hip(0f, 0f, -10f).Chest(-18f).Head(10f).LegN(90f, -120f).LegF(80f, -110f).Grip().HandF(0.42f, 0.9f).Blade(-58f).EdgeUp())
+                .Key(14, P().Hip(0f, 0f, -12f).Chest(-20f).Head(10f).LegN(92f, -122f).LegF(82f, -112f).Grip().HandF(0.52f, 1.14f).Blade(10f).EdgeUp(), Ease.OutExpo)
+                .Key(19, P().Hip(0f, 0f, -8f).Chest(-14f).Head(8f).LegN(92f, -122f).LegF(82f, -112f).Grip().HandF(0.46f, 1.2f).Blade(28f).EdgeUp())
                 .Hit(4, 9, Blade, 5, HitLevel.Overhead, new Vector2(1.2f, 1.0f), stun: 16, hitstop: 4, shake: 0.08f, radius: 0.07f)
                 .Hit(11, 16, Blade, 5, HitLevel.Overhead, new Vector2(1.8f, 2.5f), stun: 20, hitstop: 6, shake: 0.15f, knockdown: true, radius: 0.07f)
                 .Fx(3, 18, FxKind.TrailBlade).Sword().Air().Normalize();
 
             // ===================== MOBILITY =====================
-            var tuck = P().Chest(-55f).Neck(-15f).Head(-25f).LegN(115f, -145f).LegF(108f, -140f).ArmN(60f, 70f).ArmF(50f, 60f).Sword(-40f);
-            m.roll = new MoveDef("roll", "Shadow Roll", 30)
-                .Key(4, tuck.Clone().Hip(0.08f, -0.24f, -8f), Ease.OutQuad)
-                .Key(12, tuck.Clone().Hip(0.12f, -0.13f, 0f), Ease.InOutQuad)
-                .Key(18, tuck.Clone().Hip(0.1f, -0.15f, 0f), Ease.Linear)
-                .Key(24, P().Hip(0.04f, -0.3f, 0f).Chest(-20f).Head(14f).FootN(0.26f, 0.13f).FootF(-0.24f, 0.15f, -25f).HandN(0.2f, 0.9f).HandF(0.22f, 0.7f).Blade(-30f), Ease.InOutQuad)
-                .Key(30, Stance(), Ease.InOutQuad)
-                .Spin(1, 23, -360f)
-                .Move(2, 20, 4.6f).Invuln(2, 20).NoPush(2, 22)
-                .Fx(3, 18, FxKind.AfterImage).Fx(3, 3, FxKind.Dust).Fx(22, 22, FxKind.Dust).Normalize();
+            // The two dodges are flat slides along the floor (docs/combat-flow.md): no roll, no somersault, no hop. The hips sit at one
+            // low height through the slide (a grounded crouch-lean, no bob), the root motion is X only (no vertical velocity, never
+            // airborne) and it snaps: a burst, a held glide, a short brake. The ids ("roll", "backflip") stay for the code and the event
+            // stream, and so do the invulnerability, the pass-through and the length of each.
 
-            var open = P().Chest(22f).Head(-14f).LegN(30f, -40f).LegF(20f, -30f).ArmN(150f, 20f).ArmF(140f, 20f).Sword(20f);
-            m.backflip = new MoveDef("backflip", "Backflip", 34)
-                .Key(3, P().Hip(0f, -0.2f, 0f).Chest(-10f).Feet(0.22f, -0.24f).HandN(0f, 0.9f).HandF(-0.05f, 0.8f).Blade(-160f))
-                .Key(9, open.Clone().Hip(0f, 0f, 10f), Ease.OutQuad)
-                .Key(17, tuck.Clone().Hip(0f, 0f, 0f).Chest(-40f), Ease.InOutQuad)
-                .Key(25, P().Hip(0f, 0f, 0f).Chest(0f).LegN(55f, -75f).LegF(35f, -55f).ArmN(40f, 40f).ArmF(30f, 40f).Sword(-20f), Ease.InOutQuad)
-                .Key(30, P().Hip(0f, -0.14f, 0f).Chest(-8f).Feet(0.22f, -0.24f).HandN(0.2f, 1.1f).HandF(0.22f, 0.86f).Blade(-32f), Ease.OutQuad)
+            // Shadow Slide (forward, through the foe): sunk low and leaning in, the blade swept back out of the way
+            var slideIn = P().Hip(0.06f, -0.26f, -14f).Chest(-28f).Head(26f).FootN(0.44f, 0.13f, -6f).FootF(-0.44f, 0.2f, -38f)
+                .HandN(0.3f, 0.94f, 10f).HandF(-0.16f, 0.88f).Blade(-172f);
+            m.roll = new MoveDef("roll", "Shadow Slide", 30)
+                .Key(3, P().Hip(0.04f, -0.24f, -10f).Chest(-24f).Head(20f).Feet(0.3f, -0.3f).HandN(0.26f, 0.9f, 10f).HandF(-0.12f, 0.86f).Blade(-166f), Ease.OutQuad)
+                .Key(6, slideIn.Clone(), Ease.OutExpo)
+                .Key(18, slideIn.Clone(), Ease.Linear)
+                .Key(24, P().Hip(0.02f, -0.24f, -6f).Chest(-16f).Head(12f).Feet(0.26f, -0.28f).Grip().HandF(0.26f, 0.86f, 0f).Blade(20f), Ease.OutQuad)
+                .Key(30, Stance(), Ease.InOutQuad)
+                .Move(2, 5, 7.0f).Move(6, 17, 6.0f).Move(18, 20, 3.0f).Invuln(2, 20).NoPush(2, 22)
+                .Fx(3, 18, FxKind.AfterImage).Fx(3, 3, FxKind.Dust).Fx(20, 20, FxKind.Dust).Normalize();
+
+            // Back Step (the field keeps its old name, "backflip"): a low slide straight back with the guard up and the chest leaning
+            // away from the blow, the lead foot skimming the floor
+            var slideBack = P().Hip(-0.06f, -0.2f, 8f).Chest(6f).Head(-4f).FootN(0.38f, 0.18f, 25f).FootF(-0.36f, 0.13f, -5f)
+                .HandN(0.22f, 1.2f, 30f).HandF(0.16f, 0.98f).Blade(-70f);
+            m.backflip = new MoveDef("backflip", "Back Step", 34)
+                .Key(3, P().Hip(-0.02f, -0.2f, 4f).Chest(-4f).Head(2f).Feet(0.24f, -0.28f).HandN(0.2f, 1.1f, 20f).HandF(0.16f, 0.96f).Blade(-60f), Ease.OutQuad)
+                .Key(6, slideBack.Clone(), Ease.OutExpo)
+                .Key(16, slideBack.Clone(), Ease.Linear)
+                .Key(24, P().Hip(-0.02f, -0.2f, 2f).Chest(-6f).Head(4f).Feet(0.26f, -0.28f).Grip().HandF(0.27f, 0.88f, 0f).Blade(24f), Ease.OutQuad)
                 .Key(34, Stance(), Ease.InOutQuad)
-                .Spin(4, 28, 360f)
-                .Move(3, 3, -3.0f, 7.2f, true).Invuln(2, 16)
-                .Fx(3, 3, FxKind.Dust).Fx(4, 14, FxKind.AfterImage).Air(false).Normalize();
+                .Move(2, 4, -7.5f).Move(5, 12, -5.5f).Move(13, 16, -2.5f).Invuln(2, 16)
+                .Fx(3, 3, FxKind.Dust).Fx(4, 14, FxKind.AfterImage).Normalize();
 
             m.groundPound = new MoveDef("groundPound", "Ground Strike", 32)
                 .Key(4, Crouch())
@@ -225,16 +238,42 @@ namespace Kage
                 .Hit(16, 24, Fist, 6, HitLevel.Mid, new Vector2(0.5f, 1.0f), stun: 18, hitstop: 8, shake: 0.25f, otg: true, radius: 0.12f)
                 .Fx(24, 24, FxKind.Dust).Fx(24, 24, FxKind.Shockwave);
 
-            m.getUpFront = new MoveDef("getUpFront", "Push-up", 26)
-                .Key(8, P().Hip(-0.12f, -0.42f, -55f).Chest(-10f).Head(25f).LegN(60f, -70f).LegF(40f, -60f).HandN(0.25f, 0.28f).HandF(0.3f, 0.22f).Blade(-10f))
-                .Key(16, P().Hip(-0.02f, -0.3f, -15f).Chest(-20f).Head(14f).FootN(0.24f, 0.13f).FootF(-0.26f, 0.15f, -20f).HandN(0.2f, 0.8f).HandF(0.24f, 0.7f).Blade(-32f))
+            // The get-ups (docs/combat-flow.md): a person standing up off the floor, not a kip-up. The hands plant on the floor (the wrist
+            // goals sit at floor height and don't move while they bear weight), the palms press the trunk up, the weight goes over the
+            // planted feet, and only then do the hands come up and the legs drive the body up into the stance. Same length, same
+            // invulnerability as before. Both start from the captured fallen pose.
+
+            // Face down: hands by the shoulders, press up to hands and knees, hop the feet in under the hips (the hands still down,
+            // the weight back over the feet), lift the hands and step into the stance
+            var frontHandN = new Vector2(0.46f, 0.09f);
+            var frontHandF = new Vector2(0.5f, 0.09f);
+            m.getUpFront = new MoveDef("getUpFront", "Push-up Rise", 26)
+                .Key(5, P().Hip(-0.2f, -0.54f, -86f).Chest(10f).Neck(2f).Head(14f).LegN(-4f, -22f).LegF(14f, -30f)
+                    .HandN(frontHandN.x, frontHandN.y).HandF(frontHandF.x, frontHandF.y).Blade(2f), Ease.InOutQuad)
+                .Key(11, P().Hip(-0.165f, -0.35f, -84f).Chest(0f).Neck(4f).Head(12f).FootN(-0.44f, 0.11f, -60f).FootF(-0.48f, 0.11f, -60f)
+                    .HandN(frontHandN.x, frontHandN.y).HandF(frontHandF.x, frontHandF.y).Blade(2f), Ease.InOutQuad)
+                .Key(14, P().Hip(-0.15f, -0.345f, -80f).Chest(-4f).Neck(4f).Head(14f).FootN(-0.24f, 0.22f, -30f).FootF(-0.36f, 0.2f, -35f)
+                    .HandN(frontHandN.x, frontHandN.y).HandF(frontHandF.x, frontHandF.y).Blade(2f), Ease.OutQuad)
+                .Key(17, P().Hip(-0.143f, -0.405f, -76f).Chest(-6f).Neck(6f).Head(18f).FootN(-0.08f, 0.13f).FootF(-0.25f, 0.13f, -12f)
+                    .HandN(frontHandN.x, frontHandN.y).HandF(frontHandF.x, frontHandF.y).Blade(2f), Ease.InQuad)
+                .Key(21, P().Hip(-0.06f, -0.2f, -28f).Chest(-14f).Neck(2f).Head(14f).FootN(0.12f, 0.2f, -20f).FootF(-0.25f, 0.13f, -12f)
+                    .HandN(0.3f, 0.86f, 10f).HandF(0.3f, 0.72f).Blade(-10f), Ease.InOutQuad)
                 .Key(26, Stance(), Ease.InOutQuad)
                 .Invuln(0, 26).Fx(14, 14, FxKind.Dust);
 
-            m.getUp = new MoveDef("getUp", "Kip-up", 30)
-                .Key(8, P().Hip(0.2f, -0.5f, 128f).Chest(-10f).Head(-10f).LegN(60f, -20f).LegF(40f, -10f).ArmN(140f, 30f).ArmF(130f, 30f))
-                .Key(15, P().Hip(0.08f, -0.2f, 20f).Chest(-25f).Head(15f).LegN(80f, -120f).LegF(60f, -110f).HandN(0.2f, 1.0f).HandF(0.2f, 0.8f).Blade(-60f))
-                .Key(22, P().Hip(0f, -0.24f, 0f).Chest(-20f).Head(12f).FootN(0.24f, 0.13f).FootF(-0.26f, 0.15f, -20f).HandN(0.2f, 1.0f).HandF(0.24f, 0.8f).Blade(-32f))
+            // Face up: sit up with the chin tucked and both hands planted behind, press the hips off the floor through the palms and
+            // the planted feet, rock forward over the feet into a squat (the hands come off as the weight arrives), rise and step back
+            var backHandN = new Vector2(-0.36f, 0.085f);
+            var backHandF = new Vector2(-0.27f, 0.085f);
+            m.getUp = new MoveDef("getUp", "Hand-push Rise", 30)
+                .Key(6, P().Hip(0.2f, -0.53f, 68f).Chest(-10f).Neck(-8f).Head(-16f).FootN(0.52f, 0.13f).FootF(0.46f, 0.13f)
+                    .HandN(backHandN.x, backHandN.y).HandF(backHandF.x, backHandF.y).Blade(-176f), Ease.InOutQuad)
+                .Key(12, P().Hip(0.24f, -0.435f, 68f).Chest(-4f).Neck(-6f).Head(-12f).FootN(0.52f, 0.13f).FootF(0.46f, 0.13f)
+                    .HandN(backHandN.x, backHandN.y).HandF(backHandF.x, backHandF.y).Blade(-176f), Ease.InOutQuad)
+                .Key(18, P().Hip(0.24f, -0.36f, -18f).Chest(-18f).Neck(4f).Head(16f).FootN(0.48f, 0.13f).FootF(0.38f, 0.13f, -10f)
+                    .HandN(0.56f, 0.86f, 10f).HandF(0.5f, 0.74f).Blade(8f), Ease.InOutQuad)
+                .Key(24, P().Hip(0.1f, -0.18f, -8f).Chest(-14f).Head(10f).FootN(0.34f, 0.13f).FootF(0.04f, 0.2f, -28f)
+                    .Grip().HandF(0.3f, 0.9f).Blade(28f), Ease.InOutQuad)
                 .Key(30, Stance(), Ease.InOutQuad)
                 .Invuln(0, 30).Fx(15, 15, FxKind.Dust);
 
@@ -348,6 +387,61 @@ namespace Kage
                 .Hit(1, 6, Blade, 12, HitLevel.Unblockable, new Vector2(1.6f, 4.5f), stun: 30, hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: 0.12f)
                 .Invuln(0, 12).Fx(0, 8, FxKind.TrailBlade).Fx(2, 2, FxKind.SlashLine).Sword();
 
+            // ===================== REFERENCE KATA =====================
+            // Two flowing patterns taken frame by frame from the reference clips (docs: the contact-matched parry plan). Both keep the
+            // two-handed grip throughout, the hips upright (no more than 12 degrees) and the body on the ground, so every parry rhythm they
+            // make (low then mid; a held overhead) is met blade on blade.
+
+            // Crown Wheel: from chūdan the hands drop across the centre line to the rear hip and whip a low reverse sweep, edge leading, at
+            // the shins (beat one, low); a taut coil, the blade lifted steeply behind, a te-gaeshi roll of the wrists and the flat whip
+            // across the crown, then a stepping lunge snaps the hands out to chest height in an explosive level cut (beat two, mid),
+            // locked in tenouchi before zanshin back to chūdan
+            m.crownWheel = new MoveDef("crownWheel", "Crown Wheel", 44)
+                .Key(4, P().Hip(-0.03f, -0.3f, 0f).Chest(-22f).Head(14f).FootN(0.25f, 0.13f).FootF(-0.28f, 0.15f, -22f).Grip().HandF(0.04f, 0.74f).Blade(-130f).EdgeUp(), Ease.InOutQuad)
+                .Key(7, P().Hip(-0.03f, -0.38f, 0f).Chest(-26f).Head(16f).FootN(0.26f, 0.13f).FootF(-0.28f, 0.15f, -28f).Grip().HandF(-0.06f, 0.56f).Blade(-172f).EdgeUp(), Ease.OutQuad)
+                .Key(9, P().Hip(0.03f, -0.4f, -4f).Chest(-32f).Head(18f).FootN(0.29f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.06f, 0.5f).Blade(-150f).EdgeUp(), Ease.InQuad)
+                .Key(11, P().Hip(0.06f, -0.4f, -6f).Chest(-36f).Head(20f).FootN(0.32f, 0.13f).FootF(-0.28f, 0.15f, -30f).Grip().HandF(0.38f, 0.44f).Blade(-10f).EdgeUp(), Ease.OutExpo)
+                .Key(14, P().Hip(0.06f, -0.4f, -6f).Chest(-36f).Head(20f).FootN(0.32f, 0.13f).FootF(-0.27f, 0.15f, -30f).Grip().HandF(0.4f, 0.46f).Blade(4f).EdgeUp())
+                .Key(18, P().Hip(-0.03f, -0.16f, 4f).Chest(4f).Head(-2f).Feet(0.26f, -0.28f).Grip().HandF(0.02f, 1.48f).Blade(104f), Ease.InOutQuad)
+                .Key(22, P().Hip(-0.05f, -0.1f, 6f).Chest(12f).Head(-8f).Feet(0.26f, -0.3f).Grip().HandF(-0.01f, 1.66f).Blade(138f), Ease.OutQuad)
+                .Key(25, P().Hip(0.04f, -0.12f, -6f).Chest(-10f).Head(4f).Feet(0.34f, -0.27f).Grip().HandF(0.14f, 1.54f).Blade(84f), Ease.InQuad)
+                .Key(28, P().Hip(0.1f, -0.14f, -10f).Chest(-26f).Head(13f).Feet(0.4f, -0.24f).Grip().HandF(0.56f, 1.04f).Blade(12f), Ease.OutExpo)
+                .Key(31, P().Hip(0.1f, -0.14f, -10f).Chest(-26f).Head(13f).Feet(0.4f, -0.24f).Grip().HandF(0.56f, 1.04f).Blade(12f))
+                .Key(36, P().Hip(0.05f, -0.12f, -8f).Chest(-16f).Head(9f).Feet(0.32f, -0.25f).Grip().HandF(0.36f, 0.98f).Blade(24f), Ease.InOutQuad)
+                .Key(44, Stance(), Ease.InOutQuad)
+                .Hit(10, 14, Blade, 6, HitLevel.Low, new Vector2(0.6f, 0f), stun: 22, hitstop: 5, shake: 0.1f, radius: 0.08f)
+                .Hit(26, 30, Blade, 9, HitLevel.Mid, new Vector2(2.2f, 0.4f), stun: 24, hitstop: 8, shake: 0.22f, heavy: true, radius: 0.09f, postureMul: 1.25f)
+                .Move(22, 28, 3.4f)
+                .Impulse(10, new Vector2(-3.4f, 1.1f)).Impulse(26, new Vector2(-6.4f, 2.2f))
+                .Fx(8, 15, FxKind.TrailBlade).Fx(23, 31, FxKind.TrailBlade).Fx(22, 22, FxKind.Glint).Fx(10, 10, FxKind.Dust).Fx(22, 22, FxKind.Dust)
+                .Sword().Cancel(31).ProfiledOnly();
+
+            // Poised Fang (tame-giri): the hands drawn tight into the centre line, the blade flattened and dipped, then lifted straight up the
+            // centre to the brow and held poised behind the crown (the tame) with a last cock-back and a glint; then the kiri-oroshi
+            // explodes over the crown on a stepping lead foot and stops dead at chest height (tenouchi), held in an alert zanshin
+            m.tameCut = new MoveDef("tameCut", "Poised Fang", 44)
+                .Key(6, P().Hip(-0.02f, -0.12f, -2f).Chest(-4f).Head(3f).Feet(0.22f, -0.28f).Grip().HandF(0.16f, 0.96f).Blade(12f), Ease.InOutQuad)
+                .Key(12, P().Hip(-0.04f, -0.14f, 0f).Chest(2f).Head(0f).Feet(0.22f, -0.28f).Grip().HandF(0.14f, 0.94f).Blade(-14f), Ease.InOutQuad)
+                .Key(16, P().Hip(-0.03f, -0.08f, 2f).Chest(8f).Head(-5f).Feet(0.24f, -0.28f).Grip().HandF(0.1f, 1.5f).Blade(62f), Ease.OutQuad)
+                .Key(19, P().Hip(-0.03f, -0.06f, 4f).Chest(12f).Head(-8f).Feet(0.24f, -0.28f).Grip().HandF(0.04f, 1.66f).Blade(142f), Ease.OutQuad)
+                .Key(24, P().Hip(-0.05f, -0.06f, 6f).Chest(12f).Head(-8f).Feet(0.22f, -0.3f).Grip().HandF(-0.01f, 1.66f).Blade(156f), Ease.InOutQuad)
+                .Key(29, P().Hip(0.08f, -0.16f, -10f).Chest(-24f).Head(12f).Feet(0.38f, -0.24f).Grip().HandF(0.54f, 1.12f).Blade(24f), Ease.OutExpo)
+                .Key(34, P().Hip(0.07f, -0.15f, -8f).Chest(-20f).Head(10f).Feet(0.36f, -0.24f).Grip().HandF(0.52f, 1.1f).Blade(22f))
+                .Key(44, Stance(), Ease.InOutQuad)
+                .Hit(27, 31, Blade, 12, HitLevel.Overhead, new Vector2(1.8f, 0.2f), stun: 28, hitstop: 10, shake: 0.36f, heavy: true, radius: 0.09f, postureMul: 1.45f)
+                .Move(24, 29, 2.8f)
+                .Impulse(27, new Vector2(-6.4f, 2.2f))
+                .Fx(24, 31, FxKind.TrailBlade).Fx(21, 21, FxKind.Glint).Fx(24, 24, FxKind.Dust)
+                .Sword().ProfiledOnly();
+
+            m.crownWheel.chain[Btn.S] = m.tameCut;
+            m.iai.chain[Btn.P] = m.crownWheel;                  // S, P
+            m.lowReap.Cancel(14);
+            m.lowReap.chain[Btn.S] = m.crownWheel;              // Down + S, S
+            m.cross.chain[Btn.S] = m.crownWheel;                // P, P, S
+            m.risingMoon.chain[Btn.P] = m.tameCut;              // S, S, P
+            m.kick2.chain[Btn.S] = m.tameCut;                   // K, K, S
+
             // ===================== SHADOW ART =====================
             // Crimson Crescent: the charge held in hassō, the hips turn in first, then kesa-giri down through the front knee
             m.crescent = new MoveDef("crescent", "Crimson Crescent", 34)
@@ -378,6 +472,7 @@ namespace Kage
                 case Btn.P:
                     if (dy < 0) return oppDown && dist < 1.1f ? groundPound : crouchPunch;
                     if (fwd > 0) return dist < 0.85f && opp != null && opp.CanBeThrown ? throwGrab : lunge;
+                    if (fwd < 0 && !LegacyAi(self)) return tameCut;      // Back + P: Poised Fang (bare-handed it stays the jab, BareHanded)
                     return jab;
                 case Btn.K:
                     if (dy < 0) return sweep;
@@ -385,7 +480,7 @@ namespace Kage
                     if (fwd < 0) return axeKick;
                     return kick1;
                 case Btn.S:
-                    if (dy < 0) return lowReap;
+                    if (dy < 0) return LegacyAi(self) ? lowReap : crownWheel;     // S + L (Down + Weapon): Crown Wheel directly (legacy AI keeps Low Reap)
                     if (fwd > 0) return shadowStep;
                     if (fwd < 0) return counterStance;
                     return iai;
@@ -395,14 +490,15 @@ namespace Kage
             return null;
         }
 
-        /// <summary>Bare-handed (sword broken, or the fists family) the Pommel Strike becomes the far-fist cross.</summary>
-        public override MoveDef BareHanded(MoveDef m) => m == cross ? crossFist : null;
+        /// <summary>Bare-handed (sword broken, or the fists family) the Pommel Strike becomes the far-fist cross, and Back + P's Poised Fang the jab.</summary>
+        public override MoveDef BareHanded(MoveDef m) => m == cross ? crossFist : m == tameCut ? jab : null;
 
         public override IEnumerable<MoveDef> All => new[]
         {
             jab, cross, crossFist, uppercut, crouchPunch, lunge, kick1, kick2, axeKick, sweep, pushKick,
             throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront,
             iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, counterSlash, crescent,
+            crownWheel, tameCut,
         };
     }
 }

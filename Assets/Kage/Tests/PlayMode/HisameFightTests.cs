@@ -186,7 +186,7 @@ namespace Kage.Tests
             f.Run(2);
             Assert.Greater(top, 1.0f, "an arc over his head (JS 150 px x 0.95)");
             Assert.Less(f.Ronin.Pos.x, f.Kage.Pos.x, "she came down on his other side: behind him");
-            Assert.AreEqual(110f * 0.95f / 115f, f.Kage.Pos.x - f.Ronin.Pos.x, 0.15f, "110 px x her scale past him");
+            Assert.AreEqual(110f * Hisame.BodyScale / 115f, f.Kage.Pos.x - f.Ronin.Pos.x, 0.15f, "110 px x her scale past him");
             Assert.Less(f.Ronin.Pos.y, 0.05f, "on the ground");
             Assert.AreEqual(1f, f.Ronin.facing, "facing his back");
         }
@@ -201,7 +201,7 @@ namespace Kage.Tests
             f.RunUntil(() => f.Ronin.moveFrame >= f.Ronin.move.vaultTo, 60);
             f.Run(2);
             Assert.Greater(f.Ronin.Pos.x, f.Kage.Pos.x, "no room behind him: beside him, on her own side");
-            Assert.AreEqual(110f * 0.95f / 115f, f.Ronin.Pos.x - f.Kage.Pos.x, 0.15f);
+            Assert.AreEqual(110f * Hisame.BodyScale / 115f, f.Ronin.Pos.x - f.Kage.Pos.x, 0.15f);
             Assert.AreEqual(-1f, f.Ronin.facing, "facing him");
         }
 

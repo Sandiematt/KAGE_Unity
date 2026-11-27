@@ -78,5 +78,27 @@ namespace Kage
         public float tradeChance = 0.4f;
         /// <summary>An attack that cannot be guarded (Unblockable, a grab) is never guarded, and the dodge chance is higher by this (JS 0.3).</summary>
         public float unblockableDodgeBonus = 0.3f;
+
+        // ---- reading the opponent, and parrying it (docs/combat-flow.md) ----
+        /// <summary>A profiled foe remembers the opponent's last <see cref="readHistory"/> attack starts, each for <see cref="readWindowFrames"/> (4 s).</summary>
+        public int readWindowFrames = 240;
+        public int readHistory = 6;
+        /// <summary>Each earlier start of the same attack in that memory adds this to its parry chance (a repeated button or string is predictable), up to <see cref="readMax"/>; times the tier's skill.</summary>
+        public float readPerRepeat = 0.12f;
+        public float readMax = 0.36f;
+        /// <summary>An attack that runs into a foe's held guard (its defensive stance) adds this to its parry chance, times the tier's skill.</summary>
+        public float stanceParry = 0.3f;
+        /// <summary>The tier's skill at the read and the stance: a regular foe barely, an elite foe some, a sub-boss and a boss fully.</summary>
+        public float parrySkillRegular = 0.25f, parrySkillElite = 0.6f, parrySkillSub = 0.9f, parrySkillBoss = 1.1f;
+        /// <summary>The read and the stance never lift a parry chance above this (a profile whose own rate is higher keeps it).</summary>
+        public float parryCap = 0.55f;
+        /// <summary>The chance a profiled foe answers its own parry (after the tier's delay, <see cref="ParryTuning.AnswerDelayFor"/>).</summary>
+        public float answerChance = 0.85f;
+
+        /// <summary>The tier's skill at reading and stance parries.</summary>
+        public float ParrySkillFor(CombatTier tier) => tier switch
+        {
+            CombatTier.Elite => parrySkillElite, CombatTier.Sub => parrySkillSub, CombatTier.Boss => parrySkillBoss, _ => parrySkillRegular,
+        };
     }
 }

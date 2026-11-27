@@ -25,7 +25,7 @@ namespace Kage.Tests
             Assert.AreEqual(0.08f, d.defense, 1e-6);
             Assert.AreEqual(1.15f, d.damageMul, 1e-6, "41-styles/kuroe.js raises her 10-data.js dmg 1 to 1.15");
             Assert.AreEqual(1f, d.speedMul, 1e-6);
-            Assert.AreEqual(1.06f, d.bodyScale, 1e-6);
+            Assert.AreEqual(1.21f, d.bodyScale, 1e-6);
             Assert.AreEqual(CharacterFlags.None, d.flags, "no heavy armour, no no-grab: the JS tip says throw him");
             Assert.IsFalse(d.IsPlayer);
         }
@@ -41,16 +41,21 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void She_is_a_boss_with_Censure_in_her_one_ability_slot()
+        public void She_is_a_boss_with_Censure_first_then_her_calligraphy_and_Raikon_kit()
         {
             var d = CharacterCatalog.Get(Id);
             Assert.AreEqual(Id, d.bossId);
-            CollectionAssert.AreEqual(new[] { "censure" }, d.abilities, "the JS phases' abilities, in order");
+            Assert.AreEqual("censure", d.abilities[0], "the JS Censure stays in slot 1");
+            CollectionAssert.AreEqual(KuroeAbilities.ExtraIds, d.abilities.Skip(1).ToArray());
         }
 
         [Test]
-        public void Her_boss_data_is_the_two_JS_phases()
+        public void Her_boss_data_keeps_the_two_JS_phases_and_adds_her_ink_and_Raikon_abilities()
         {
+            var js = BossDef.FromJs(Id);
+            CollectionAssert.AreEqual(new[] { "censure" }, js.phases[0].abilities);
+            CollectionAssert.AreEqual(new[] { "censure" }, js.phases[1].abilities);
+
             var b = BossCatalog.Get(Id);
             Assert.IsNotNull(b);
             Assert.AreEqual("Kuroe", b.name);
@@ -58,11 +63,11 @@ namespace Kage.Tests
             Assert.AreEqual(2, b.Count);
             Assert.AreEqual("The Black Line", b.phases[0].name);
             Assert.AreEqual(1f, b.phases[0].at);
-            CollectionAssert.AreEqual(new[] { "censure" }, b.phases[0].abilities);
+            CollectionAssert.AreEquivalent(new[] { "censure", KuroeAbilities.SumiNidanId, KuroeAbilities.SumiBaraiId, KuroeAbilities.BokusekiWaveId }, b.phases[0].abilities);
             Assert.IsFalse(b.phases[0].aggressive);
             Assert.AreEqual("Redacted", b.phases[1].name);
             Assert.AreEqual(0.5f, b.phases[1].at);
-            CollectionAssert.AreEqual(new[] { "censure" }, b.phases[1].abilities);
+            CollectionAssert.AreEquivalent(new[] { "censure", KuroeAbilities.SumiNidanId, KuroeAbilities.SumiBaraiId, KuroeAbilities.BokusekiWaveId, KuroeAbilities.ThunderRedactionId }, b.phases[1].abilities);
             Assert.IsTrue(b.phases[1].aggressive, "phase two: the JS aggressive flag");
             Assert.IsNull(b.phases[1].aiProfile, "she stays on the defensive profile");
         }
@@ -144,7 +149,7 @@ namespace Kage.Tests
             }
             var footman = CharacterCatalog.PartSet("order_footman").Build(CharacterCatalog.Get("order_footman"));
             Assert.AreNotEqual(footman.rimColor, rig.rimColor, "not the Order's palette");
-            Assert.IsTrue(rig.parts.Any(p => p.name.StartsWith("Eboshi")), "her tall cap is the head of her silhouette");
+            Assert.IsTrue(rig.parts.Any(p => p.name == "Ponytail" && p.bone == B.Head && p.soft == SoftKind.Flow), "the ponytail flows from the crown");
         }
     }
 }

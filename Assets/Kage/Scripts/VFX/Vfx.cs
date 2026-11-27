@@ -115,7 +115,9 @@ namespace Kage
 
         void Update()
         {
-            float dt = Time.deltaTime, ud = Time.unscaledDeltaTime;
+            // while capturing (review renders, recordings) unscaled effects follow the capture clock, so a frame is a frame; 0 in play
+            float dt = Time.deltaTime, ud = Time.captureDeltaTime > 0f ? Time.captureDeltaTime : Time.unscaledDeltaTime;
+            TickSky(ud);           // a rage art's sky behind the fighters (Vfx.RageArts.cs)
             for (int i = _live.Count - 1; i >= 0; i--)
             {
                 var f = _live[i];
@@ -131,16 +133,16 @@ namespace Kage
         class StarFx : Fx
         {
             public MeshRenderer r; public float size, spin;
+            readonly MaterialPropertyBlock _mpb = new();
             public override void Tick(float u)
             {
                 float pop = u < 0.25f ? KMath.Apply(Ease.OutExpo, u / 0.25f) : 1f;
                 float s = size * Mathf.Lerp(0.5f, 1.25f, pop) * (u < 0.25f ? 1f : Mathf.Lerp(1f, 0.35f, (u - 0.25f) / 0.75f));
                 go.transform.localScale = new Vector3(s, s * (u < 0.25f ? 1f : Mathf.Lerp(1f, 0.25f, (u - 0.25f) / 0.75f)), 1f);
                 go.transform.Rotate(0, 0, spin * Time.unscaledDeltaTime);
-                var mpb = new MaterialPropertyBlock();
                 float a = u < 0.3f ? 1f : 1f - (u - 0.3f) / 0.7f;
-                mpb.SetVector("_Color", new Vector4(3f, 3f, 3f, a));
-                r.SetPropertyBlock(mpb);
+                _mpb.SetVector("_Color", new Vector4(3f, 3f, 3f, a));
+                r.SetPropertyBlock(_mpb);
             }
         }
 
@@ -152,6 +154,7 @@ namespace Kage
             go.transform.rotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
             var mesh = MeshKit.Star(points, 1f, 0.22f * aspect, core, tip.WithA(0f));
             var r = MeshKit.MakeRenderer("FlashMesh", go.transform, mesh, MeshKit.Additive, order);
+            if (Application.isPlaying) go.AddComponent<MeshOwner>().meshes.Add(mesh);
             var fx = new StarFx { go = go, r = r, size = size, life = life, unscaled = unscaled, spin = Random.Range(-90f, 90f) };
             _live.Add(fx);
             fx.Tick(0f);
@@ -176,6 +179,7 @@ namespace Kage
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
             var rib = new Ribbon(name, go.transform, mat, order);
+            if (Application.isPlaying) go.AddComponent<MeshOwner>().meshes.Add(rib.mesh);
             var fx = new DynFx { go = go, rib = rib, build = build, life = life, unscaled = unscaled };
             _live.Add(fx);
             fx.Tick(0f);
@@ -235,30 +239,50 @@ namespace Kage
         // =========================================================================================
         //  PUBLIC EFFECTS
         // =========================================================================================
-        public void HitBurst(Vector2 p, Vector2 dir, float strength, bool sword, Color main, Color core, Color dark)
+        public void HitBurst(Vector2 p, Vector2 dir, float strength, bool sword, Color main, Color core, Color dark, bool strong = false)
         {
             // contact flash (2–5 frames, 1.5–2x body size)
-            Star(p, 0.42f * strength, core, main, 0.11f, 8, true, Order + 60);
+            dir = dir.sqrMagnitude > 1e-8f ? dir.normalized : Vector2.right;
+            if (strong) core = Color.white;
+            Star(p, (strong ? 0.59f : 0.34f) * strength, core, main, strong ? 0.15f : 0.09f, strong ? 8 : 4, true, Order + 60);
             // body: shock ring + speed shards
-            Ring(p, 0.05f, 0.55f * strength, 0.07f * strength, Color.Lerp(main, core, 0.3f), 0.24f, true, 1f, 2.2f);
-            Shards(p, dir, sword ? 7 : 10, (sword ? 0.75f : 0.5f) * strength, (sword ? 0.018f : 0.03f) * strength, core, main, 0.22f, sword ? 25f : 65f);
-            if (sword)
+            Ring(p, 0.05f, (strong ? 0.92f : 0.43f) * strength, 0.07f * strength, Color.Lerp(main, core, 0.3f), 0.24f, true, 1f, 2.2f);
+            if (strong) Ring(p, 0.08f, 0.64f * strength, 0.045f, Color.white, 0.16f, true);
+            Shards(p, dir, strong ? 11 : 6, (sword ? 0.75f : 0.5f) * strength, (sword ? 0.018f : 0.03f) * strength, core, main, 0.22f, sword ? 25f : 65f);
+            if (sword || strong)
             {
-                float a = KMath.Ang(dir) + (Random.value < 0.5f ? 55f : -55f);
-                Vector2 d = KMath.Dir(a);
-                SlashLine(p - d * 0.55f * strength, p + d * 0.55f * strength, main, core, 0.2f, 0.05f);
+                float length = (strong ? 0.93f : 0.48f) * strength;
+                SlashLine(p - dir * length * 0.65f, p + dir * length, main, core, strong ? 0.22f : 0.14f, strong ? 0.07f : 0.035f);
             }
             // secondary: sparks burst then hang and droop
-            int n = Mathf.RoundToInt(16 * strength);
+            int n = Mathf.RoundToInt((strong ? 16 : 8) * strength);
             for (int i = 0; i < n; i++)
             {
-                float ang = KMath.Ang(dir) + Random.Range(-75f, 75f) + (i % 5 == 0 ? 180f : 0f);
+                float ang = KMath.Ang(dir) + Random.Range(-36f, 36f) + (i % 5 == 0 ? 180f : 0f);
                 Vector2 v = KMath.Dir(ang) * Random.Range(3.5f, 9f) * strength;
                 Emit(_sparks, p, v, Random.Range(0.025f, 0.05f), Random.Range(0.25f, 0.55f), Color.Lerp(core, main, Random.Range(0.2f, 1f)));
             }
             // dissipation: ink residue
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < (strong ? 7 : 2); i++)
                 Emit(_dust, p + Random.insideUnitCircle * 0.1f, Random.insideUnitCircle * 0.6f + dir * 0.4f, Random.Range(0.3f, 0.5f) * strength, Random.Range(0.45f, 0.7f), dark.WithA(0.55f));
+        }
+
+        /// <summary>
+        /// Two steel streaks crossing where the blades met, at a quarter turn to the cut, the cross turned to the clash normal
+        /// <paramref name="dir"/> (a level normal draws it as it always was).
+        /// </summary>
+        public void CrossedSteel(Vector2 pos, Vector2 dir, Color main, Color core, float half)
+        {
+            float turn = KMath.Ang(dir);
+            Vector2 p = KMath.Rot(new Vector2(half, half * 0.7f), turn), q = KMath.Rot(new Vector2(half, -half * 0.7f), turn);
+            SlashLine(pos - p, pos + p, main, core, 0.18f, 0.06f);
+            SlashLine(pos - q, pos + q, main, core, 0.18f, 0.06f);
+        }
+
+        public void PostureShatter(Vector2 at, Vector2 dir)
+        {
+            InkBurst(at, Color.black, 0.82f);
+            Shards(at, dir, 17, 1.35f, 0.048f, Color.white, new Color(1f, 0.52f, 0.19f), 0.29f, 180f);
         }
 
         public void BlockBurst(Vector2 p, Vector2 towardAttacker)
@@ -461,67 +485,54 @@ namespace Kage
     /// Weapon/limb smear: a ribbon through the last ~0.1 s of an edge (blade base→tip, or a
     /// fist/foot strip). White-hot leading edge, coloured body, fading tail.
     /// </summary>
-    public class MotionTrail
+    public class MotionTrail : SampledTrail
     {
-        struct S { public Vector2 a, b; public float t; }
-        readonly List<S> _s = new();
-        readonly Ribbon _rib;
-        readonly float _life;
         readonly Color _main, _core;
         readonly bool _blade;
-        readonly GameObject _go;
+        float _nextEmber;
+        public bool shedEmbers;
 
         public MotionTrail(string name, Transform parent, float life, Color main, Color core, int order, bool blade)
+            : base(name, parent, life, blade ? order - 1 : order, null, Materials(blade))
         {
-            _go = new GameObject(name);
-            _go.transform.SetParent(parent, false);
-            _rib = new Ribbon(name, _go.transform, Vfx.I != null ? Vfx.I.AddHDR(blade ? 1.5f : 1.3f) : MeshKit.Additive, order);
-            _life = life; _main = main; _core = core; _blade = blade;
+            _main = main;
+            _core = core;
+            _blade = blade;
         }
 
-        public void Tick(bool emit, Vector2 a, Vector2 b)
+        static Material[] Materials(bool blade)
         {
-            float now = Time.time;
-            if (emit && Time.deltaTime > 0f)
+            var hot = Vfx.I != null ? Vfx.I.AddHDR(blade ? 1.5f : 1.3f) : MeshKit.Additive;
+            return blade ? new[] { MeshKit.Alpha, hot } : new[] { hot };
+        }
+
+        protected override void DrawStroke(List<Section> sections, bool live)
+        {
+            var hot = ribs[^1];
+            foreach (var ribbon in ribs) ribbon.Break();
+            foreach (var s in sections)
             {
-                if (_s.Count == 0 || (_s[^1].a - a).sqrMagnitude > 1e-6f || (_s[^1].b - b).sqrMagnitude > 1e-6f)
-                    _s.Add(new S { a = a, b = b, t = now });
-            }
-            while (_s.Count > 0 && now - _s[0].t > _life) _s.RemoveAt(0);
-            _rib.Begin();
-            if (_s.Count >= 2)
-            {
-                for (int i = 0; i < _s.Count; i++)
+                float k = 1f - s.age;
+                if (_blade)
                 {
-                    float age = Mathf.Clamp01((now - _s[i].t) / _life);
-                    float k = 1f - age;
-                    // subdivide between samples for a smooth arc
-                    if (i > 0)
-                    {
-                        var p = _s[i - 1];
-                        for (int j = 1; j < 3; j++)
-                        {
-                            float f = j / 3f;
-                            float kk = Mathf.Lerp(1f - Mathf.Clamp01((now - p.t) / _life), k, f);
-                            Vector2 aa = Vector2.Lerp(p.a, _s[i].a, f), bb = Vector2.Lerp(p.b, _s[i].b, f);
-                            AddSection(aa, bb, kk);
-                        }
-                    }
-                    AddSection(_s[i].a, _s[i].b, k);
+                    Vector2 rim = (s.b - s.a) * 0.065f;
+                    Color ink = new Color(0.055f, 0.012f, 0.035f, 0.54f * k);
+                    ribs[0].Add(s.a - rim, s.b + rim, ink.WithA(ink.a * 0.18f), ink);
                 }
+                Color inner = _main.WithA((_blade ? 0.12f : 0.2f) * k);
+                Color outer = Color.Lerp(_main, _core, k * k * k * k).WithA((_blade ? 0.85f : 0.6f) * Mathf.Sqrt(k));
+                hot.Add(s.a, s.b, inner, outer);
             }
-            _rib.End();
         }
 
-        void AddSection(Vector2 a, Vector2 b, float k)
+        protected override void OnMove(Vector2 pa, Vector2 pb, Vector2 a, Vector2 b, float dt)
         {
-            // value layering: white-hot leading edge, saturated body, fading dark-red tail
-            float hot = k * k * k * k;
-            Color inner = _blade ? Color.Lerp(_main * 0.6f, _main, k).WithA(0.12f * k) : _main.WithA(0.2f * k);
-            Color outer = Color.Lerp(_main, _core, hot).WithA((_blade ? 0.85f : 0.6f) * Mathf.Sqrt(k));
-            _rib.Add(a, b, inner, outer);
+            if (!shedEmbers || Vfx.I == null || Time.time < _nextEmber) return;
+            Vector2 travel = b - pb;
+            if (travel.sqrMagnitude < dt * dt) return;
+            _nextEmber = Time.time + 0.04f;
+            Vfx.I.Embers(Vector2.Lerp(pb, b, Random.value), -travel.normalized * 0.65f + Random.insideUnitCircle * 0.35f,
+                _main, 0.032f, 0.18f);
         }
-
-        public void Dispose() { if (_go != null) Object.Destroy(_go); }
     }
 }

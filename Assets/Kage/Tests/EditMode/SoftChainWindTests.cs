@@ -207,5 +207,58 @@ namespace Kage.Tests
             }
             Assert.Less(platesBend, capeBend, "hanging plates are heavier than cloth: the wind moves them less");
         }
+
+        [Test]
+        public void ScarfFlowsSmoothlyInIdleAndWindWithoutRapidVerticalThrashing()
+        {
+            foreach (var (scarfWind, worldWind) in new[]
+            {
+                (8.0f, Wind.Calm),
+                (1.6f, Wind.Blowing(new Vector2(-0.14f, 0.04f), gust: 0.22f, seed: 101, gustRate: 0.35f)),
+                (8.0f, Wind.Blowing(new Vector2(-0.45f, 0.06f), gust: 0.55f, seed: 42, gustRate: 0.40f)),
+            })
+            {
+                var go = new GameObject("KageScarfFlow");
+                try
+                {
+                    var rig = go.AddComponent<FighterRig>();
+                    rig.Build(KageModel.Build(KageModel.Look.Kage), 1000);
+                    rig.wind = worldWind;
+                    rig.scarf.wind = scarfWind;
+                    rig.Apply(PoseLib.Stance());
+                    rig.ResetSoft();
+                    rig.scarf.ResetChain();
+
+                    var mf = rig.scarf.GetComponentsInChildren<MeshFilter>()[0];
+                    const float dt = 1f / 60f;
+                    for (int i = 0; i < 120; i++)
+                    {
+                        rig.Secondary(dt, Vector2.zero);
+                        rig.scarf.Tick(dt);
+                    }
+
+                    float minY = float.MaxValue, maxY = float.MinValue, maxVy = 0f;
+                    float prevY = float.NaN;
+                    const int frames = 360; // 6 seconds (> 1 full slow cycle)
+                    for (int i = 0; i < frames; i++)
+                    {
+                        rig.Secondary(dt, Vector2.zero);
+                        rig.scarf.Tick(dt);
+                        var v = mf.sharedMesh.vertices;
+                        float tipY = (v[v.Length - 2].y + v[v.Length - 1].y) * 0.5f;
+                        Assert.IsTrue(float.IsFinite(tipY), "finite scarf tip");
+                        minY = Mathf.Min(minY, tipY);
+                        maxY = Mathf.Max(maxY, tipY);
+                        if (!float.IsNaN(prevY))
+                            maxVy = Mathf.Max(maxVy, Mathf.Abs(tipY - prevY) / dt);
+                        prevY = tipY;
+                    }
+                    Assert.Greater(maxY - minY, 0.02f, $"wind={scarfWind}: scarf visibly flows in the breeze");
+                    Assert.Less(maxY - minY, 0.18f, $"wind={scarfWind}: scarf flows gracefully without giant up-and-down swings");
+                    Assert.Less(maxVy, 0.25f, $"wind={scarfWind}: scarf tip glides smoothly instead of whipping rapidly up and down");
+                }
+                finally { Object.DestroyImmediate(go); }
+            }
+        }
     }
 }

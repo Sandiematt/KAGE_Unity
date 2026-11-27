@@ -1,103 +1,122 @@
-katana.airCleave total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.airCleave total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..17 pts=Blade r=0.08 dmg=12 lvl=Overhead kb=1.4,-3 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.42 posture=1 crit=False fixed=False
   fx 8..18 TrailBlade
-katana.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..30 pts=FootN+ShinN r=0.11 dmg=8 lvl=Overhead kb=2.4,1.8 stun=20 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
-katana.airPunch total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.airPunch total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..12 pts=Fist r=0.09 dmg=6 lvl=Overhead kb=1.4,0.5 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   fx 6..12 TrailFist
-katana.airSlash total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=2..19:-360 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.airSlash total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..9 pts=Blade r=0.07 dmg=5 lvl=Overhead kb=1.2,1 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   hit 11..16 pts=Blade r=0.07 dmg=5 lvl=Overhead kb=1.8,2.5 stun=20 kd=True launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 3..18 TrailBlade
-katana.axe total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.axe total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 13..16 pts=FootN+ShinN r=0.11 dmg=10 lvl=Overhead kb=1,-1.5 stun=26 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=9 shake=0.32 posture=1 crit=False fixed=False
   fx 9..16 TrailFootN
   fx 16..16 Dust
-katana.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+katana.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-katana.cleave total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.cleave total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 18..25 pts=Blade r=0.08 dmg=12 lvl=Overhead kb=1.4,-3 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.42 posture=1 crit=False fixed=False
   move 15..20 v=2.6,0 setY=False
   fx 16..26 TrailBlade
   fx 26..26 Shockwave
   fx 26..26 Dust
-katana.counterSlash total=30 cancel=999 jumpCancel=-1 invuln=0..12 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.counterSlash total=30 cancel=999 jumpCancel=-1 invuln=0..12 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 1..6 pts=Blade r=0.12 dmg=12 lvl=Unblockable kb=1.6,4.5 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.4 posture=1 crit=False fixed=False
   fx 0..8 TrailBlade
   fx 2..2 SlashLine
-katana.counterStance total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=4..24 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.counterStance total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=4..24 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 4..4 Glint
-katana.crescent total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=35 proj=12 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.crescent total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=35 proj=12 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 1..12 ChargeDark
   fx 10..15 TrailBlade
-katana.cross total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.cross total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..11 pts=Hilt r=0.09 dmg=5 lvl=High kb=1.4,0 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.08 posture=1 crit=False fixed=False
   chain P->uppercut
   chain K->kick2
-katana.crossFist total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->crownWheel
+katana.crossFist total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..11 pts=FistF r=0.09 dmg=5 lvl=High kb=1.4,0 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.08 posture=1 crit=False fixed=False
   fx 7..12 TrailFist
   chain P->uppercut
-katana.crouchPunch total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.crouchPunch total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=Fist r=0.09 dmg=3 lvl=Mid kb=0.8,0 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
   fx 5..9 TrailFist
   chain P->uppercut
-katana.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.crownWheel total=44 cancel=31 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..14 pts=Blade r=0.08 dmg=6 lvl=Low kb=0.6,0 stun=22 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+  hit 26..30 pts=Blade r=0.09 dmg=9 lvl=Mid kb=2.2,0.4 stun=24 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.22 posture=1.25 crit=False fixed=False
+  move 22..28 v=3.4,0 setY=False
+  fx 8..15 TrailBlade
+  fx 23..31 TrailBlade
+  fx 22..22 Glint
+  fx 10..10 Dust
+  fx 22..22 Dust
+  chain S->tameCut
+katana.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-katana.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-katana.groundPound total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.groundPound total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 16..24 pts=Fist r=0.12 dmg=6 lvl=Mid kb=0.5,1 stun=18 kd=False launch=False otg=True heavy=False sword=False breaks=False stop=8 shake=0.25 posture=1 crit=False fixed=False
   move 4..4 v=1.5,4 setY=True
   fx 24..24 Dust
   fx 24..24 Shockwave
-katana.iai total=30 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.iai total=30 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..12 pts=Blade r=0.07 dmg=9 lvl=Mid kb=1.8,0.3 stun=18 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 6..14 TrailBlade
+  chain P->crownWheel
   chain S->risingMoon
-katana.jab total=20 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.jab total=20 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=Fist r=0.09 dmg=4 lvl=High kb=1,0 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFist
   chain P->cross
   chain K->kick1
   chain S->iai
-katana.kick1 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.kick1 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN+ShinN r=0.1 dmg=6 lvl=High kb=1.6,0.4 stun=18 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 8..14 TrailFootN
   chain K->kick2
   chain S->iai
-katana.kick2 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.kick2 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootF+ShinF r=0.1 dmg=6 lvl=Mid kb=2.2,0.3 stun=18 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 8..14 TrailFootF
   chain K->axe
-katana.lowReap total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->tameCut
+katana.lowReap total=32 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=Blade r=0.08 dmg=9 lvl=Low kb=0.5,3 stun=20 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 7..14 TrailBlade
   fx 10..10 Dust
-katana.lunge total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->crownWheel
+katana.lunge total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..12 pts=Fist r=0.09 dmg=6 lvl=High kb=1.8,0.2 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   move 3..10 v=3.2,0 setY=False
   fx 7..12 TrailFist
   fx 3..3 Dust
   chain P->cross
-katana.push total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.push total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN r=0.11 dmg=6 lvl=Mid kb=4,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 8..13 TrailFootN
-katana.risingMoon total=32 cancel=12 jumpCancel=14 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.risingMoon total=32 cancel=12 jumpCancel=14 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..10 pts=Blade r=0.09 dmg=8 lvl=Mid kb=0.4,7.2 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   move 1..7 v=2.4,0 setY=False
   fx 4..13 TrailBlade
+  chain P->tameCut
   chain S->cleave
-katana.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+katana.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-katana.shadowStep total=34 cancel=999 jumpCancel=-1 invuln=5..13 noPush=4..18 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 20..20 Dust
+katana.shadowStep total=34 cancel=999 jumpCancel=-1 invuln=5..13 noPush=4..18 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..13 pts=Blade r=0.09 dmg=10 lvl=Mid kb=0.6,0.6 stun=26 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.25 posture=1 crit=False fixed=False
   move 5..13 v=10.5,0 setY=False
   move 14..16 v=1,0 setY=False
@@ -105,148 +124,163 @@ katana.shadowStep total=34 cancel=999 jumpCancel=-1 invuln=5..13 noPush=4..18 ar
   fx 6..14 TrailBlade
   fx 9..9 SlashLine
   fx 5..5 Dust
-katana.sweep total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.sweep total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..15 pts=FootN+ShinN r=0.11 dmg=6 lvl=Low kb=0.6,3.4 stun=20 kd=True launch=False otg=True heavy=False sword=False breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
   fx 9..16 TrailFootN
   fx 11..11 Dust
-katana.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-katana.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-katana.uppercut total=30 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.tameCut total=44 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 27..31 pts=Blade r=0.09 dmg=12 lvl=Overhead kb=1.8,0.2 stun=28 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.36 posture=1.45 crit=False fixed=False
+  move 24..29 v=2.8,0 setY=False
+  fx 24..31 TrailBlade
+  fx 21..21 Glint
+  fx 24..24 Dust
+katana.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+katana.uppercut total=30 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..13 pts=Fist r=0.12 dmg=7 lvl=Mid kb=0.5,6.4 stun=30 kd=False launch=True otg=False heavy=True sword=False breaks=False stop=7 shake=0.22 posture=1 crit=False fixed=False
   move 2..9 v=1.8,0 setY=False
   fx 8..14 TrailFist
-fists.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..30 pts=FootN+ShinN r=0.11 dmg=8 lvl=Overhead kb=2.4,1.8 stun=20 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
-fists.airPunch total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.airPunch total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..12 pts=Fist r=0.09 dmg=6 lvl=Overhead kb=1.4,0.5 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   fx 6..12 TrailFist
-fists.axe total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.axe total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 13..16 pts=FootN+ShinN r=0.11 dmg=10 lvl=Overhead kb=1,-1.5 stun=26 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=9 shake=0.32 posture=1 crit=False fixed=False
   fx 9..16 TrailFootN
   fx 16..16 Dust
-fists.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+fists.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-fists.crossFist total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.crossFist total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..11 pts=FistF r=0.09 dmg=5 lvl=High kb=1.4,0 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.08 posture=1 crit=False fixed=False
   fx 7..12 TrailFist
   chain P->uppercut
-fists.crouchPunch total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.crouchPunch total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=Fist r=0.09 dmg=3 lvl=Mid kb=0.8,0 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
   fx 5..9 TrailFist
   chain P->uppercut
-fists.fists.airSlam total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.airSlam total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..30 pts=Fist+FistF r=0.13 dmg=10 lvl=Overhead kb=1.6,-2.2 stun=24 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=8 shake=0.22 posture=1 crit=False fixed=False
   fx 6..14 TrailFist
-fists.fists.grapple total=78 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=2..43 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:9..-1/43/18 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.grapple total=78 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=2..43 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:9..-1/43/18 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 43..43 Dust
-fists.fists.grappleWhiff total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=2..9 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-fists.fists.haymaker total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=3..22 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.grappleWhiff total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=2..9 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.haymaker total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=3..22 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..20 pts=Fist r=0.14 dmg=15 lvl=Mid kb=3.2,2.4 stun=28 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=10 shake=0.35 posture=1.4 crit=False fixed=False
   move 9..19 v=2.2,0 setY=False
   fx 12..21 TrailFist
   fx 15..15 Dust
-fists.fists.ironGuard total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=5..26 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-fists.fists.quake total=48 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.ironGuard total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=5..26 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.quake total=48 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..15 pts=Fist+FistF r=0.14 dmg=9 lvl=Low kb=1.4,3.6 stun=24 kd=True launch=False otg=True heavy=True sword=False breaks=False stop=8 shake=0.28 posture=1 crit=False fixed=False
   fx 10..10 Dust
   fx 10..10 Shockwave
-fists.fists.shadowPalm total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=25 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.fists.shadowPalm total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=25 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 12..16 pts=Fist r=0.18 dmg=10 lvl=Mid kb=7,1.4 stun=26 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=9 shake=0.3 posture=1.3 crit=False fixed=False
   move 8..14 v=1.6,0 setY=False
   fx 1..11 ChargeDark
   fx 11..17 TrailFist
   fx 12..12 Shockwave
-fists.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-fists.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-fists.groundPound total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.groundPound total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 16..24 pts=Fist r=0.12 dmg=6 lvl=Mid kb=0.5,1 stun=18 kd=False launch=False otg=True heavy=False sword=False breaks=False stop=8 shake=0.25 posture=1 crit=False fixed=False
   move 4..4 v=1.5,4 setY=True
   fx 24..24 Dust
   fx 24..24 Shockwave
-fists.jab total=20 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.jab total=20 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=Fist r=0.09 dmg=4 lvl=High kb=1,0 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFist
   chain P->cross
   chain K->kick1
   chain S->iai
-fists.kick1 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.kick1 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN+ShinN r=0.1 dmg=6 lvl=High kb=1.6,0.4 stun=18 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 8..14 TrailFootN
   chain K->kick2
   chain S->iai
-fists.kick2 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.kick2 total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootF+ShinF r=0.1 dmg=6 lvl=Mid kb=2.2,0.3 stun=18 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 8..14 TrailFootF
   chain K->axe
-fists.lunge total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->tameCut
+fists.lunge total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..12 pts=Fist r=0.09 dmg=6 lvl=High kb=1.8,0.2 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   move 3..10 v=3.2,0 setY=False
   fx 7..12 TrailFist
   fx 3..3 Dust
   chain P->cross
-fists.push total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.push total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN r=0.11 dmg=6 lvl=Mid kb=4,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 8..13 TrailFootN
-fists.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+fists.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-fists.sweep total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 20..20 Dust
+fists.sweep total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..15 pts=FootN+ShinN r=0.11 dmg=6 lvl=Low kb=0.6,3.4 stun=20 kd=True launch=False otg=True heavy=False sword=False breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
   fx 9..16 TrailFootN
   fx 11..11 Dust
-fists.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-fists.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-fists.uppercut total=30 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+fists.uppercut total=30 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..13 pts=Fist r=0.12 dmg=7 lvl=Mid kb=0.5,6.4 stun=30 kd=False launch=True otg=False heavy=True sword=False breaks=False stop=7 shake=0.22 posture=1 crit=False fixed=False
   move 2..9 v=1.8,0 setY=False
   fx 8..14 TrailFist
-twin.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+twin.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-twin.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-twin.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-twin.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+twin.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-twin.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-twin.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-twin.twin.airJab total=16 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 20..20 Dust
+twin.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.airJab total=16 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..9 pts=Fist r=0.09 dmg=3 lvl=Overhead kb=1,0.4 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.05 posture=1 crit=False fixed=False
   fx 4..9 TrailFist
-twin.twin.airKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.airKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 3..18 pts=FootN+ShinN r=0.11 dmg=4 lvl=Overhead kb=2,1.2 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.1 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
-twin.twin.airSpin total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=2..15:-360 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.airSpin total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 3..8 pts=Blade+BladeN r=0.07 dmg=3 lvl=Overhead kb=1,0.8 stun=12 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=3 shake=0.05 posture=1 crit=False fixed=False
   hit 9..14 pts=Blade+BladeN r=0.07 dmg=3 lvl=Overhead kb=1.6,2 stun=16 kd=True launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 3..15 TrailBlade
   fx 3..15 TrailBladeN
-twin.twin.backKick total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.backKick total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..11 pts=FootF+ShinF r=0.1 dmg=4 lvl=Mid kb=2.4,0.4 stun=16 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.1 posture=1 crit=False fixed=False
   fx 6..12 TrailFootF
-twin.twin.crossSlash total=22 cancel=999 jumpCancel=13 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.crossSlash total=22 cancel=999 jumpCancel=13 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=Blade+BladeN r=0.08 dmg=6 lvl=Mid kb=0.5,5.2 stun=24 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
   move 4..8 v=1.6,0 setY=False
   fx 5..11 TrailBlade
   fx 5..11 TrailBladeN
   fx 8..8 SlashLine
-twin.twin.crouchJab total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.crouchJab total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..7 pts=Fist r=0.09 dmg=2 lvl=Mid kb=0.6,0 stun=10 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.03 posture=1 crit=False fixed=False
   fx 3..7 TrailFist
   chain P->twin.hook
-twin.twin.dashThrough total=26 cancel=999 jumpCancel=-1 invuln=4..10 noPush=3..15 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.dashThrough total=26 cancel=999 jumpCancel=-1 invuln=4..10 noPush=3..15 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..11 pts=Blade+BladeN r=0.08 dmg=4 lvl=Mid kb=0.8,0.6 stun=18 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   move 4..11 v=12,0 setY=False
   move 12..15 v=1.2,0 setY=False
@@ -254,446 +288,501 @@ twin.twin.dashThrough total=26 cancel=999 jumpCancel=-1 invuln=4..10 noPush=3..1
   fx 5..12 TrailBlade
   fx 5..12 TrailBladeN
   fx 4..4 Dust
-twin.twin.dive total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.dive total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 3..26 pts=Blade+BladeN r=0.08 dmg=5 lvl=Overhead kb=0.6,-2 stun=18 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
   move 2..2 v=1,-13 setY=True
   fx 2..26 TrailBlade
   fx 2..26 TrailBladeN
-twin.twin.fang1 total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.fang1 total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..8 pts=Blade+BladeN r=0.07 dmg=3 lvl=Mid kb=0.7,0 stun=12 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=3 shake=0.04 posture=1 crit=False fixed=False
   fx 3..9 TrailBladeN
   chain S->twin.fang2
-twin.twin.fang2 total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.fang2 total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..8 pts=Blade+BladeN r=0.07 dmg=3 lvl=Mid kb=0.7,0 stun=12 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=3 shake=0.04 posture=1 crit=False fixed=False
   fx 3..9 TrailBlade
   chain S->twin.fang3
-twin.twin.fang3 total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.fang3 total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..9 pts=Blade+BladeN r=0.07 dmg=3 lvl=Mid kb=0.5,1.6 stun=14 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=3 shake=0.05 posture=1 crit=False fixed=False
   move 2..6 v=1,0 setY=False
   fx 3..10 TrailBlade
   fx 3..10 TrailBladeN
   chain S->twin.fang4
-twin.twin.fang4 total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.fang4 total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..11 pts=Blade+BladeN r=0.08 dmg=5 lvl=Overhead kb=1.4,-1 stun=22 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
   move 5..8 v=2.2,0 setY=False
   fx 5..12 TrailBlade
   fx 5..12 TrailBladeN
   fx 11..11 Dust
-twin.twin.groundStab total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.groundStab total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..13 pts=Blade+BladeN r=0.07 dmg=4 lvl=Mid kb=0.3,0.6 stun=16 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=5 shake=0.12 posture=1 crit=False fixed=False
   fx 7..13 TrailBlade
   fx 7..13 TrailBladeN
   fx 10..10 Dust
-twin.twin.hook total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.hook total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..8 pts=FistF r=0.09 dmg=3 lvl=High kb=1,0 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.05 posture=1 crit=False fixed=False
   fx 4..8 TrailFist
   chain K->twin.kick2
   chain S->twin.fang3
-twin.twin.jab total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.jab total=14 cancel=7 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..7 pts=Fist r=0.09 dmg=3 lvl=High kb=0.8,0 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.04 posture=1 crit=False fixed=False
   fx 3..7 TrailFist
   chain P->twin.hook
   chain K->twin.kick1
   chain S->twin.fang2
-twin.twin.kick1 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.kick1 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=FootN+ShinN r=0.1 dmg=3 lvl=High kb=1,0.2 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFootN
   chain K->twin.kick2
   chain S->twin.fang2
-twin.twin.kick2 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.kick2 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=FootF+ShinF r=0.1 dmg=3 lvl=Mid kb=1.4,0.3 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFootF
   chain S->twin.fang3
-twin.twin.lowSlice total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.lowSlice total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..9 pts=Blade+BladeN r=0.07 dmg=4 lvl=Low kb=0.5,2.6 stun=18 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..10 TrailBlade
   fx 5..10 TrailBladeN
   fx 7..7 Dust
-twin.twin.lunge total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.lunge total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..9 pts=Blade+BladeN r=0.07 dmg=4 lvl=High kb=1.1,0.2 stun=14 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   move 2..8 v=2.6,0 setY=False
   fx 4..9 TrailBladeN
   fx 2..2 Dust
   chain S->twin.fang2
-twin.twin.pushKick total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.pushKick total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=FootN r=0.11 dmg=3 lvl=Mid kb=3.4,0.5 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..10 TrailFootN
-twin.twin.sweep total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+twin.twin.sweep total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=FootN+ShinN r=0.11 dmg=3 lvl=Low kb=0.6,3 stun=14 kd=True launch=False otg=True heavy=False sword=False breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..11 TrailFootN
   fx 8..8 Dust
-spear.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+spear.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-spear.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-spear.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-spear.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+spear.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-spear.spear.airDive total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 4..30 pts=Blade r=0.08 dmg=9 lvl=Overhead kb=2,1.6 stun=20 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
+  fx 20..20 Dust
+spear.spear.airDive total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 4..30 pts=Blade r=0.085 dmg=9 lvl=Overhead kb=2,1.6 stun=20 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   fx 3..30 TrailBlade
-spear.spear.airPoke total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 7..14 pts=Blade r=0.07 dmg=6 lvl=Overhead kb=1.4,0.5 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+spear.spear.airPoke total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..14 pts=Blade r=0.08 dmg=6 lvl=Overhead kb=1.4,0.5 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   fx 6..14 TrailBlade
-spear.spear.airSweep total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=2..19:-360 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.spear.airSweep total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..9 pts=Blade r=0.08 dmg=5 lvl=Overhead kb=1.2,1 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   hit 11..16 pts=Blade r=0.08 dmg=5 lvl=Overhead kb=1.8,2.5 stun=20 kd=True launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 3..18 TrailBlade
-spear.spear.guardRaise total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=5..24 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.spear.crescentCleave total=42 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 12..18 pts=Blade r=0.09 dmg=12 lvl=Overhead kb=3.4,1.4 stun=26 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.24 posture=1.5 crit=False fixed=False
+  move 10..16 v=3.2,0 setY=False
+  fx 10..19 TrailBlade
+  fx 16..16 Dust
+spear.spear.dashSkewer total=32 cancel=15 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..14 pts=Blade r=0.08 dmg=10 lvl=Mid kb=2.8,0.5 stun=22 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=7 shake=0.18 posture=1 crit=False fixed=False
+  move 0..9 v=6.4,0 setY=False
+  fx 1..14 AfterImage
+  fx 6..15 TrailBlade
+  fx 6..6 Dust
+  chain S->spear.twinFang
+spear.spear.guardRaise total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=5..24 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 4..4 Glint
-spear.spear.jab total=20 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 5..8 pts=Blade r=0.07 dmg=5 lvl=High kb=1,0 stun=13 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
+spear.spear.jab total=20 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 5..8 pts=Blade r=0.075 dmg=5 lvl=High kb=1,0 stun=13 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   fx 4..9 TrailBlade
   chain P->spear.poke2
   chain K->spear.kick
   chain S->spear.thrust
-spear.spear.kick total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.spear.kick total=26 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN+ShinN r=0.1 dmg=5 lvl=Mid kb=1.6,0.4 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   fx 8..14 TrailFootN
   chain S->spear.thrust
-spear.spear.lowKick total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.spear.lowKick total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..11 pts=FootN+ShinN r=0.1 dmg=4 lvl=Low kb=0.9,0 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   fx 6..11 TrailFootN
-spear.spear.lowPoke total=22 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 6..9 pts=Blade r=0.07 dmg=4 lvl=Low kb=0.9,0 stun=12 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
+spear.spear.lowPoke total=22 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 6..9 pts=Blade r=0.075 dmg=4 lvl=Low kb=0.9,0 stun=12 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
   fx 5..9 TrailBlade
   chain P->spear.poke2
-spear.spear.lunge total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 9..18 pts=Blade r=0.08 dmg=11 lvl=Mid kb=3,0.5 stun=26 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.25 posture=1 crit=False fixed=False
-  move 8..18 v=7,0 setY=False
-  fx 7..19 AfterImage
-  fx 8..19 TrailBlade
-  fx 8..8 Dust
-spear.spear.poke2 total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 7..11 pts=Blade r=0.07 dmg=5 lvl=High kb=0.9,1.8 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
+spear.spear.lunge total=42 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..20 pts=Blade r=0.085 dmg=12 lvl=Mid kb=4.2,1 stun=28 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=9 shake=0.26 posture=1.55 crit=False fixed=False
+  move 9..20 v=7.4,0 setY=False
+  fx 9..21 AfterImage
+  fx 9..21 TrailBlade
+  fx 9..9 Dust
+spear.spear.poke2 total=24 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..11 pts=Blade r=0.075 dmg=5 lvl=High kb=0.9,1.8 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..12 TrailBlade
   chain P->spear.thrust
   chain S->spear.sweep
-spear.spear.pushKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.spear.pushKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN r=0.11 dmg=5 lvl=Mid kb=4,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 8..13 TrailFootN
-spear.spear.skewer total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 11..17 pts=Blade r=0.08 dmg=6 lvl=Mid kb=0.4,1 stun=18 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=8 shake=0.2 posture=1 crit=False fixed=False
+spear.spear.skewer total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 11..17 pts=Blade r=0.085 dmg=6 lvl=Mid kb=0.4,1 stun=18 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=8 shake=0.2 posture=1 crit=False fixed=False
   fx 9..17 TrailBlade
   fx 13..13 Dust
-spear.spear.stepPoke total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 8..12 pts=Blade r=0.07 dmg=6 lvl=High kb=1.6,0.2 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
-  move 3..10 v=3,0 setY=False
+spear.spear.stepPoke total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..12 pts=Blade r=0.075 dmg=6 lvl=High kb=1.6,0.2 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+  move 3..10 v=3.2,0 setY=False
   fx 7..12 TrailBlade
   fx 3..3 Dust
   chain S->spear.thrust
-spear.spear.sweep total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 10..16 pts=Blade r=0.08 dmg=8 lvl=Low kb=0.6,3.4 stun=22 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
-  fx 8..17 TrailBlade
+spear.spear.sweep total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..17 pts=Blade r=0.085 dmg=8 lvl=Low kb=0.8,3.4 stun=22 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=6 shake=0.16 posture=1 crit=False fixed=False
+  move 9..14 v=1.8,0 setY=False
+  fx 9..18 TrailBlade
   fx 11..11 Dust
-spear.spear.thrust total=34 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 9..14 pts=Blade r=0.07 dmg=9 lvl=Mid kb=2.4,0.2 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
-  move 8..12 v=2.2,0 setY=False
+spear.spear.thrust total=34 cancel=13 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 9..14 pts=Blade r=0.08 dmg=9 lvl=Mid kb=2.4,0.2 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
+  move 7..11 v=2.4,0 setY=False
   fx 8..15 TrailBlade
-  chain S->spear.sweep
-spear.spear.vault total=40 cancel=999 jumpCancel=18 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 8..16 pts=Blade r=0.09 dmg=8 lvl=Mid kb=0.4,7.2 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
-  move 6..6 v=1.6,7.2 setY=True
-  fx 5..16 TrailBlade
+  fx 8..8 Dust
+  chain S->spear.twinFang
+spear.spear.twinFang total=38 cancel=20 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..11 pts=Blade r=0.08 dmg=5 lvl=Low kb=1,0.1 stun=18 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.09 posture=1 crit=False fixed=False
+  hit 15..20 pts=Blade r=0.08 dmg=6 lvl=High kb=1.8,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.12 posture=1 crit=False fixed=False
+  move 6..9 v=1.8,0 setY=False
+  move 13..17 v=2.2,0 setY=False
+  fx 7..21 TrailBlade
+  chain S->spear.crescentCleave
+spear.spear.vault total=40 cancel=999 jumpCancel=18 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..17 pts=Blade r=0.09 dmg=9 lvl=Mid kb=0.5,7.2 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
+  move 6..6 v=1.6,6.2 setY=True
+  fx 6..17 TrailBlade
   fx 6..6 Dust
-spear.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-spear.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-chain.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+spear.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+spear.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-chain.chain.airJab total=16 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.airJab total=16 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..9 pts=Fist r=0.09 dmg=3 lvl=Overhead kb=1,0.4 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.05 posture=1 crit=False fixed=False
   fx 4..9 TrailFist
-chain.chain.airKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.airKick total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 3..18 pts=FootN+ShinN r=0.11 dmg=5 lvl=Overhead kb=2,1.2 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.1 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
-chain.chain.airReap total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 6..12 pts=Blade r=0.08 dmg=5 lvl=Overhead kb=1.4,0.8 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
+chain.chain.airReap total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 6..12 pts=Blade r=0.085 dmg=5 lvl=Overhead kb=1.4,0.8 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..12 TrailBlade
-  ext 3 0 Linear
-  ext 7 0.5 OutExpo
-  ext 14 0 InOutQuad
-chain.chain.backKick total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.backKick total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..11 pts=FootF+ShinF r=0.1 dmg=5 lvl=Mid kb=2.4,0.4 stun=16 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.1 posture=1 crit=False fixed=False
   fx 6..12 TrailFootF
-chain.chain.crescentLift total=36 cancel=999 jumpCancel=14 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 5..10 pts=Blade r=0.09 dmg=8 lvl=Mid kb=0.4,7 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
-  move 1..7 v=2.2,0 setY=False
-  fx 4..13 TrailBlade
-  ext 5 0 Linear
-  ext 9 0.3 OutExpo
-  ext 14 0 InOutQuad
-chain.chain.crouchJab total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.crescentLift total=36 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 6..10 pts=Blade r=0.09 dmg=5 lvl=Mid kb=0.3,6.2 stun=26 kd=False launch=True otg=False heavy=False sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
+  hit 8..14 pts=Blade r=0.09 dmg=7 lvl=High kb=0.5,7.2 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
+  move 2..8 v=1.8,0 setY=False
+  fx 5..15 TrailBlade
+chain.chain.crouchJab total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..8 pts=Fist r=0.09 dmg=2 lvl=Mid kb=0.7,0 stun=11 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.04 posture=1 crit=False fixed=False
   fx 4..8 TrailFist
   chain P->chain.hilt
-chain.chain.graveHook total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 8..13 pts=Blade r=0.08 dmg=7 lvl=Low kb=0.5,2.8 stun=20 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=5 shake=0.12 posture=1 crit=False fixed=False
-  fx 7..14 TrailBlade
+chain.chain.cyclone total=48 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 18..25 pts=Blade r=0.1 dmg=12 lvl=Mid kb=3.8,1.6 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=9 shake=0.28 posture=1.55 crit=False fixed=False
+  move 16..22 v=2.4,0 setY=False
+  fx 16..26 TrailBlade
+  fx 17..17 Dust
+chain.chain.dashHook total=30 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..13 pts=Blade r=0.09 dmg=9 lvl=Mid kb=-1.4,0.6 stun=22 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=6 shake=0.16 posture=1 crit=False fixed=False
+  move 0..8 v=7,0 setY=False
+  fx 1..13 AfterImage
+  fx 6..14 TrailBlade
+  fx 6..6 Dust
+  chain S->chain.lash
+chain.chain.graveHook total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..14 pts=Blade r=0.085 dmg=7 lvl=Low kb=0.8,3 stun=20 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
+  fx 7..15 TrailBlade
   fx 10..10 Dust
-  ext 5 0 Linear
-  ext 9 0.7 OutExpo
-  ext 15 0.7 Linear
-  ext 22 0 InOutQuad
-chain.chain.groundHook total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 8..13 pts=Blade r=0.07 dmg=4 lvl=Mid kb=0.3,0.6 stun=16 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=5 shake=0.12 posture=1 crit=False fixed=False
+chain.chain.groundHook total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..13 pts=Blade r=0.08 dmg=5 lvl=Mid kb=0.3,0.6 stun=16 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=5 shake=0.12 posture=1 crit=False fixed=False
   fx 7..13 TrailBlade
   fx 10..10 Dust
-  ext 5 0 Linear
-  ext 9 0.12 OutExpo
-  ext 16 0 Linear
-chain.chain.hilt total=20 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.hilt total=20 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..10 pts=Hilt r=0.09 dmg=4 lvl=High kb=1.3,0 stun=15 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.07 posture=1 crit=False fixed=False
   chain K->chain.kick2
   chain S->chain.reapUp
-chain.chain.jab total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.jab total=16 cancel=8 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 5..8 pts=Fist r=0.09 dmg=3 lvl=High kb=0.9,0 stun=13 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
   fx 4..8 TrailFist
   chain P->chain.hilt
   chain K->chain.kick1
   chain S->chain.reap
-chain.chain.kick1 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.kick1 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=FootN+ShinN r=0.1 dmg=4 lvl=High kb=1.2,0.2 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFootN
   chain K->chain.kick2
   chain S->chain.reap
-chain.chain.kick2 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.kick2 total=18 cancel=9 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..9 pts=FootF+ShinF r=0.1 dmg=4 lvl=Mid kb=1.4,0.3 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=3 shake=0.06 posture=1 crit=False fixed=False
   fx 5..10 TrailFootF
   chain S->chain.reapUp
-chain.chain.lash total=34 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 7..13 pts=Blade r=0.07 dmg=6 lvl=Mid kb=2.2,0.3 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+chain.chain.lash total=34 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..13 pts=Blade r=0.08 dmg=6 lvl=Mid kb=2.2,0.3 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.11 posture=1 crit=False fixed=False
   move 6..10 v=1.2,0 setY=False
   fx 6..14 TrailBlade
-  ext 4 0 Linear
-  ext 8 0.85 OutExpo
-  ext 14 0.85 Linear
-  ext 24 0 InOutQuad
+  chain S->chain.pull
+chain.chain.pull total=42 cancel=25 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 8..13 pts=Blade r=0.09 dmg=4 lvl=Mid kb=-5.4,0.2 stun=34 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
+  hit 20..24 pts=Blade r=0.09 dmg=7 lvl=Mid kb=0.5,0.3 stun=22 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
+  move 14..19 v=1.8,0 setY=False
+  fx 7..14 TrailBlade
+  fx 19..25 TrailBlade
   chain S->chain.reap
-chain.chain.pull total=40 cancel=16 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 8..14 pts=Blade r=0.08 dmg=4 lvl=Mid kb=-5.4,0.2 stun=36 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
-  fx 7..15 TrailBlade
-  ext 5 0 Linear
-  ext 9 0.95 OutExpo
-  ext 15 0.95 Linear
-  ext 26 0 InOutQuad
-  chain S->chain.reap
-chain.chain.pushKick total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.pushKick total=20 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=FootN r=0.11 dmg=4 lvl=Mid kb=3.4,0.5 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..10 TrailFootN
-chain.chain.reap total=26 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 7..11 pts=Blade r=0.08 dmg=7 lvl=Mid kb=1.5,0.3 stun=17 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
-  fx 5..12 TrailBlade
-  ext 4 0 Linear
-  ext 8 0.35 OutExpo
-  ext 14 0 InOutQuad
+chain.chain.reap total=24 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 6..10 pts=Blade r=0.085 dmg=7 lvl=Mid kb=1.4,0.2 stun=17 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+  move 5..8 v=1.8,0 setY=False
+  fx 5..11 TrailBlade
   chain P->chain.pull
-  chain S->chain.reapUp
-chain.chain.reapUp total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 6..11 pts=Blade r=0.08 dmg=7 lvl=Mid kb=0.5,5.2 stun=24 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
-  move 2..8 v=1.4,0 setY=False
-  fx 5..13 TrailBlade
-  ext 4 0 Linear
-  ext 9 0.4 OutExpo
-  ext 15 0 InOutQuad
-chain.chain.shadowFall total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 3..28 pts=Blade r=0.08 dmg=6 lvl=Overhead kb=0.6,-2 stun=18 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
+  chain S->chain.lash
+chain.chain.reapUp total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 7..11 pts=Blade r=0.085 dmg=7 lvl=Mid kb=0.5,5.4 stun=24 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
+  move 4..9 v=1.4,0 setY=False
+  fx 6..13 TrailBlade
+chain.chain.shadowFall total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 3..28 pts=Blade r=0.085 dmg=6 lvl=Overhead kb=0.6,-2 stun=18 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
   move 2..2 v=1,-12 setY=True
   fx 2..28 TrailBlade
-  ext 2 0 Linear
-  ext 5 0.5 OutExpo
-  ext 30 0.5 Linear
-chain.chain.sweep total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.chain.sweep total=22 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=FootN+ShinN r=0.11 dmg=4 lvl=Low kb=0.6,3 stun=14 kd=True launch=False otg=True heavy=False sword=False breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   fx 5..11 TrailFootN
   fx 8..8 Dust
-chain.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-chain.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-chain.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+chain.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-chain.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-chain.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-cleaver.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+  fx 20..20 Dust
+chain.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+chain.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-cleaver.cleaver.airChop total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 9..17 pts=Blade r=0.09 dmg=10 lvl=Overhead kb=1.6,0.5 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
+cleaver.cleaver.airChop total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 9..17 pts=Blade r=0.1 dmg=10 lvl=Overhead kb=1.6,0.5 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
   fx 8..17 TrailBlade
-cleaver.cleaver.airKick total=44 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.cleaver.airKick total=44 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..34 pts=FootN+ShinN r=0.11 dmg=9 lvl=Overhead kb=2.6,1.8 stun=22 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=8 shake=0.22 posture=1 crit=False fixed=False
   fx 5..14 TrailFootN
-cleaver.cleaver.airPlunge total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 11..32 pts=Blade r=0.1 dmg=18 lvl=Overhead kb=1.6,-1 stun=28 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.4 posture=1.5 crit=False fixed=False
+cleaver.cleaver.airPlunge total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 11..32 pts=Blade r=0.11 dmg=18 lvl=Overhead kb=1.6,-1 stun=28 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.4 posture=1.5 crit=False fixed=False
   fx 9..32 TrailBlade
-cleaver.cleaver.charge total=52 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=6..30 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 16..32 pts=Fist+KneeN r=0.2 dmg=14 lvl=Mid kb=4.5,1 stun=28 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=9 shake=0.3 posture=1.3 crit=False fixed=False
-  move 12..30 v=6,0 setY=False
-  fx 12..31 AfterImage
-  fx 13..13 Dust
-cleaver.cleaver.hack total=28 cancel=16 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 11..16 pts=Blade r=0.09 dmg=8 lvl=High kb=1.5,0 stun=18 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
-  fx 10..16 TrailBlade
+cleaver.cleaver.charge total=50 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=6..25 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 17..26 pts=Blade r=0.11 dmg=15 lvl=Mid kb=4.2,1.2 stun=28 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.34 posture=1.4 crit=False fixed=False
+  move 6..20 v=6.4,0 setY=False
+  fx 6..24 AfterImage
+  fx 16..27 TrailBlade
+  fx 12..12 Dust
+cleaver.cleaver.hack total=28 cancel=15 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..15 pts=Blade r=0.1 dmg=9 lvl=High kb=1.8,-0.2 stun=19 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=7 shake=0.15 posture=1 crit=False fixed=False
+  move 5..11 v=2.2,0 setY=False
+  fx 9..16 TrailBlade
+  fx 8..8 Dust
   chain P->cleaver.hack2
   chain K->cleaver.kick
   chain S->cleaver.sweep
-cleaver.cleaver.hack2 total=32 cancel=18 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 12..17 pts=Blade r=0.09 dmg=9 lvl=Mid kb=1.7,0.2 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.14 posture=1 crit=False fixed=False
-  fx 11..17 TrailBlade
+cleaver.cleaver.hack2 total=32 cancel=18 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 11..17 pts=Blade r=0.1 dmg=10 lvl=Mid kb=2.2,0.3 stun=22 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=7 shake=0.18 posture=1 crit=False fixed=False
+  move 8..13 v=2,0 setY=False
+  fx 10..17 TrailBlade
+  chain P->cleaver.overhead
   chain K->cleaver.pushKick
   chain S->cleaver.overhead
-cleaver.cleaver.hew total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 14..22 pts=Blade r=0.09 dmg=14 lvl=Mid kb=0.4,1 stun=20 kd=False launch=False otg=True heavy=True sword=True breaks=False stop=9 shake=0.3 posture=1 crit=False fixed=False
+cleaver.cleaver.hew total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 14..22 pts=Blade r=0.1 dmg=14 lvl=Mid kb=0.4,1 stun=20 kd=False launch=False otg=True heavy=True sword=True breaks=False stop=9 shake=0.3 posture=1 crit=False fixed=False
   fx 12..22 TrailBlade
   fx 17..17 Dust
-cleaver.cleaver.kick total=32 cancel=17 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.cleaver.kick total=32 cancel=17 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 12..17 pts=FootN+ShinN r=0.1 dmg=8 lvl=Mid kb=1.8,0.4 stun=18 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
   fx 11..17 TrailFootN
   chain S->cleaver.overhead
-cleaver.cleaver.lowHack total=28 cancel=15 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 10..15 pts=Blade r=0.09 dmg=7 lvl=Low kb=1,0 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
+cleaver.cleaver.lowHack total=28 cancel=15 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 10..15 pts=Blade r=0.1 dmg=8 lvl=Low kb=1.4,0.2 stun=17 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.12 posture=1 crit=False fixed=False
+  move 8..12 v=1.4,0 setY=False
   fx 9..15 TrailBlade
   chain P->cleaver.hack2
-cleaver.cleaver.lowKick total=36 cancel=17 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.cleaver.lowKick total=36 cancel=17 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 12..17 pts=FootN+ShinN r=0.1 dmg=7 lvl=Low kb=1,0 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.08 posture=1 crit=False fixed=False
   fx 11..17 TrailFootN
-cleaver.cleaver.overhead total=58 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..31 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 27..34 pts=Blade r=0.1 dmg=22 lvl=Overhead kb=1.2,-3.2 stun=32 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.5 posture=1.6 crit=False fixed=False
+cleaver.cleaver.overhead total=58 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..31 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 27..34 pts=Blade r=0.11 dmg=22 lvl=Overhead kb=1.2,-3.4 stun=32 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.52 posture=1.65 crit=False fixed=False
   move 25..30 v=2.2,0 setY=False
   fx 24..34 TrailBlade
   fx 31..31 Dust
-cleaver.cleaver.pommel total=40 cancel=999 jumpCancel=22 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.cleaver.pommel total=40 cancel=999 jumpCancel=22 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..20 pts=Hilt r=0.13 dmg=11 lvl=High kb=0.5,5.6 stun=30 kd=False launch=True otg=False heavy=True sword=False breaks=False stop=8 shake=0.22 posture=1 crit=False fixed=False
   move 8..15 v=1.8,0 setY=False
   fx 13..20 Glint
-cleaver.cleaver.pushKick total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.cleaver.pushKick total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 12..17 pts=FootN r=0.11 dmg=7 lvl=Mid kb=4.2,0.6 stun=22 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.16 posture=1 crit=False fixed=False
   fx 11..17 TrailFootN
-cleaver.cleaver.slam total=64 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..34 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 31..40 pts=Blade r=0.11 dmg=26 lvl=Mid kb=1.4,3 stun=34 kd=True launch=False otg=True heavy=True sword=True breaks=False stop=14 shake=0.6 posture=1.8 crit=False fixed=False
-  move 14..14 v=2.2,5.4 setY=True
-  fx 28..40 TrailBlade
-  fx 34..34 Shockwave
-  fx 34..34 Dust
-cleaver.cleaver.stepHack total=34 cancel=16 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 11..16 pts=Blade r=0.09 dmg=9 lvl=High kb=2,0.2 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=7 shake=0.14 posture=1 crit=False fixed=False
+cleaver.cleaver.slam total=62 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..34 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 27..36 pts=Blade r=0.11 dmg=26 lvl=Mid kb=1.8,6.8 stun=34 kd=True launch=True otg=True heavy=True sword=True breaks=False stop=13 shake=0.56 posture=1.85 crit=False fixed=False
+  move 11..22 v=1.4,0 setY=False
+  move 24..32 v=3,0 setY=False
+  fx 25..37 TrailBlade
+  fx 30..30 Shockwave
+  fx 14..14 Dust
+  cue 12 VFX_Onikiri_SparkDrag
+  cue 16 VFX_Onikiri_SparkDrag
+  cue 20 VFX_Onikiri_SparkDrag
+  cue 24 VFX_Onikiri_SparkDrag
+cleaver.cleaver.stepHack total=34 cancel=16 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 11..16 pts=Blade r=0.1 dmg=9 lvl=High kb=2,0.2 stun=20 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=7 shake=0.14 posture=1 crit=False fixed=False
   move 4..13 v=3,0 setY=False
   fx 10..16 TrailBlade
   fx 4..4 Dust
   chain S->cleaver.overhead
-cleaver.cleaver.sweep total=50 cancel=36 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=9..29 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  hit 23..32 pts=Blade r=0.1 dmg=16 lvl=Mid kb=3.2,1 stun=28 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.4 posture=1.4 crit=False fixed=False
-  move 20..29 v=3,0 setY=False
-  fx 21..32 TrailBlade
+cleaver.cleaver.sweep total=50 cancel=36 jumpCancel=31 invuln=-1..-1 noPush=-1..-1 armour=9..28 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 22..30 pts=Blade r=0.1 dmg=16 lvl=Mid kb=2.4,5.2 stun=28 kd=True launch=True otg=False heavy=True sword=True breaks=False stop=10 shake=0.38 posture=1.45 crit=False fixed=False
+  move 19..27 v=2.6,0 setY=False
+  fx 20..31 TrailBlade
   fx 20..20 Dust
   chain S->cleaver.overhead
-cleaver.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-cleaver.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-cleaver.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+cleaver.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-cleaver.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-cleaver.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-tachi.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=4..28:360 air=True/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 3..3 v=-3,7.2 setY=True
+  fx 20..20 Dust
+cleaver.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+cleaver.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.backflip total=34 cancel=999 jumpCancel=-1 invuln=2..16 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..4 v=-7.5,0 setY=False
+  move 5..12 v=-5.5,0 setY=False
+  move 13..16 v=-2.5,0 setY=False
   fx 3..3 Dust
   fx 4..14 AfterImage
-tachi.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.getUp total=30 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 15..15 Dust
-tachi.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.getUpFront total=26 cancel=999 jumpCancel=-1 invuln=0..26 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 14..14 Dust
-tachi.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=1..23:-360 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-  move 2..20 v=4.6,0 setY=False
+tachi.roll total=30 cancel=999 jumpCancel=-1 invuln=2..20 noPush=2..22 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=True throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  move 2..5 v=7,0 setY=False
+  move 6..17 v=6,0 setY=False
+  move 18..20 v=3,0 setY=False
   fx 3..18 AfterImage
   fx 3..3 Dust
-  fx 22..22 Dust
-tachi.tachi.airCleave total=44 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 20..20 Dust
+tachi.tachi.airCleave total=44 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..34 pts=Blade r=0.09 dmg=18 lvl=Overhead kb=2,1.6 stun=22 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=9 shake=0.28 posture=2.6 crit=False fixed=False
   fx 8..34 TrailBlade
-tachi.tachi.airHilt total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.airHilt total=32 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..13 pts=Hilt r=0.09 dmg=6 lvl=Overhead kb=1.4,0.5 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
-tachi.tachi.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.airKick total=40 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=True/True sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 4..30 pts=FootN+ShinN r=0.11 dmg=8 lvl=Overhead kb=2.4,1.8 stun=20 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
   fx 3..12 TrailFootN
-tachi.tachi.cut1 total=48 cancel=23 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.crownWheel total=56 cancel=40 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 13..18 pts=Blade r=0.08 dmg=10 lvl=Low kb=0.6,0 stun=30 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.2 posture=2.2 crit=False fixed=False
+  hit 34..39 pts=Blade r=0.09 dmg=18 lvl=Mid kb=3,0.5 stun=26 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=11 shake=0.34 posture=2.4 crit=False fixed=False
+  move 30..36 v=3,0 setY=False
+  fx 11..19 TrailBlade
+  fx 30..40 TrailBlade
+  fx 28..28 Glint
+  fx 13..13 Dust
+  fx 30..30 Dust
+  chain S->tachi.tameCut
+tachi.tachi.cut1 total=48 cancel=23 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..20 pts=Blade r=0.09 dmg=16 lvl=Mid kb=3.4,0.5 stun=26 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=10 shake=0.3 posture=2.2 crit=False fixed=False
   move 12..18 v=1.6,0 setY=False
   fx 12..22 TrailBlade
   fx 12..12 Dust
+  chain P->tachi.crownWheel
   chain S->tachi.cut2
-tachi.tachi.cut2 total=50 cancel=25 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.cut2 total=50 cancel=25 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..21 pts=Blade r=0.09 dmg=18 lvl=Mid kb=2.6,0.2 stun=28 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=11 shake=0.34 posture=2.4 crit=False fixed=False
   move 12..18 v=1.8,0 setY=False
   fx 12..22 TrailBlade
+  chain P->tachi.tameCut
   chain S->tachi.overhead
-tachi.tachi.groundStab total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.groundStab total=36 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..21 pts=Blade r=0.09 dmg=10 lvl=Mid kb=0.4,1 stun=20 kd=False launch=False otg=True heavy=False sword=True breaks=False stop=8 shake=0.22 posture=1.6 crit=False fixed=False
   fx 12..21 TrailBlade
   fx 16..16 Dust
-tachi.tachi.guard total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=6..26 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.guard total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=6..26 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   fx 5..5 Glint
-tachi.tachi.heelDrop total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.heelDrop total=38 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 14..17 pts=FootN+ShinN r=0.11 dmg=9 lvl=Overhead kb=1,-1.5 stun=26 kd=True launch=False otg=False heavy=True sword=False breaks=False stop=9 shake=0.3 posture=1 crit=False fixed=False
   fx 10..17 TrailFootN
   fx 17..17 Dust
-tachi.tachi.hiltRise total=32 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.hiltRise total=32 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..13 pts=Hilt r=0.11 dmg=7 lvl=Mid kb=0.7,2.6 stun=24 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=7 shake=0.18 posture=1 crit=False fixed=False
   move 2..9 v=1.6,0 setY=False
   chain S->tachi.overhead
-tachi.tachi.kick total=28 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.kick total=28 cancel=14 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..14 pts=FootN+ShinN r=0.1 dmg=5 lvl=Mid kb=1.6,0.4 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   fx 9..15 TrailFootN
   chain S->tachi.cut1
-tachi.tachi.lowKick total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.lowKick total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..12 pts=FootN+ShinN r=0.1 dmg=4 lvl=Low kb=0.9,0 stun=14 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.06 posture=1 crit=False fixed=False
   fx 7..12 TrailFootN
-tachi.tachi.lowPommel total=24 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->tachi.sweep
+tachi.tachi.lowPommel total=24 cancel=10 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..10 pts=Hilt r=0.09 dmg=5 lvl=Mid kb=0.8,0 stun=12 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.05 posture=1 crit=False fixed=False
   chain P->tachi.hiltRise
-tachi.tachi.overhead total=66 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..30 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.overhead total=66 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=8..30 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 20..28 pts=Blade r=0.1 dmg=28 lvl=Overhead kb=1.8,-3.2 stun=34 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=14 shake=0.55 posture=3 crit=False fixed=False
   move 10..20 v=1.5,0 setY=False
   fx 14..29 TrailBlade
   fx 24..24 Shockwave
   fx 24..24 Dust
-tachi.tachi.pommel total=26 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.pommel total=26 cancel=11 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..11 pts=Hilt r=0.09 dmg=6 lvl=High kb=1.4,0 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.08 posture=1 crit=False fixed=False
   chain P->tachi.hiltRise
   chain K->tachi.kick
   chain S->tachi.cut1
-tachi.tachi.pushKick total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.pushKick total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..14 pts=FootN r=0.11 dmg=5 lvl=Mid kb=4.2,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 9..14 TrailFootN
-tachi.tachi.stepPommel total=28 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.stepPommel total=28 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 8..12 pts=Hilt r=0.09 dmg=7 lvl=High kb=1.8,0.2 stun=16 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=5 shake=0.1 posture=1 crit=False fixed=False
   move 3..10 v=3.2,0 setY=False
   fx 3..3 Dust
   chain S->tachi.cut1
-tachi.tachi.sweep total=54 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.tachi.sweep total=54 cancel=25 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 16..23 pts=Blade r=0.08 dmg=16 lvl=Low kb=0.6,3.4 stun=24 kd=True launch=False otg=True heavy=False sword=True breaks=False stop=8 shake=0.2 posture=2.2 crit=False fixed=False
   fx 13..23 TrailBlade
   fx 17..17 Dust
-tachi.tachi.thrust total=58 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=7..24 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  chain S->tachi.crownWheel
+tachi.tachi.tameCut total=58 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 35..40 pts=Blade r=0.1 dmg=24 lvl=Overhead kb=2,0.3 stun=30 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=13 shake=0.45 posture=2.6 crit=False fixed=False
+  move 31..36 v=2.6,0 setY=False
+  fx 31..40 TrailBlade
+  fx 27..27 Glint
+  fx 31..31 Dust
+tachi.tachi.thrust total=58 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=7..24 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 15..23 pts=Blade r=0.08 dmg=22 lvl=Mid kb=3.8,0.4 stun=30 kd=False launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.4 posture=2.6 crit=False fixed=False
   move 11..21 v=5,0 setY=False
   fx 12..23 AfterImage
   fx 13..24 TrailBlade
   fx 12..12 Dust
-tachi.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
-tachi.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 spin=0..0:0 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.throw total=46 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=True:6..-1/30/12 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+tachi.throwWhiff total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0

@@ -96,15 +96,17 @@ namespace Kage.Tests
             Assert.AreEqual(4, f.Kage.KunaiCount);
         }
 
-        [Test]
-        public void The_family_decides_not_the_weapon_id([Values("kagetsu", "shizuka")] string weapon)
+        [TestCase("kagetsu", Fighter.CrimsonMoon)]
+        [TestCase("shizuka", Fighter.SilentMoon)]
+        public void Each_katana_plays_its_own_weapons_art(string weapon, string art)
         {
+            // both are katana-family weapons; the weapon's style picks the art (docs/weapon-styles.md): Kagetsu's Crimson Moon, Shizuka's Silent Moon
             var f = Duel(kage: SpearFamilyFightTests.KageWith(weapon));
             Assert.AreEqual("katana", f.Kage.Family.id);
-            Assert.AreEqual(Fighter.CrimsonMoon, f.Kage.Family.rageArt);
+            Assert.AreEqual(art, f.Kage.RageArtId);
             Cast(f);
             f.Run(3);
-            Assert.AreEqual(f.Kage.Family.rageArt, f.Events(CombatEventType.RageArt).Single().MoveId);
+            Assert.AreEqual(art, f.Events(CombatEventType.RageArt).Single().MoveId);
         }
 
         [Test]
@@ -628,6 +630,48 @@ namespace Kage.Tests
             Assert.IsTrue(_hud.CutInShowing);
             Assert.AreEqual("CRIMSON MOON", _hud.CutInName);
             Assert.AreEqual("紅月", _hud.CutInKanji);
+            Assert.AreEqual("RAGE ART  ·  KAGETSU", _hud.CutInCaption);
+        }
+
+        [UnityTest]
+        public IEnumerator The_finisher_stamp_sets_word_kanji_and_caption_and_clears_after_its_time()
+        {
+            Assert.IsFalse(_hud.ArtStampShowing);
+            _hud.ArtStamp("EARTHSPLITTER", "地裂", "LEGENDARY RAGE ART  ·  IWAKUDAKI", KMath.Hex("#ffb51f"), KMath.Hex("#fff1bf"), 0.5f, legendary: true, deep: KMath.Hex("#1e1200"));
+            Assert.IsTrue(_hud.ArtStampShowing);
+            Assert.AreEqual("EARTHSPLITTER", _hud.ArtStampWord);
+            Assert.AreEqual("地裂", _hud.ArtStampKanji);
+            Assert.AreEqual("LEGENDARY RAGE ART  ·  IWAKUDAKI", _hud.ArtStampCaption);
+            float until = Time.realtimeSinceStartup + 0.9f;
+            while (Time.realtimeSinceStartup < until) { _hud.Tick(null, null, 0f, 1, false); yield return null; }
+            Assert.IsFalse(_hud.ArtStampShowing, "gone after its seconds");
+        }
+
+        [Test]
+        public void Thousand_Shadows_shows_both_cut_in_and_finisher_stamp_through_the_fight_context()
+        {
+            _vfx = new GameObject("Vfx");
+            _vfx.AddComponent<Vfx>();
+            using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -0.6f, 0.6f, 100f, kageDef: SpearFamilyFightTests.KageWith("fists"));
+            f.RoninInput.Add(600);
+            f.Ctx.Hud = _hud;
+            f.KageInput.Add(1, dy: -1, buttons: "X").Add(600);
+            f.Run(4);
+            Assert.IsTrue(_hud.CutInShowing, "Thousand Shadows shows a cut-in band");
+            Assert.AreEqual("THOUSAND SHADOWS", _hud.CutInName);
+            Assert.AreEqual("千影", _hud.CutInKanji);
+            Assert.AreEqual("SHADOW ART  ·  BARE HANDS", _hud.CutInCaption);
+
+            bool sawStamp = false;
+            for (int i = 0; i < 160 && !sawStamp; i++)
+            {
+                f.Run(1);
+                if (_hud.ArtStampShowing) sawStamp = true;
+            }
+            Assert.IsTrue(sawStamp, "Thousand Shadows slams its finisher stamp");
+            Assert.AreEqual("SHADOWFALL", _hud.ArtStampWord);
+            Assert.AreEqual("千影", _hud.ArtStampKanji);
+            Assert.AreEqual("THOUSAND SHADOWS  ·  BARE HANDS", _hud.ArtStampCaption);
         }
     }
 }

@@ -38,11 +38,11 @@ namespace Kage
         }
     }
 
-    /// <summary>Moves the blade illustration of the Armory preview on <see cref="ArmoryPreviewMotion"/> and sweeps the faint light across the picture.</summary>
+    /// <summary>Moves the blade illustration of the Armory preview on <see cref="ArmoryPreviewMotion"/> cleanly without hazy overlays.</summary>
     [AddComponentMenu("")]
     public sealed class ArmoryBladeSway : MonoBehaviour
     {
-        RectTransform blade, shimmer;
+        RectTransform blade;
         float length, born;
 
         public static ArmoryBladeSway Build(RectTransform holder, Texture2D art, int weaponLen)
@@ -53,14 +53,8 @@ namespace Kage
             var ri = node.gameObject.AddComponent<UnityEngine.UI.RawImage>();
             ri.texture = art;
             ri.raycastTarget = false;
-            var sh = Ui.Node(holder, "Shimmer", 0, 0, 220, 1100);
-            sh.pivot = new Vector2(0.5f, 0.5f);
-            var g = sh.gameObject.AddComponent<GradRect>();
-            g.raycastTarget = false;
-            g.Set(true, new[] { new Color(0.93f, 0.9f, 0.83f, 0f), new Color(0.93f, 0.9f, 0.83f, 0.07f), new Color(0.93f, 0.9f, 0.83f, 0f) });
-            sh.localRotation = Quaternion.Euler(0f, 0f, -18f);
             var s = holder.gameObject.AddComponent<ArmoryBladeSway>();
-            s.blade = node; s.shimmer = sh;
+            s.blade = node;
             s.length = ArmoryPreviewMotion.DrawnLength(weaponLen);
             s.born = UiClock.Now;
             s.Tick();
@@ -77,8 +71,6 @@ namespace Kage
             blade.anchoredPosition = new Vector2(p.X, -p.Y);
             blade.localRotation = Quaternion.Euler(0f, 0f, -p.Angle * Mathf.Rad2Deg);
             blade.localScale = new Vector3(1f, p.ScaleY, 1f);
-            float sp = UiClock.Animate ? (t * 0.35f) % 1f : 0.3f;
-            shimmer.anchoredPosition = new Vector2(Mathf.Lerp(-150f, ArmoryPreviewMotion.Width + 150f, sp), -ArmoryPreviewMotion.Height * 0.5f);
         }
     }
 }

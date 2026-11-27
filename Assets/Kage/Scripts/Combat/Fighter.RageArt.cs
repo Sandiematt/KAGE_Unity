@@ -51,7 +51,9 @@ namespace Kage
         float _cmPrevSize;
 
         /// <summary>The rage art the equipped weapon's family has: <c>crimsonMoon</c> or <c>thousandShadows</c> (ADR-0006).</summary>
-        public string RageArtId => Family != null && !string.IsNullOrEmpty(Family.rageArt) ? Family.rageArt : ThousandShadows;
+        public string RageArtId =>
+            Style != null && !string.IsNullOrEmpty(Style.rageArt) ? Style.rageArt
+            : Family != null && !string.IsNullOrEmpty(Family.rageArt) ? Family.rageArt : ThousandShadows;
 
         /// <summary>The rage art being played now, or null.</summary>
         public string ActiveRageArt => state == FState.Ultimate ? _artId : null;
@@ -65,13 +67,19 @@ namespace Kage
         /// </summary>
         public bool RageArtReady => Has(CharacterFlags.CanRageArt) && meter >= 100f && Grounded && state is FState.Idle or FState.Walk or FState.Run or FState.Crouch;
 
-        /// <summary>Starts the equipped weapon's rage art (the caller checked the flag, the meter and the ground).</summary>
+        /// <summary>
+        /// Starts the equipped weapon's rage art (the caller checked the flag, the meter and the ground), unless the target is a sub-boss or the
+        /// boss that isn't open to it: then the art is turned aside (Fighter.RageArtCounter.cs).
+        /// </summary>
         void StartRageArt()
         {
             string art = RageArtId;
-            // Crimson Moon needs someone to cut; with no target (the training bag) the press is spent as Thousand Shadows always was
+            if (opponent != null && opponent.WouldCounterRageArt(this)) { RageArtTurnedAside(opponent, art); return; }
+            // a weapon's art needs someone to cut; with no target (the training bag) the press is spent as Thousand Shadows always was
+            var cine = opponent != null && ctx != null ? MakeArt(art) : null;
             if (art == CrimsonMoon && opponent != null) StartCrimsonMoon();
-            else StartUltimate(art == CrimsonMoon ? CrimsonMoon : ThousandShadows);
+            else if (cine != null) StartCinematicArt(cine);
+            else StartUltimate(IsCinematicArt(art) ? art : ThousandShadows);
         }
 
         // =====================================================================================
@@ -97,6 +105,8 @@ namespace Kage
             ctx.Clock.SlowWorld(0f, -1, this);
             _cmFrozen = true;
             ctx.Events.Publish(CombatEvent.RageArt(ctx.Clock.Frame, this, CrimsonMoon));
+            var look = RageArtLook.Crimson;
+            ArtHud?.CutIn(look.name.ToUpperInvariant(), look.kanji, RageArtCues.FormatCutInCaption(look, WeaponId), look.col, look.hot, t.cutInSeconds, look.legendary, look.deep);
             EffectCues.Play(RageArtCutInCue, Pos, new CueArgs { owner = this, dir = new Vector2(facing, 0f), scale = 1f, seconds = t.cutInSeconds });
             GameFeel.Punch(0.1f);
             KageGame.I?.Audio?.Play(SfxKind.Ultimate, 1f);
@@ -131,6 +141,8 @@ namespace Kage
             if (f == t.finisherFrame) CrimsonFinisher(tgt);
 
             AimCrimsonCamera(tgt, f);
+            ArtHud?.ArtGrade(RageArtLook.Crimson.deep, f < t.finisherFrame ? 1f : 0.45f);
+            Vfx.I?.SkyGrade(RageArtLook.Crimson.deep, f < t.finisherFrame ? 1f : 0.5f, ctx != null && ctx.Camera != null ? ctx.Camera.cam : null);
             if (f >= t.totalFrames) EndCrimsonMoon();
         }
 
@@ -169,6 +181,7 @@ namespace Kage
                 };
                 DeliverArtHit(tgt, w, t.cutKnockback);
                 if (i == 0 && tgt.state != FState.Launched) tgt.Stagger(t.bindFrames);     // bound: held where it stands
+                if (_cmFrozen) tgt.rig?.SetFlash(RageArtLook.Crimson.col, 0.28f, 12f);    // held, it can't fade the hit's white: a faint crimson instead
             }
             GameFeel.Hitstop(t.cutHitstop);
             GameFeel.Shake(t.cutShake);
@@ -192,6 +205,8 @@ namespace Kage
                 DeliverArtHit(tgt, w, t.finisherKnockback);
             }
             EffectCues.Play(CrimsonFinishCue, at, new CueArgs { owner = this, dir = new Vector2(facing, 0f), scale = t.finisherScale });
+            var look = RageArtLook.Crimson;
+            ArtHud?.ArtStamp(look.stamp, look.kanji, RageArtCues.FormatStampCaption(look, WeaponId), look.col, look.hot, 1.25f, look.legendary, look.deep);       // MOONFALL (docs/weapon-styles.md)
             GameFeel.Hitstop(t.finisherHitstop);
             GameFeel.SlowMo(t.finisherSlowScale, t.finisherSlowSeconds);
             GameFeel.Shake(t.finisherShake);
@@ -225,6 +240,8 @@ namespace Kage
             _cmActive = false;
             ReleaseRageArtWorld();
             ReleaseRageArtCamera();
+            ArtHud?.ArtGrade(Color.black, 0f);
+            Vfx.I?.SkyGrade(Color.black, 0f);
             SetState(FState.Idle);
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         }
@@ -232,10 +249,14 @@ namespace Kage
         /// <summary>The art ends early (the round resets, the fight ends, Kage is replaced): the world and the camera are given back.</summary>
         void AbortRageArt()
         {
+            if (_art != null) AbortCinematicArt();
+            if (state == FState.Ultimate) ArtHud?.ArtGrade(Color.black, 0f);
             if (!_cmActive && !_cmFrozen && !_cmCamOn) return;
             _cmActive = false;
             ReleaseRageArtWorld();
             ReleaseRageArtCamera();
+            ArtHud?.ArtGrade(Color.black, 0f);
+            Vfx.I?.SkyGrade(Color.black, 0f);
         }
 
         /// <summary>The world runs again, if the art holds it (a later SlowWorld by someone else is left alone).</summary>

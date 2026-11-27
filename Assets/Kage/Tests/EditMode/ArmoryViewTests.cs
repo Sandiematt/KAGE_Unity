@@ -19,6 +19,7 @@ namespace Kage.Tests
             s.owned.weapons["tsubame"] = 1;
             s.owned.helmets["kuro_zukin"] = 2;
             s.owned.armors["ronin_yoroi"] = 1;
+            s.equipped.weapon = "kagetsu";          // bought and worn (a new save starts with Mumei)
             return s;
         }
 
@@ -33,23 +34,28 @@ namespace Kage.Tests
         public void Weapons_are_listed_cheapest_tier_first_without_enemy_gear_fists_or_withheld_boss_weapons()
         {
             var v = View(MidGame(), ArmoryTab.Weapons);
+            // the owner's tiers (docs/weapon-styles.md): one common, rare, epic, then the two legendary weapons last
             CollectionAssert.AreEqual(
-                new[] { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama" },
+                new[] { "mumei", "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" },
                 v.Tiles.Select(t => t.Id).ToArray());
         }
 
         [Test]
-        public void The_armor_tab_is_one_list_with_the_shop_armours_first_and_an_owned_reward_after_them()
+        public void The_armor_tab_is_one_list_ordered_by_five_tier_rarity_with_owned_trophies_before_legendary()
         {
             var save = MidGame();
             var v = View(save, ArmoryTab.Armor);
             Assert.AreEqual(8, v.Tiles.Length);
             Assert.AreEqual("tachibana_yoroi", v.Tiles[0].Id);
             Assert.AreEqual("mugen_yoroi", v.Tiles[7].Id);
+            Assert.AreEqual("legendary", v.Tiles[6].TierId);
+            Assert.AreEqual("legendary", v.Tiles[7].TierId);
             save.owned.armors["ikazuchi_do"] = 1;
             var withReward = View(save, ArmoryTab.Armor);
             Assert.AreEqual(9, withReward.Tiles.Length);
-            Assert.AreEqual("ikazuchi_do", withReward.Tiles[8].Id);
+            Assert.AreEqual("ikazuchi_do", withReward.Tiles[6].Id);
+            Assert.AreEqual("yurei_yoroi", withReward.Tiles[7].Id);
+            Assert.AreEqual("mugen_yoroi", withReward.Tiles[8].Id);
         }
 
         [Test]
@@ -80,7 +86,10 @@ namespace Kage.Tests
         public void Tiles_say_what_is_owned_equipped_locked_and_what_the_rest_cost()
         {
             var v = View(MidGame(), ArmoryTab.Weapons, "onikiri");
-            var kagetsu = v.Tiles[0];
+            var mumei = v.Tiles[0];
+            Assert.IsTrue(mumei.Owned, "the starter is owned");
+            Assert.IsFalse(mumei.Equipped, "MidGame wears Kagetsu");
+            var kagetsu = v.Tiles.Single(t => t.Id == "kagetsu");
             Assert.IsTrue(kagetsu.Owned);
             Assert.IsTrue(kagetsu.Equipped);
             var onikiri = v.Tiles.Single(t => t.Id == "onikiri");
@@ -98,8 +107,8 @@ namespace Kage.Tests
         public void A_weapon_owned_at_level_3_shows_its_stats_and_what_the_next_level_adds()
         {
             var v = View(MidGame(), ArmoryTab.Weapons, "kagetsu");
-            Assert.AreEqual("Common · Katana", v.TierLine);
-            Assert.AreEqual("common", v.TierId);
+            Assert.AreEqual("Rare · Katana", v.TierLine);
+            Assert.AreEqual("rare", v.TierId);
             Assert.AreEqual("Kagetsu", v.Name);
             Assert.AreEqual(3, v.Level);
             Assert.AreEqual(8, v.MaxLevel);
@@ -116,7 +125,7 @@ namespace Kage.Tests
         public void An_unowned_weapon_shows_level_one_stats_and_no_preview()
         {
             var v = View(MidGame(), ArmoryTab.Weapons, "onikiri");
-            Assert.AreEqual("Rare · Cleaver", v.TierLine);
+            Assert.AreEqual("Epic · Cleaver", v.TierLine);
             Assert.AreEqual("Not owned", v.LevelText);
             CollectionAssert.AreEqual(new[] { "82", "38", "54" }, v.Stats.Select(s => s.Value).ToArray());
             Assert.IsTrue(v.Stats.All(s => string.IsNullOrEmpty(s.Preview)));
@@ -126,10 +135,10 @@ namespace Kage.Tests
         public void A_weapon_that_climbs_a_tier_with_levels_shows_the_tier_it_has_reached()
         {
             var save = MidGame();
-            save.owned.weapons["kagetsu"] = 4;
-            Assert.AreEqual("Rare · Katana", View(save, ArmoryTab.Weapons, "kagetsu").TierLine);
-            save.owned.weapons["kagetsu"] = 7;
-            Assert.AreEqual("Epic · Katana", View(save, ArmoryTab.Weapons, "kagetsu").TierLine);
+            save.owned.weapons["mumei"] = 4;
+            Assert.AreEqual("Rare · Katana", View(save, ArmoryTab.Weapons, "mumei").TierLine);
+            save.owned.weapons["mumei"] = 7;
+            Assert.AreEqual("Epic · Katana", View(save, ArmoryTab.Weapons, "mumei").TierLine);
         }
 
         [Test]
@@ -138,7 +147,7 @@ namespace Kage.Tests
             var onikiri = View(MidGame(), ArmoryTab.Weapons, "onikiri");
             var box = onikiri.Boxes.Single(b => !b.Warn);
             Assert.AreEqual("RAGE ART · Hell Splitter", box.Title);
-            StringAssert.StartsWith("A demon leap", box.Text);
+            StringAssert.StartsWith("A demon aura", box.Text);
         }
 
         // ---- the buttons ----
@@ -254,7 +263,7 @@ namespace Kage.Tests
         public void A_helmet_with_the_rage_perk_and_an_unowned_state()
         {
             var v = View(MidGame(), ArmoryTab.Helmets, "oni_menpo");
-            Assert.AreEqual("Rare", v.TierLine);
+            Assert.AreEqual("Epic", v.TierLine);
             CollectionAssert.AreEqual(new[] { "8%", "+14", "100" }, v.Stats.Select(s => s.Value).ToArray());
             Assert.AreEqual("+20% rage gain", v.Boxes.Single().Text);
         }
@@ -291,10 +300,26 @@ namespace Kage.Tests
             Assert.AreEqual("kagetsu", h.equipped.weapon);
             Assert.AreEqual("kuro_zukin", KageCharacter.Def(h).helmet);
             Assert.AreEqual(2, h.owned.helmets["kuro_zukin"]);
-            // the armour cards wear the Crimson Scarf, as the JS cards do
+            // the armour cards wear the Crimson Scarf and carry no weapon so only the armour is displayed
             var a = ArmoryView.PreviewSave(save, ArmoryTab.Armor, "ronin_yoroi");
             Assert.AreEqual("ronin_yoroi", KageCharacter.Def(a).armor);
             Assert.AreEqual("shiro_maki", KageCharacter.Def(a).helmet);
+            Assert.AreEqual("fists", a.equipped.weapon, "armour preview must be unarmed");
+            Assert.AreEqual("fists", KageCharacter.Def(a).weaponId, "armour preview character must not carry a weapon");
+        }
+
+        [Test]
+        public void Armor_preview_always_strips_any_equipped_weapon_so_only_armor_displays()
+        {
+            var save = MidGame();
+            foreach (var weaponId in new[] { "mumei", "kagetsu", "onikiri", "mizuchi", "yamigama", "iwakudaki" })
+            {
+                save.equipped.weapon = weaponId;
+                var a = ArmoryView.PreviewSave(save, ArmoryTab.Armor, "mugen_yoroi");
+                Assert.AreEqual("fists", a.equipped.weapon, weaponId);
+                Assert.AreEqual("fists", KageCharacter.Def(a).weaponId, weaponId);
+                Assert.AreEqual(weaponId, save.equipped.weapon, "the real save's weapon must stay intact");
+            }
         }
 
         [Test]

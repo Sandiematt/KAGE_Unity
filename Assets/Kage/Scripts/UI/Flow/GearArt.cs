@@ -7,7 +7,7 @@ namespace Kage
     /// <summary>Where the picture of a gear item comes from.</summary>
     public enum ArtSource
     {
-        /// <summary>The weapon render of the Wonder design file (JS <c>WEAPON_ART</c>, src/img/ui_w_*.webp): the seven shop weapons.</summary>
+        /// <summary>The weapon render of the Wonder design file (JS <c>WEAPON_ART</c>, src/img/ui_w_*.webp): the seven shop weapons, and Unity's Mumei (drawn for Unity in the same flat style).</summary>
         WeaponRender,
         /// <summary>The weapon the JS draws itself on a canvas (<c>drawWeaponIcon</c>): every other weapon.</summary>
         WeaponIcon,
@@ -34,7 +34,7 @@ namespace Kage
     public static class GearArt
     {
         // JS WEAPON_ART: the weapons that have a render
-        static readonly HashSet<string> Renders = new HashSet<string> { "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" };
+        static readonly HashSet<string> Renders = new HashSet<string> { "mumei", "kagetsu", "tsubame", "shizuka", "onikiri", "mizuchi", "yamigama", "iwakudaki" };
 
         public static bool HasRender(string weaponId) { return weaponId != null && Renders.Contains(weaponId); }
 

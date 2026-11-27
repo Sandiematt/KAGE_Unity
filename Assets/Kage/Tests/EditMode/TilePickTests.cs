@@ -31,6 +31,8 @@ namespace Kage.Tests
             save = GameRules.DefaultSave(false);
             save.coins = 5000;
             save.owned.weapons["tsubame"] = 1;
+            save.owned.weapons["kagetsu"] = 1;
+            save.equipped.weapon = "kagetsu";        // the Armory opens on the worn weapon (a new save wears Mumei)
             changes = 0;
             armory = new ArmoryController(save, null, () => changes++);
         }

@@ -44,7 +44,7 @@ namespace Kage
             foreach (var h in def.hurt)
             {
                 Vector2 c = rig.World(h.bone, h.local);
-                float rr = r + h.radius;
+                float rr = r + h.radius * _contactScale;
                 if ((c - p).sqrMagnitude <= rr * rr)
                 {
                     zone = h.zone;
@@ -108,13 +108,23 @@ namespace Kage
         {
             float before = health;
             _hitPosture = 0f;
+            _hitCounter = false;
+            _hitPunish = false;
             var res = ReceiveHitCore(ref info);
             LastDamageTaken = before - health;      // clears the posture and crit of the last hit, then:
             LastPostureTaken = _hitPosture;
             LastHitCrit = res == HitResult.Hit && info.crit;
             LastHitDamage = info.dmg;
+            LastHitCounter = res == HitResult.Hit && _hitCounter;
+            LastHitPunish = res == HitResult.Hit && _hitPunish;
             return res;
         }
+
+        /// <summary>Set by step 7 when this hit is a whiff punish (Fighter.Flow.cs).</summary>
+        bool _hitPunish;
+
+        /// <summary>Set by step 7 when this hit is a counter hit (Fighter.Counter.cs).</summary>
+        bool _hitCounter;
 
         HitResult ReceiveHitCore(ref HitInfo info)
         {
@@ -135,6 +145,8 @@ namespace Kage
             // step 7: the hit
             _hitOnBrokenGuard = GuardBroken;        // the armour check below reads it: the break is spent next (Fighter.Armour.cs)
             ApplyGuardBreakCrit(ref info);
+            _hitCounter = ApplyCounterHit(ref info);     // the parrier's answer: more damage, stun and posture (Fighter.Counter.cs)
+            _hitPunish = !_hitCounter && ApplyWhiffPunish(ref info);     // caught recovering from a move that touched nothing (Fighter.Flow.cs)
             if (state == FState.Down)
             {
                 // ground hit: damage and a jolt, but no re-launch (prevents infinite down-loops)
@@ -151,7 +163,7 @@ namespace Kage
 
             health = Mathf.Max(0f, health - info.dmg);
             meter = Mathf.Min(100f, meter + (3f + info.dmg * 0.3f) * RageMul);
-            CleanHitPosture(info);
+            CleanHitPosture(info, _hitCounter ? ParryT.counterPostureMul : 1f);
             rig.Flash(Color.white, 0.95f, 14f);
             JoltSoftParts(info, info.w.heavy || info.w.launch || info.w.knockdown || health <= 0f ? 1.3f : 1f);
 
@@ -166,9 +178,10 @@ namespace Kage
             if (state == FState.Launched || !Grounded || w.launch || w.knockdown) Launch(info);
             else
             {
+                TurnToBlow(info, true);               // a blow from behind: reel facing the blade, not into it (Fighter.Facing.cs)
                 SetState(FState.Hitstun);
                 rig.Squash(w.heavy ? 0.09f : 0.05f);
-                _stun = ScaleStun(w.stun);
+                _stun = ScaleStun(w.stun) + (_hitCounter ? ParryT.counterStunBonus : 0) + (_hitPunish ? FlowT.whiffPunishStunBonus : 0);
                 _hurt = w.level == HitLevel.Low || info.zone == HitZone.Legs ? _hurtLow : info.zone == HitZone.Head ? _hurtHigh : _hurtBody;
                 Knock(KnockVelocity(new Vector2(info.kb.x, Mathf.Max(0f, info.kb.y * 0.3f))));
                 TryEscapeAbility();                   // Afterimage Feint: out of a long combo (Fighter.Ascendant.cs)
@@ -185,22 +198,36 @@ namespace Kage
             if (v.y > 0f) v.y *= jm;
             if (Grounded && v.y < 2.5f) v.y = info.w.knockdown && info.kb.y < 0 ? 2.2f : 2.8f;
             if (!Grounded && v.y < 1.5f && info.kb.y >= 0f) v.y = Mathf.Max(v.y, 1.5f * jm);
+            bool falling = state == FState.Launched;     // a juggle: the body keeps the turn it has (the pose read below is stale mid-fall)
             SetState(FState.Launched);
             _bounces = info.kb.y < 0f ? -1 : 0;     // spiked: guaranteed ground bounce
             Knock(v);
             _lastVy = v.y;
-            // tumble: knocked backwards -> rotate onto the back, knocked forwards -> onto the front
+            // tumble: knocked backwards -> turn onto the back, knocked forwards -> onto the front, and stop there (docs/combat-flow.md):
+            // the body lies flat in the air rather than somersaulting
             bool backwards = v.x * facing <= 0f;
-            _tumbleAng = KMath.Wrap(_display.a[(int)B.Hips]);
-            float speed = Mathf.Clamp(170f + Mathf.Abs(v.x) * 55f + Mathf.Max(0f, v.y) * 22f, 170f, 460f);
+            if (!falling) _tumbleAng = KMath.Wrap(_display.a[(int)B.Hips]);
+            var ft = FlowT;
+            _tumbleTo = backwards ? ft.tumbleRestAngle : -ft.tumbleRestAngle;
+            if (falling && Mathf.Abs(_tumbleAng) > 30f) _tumbleTo = Mathf.Sign(_tumbleAng) * ft.tumbleRestAngle;     // juggled: it stays on the side it already turned to
+            float speed = Mathf.Clamp(170f + Mathf.Abs(v.x) * 55f + Mathf.Max(0f, v.y) * 22f, 170f, Mathf.Max(170f, ft.tumbleMaxSpeed));
             _tumbleVel = backwards ? speed : -speed;
             rig.Squash(-0.06f);
             StartPhysicalFall(v);
         }
 
+        /// <summary>The angle the launched body turns to and holds (± the flow's rest angle: on its back or its front).</summary>
+        float _tumbleTo;
+
+        /// <summary>The launched body's turn about the hips now, degrees (0 upright, +90 on its back, -90 on its front).</summary>
+        public float TumbleAngle => _tumbleAng;
+
+        /// <summary>One frame of the launched turn: towards the rest angle at the tumble's speed, never past it.</summary>
+        void TumbleStep() => _tumbleAng = Mathf.MoveTowards(_tumbleAng, _tumbleTo, Mathf.Abs(_tumbleVel) * Time.fixedDeltaTime);
+
         void LaunchedUpdate()
         {
-            _tumbleAng += _tumbleVel * Time.fixedDeltaTime;
+            TumbleStep();
             if (stateFrame > 3 && Grounded)
             {
                 float impact = Mathf.Abs(_lastVy);
@@ -244,11 +271,16 @@ namespace Kage
             SetHurtboxesActive(false);      // the ragdoll bodies take the bones; the hurt circles stay out of them
             if (FallingPhysically) _ragdoll.Release(impulse, info.contact);     // a fall becomes the free KO ragdoll
             else _ragdoll = Ragdoll2D.Activate(rig, impulse, info.contact);
-            Vfx.I?.KoBurst(info.contact, fxMain, info.attacker != null ? info.attacker.fxMain : fxMain);
             GameFeel.SlowMo(0.25f, 0.9f);
-            GameFeel.Shake(0.5f);
-            GameFeel.Punch(0.25f);
-            KageGame.I?.Audio?.Play(SfxKind.KO, 1f);
+            if (PresentsCombat)
+            {
+                Vfx.I?.KoBurst(info.contact, fxMain, info.attacker != null ? info.attacker.fxMain : fxMain);
+                GameFeel.Shake(0.5f);
+                GameFeel.Punch(0.25f);
+                GameFeel.Kick(impulse, 0.18f);
+                GameFeel.ImpactFrame(new Color(0.07f, 0.015f, 0.035f, 0.92f), 3f / 60f);
+                CombatAudio?.Play(SfxKind.KO, 1f);
+            }
             ctx?.Events.Publish(CombatEvent.KnockedOut(ctx.Clock.Frame, info.attacker, this, info.moveId, info.contact, impulse));
             onKO?.Invoke(this);
         }

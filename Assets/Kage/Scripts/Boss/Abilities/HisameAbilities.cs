@@ -4,76 +4,75 @@ using UnityEngine;
 namespace Kage
 {
     /// <summary>
-    /// Hisame's abilities (SAN-105, ADR-0008): the three JS ones, each an ordinary <see cref="MoveDef"/> on the twin blades set (her Mist Fans).
+    /// Hisame's abilities (SAN-105 + Tessenjutsu war-fan martial arts &amp; Raikon's training, ADR-0008):
     /// <list type="bullet">
-    /// <item><b>Lightning Cut</b> (<c>lightningCut</c>, JS "Thunder Swing cut down to its first stroke, a short dashing lightning cut with no
-    /// ground wave"): she drops low with both fans drawn back, red sparks crackling on them and a red glint before the release (armoured,
-    /// the JS super armour), then dashes straight through Kage with one cut. No wave. Then she skids to a stop, open: the JS tip is "block
-    /// or jump it, then strike as she skids to a stop".</item>
-    /// <item><b>Kocho</b> (<c>hisameKocho</c>, the butterfly step, the ticket's "mist step"): her answer to being chased. The fans spread,
-    /// she springs in an arc over Kage's head and lands at his back (beside him on her own side when a wall leaves no room there), facing
-    /// him; invulnerable from the start to the landing. A glint on the fan as she lands, and the cut a beat later (0.2 s: time to turn and
-    /// guard). Her AI uses it only on a Kage walking, running or dashing at her (<see cref="AbilityDef.when"/>), as the JS does.</item>
-    /// <item><b>Smoke Bomb</b> (<c>smokeBomb</c>, phase two): she lobs a smoke bomb (the JS thrown weapon <c>smoke</c>, a projectile,
-    /// ADR-0007); it bursts into smoke where it lands, or on Kage.</item>
+    /// <item><b>Lightning Cut</b> (<c>lightningCut</c>), <b>Kocho</b> (<c>hisameKocho</c>), and <b>Smoke Bomb</b> (<c>smokeBomb</c>): her three
+    /// SAN-105 slots, upgraded with craft-layered rain-wind crescents, crimson fan arcs, and multi-layered mist bursts.</item>
+    /// <item><b>Kasumi Fan Dance</b> (<c>hisame.kasumiMai</c>): Tessenjutsu closed-fan wrist snap → Kasumi temple fan slash → a stepping
+    /// twin-fan cross-sweep, body upright (a light courier echo of Raikon's Tempest Wheel).</item>
+    /// <item><b>Shigure Fan Gust</b> (<c>hisame.rainGust</c>): a nimble spacing step that snaps both Mist Fans open and launches a fast
+    /// rain-wind crescent across mid-range.</item>
+    /// <item><b>Inazuma Mist Step</b> (<c>hisame.inazumaStep</c>, Phase 2): taught by Raikon — an electrified crouch and mist-ghost dash
+    /// through Kage that leaves a delayed rain-and-crimson-lightning slash hanging where she passed (a single-dash Blink Flurry).</item>
     /// </list>
-    /// <para>
-    /// <b>Numbers.</b> As Garan's (<see cref="GaranAbilities"/>, which this file shares its two conversions with): cooldown, range and chance
-    /// from <see cref="JsTables.BossAbility"/>; Lightning Cut's variant (wind-up, damage, reach, dash); the twin blades' first cut that ends
-    /// Kocho (<see cref="JsTables.Move"/> <c>tw1</c>); the smoke projectile (<see cref="JsTables.Projectile"/>); the tells scaled by the JS
-    /// <c>ai.p.windup</c> for a sub-boss on Normal (<see cref="GaranAbilities.Windup"/>). What the JS writes only in its ability code is a
-    /// named constant below with its file. Damage is the JS damage × <see cref="GaranAbilities.UnityPerJsDamage"/>. Posture is
-    /// not Garan's conversion: a JS <c>gb</c> takes the same share of Kage's posture as of the JS guard (out of 100), so Lightning Cut's gb 70
-    /// leaves a full guard standing, as the JS tip ("block it") needs (see <see cref="PostureMul"/>).
-    /// </para>
     /// </summary>
     public static class HisameAbilities
     {
         public const string LightningCutId = "lightningCut", KochoId = "hisameKocho", SmokeBombId = "smokeBomb";
-        public const string SmokeProjectileId = "hisame.smokeBomb";
-        /// <summary>Her glint on the fan before Kocho's cut (the JS <c>w.fx.glint(..., '#9fd4ff')</c>; not in the JS VFX manifest).</summary>
+        public const string KasumiMaiId = "hisame.kasumiMai", RainGustId = "hisame.rainGust", InazumaStepId = "hisame.inazumaStep";
+        public const string SmokeProjectileId = "hisame.smokeBomb", RainGustProjectileId = "hisame.rainGust.blade";
+
+        public static readonly string[] ExtraIds = { KasumiMaiId, RainGustId, InazumaStepId };
+
+        // ---- effect cues ----
         public const string KochoGlintCue = "VFX_Kage_HisameGlint";
-        /// <summary>Red sparks on the fans through Lightning Cut's tell (the JS <c>raikonCrackle</c>), and the red glint before the release.</summary>
         public const string CrackleCue = "VFX_Kage_LightningCrackle", CutGlintCue = "VFX_Kage_LightningGlint";
-        /// <summary>The smoke bomb in flight.</summary>
         public const string SmokeBombCue = "VFX_Kage_SmokeBomb";
-        /// <summary>The JS manifest's toon smoke burst: where the bomb bursts.</summary>
         public const string SmokeBurstCue = "VFX_Anime_Smoke_Burst";
-        /// <summary>A little smoke at her feet where Kocho lands (the JS <c>w.fx.smoke(f.x, -30, 3)</c>).</summary>
         public const string KochoSmokeCue = "VFX_Kage_KochoSmoke";
+        public const string FanSlashCue = "VFX_Kage_HisameFanSlash";
+        public const string StormFanSlashCue = "VFX_Kage_HisameStormFanSlash";
+        public const string FanWheelCue = "VFX_Kage_HisameFanWheel";
+        public const string RainGhostCue = "VFX_Kage_HisameRainGhost";
+        public const string RainGustFlightCue = "VFX_Kage_HisameRainGust";
+        public const string RainGustHitCue = "VFX_Kage_HisameRainGustHit";
+        public const string InazumaMarkCue = "VFX_Kage_HisameInazumaMark";
+        public const string InazumaDetonateCue = "VFX_Kage_HisameInazumaDetonate";
+        public const string AtemiCue = "VFX_Kage_HisameAtemi";
 
-        // ---- constants of the JS ability code (not data, so not in the generated tables) ----
-        const double SwingDmg = 15, SwingGb = 70, SwingKbPx = 420, SwingUpPx = 240, SwingStun = 0.5;   // 40-ai.js raikonRelease: 15 x the variant's dmg, gb 70
-        const double SwingRecovery = 0.6;           // 40-ai.js thunderSwing: the ability lasts the wind-up + 0.6 s
-        const double DashTime = 0.16, CutDelay = 0.06, GlintLead = 0.2;   //   ...the dash runs 0.16 s, the cut lands 0.06 s into it, the glint 0.2 s before
-        const double KochoWindup = 0.14, KochoArc = 0.34;                 // 41-styles/hisame.js hisameKocho: W = 0.14 x windup, E = 0.34
-        const double KochoHeightPx = 150, KochoPastPx = 110, KochoRoomPx = 60, KochoMarginPx = 30;   //   ...arc 150 px x scale high, 110 px x scale past him
-        const double KochoCutStartup = 0.2;         //   ...tw1 with its wind-up held to at least 0.2 s after the glint
-        const double ChasedPx = 280, ChasedSpeedPx = 120;                 // 41-styles/hisame.js hisameChased: within 280 px, coming faster than 120 px/s
-        const double SmokeThrowTime = 0.5, SmokeReleaseAt = 0.18;         // 40-ai.js smokeBomb: a 0.5 s throw, the bomb leaves at 0.18 s
-        const double SmokeVyPx = 520, SmokeVxMinPx = 380, SmokeVxMaxPx = 560;   // 30-combat.js WeaponSystem.spawn('smoke'): vy -520, vx rand(380, 560)
-        const double JsGuardMax = 100;              // 20-fighter.js: the guard (posture) is 100, and gb comes off it
+        public static readonly string[] CueIds =
+        {
+            KochoGlintCue, CrackleCue, CutGlintCue, SmokeBombCue, SmokeBurstCue, KochoSmokeCue,
+            FanSlashCue, StormFanSlashCue, FanWheelCue, RainGhostCue, RainGustFlightCue, RainGustHitCue,
+            InazumaMarkCue, InazumaDetonateCue, AtemiCue,
+        };
 
-        /// <summary>
-        /// How far ahead of her the fans' tips are as they cut through (the far hand 0.62 m ahead in the pose, plus a fan): the cut's hit
-        /// radius is what is left of the JS cut's reach (160 px x scale) past them.
-        /// </summary>
-        const float ThroughReach = 0.62f + TwinMoves.BladeLength;
+        // ---- constants of the JS ability code ----
+        const double SwingDmg = 15, SwingGb = 70, SwingKbPx = 420, SwingUpPx = 240, SwingStun = 0.5;
+        const double SwingRecovery = 0.6;
+        const double DashTime = 0.16, CutDelay = 0.06, GlintLead = 0.2;
+        const double KochoWindup = 0.14, KochoArc = 0.34;
+        const double KochoHeightPx = 150, KochoPastPx = 110, KochoRoomPx = 60, KochoMarginPx = 30;
+        const double KochoCutStartup = 0.2;
+        const double ChasedPx = 280, ChasedSpeedPx = 120;
+        const double SmokeThrowTime = 0.5, SmokeReleaseAt = 0.18;
+        const double SmokeVyPx = 520, SmokeVxMinPx = 380, SmokeVxMaxPx = 560;
+        const double JsGuardMax = 100;
 
-        /// <summary>Where the bomb leaves her hand (metres ahead, up): Unity tuning, the throwing hand at the release.</summary>
         static readonly Vector2 SmokeFrom = new(0.3f, 1.3f);
 
         static readonly HitPoint[] Fans = { HitPoint.Blade, HitPoint.BladeN };
         static readonly HitPoint[] NearFan = { HitPoint.BladeN };
+        static readonly HitPoint[] FarFan = { HitPoint.Blade };
+
+        public static MoveDef KasumiMaiMove, RainGustMove, InazumaStepMove;
+        public static ProjectileDef RainGustBlade;
+        public static HazardDef InazumaDelayedSlash;
 
         static int Frames(double seconds) => Mathf.RoundToInt((float)(seconds * 60.0));
         static float Metres(double px) => (float)JsUnits.PxToMetres(px);
         static int Dmg(double js) => Mathf.Max(1, Mathf.RoundToInt((float)js * GaranAbilities.UnityPerJsDamage));
-        /// <summary>
-        /// The JS <c>gb</c> as a <see cref="HitWindow.postureMul"/>: the blow takes the same share of Kage's posture as of the JS guard (gb out of
-        /// 100), so a guard that holds in the JS holds here. A guarded hit adds damage × <see cref="GuardTuning.blockPostureFactor"/> × postureMul
-        /// of Kage's <see cref="CharacterDef.postureMax"/> (the default, 60).
-        /// </summary>
+
         public static float PostureMul(double gb, int unityDmg) =>
             (float)(gb / JsGuardMax * new CharacterDef().postureMax / (unityDmg * Tuning.Get<GuardTuning>().blockPostureFactor));
 
@@ -87,10 +86,6 @@ namespace Kage
             };
         }
 
-        /// <summary>
-        /// The JS <c>hisameChased</c>: Kage is coming after her, on the ground within 280 px, walking or running at her faster than
-        /// 120 px/s, or dashing in. Kocho waits for it.
-        /// </summary>
         public static bool Chased(Fighter self, Fighter kage)
         {
             if (self == null || kage == null || !kage.Grounded) return false;
@@ -102,37 +97,140 @@ namespace Kage
             return (kage.state == FState.Walk || kage.state == FState.Run) && toward && Mathf.Abs(vx) > Metres(ChasedSpeedPx);
         }
 
-        /// <summary>Registers the three abilities in the <see cref="AbilityCatalog"/> for a Hisame of build scale <paramref name="scale"/>. Idempotent.</summary>
+        /// <summary>Registers Hisame's abilities in the <see cref="AbilityCatalog"/> for build scale <paramref name="scale"/>. Idempotent.</summary>
         public static void Register(float scale)
         {
-            AbilityCatalog.Register(Def(LightningCutId, LightningCut(JsTables.BossAbility(LightningCutId), scale)));
+            RegisterCues();
+            AbilityCatalog.Register(Def(LightningCutId, LightningCut(JsTables.BossAbility(LightningCutId))));
             var kocho = Def(KochoId, Kocho(scale));
             kocho.when = Chased;
             AbilityCatalog.Register(kocho);
             AbilityCatalog.Register(Def(SmokeBombId, SmokeBomb()));
+
+            BuildMartialKit();
+            Reg(KasumiMaiId, KasumiMaiMove, 5.2f, 0.4f, 2.0f, 0.45f);
+            Reg(RainGustId, RainGustMove, 6.0f, 2.0f, 5.8f, 0.45f);
+            Reg(InazumaStepId, InazumaStepMove, 7.0f, 1.1f, 4.2f, 0.45f);
+            Patterns();
         }
 
-        // ---------------------------------------------------------------------------------------------- poses
+        /// <summary>
+        /// Hisame's strings (sub-boss III, <see cref="SubBossTier.Hisame"/>): hit-and-run. The fan gust is chased by the dash cuts; the Lightning
+        /// Cut lands her beside Kage for the fan dance, or vanishes behind a smoke bomb; the fan dance's cross-sweep throws her clear for another gust; a
+        /// smoke bomb covers a dash in.
+        /// </summary>
+        static void Patterns()
+        {
+            var t = SubBossTier.Hisame;
+            t.Chain(RainGustId, InazumaStepId, LightningCutId);
+            t.Chain(LightningCutId, KasumiMaiId, SmokeBombId);
+            t.Chain(KasumiMaiId, RainGustId, InazumaStepId);
+            t.Chain(SmokeBombId, LightningCutId, InazumaStepId);
+            t.Chain(InazumaStepId, KasumiMaiId, RainGustId);
+            t.Chain(KochoId, KasumiMaiId, LightningCutId);
+        }
+
+        static void Reg(string id, MoveDef m, float cd, float near, float far, float chance)
+        {
+            AbilityCatalog.Register(new AbilityDef { id = id, move = m, cooldownFrames = Frames(cd), range = new Vector2(near, far), chance = chance });
+        }
+
         static Pose T() => new Pose().Dual();
 
-        /// <summary>The twin blades' ready stance (TwinMoves): far fan up, near fan low and forward.</summary>
         static Pose Rest() => T().Hip(0f, -0.08f, -4f).Chest(-8f).Head(5f).Feet(0.24f, -0.26f)
             .HandN(0.44f, 1.01f).BladeN(10f).HandF(0.27f, 0.97f).Blade(34f);
 
-        // ---------------------------------------------------------------------------------------------- Lightning Cut
-        static MoveDef LightningCut(JsBossAbility js, float scale)
+        static void BuildMartialKit()
         {
-            int tell = Frames(js.Windup * GaranAbilities.Windup);     // 33: 0.56 x Normal 1 x the sub role's 0.98
-            int dash = Frames(DashTime);                               // 10
-            int cut = tell + Frames(CutDelay);                         // 37: the cut lands mid-dash
-            int total = tell + Frames(SwingRecovery);                  // 69
-            double jsDmg = SwingDmg * js.Dmg;                          // 9
+            if (KasumiMaiMove != null) return;
+
+            RainGustBlade = new ProjectileDef
+            {
+                id = RainGustProjectileId,
+                speed = 7.4f,
+                radius = 0.24f,
+                lifeFrames = 70,
+                maxHits = 1,
+                hit = new HitWindow { dmg = Dmg(5), level = HitLevel.Mid, kb = new Vector2(1.9f, 0.5f), stun = 18, hitstop = 5, shake = 0.14f },
+                flightCue = RainGustFlightCue,
+                hitCue = RainGustHitCue,
+                endCue = RainGustHitCue,
+            };
+
+            InazumaDelayedSlash = new HazardDef
+            {
+                id = "hisame.inazumaStep.slash",
+                telegraphFrames = 22,
+                strikeFrames = 4,
+                size = new Vector2(1.25f, 1.6f),
+                hit = new HitWindow { dmg = Dmg(5), level = HitLevel.Mid, kb = new Vector2(1.4f, 2.6f), stun = 20, hitstop = 6, shake = 0.18f },
+                telegraphCue = InazumaMarkCue,
+                strikeCue = InazumaDetonateCue,
+            };
+
+            // Tessenjutsu Kasumi Fan Dance: closed-fan atemi -> open-fan Kasumi temple slash -> both fans gathered high, then swept
+            // forward together through Kage on a step-in (a grounded cross-sweep: no whole-body spin)
+            KasumiMaiMove = new MoveDef(KasumiMaiId, "Kasumi Fan Dance", 68)
+                .Key(7, T().Hip(0.02f, -0.14f, -4f).Chest(-10f).Head(6f).Feet(0.28f, -0.26f).HandF(0.18f, 1.18f).Blade(90f).HandN(0.28f, 0.98f).BladeN(20f), Ease.OutQuad)
+                .Key(15, T().Hip(0.1f, -0.12f, -12f).Chest(-20f).Head(10f).Feet(0.38f, -0.24f).HandF(0.62f, 1.16f).Blade(6f).HandN(0.2f, 1.04f).BladeN(50f), Ease.OutExpo)
+                .Key(22, T().Hip(0.06f, -0.14f, -6f).Chest(-10f).Head(6f).Feet(0.34f, -0.26f).HandN(0.12f, 1.38f).BladeN(132f).HandF(0.34f, 0.96f).Blade(-20f), Ease.InOutQuad)
+                .Key(28, T().Hip(0.12f, -0.1f, -14f).Chest(-24f).Head(12f).Feet(0.42f, -0.26f).HandN(0.68f, 1.24f).BladeN(-12f).HandF(0.18f, 1.06f).Blade(70f), Ease.OutExpo)
+                .Key(36, T().Hip(-0.02f, -0.16f, 4f).Chest(4f).Head(-2f).Feet(0.3f, -0.28f).HandN(0.1f, 1.34f).BladeN(140f).HandF(-0.3f, 1.28f).Blade(160f), Ease.InOutQuad)
+                .Key(42, T().Hip(0.1f, -0.14f, -12f).Chest(-22f).Head(10f).Feet(0.4f, -0.26f).HandN(0.66f, 1.16f).BladeN(-6f).HandF(0.6f, 1.04f).Blade(-14f), Ease.OutExpo)
+                .Key(46, T().Hip(0.1f, -0.15f, -12f).Chest(-22f).Head(10f).Feet(0.4f, -0.26f).HandN(0.62f, 1.0f).BladeN(-30f).HandF(0.56f, 0.92f).Blade(-36f))
+                .Key(50, T().Hip(0.06f, -0.16f, -8f).Chest(-12f).Head(6f).Feet(0.36f, -0.28f).HandN(0.5f, 1.06f).BladeN(-20f).HandF(0.42f, 1.0f).Blade(-24f))
+                .Key(68, Rest(), Ease.InOutQuad)
+                .Move(11, 16, 2.8f).Move(24, 29, 2.2f).Move(38, 49, 2.4f)
+                .Hit(14, 17, FarFan, Dmg(4), HitLevel.Mid, new Vector2(0.9f, 0f), stun: 18, hitstop: 4, shake: 0.1f, radius: 0.09f)
+                .Hit(26, 30, NearFan, Dmg(5), HitLevel.Mid, new Vector2(1.2f, 0.3f), stun: 20, hitstop: 5, shake: 0.14f, radius: 0.1f)
+                .Hit(40, 48, Fans, Dmg(7), HitLevel.Mid, new Vector2(3.2f, 1.1f), stun: 24, hitstop: 8, shake: 0.24f, heavy: true, radius: 0.24f)
+                .Cue(15, AtemiCue).Cue(27, FanSlashCue).Cue(41, FanWheelCue).Cue(46, FanWheelCue)
+                .Fx(13, 18, FxKind.TrailBlade).Fx(25, 31, FxKind.TrailBladeN).Fx(39, 49, FxKind.TrailBlade).Fx(39, 49, FxKind.TrailBladeN)
+                .Impulse(39, new Vector2(-3.0f, 1.6f)).Sword();
+
+            // Shigure Fan Gust: agile step back while snapping both Mist Fans open to send a rain-wind crescent
+            RainGustMove = new MoveDef(RainGustId, "Shigure Fan Gust", 42)
+                .Key(8, T().Hip(-0.08f, -0.18f, 6f).Chest(10f).Head(-4f).Feet(0.26f, -0.32f).HandN(-0.14f, 1.32f).BladeN(142f).HandF(-0.18f, 1.22f).Blade(156f), Ease.OutQuad)
+                .Key(16, T().Hip(0.08f, -0.14f, -12f).Chest(-20f).Head(10f).Feet(0.36f, -0.28f).HandN(0.64f, 1.14f).BladeN(-4f).HandF(0.58f, 1.06f).Blade(8f), Ease.OutExpo)
+                .Key(23, T().Hip(0.06f, -0.14f, -10f).Chest(-18f).Head(8f).Feet(0.34f, -0.28f).HandN(0.6f, 1.12f).BladeN(-8f).HandF(0.54f, 1.04f).Blade(4f))
+                .Key(42, Rest(), Ease.InOutQuad)
+                .Move(2, 10, -2.4f)
+                .Throw(15, RainGustBlade, new Vector2(0.55f, 1.05f))
+                .Cue(6, KochoGlintCue).Cue(15, FanSlashCue)
+                .Fx(14, 19, FxKind.TrailBlade).Fx(14, 19, FxKind.TrailBladeN)
+                .Impulse(15, new Vector2(2.4f, 0.8f)).Sword();
+
+            // Inazuma Mist Step (Phase 2): Raikon-trained blink dash leaving a delayed electrified rain-slash
+            InazumaStepMove = new MoveDef(InazumaStepId, "Inazuma Mist Step", 58)
+                .Key(9, T().Hip(-0.06f, -0.4f, 8f).Chest(-26f).Head(18f).Feet(0.48f, -0.34f).HandN(-0.18f, 0.64f).BladeN(-158f).HandF(-0.24f, 0.7f).Blade(-170f), Ease.OutQuad)
+                .Key(23, T().Hip(-0.08f, -0.44f, 10f).Chest(-30f).Head(22f).Feet(0.5f, -0.34f).HandN(-0.22f, 0.6f).BladeN(-164f).HandF(-0.28f, 0.66f).Blade(-174f))
+                .Key(28, T().Hip(0.16f, -0.28f, -18f).Chest(-36f).Head(22f).Feet(0.52f, -0.3f).HandN(0.66f, 0.9f).BladeN(-4f).HandF(0.6f, 0.98f).Blade(8f), Ease.OutExpo)
+                .Key(36, T().Hip(0.08f, -0.3f, -10f).Chest(-24f).Head(14f).Feet(0.54f, -0.3f).HandN(0.54f, 0.86f).BladeN(-24f).HandF(0.24f, 1.02f).Blade(36f), Ease.OutQuad)
+                .Key(58, Rest(), Ease.InOutQuad)
+                .Move(24, 33, 8.2f)
+                .NoPush(23, 35)
+                .Hit(25, 32, Fans, Dmg(6), HitLevel.Mid, new Vector2(2.2f, 0.8f), stun: 22, hitstop: 7, shake: 0.2f, radius: 0.22f)
+                .HazardOnTarget(25, InazumaDelayedSlash)
+                .Cue(6, CrackleCue).Cue(12, CrackleCue).Cue(16, CutGlintCue)
+                .Cue(24, RainGhostCue).Cue(27, RainGhostCue).Cue(30, RainGhostCue).Cue(28, StormFanSlashCue)
+                .Fx(24, 34, FxKind.TrailBlade).Fx(24, 34, FxKind.TrailBladeN).Fx(24, 24, FxKind.Dust)
+                .Impulse(24, new Vector2(-5.5f, 1.4f)).Sword();
+        }
+
+        // ---------------------------------------------------------------------------------------------- Lightning Cut
+        static MoveDef LightningCut(JsBossAbility js)
+        {
+            int tell = Frames(js.Windup * GaranAbilities.Windup);
+            int dash = Frames(DashTime);
+            int cut = tell + Frames(CutDelay);
+            int total = tell + Frames(SwingRecovery);
+            double jsDmg = SwingDmg * js.Dmg;
             var low = T().Hip(-0.06f, -0.44f, 10f).Chest(-30f).Head(22f).Feet(0.52f, -0.34f)
                 .HandN(-0.18f, 0.6f).BladeN(-160f).HandF(-0.26f, 0.66f).Blade(-172f);
             var lower = T().Hip(-0.08f, -0.48f, 12f).Chest(-34f).Head(24f).Feet(0.54f, -0.34f)
                 .HandN(-0.24f, 0.56f).BladeN(-165f).HandF(-0.32f, 0.62f).Blade(-176f);
             var through = T().Hip(0.18f, -0.32f, -20f).Chest(-42f).Head(26f).Feet(0.56f, -0.3f)
-                .HandN(0.68f, 0.84f).BladeN(-6f).HandF(0.62f, 0.92f).Blade(6f);
+                .HandN(0.68f, 0.62f).BladeN(-9f).HandF(0.62f, 0.69f).Blade(1f);
             var skid = T().Hip(0.08f, -0.36f, -10f).Chest(-30f).Head(18f).Feet(0.6f, -0.32f)
                 .HandN(0.56f, 0.8f).BladeN(-30f).HandF(0.2f, 1.0f).Blade(40f);
             var m = new MoveDef("hisame.lightningCut", "Lightning Cut", total)
@@ -141,14 +239,15 @@ namespace Kage
                 .Key(tell + 3, through, Ease.OutExpo)
                 .Key(tell + 14, skid, Ease.OutQuad)
                 .Key(total, Rest(), Ease.InOutQuad)
-                .Move(tell, tell + dash - 1, Metres(js.Dash))          // 900 px/s for 0.16 s: straight through him
+                .Move(tell, tell + dash - 1, Metres(js.Dash))
                 .Hit(cut - 1, cut + 3, Fans, Dmg(jsDmg), HitLevel.Mid, new Vector2(Metres(SwingKbPx), Metres(SwingUpPx)), stun: Frames(SwingStun),
-                    hitstop: 10, shake: 0.25f, heavy: true, radius: Mathf.Max(0.08f, Metres(js.Reach * scale) - ThroughReach), postureMul: PostureMul(SwingGb, Dmg(jsDmg)))
-                .Armour(0, tell - 1)                                   // the JS super armour, off at the release
+                    hitstop: 10, shake: 0.25f, heavy: true, radius: 0.10f, postureMul: PostureMul(SwingGb, Dmg(jsDmg)))
+                .Armour(0, tell - 1)
                 .NoPush(tell, tell + dash + 2)
                 .Fx(tell, tell + dash, FxKind.AfterImage).Fx(tell, tell, FxKind.Dust).Fx(cut - 1, cut + 4, FxKind.TrailBlade)
                 .Fx(cut - 1, cut + 4, FxKind.TrailBladeN).Fx(cut, cut, FxKind.SlashLine).Fx(tell + dash, tell + dash, FxKind.Dust)
-                .Cue(tell - Frames(GlintLead), CutGlintCue).Sword();
+                .Cue(tell - Frames(GlintLead), CutGlintCue).Cue(cut, StormFanSlashCue)
+                .Impulse(tell, new Vector2(-4.8f, 1.2f)).Sword();
             for (int f = 3; f < tell; f += 3) m.Cue(f, CrackleCue);
             return m;
         }
@@ -157,11 +256,11 @@ namespace Kage
         static MoveDef Kocho(float scale)
         {
             var tw1 = JsTables.Move("tw1");
-            int wind = Frames(KochoWindup * GaranAbilities.Windup);    // 8: the fans spread
-            int land = wind + Frames(KochoArc);                        // 28: down at his back
-            int cut = land + Frames(System.Math.Max(tw1.T[0], KochoCutStartup));   // 40: the glint on landing, the cut 0.2 s later
-            int active = Frames(tw1.T[1]);                             // 3
-            int total = cut + active + Frames(tw1.T[2]);               // 51
+            int wind = Frames(KochoWindup * GaranAbilities.Windup);
+            int land = wind + Frames(KochoArc);
+            int cut = land + Frames(System.Math.Max(tw1.T[0], KochoCutStartup));
+            int active = Frames(tw1.T[1]);
+            int total = cut + active + Frames(tw1.T[2]);
             var spread = T().Hip(0f, -0.3f, 4f).Chest(-8f).Head(6f).Feet(0.36f, -0.3f)
                 .HandN(0.3f, 1.36f).BladeN(120f).HandF(-0.34f, 1.24f).Blade(160f);
             var air = T().Hip(0f, 0f, 0f).Chest(8f).Head(-4f).LegN(100f, -130f).LegF(84f, -120f)
@@ -182,15 +281,15 @@ namespace Kage
                 .Key(cut + active + 1, strike)
                 .Key(total, Rest(), Ease.InOutQuad)
                 .Vault(wind, land, Metres(KochoPastPx * scale), Metres(KochoHeightPx * scale), Metres(KochoRoomPx * scale), Metres(KochoMarginPx))
-                .Invuln(0, land)                                       // the JS invuln = W + E: the whole step, not the cut
+                .Invuln(0, land)
                 .NoPush(wind, land + 2)
                 .Hit(cut, cut + active - 1, NearFan, Dmg(tw1.Dmg), HitLevel.Mid, new Vector2(0.78f, 0f), stun: 16, hitstop: 4, shake: 0.06f, radius: 0.08f)
                 .Fx(wind, land, FxKind.AfterImage).Fx(wind, wind, FxKind.Dust).Fx(cut - 1, cut + active + 1, FxKind.TrailBladeN)
-                .Cue(land, KochoSmokeCue).Cue(land, KochoGlintCue).Sword();
+                .Cue(land, KochoSmokeCue).Cue(land, KochoGlintCue).Cue(cut, FanSlashCue)
+                .Impulse(wind, new Vector2(-2.2f, 2.5f)).Sword();
         }
 
         // ---------------------------------------------------------------------------------------------- Smoke Bomb
-        /// <summary>The JS <c>smoke</c> thrown weapon as a projectile (ADR-0007): a lob that falls under the JS gravity and bursts where it lands.</summary>
         public static ProjectileDef SmokeBombProjectile()
         {
             var p = JsTables.Projectile("smoke");
@@ -207,7 +306,7 @@ namespace Kage
 
         static MoveDef SmokeBomb()
         {
-            int total = Frames(SmokeThrowTime), release = Frames(SmokeReleaseAt);      // 30, 11
+            int total = Frames(SmokeThrowTime), release = Frames(SmokeReleaseAt);
             var back = T().Hip(-0.04f, -0.12f, 6f).Chest(8f).Head(-2f).Feet(0.3f, -0.28f)
                 .HandN(-0.12f, 1.42f).BladeN(150f).HandF(0.3f, 0.92f).Blade(20f);
             var fling = T().Hip(0.08f, -0.12f, -10f).Chest(-18f).Head(8f).Feet(0.36f, -0.26f)
@@ -220,104 +319,61 @@ namespace Kage
         }
 
         // ---------------------------------------------------------------------------------------------- cues
+        // The look itself is in Vfx.Hisame.cs (docs/act1-subbosses-vfx.md); her fan winds and rain cuts come from HisameLook on every move.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void RegisterCues()
+        public static void RegisterCues()
         {
-            EffectCues.Register(KochoGlintCue, PlayGlint);
-            EffectCues.Register(CrackleCue, PlayCrackle);
-            EffectCues.Register(CutGlintCue, PlayCutGlint);
+            EffectCues.Register(KochoGlintCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameGlint(p + Vector2.up * 0.12f, HisamePalette.Accent, 0.85f));
+            EffectCues.Register(CrackleCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameCrackle(p));
+            EffectCues.Register(CutGlintCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameGlint(p, GlintRed, 1.1f));
             EffectCues.Register(SmokeBombCue, SmokeBombLook.Play);
-            EffectCues.Register(SmokeBurstCue, PlaySmokeBurst);
-            EffectCues.Register(KochoSmokeCue, PlayKochoSmoke);
+            EffectCues.Register(SmokeBurstCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameMistScreen(p, 1.05f, Downpour(a)));
+            EffectCues.Register(KochoSmokeCue, (Vector2 p, in CueArgs a) => { if (a.owner != null) Vfx.I?.HisameLanding(a.owner.Pos, a.owner.facing); });
+            EffectCues.Register(FanSlashCue, (Vector2 p, in CueArgs a) => PlayGust(p, a, false));
+            EffectCues.Register(StormFanSlashCue, (Vector2 p, in CueArgs a) => PlayGust(p, a, true));
+            EffectCues.Register(FanWheelCue, PlayFanWheel);
+            EffectCues.Register(RainGhostCue, PlayRainGhost);
+            EffectCues.Register(RainGustFlightCue, RainGustLook.Play);
+            EffectCues.Register(RainGustHitCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameRainCut(p, a.dir.sqrMagnitude > 0f ? a.dir : Vector2.right, 1.1f, false));
+            EffectCues.Register(InazumaMarkCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameSuspendedRain(p + new Vector2(-0.55f, 0.35f), p + new Vector2(0.55f, 1.4f), a.seconds));
+            EffectCues.Register(InazumaDetonateCue, (Vector2 p, in CueArgs a) => Vfx.I?.HisameRainCleave(p + new Vector2(-0.55f, 0.35f), p + new Vector2(0.55f, 1.4f)));
+            EffectCues.Register(AtemiCue, PlayAtemi);
         }
 
-        static readonly Color StormRed = KMath.Hex("#FF6A52"), GlintRed = KMath.Hex("#FF4A3C");
+        static readonly Color GlintRed = KMath.Hex("#FF4A3C");
 
-        /// <summary>A pale blue glint and a small star on the fan: the cut is coming.</summary>
-        static void PlayGlint(Vector2 pos, in CueArgs a)
+        static float Facing(in CueArgs a) => a.owner != null ? a.owner.facing : (a.dir.x >= 0f ? 1f : -1f);
+        static bool Downpour(in CueArgs a) => a.owner?.Phases != null && a.owner.Phases.Index >= 1;
+
+        /// <summary>A fan's gust leaves her at chest height and travels: level for the storm cuts, tilted down for the plain fan slash.</summary>
+        static void PlayGust(Vector2 pos, in CueArgs a, bool storm)
         {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            vfx.Glint(pos + Vector2.up * 0.12f, HisamePalette.Pale);
-            vfx.Star(pos + Vector2.up * 0.12f, 0.42f, Color.white, HisamePalette.Accent);
+            var v = Vfx.I;
+            if (v == null) return;
+            float face = Facing(a);
+            Vector2 c = a.owner != null ? a.owner.Pos + new Vector2(face * 0.35f, 1.0f) : pos;
+            v.HisameGust(c, face, storm ? -4f : -16f, storm || Downpour(a));
         }
 
-        /// <summary>Red sparks on the fans (the JS crackle: Raikon's lightning in her fans).</summary>
-        static void PlayCrackle(Vector2 pos, in CueArgs a)
+        static void PlayFanWheel(Vector2 pos, in CueArgs a)
         {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            for (int i = 0; i < 3; i++)
-                vfx.Spark(pos + new Vector2(Random.Range(-0.18f, 0.18f), Random.Range(-0.1f, 0.2f)), new Vector2(Random.Range(-1f, 1f), Random.Range(0.4f, 1.6f)),
-                    i == 0 ? Color.white : StormRed, 0.045f, 0.22f);
+            var v = Vfx.I;
+            if (v == null) return;
+            v.HisameVortex(a.owner != null ? a.owner.Pos + Vector2.up * 1.0f : pos, Facing(a), Downpour(a));
         }
 
-        static void PlayCutGlint(Vector2 pos, in CueArgs a)
+        static void PlayRainGhost(Vector2 pos, in CueArgs a)
         {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            vfx.Glint(pos, GlintRed);
-            vfx.Star(pos, 0.5f, Color.white, GlintRed);
+            if (a.owner?.rig == null) return;
+            Vfx.I?.HisameWaterGhost(a.owner);
         }
 
-        /// <summary>Three small puffs at her feet as she lands.</summary>
-        static void PlayKochoSmoke(Vector2 pos, in CueArgs a)
+        static void PlayAtemi(Vector2 pos, in CueArgs a)
         {
-            var vfx = Vfx.I;
-            if (vfx == null || a.owner == null) return;
-            var feet = a.owner.Pos + Vector2.up * 0.12f;
-            for (int i = -1; i <= 1; i++)
-                vfx.Puff(feet + new Vector2(i * 0.22f, 0f), new Vector2(i * 0.8f, 0.35f), HisamePalette.Smoke, 0.22f, 0.5f);
-        }
-
-        /// <summary>Placeholder toon smoke: grey-blue puffs blooming and rising.</summary>
-        static void PlaySmokeBurst(Vector2 pos, in CueArgs a)
-        {
-            var vfx = Vfx.I;
-            if (vfx == null) return;
-            var ground = new Vector2(pos.x, Mathf.Max(0.05f, pos.y));
-            for (int i = 0; i < 15; i++)
-            {
-                float k = (i - 7) / 7f, up = 1f - Mathf.Abs(k);
-                vfx.Puff(ground + new Vector2(k * 0.5f, 0.12f + up * 0.25f), new Vector2(k * 1.1f, 0.4f + up * 0.9f),
-                    i % 3 == 0 ? HisamePalette.SmokeDark : HisamePalette.Smoke, 0.42f + up * 0.22f, 0.95f);
-            }
-            vfx.Dust(ground, 0.8f, 0f);
-        }
-    }
-
-    /// <summary>The smoke bomb in flight (a flight cue riding the projectile): a black ball with a pale rim, a burning fuse and a thin smoke trail.</summary>
-    public sealed class SmokeBombLook : MonoBehaviour
-    {
-        Transform _proj;
-        float _trail;
-
-        public static void Play(Vector2 pos, in CueArgs a)
-        {
-            if (a.follow == null || Vfx.I == null) return;
-            var go = new GameObject("SmokeBombLook");
-            go.transform.SetParent(a.follow, false);
-            go.transform.localPosition = Vector3.zero;
-            go.AddComponent<SmokeBombLook>().Init(a.follow);
-        }
-
-        void Init(Transform proj)
-        {
-            _proj = proj;
-            int o = Vfx.Order + 30;
-            MeshKit.MakeRenderer("Rim", transform, MeshKit.Disc(Vector2.zero, 0.105f, HisamePalette.Pale, HisamePalette.Pale), MeshKit.Alpha, o);
-            MeshKit.MakeRenderer("Ball", transform, MeshKit.Disc(Vector2.zero, 0.09f, HisamePalette.RainLit, HisamePalette.RainDeep), MeshKit.Alpha, o + 1);
-            MeshKit.MakeRenderer("Fuse", transform, MeshKit.Star(6, 0.07f, 0.025f, Color.white, KMath.Hex("#FFB25A")), Vfx.I.AddHDR(2.4f), o + 2)
-                .transform.localPosition = new Vector3(0.05f, 0.11f, 0f);
-        }
-
-        void Update()
-        {
-            if (_proj == null || Vfx.I == null) return;
-            _trail += Time.deltaTime;
-            if (_trail < 0.035f) return;
-            _trail = 0f;
-            Vfx.I.Puff((Vector2)_proj.position, new Vector2(0f, 0.3f), HisamePalette.Smoke, 0.1f, 0.4f);
+            var v = Vfx.I;
+            if (v == null) return;
+            Vector2 tip = a.owner != null && a.owner.rig != null ? a.owner.rig.World(B.Sword, a.owner.BladeTipLocal * 0.95f) : pos;
+            v.HisameAtemi(tip, Facing(a));
         }
     }
 }

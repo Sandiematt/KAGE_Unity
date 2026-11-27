@@ -39,6 +39,10 @@ namespace Kage
 
         Vector2 _bladeTip, _bladeBase;
         bool _bladeSet;
+        /// <summary>The blade extension (metres) a parried blow was locked at (Fighter.Parry.cs); 0 when none.</summary>
+        float _parryLockExtension;
+        bool _parryLockChainArc;
+        float _parryLockChainAngle, _parryLockChainBow, _parryLockChainSpin;
 
         /// <summary>HandN-local start of the second (near hand) blade: just past the fist.</summary>
         public Vector2 NearBladeBaseLocal => def.fistLocal + Vector2.right * 0.05f;
@@ -70,8 +74,86 @@ namespace Kage
         /// <summary>The extension <paramref name="alpha"/> of a logic frame past the current move time (a rendered frame between two logic frames).</summary>
         public float BladeExtensionAt(float alpha)
         {
-            if (state != FState.Attack || move == null || move.extension.Count == 0) return 0f;
+            // a parried lash (the chain sickle) stays out on the parrier's blade through the hit-stop, then snaps back as it recoils
+            if (_parryLockExtension > 0f && _parryCtrl.Mode == DynamicParryController.Role.Attacker) return _parryLockExtension * _parryCtrl.AttackerHold;
+            if (state != FState.Attack || move == null || (move.extension.Count == 0 && move.chainArc.Count == 0)) return 0f;
             return move.ExtensionAt(_moveTime + alpha * PlaybackRate) * Weapon.reach;
+        }
+
+        /// <summary>
+        /// Samples Yamigama's dynamic weighted-chain whip (off-hand to iron weight <c>fundo</c>) in world space for
+        /// the current move frame (or locked parry recoil). Returns false when no chain whip arc is active.
+        /// </summary>
+        public bool TryChainWhipWorld(float alpha, out Vector2 handWorld, out Vector2 weightWorld, out Vector2 ctrlWorld, out float ext)
+        {
+            handWorld = weightWorld = ctrlWorld = default;
+            ext = 0f;
+            if (rig == null || def == null) return false;
+            var frame = RootFrame.Of(rig.transform);
+            if (!frame.Valid) return false;
+            float angleDeg, bow, spinDeg;
+            if (_parryLockChainArc && _parryLockExtension > 0f && _parryCtrl.Mode == DynamicParryController.Role.Attacker)
+            {
+                float hold = _parryCtrl.AttackerHold;
+                ext = _parryLockExtension * hold;
+                angleDeg = _parryLockChainAngle;
+                bow = _parryLockChainBow * hold;
+                spinDeg = _parryLockChainSpin;
+            }
+            else if (state == FState.Attack && move != null && move.HasChainArc)
+            {
+                float t = _moveTime + alpha * PlaybackRate;
+                if (!move.ChainAt(t, out float m, out angleDeg, out bow, out spinDeg)) return false;
+                ext = m * Weapon.reach;
+            }
+            else return false;
+
+            handWorld = rig.World(B.HandN, def.fistLocal);
+            ComputeChainCurve(frame, frame.ToRoot(handWorld), ext, angleDeg, bow, spinDeg, rig.groundY, out weightWorld, out ctrlWorld);
+            return true;
+        }
+
+        /// <summary>Evaluates a move's chain whip curve at an exact fractional move time using <see cref="PoseFK"/>.</summary>
+        internal bool TryChainWhipPosed(PoseFK fk, RootFrame frame, float at, out Vector2 handWorld, out Vector2 weightWorld, out Vector2 ctrlWorld, out float ext)
+        {
+            handWorld = weightWorld = ctrlWorld = default;
+            ext = 0f;
+            if (move == null || !move.HasChainArc || !frame.Valid) return false;
+            if (!move.ChainAt(at, out float m, out float angleDeg, out float bow, out float spinDeg)) return false;
+            ext = m * Weapon.reach;
+            Vector2 handRoot = fk.Point(B.HandN, def.fistLocal);
+            handWorld = frame.ToWorld(handRoot);
+            ComputeChainCurve(frame, handRoot, ext, angleDeg, bow, spinDeg, rig != null ? rig.groundY : 0f, out weightWorld, out ctrlWorld);
+            return true;
+        }
+
+        static void ComputeChainCurve(RootFrame frame, Vector2 handRoot, float ext, float angleDeg, float bow, float spinDeg, float groundY, out Vector2 weightWorld, out Vector2 ctrlWorld)
+        {
+            float effAng = angleDeg + spinDeg;
+            Vector2 dir = KMath.Dir(effAng);
+            Vector2 perp = new(-dir.y, dir.x);
+            Vector2 weightRoot = handRoot + dir * ext;
+            Vector2 ctrlRoot = handRoot + dir * (ext * 0.52f) + perp * bow;
+            weightWorld = frame.ToWorld(weightRoot);
+            ctrlWorld = frame.ToWorld(ctrlRoot);
+            float floor = groundY + 0.05f;
+            if (weightWorld.y < floor) weightWorld.y = floor;
+            if (ctrlWorld.y < floor) ctrlWorld.y = floor;
+        }
+
+        /// <summary>Quadratic Bezier point along a chain curve.</summary>
+        public static Vector2 ChainBezier(Vector2 a, Vector2 c, Vector2 b, float t)
+        {
+            float u = 1f - t;
+            return u * u * a + 2f * u * t * c + t * t * b;
+        }
+
+        /// <summary>World tip of the currently active weapon strike (follows Yamigama's weighted chain on whip windows, else the blade tip).</summary>
+        public Vector2 ActiveWeaponTipWorld(HitWindow w = null)
+        {
+            bool whip = w != null ? w.chainWhip : (state == FState.Attack && move != null && move.HasChainArc && BladeExtension > 0.05f);
+            if (whip && TryChainWhipWorld(0f, out _, out var weight, out _, out float ext) && ext > 0.02f) return weight;
+            return rig.World(B.Sword, BladeTipLocal);
         }
 
         /// <summary>
@@ -99,6 +181,7 @@ namespace Kage
                 if (weaponId != null && WeaponFamilies.FamilyIdOf(weaponId) != fam.id)
                     Debug.LogWarning($"{FighterId ?? fighterName}: weapon '{weaponId}' has no registered family yet; fighting with the {fam.id} set");
             }
+            bool chosen = weaponId != null;              // a weapon picked for this fighter, not its family's reference by default
             weaponId ??= fam.referenceWeapon;
 
             if (state == FState.Attack) SetState(FState.Idle);
@@ -107,7 +190,11 @@ namespace Kage
             WeaponId = weaponId;
             WeaponLevel = Mathf.Max(1, level);
             Weapon = WeaponStats.Combat(weaponId, WeaponLevel);
-            moves = (ctx != null ? ctx.MoveSets : _ownSets ??= new MoveSets()).Get(fam.id);
+            // the weapon's attack pattern (docs/weapon-styles.md): the player's own equipped weapon only. A foe with no weapon of its own is
+            // handed its family's reference weapon (a Footman's "kagetsu") and must keep fighting exactly as its family does.
+            Style = chosen && isPlayer ? WeaponStyles.Of(weaponId) : null;
+            ResetStyleState();
+            moves = (ctx != null ? ctx.MoveSets : _ownSets ??= new MoveSets()).Get(fam.id, Style);
             SetBlade();
             fam.visual?.Attach(rig, weaponId);
             if (SwordBroken) rig.SetSwordVisible(false);
@@ -151,14 +238,17 @@ namespace Kage
             }
             bool polearm = Family != null && Family.grip == GripPose.Polearm;
             bool heavy = Family != null && Family.grip == GripPose.HeavyTwoHand;
-            float spacing = polearm ? Pose.PolearmSpacing : heavy ? Pose.HeavySpacing : Pose.GripSpacing;
-            float pommel = polearm ? Pose.PolearmPommel : heavy ? Pose.HeavyPommel : Pose.GripPommel;
-            if (p.gripSpacing != spacing || p.gripPommel != pommel) { p.gripSpacing = spacing; p.gripPommel = pommel; p.MarkDirty(); }
+            if (!p.hasCustomGrip)
+            {
+                float spacing = polearm ? Pose.PolearmSpacing : heavy ? Pose.HeavySpacing : Pose.GripSpacing;
+                float pommel = polearm ? Pose.PolearmPommel : heavy ? Pose.HeavyPommel : Pose.GripPommel;
+                if (p.gripSpacing != spacing || p.gripPommel != pommel) { p.gripSpacing = spacing; p.gripPommel = pommel; p.MarkDirty(); }
+            }
             if ((polearm || (Family != null && Family.keepPointOffFloor)) && p.ik[(int)Limb.ArmF])
             {
                 const float floor = 0.05f;
                 p.Resolve(def);       // bakes the arm angles; the shaft's drawn direction is their sum
-                float len = BladeReach + 0.08f;
+                float len = Mathf.Max(0.25f, BladeReach + 0.08f + p.shaftSlide);
                 float y0 = p.target[(int)Limb.ArmF].y;
                 float deg = p.a[(int)B.Hips] + p.a[(int)B.Chest] + p.a[(int)B.ArmFU] + p.a[(int)B.ArmFL] + p.a[(int)B.HandF] + p.a[(int)B.Sword] + def.bladeBindAngle;
                 float ang = deg * Mathf.Deg2Rad;

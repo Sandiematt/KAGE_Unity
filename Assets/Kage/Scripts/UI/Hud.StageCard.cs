@@ -48,11 +48,18 @@ namespace Kage
             _cardGroup = go.GetComponent<CanvasGroup>();
             _cardGroup.blocksRaycasts = false;
             Place(_card, new Vector2(0.5f, 0.5f), new Vector2(0f, 60f), new Vector2(2400f, 300f));
-            var bg = MakeImage("Bg", _card, new Color(0f, 0f, 0f, 0.62f));
+            var bg = MakeImage("Bg", _card, new Color(0.03f, 0.02f, 0.02f, 0.76f));
             Stretch(bg.rectTransform);
+            var topLine = MakeImage("TopLine", _card, KMath.Hex("#C9A45C").WithA(0.45f));
+            Place(topLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -2f), new Vector2(1500f, 2f));
+            var botLine = MakeImage("BotLine", _card, KMath.Hex("#C9A45C").WithA(0.45f));
+            Place(botLine.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 2f), new Vector2(1500f, 2f));
             _cardKicker = MakeText("Kicker", _card, 26, TextAnchor.MiddleCenter, KMath.Hex("#C9A45C"), new Vector2(0.5f, 0.5f), new Vector2(0f, 82f), new Vector2(1400f, 36f), true);
-            _cardName = MakeText("Name", _card, 96, TextAnchor.MiddleCenter, KMath.Hex("#ECE5D3"), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(1800f, 120f), true);
-            _cardSub = MakeText("Sub", _card, 28, TextAnchor.MiddleCenter, new Color(0.93f, 0.9f, 0.83f, 0.7f), new Vector2(0.5f, 0.5f), new Vector2(0f, -66f), new Vector2(1400f, 40f), false);
+            _cardKicker.font = Ui.FontOf(UiFont.Title);
+            _cardName = MakeText("Name", _card, 92, TextAnchor.MiddleCenter, KMath.Hex("#ECE5D3"), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(1800f, 120f), false);
+            _cardName.font = Ui.FontOf(UiFont.Mincho);
+            _cardSub = MakeText("Sub", _card, 26, TextAnchor.MiddleCenter, new Color(0.93f, 0.9f, 0.83f, 0.75f), new Vector2(0.5f, 0.5f), new Vector2(0f, -66f), new Vector2(1400f, 40f), false);
+            _cardSub.font = Ui.FontOf(UiFont.Body);
             var rule = MakeImage("Rule", _card, KMath.Hex("#C9A45C"));
             Place(rule.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -108f), new Vector2(220f, 3f));
             go.SetActive(false);
@@ -137,27 +144,33 @@ namespace Kage
             s.group = go.GetComponent<CanvasGroup>();
             s.group.blocksRaycasts = false;
             Place(s.root, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(620f, 150f));
-            s.paper = MakeImage("Paper", s.root, new Color(0.925f, 0.898f, 0.827f, 0.94f));
+            s.paper = MakeImage("Paper", s.root, new Color(0.925f, 0.898f, 0.827f, 0.96f));
             Stretch(s.paper.rectTransform);
-            var seal = MakeImage("Seal", s.root, KMath.Hex("#C0392B"));
-            Place(seal.rectTransform, new Vector2(0f, 0.5f), new Vector2(-6f, 0f), new Vector2(12f, 120f));
-            s.verb = MakeText("Verb", s.root, 54, TextAnchor.MiddleLeft, KMath.Hex("#1A1512"), new Vector2(0f, 1f), new Vector2(40f + 100f, -48f), new Vector2(240f, 70f), true);
+            var seal = MakeImage("Seal", s.root, KMath.Hex("#C8343A"));
+            Place(seal.rectTransform, new Vector2(0f, 0.5f), new Vector2(6f, 0f), new Vector2(12f, 118f));
+            s.verb = MakeText("Verb", s.root, 48, TextAnchor.MiddleLeft, KMath.Hex("#1A1512"), new Vector2(0f, 1f), new Vector2(40f + 100f, -48f), new Vector2(240f, 70f), false);
+            s.verb.font = Ui.FontOf(UiFont.Title);
+            var vo = s.verb.GetComponent<Outline>();
+            if (vo != null) Destroy(vo);
             s.verb.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             for (int i = 0; i < 2; i++)
             {
                 s.capBg[i] = MakeImage("Cap" + i, s.root, KMath.Hex("#1A1512"));
-                s.capText[i] = MakeText("CapText" + i, s.capBg[i].transform, 34, TextAnchor.MiddleCenter, KMath.Hex("#ECE5D3"), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300f, 56f), true);
+                s.capText[i] = MakeText("CapText" + i, s.capBg[i].transform, 32, TextAnchor.MiddleCenter, KMath.Hex("#ECE5D3"), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300f, 56f), false);
+                s.capText[i].font = Ui.FontOf(UiFont.Cond);
                 var o = s.capText[i].GetComponent<Outline>();
                 if (o != null) Destroy(o);
                 s.capText[i].horizontalOverflow = HorizontalWrapMode.Overflow;
             }
-            s.slash = MakeText("Slash", s.root, 34, TextAnchor.MiddleCenter, KMath.Hex("#1A1512"), new Vector2(0f, 1f), Vector2.zero, new Vector2(30f, 50f), true);
+            s.slash = MakeText("Slash", s.root, 32, TextAnchor.MiddleCenter, KMath.Hex("#1A1512"), new Vector2(0f, 1f), Vector2.zero, new Vector2(30f, 50f), false);
+            s.slash.font = Ui.FontOf(UiFont.Cond);
             var so = s.slash.GetComponent<Outline>();
             if (so != null) Destroy(so);
-            s.hint = MakeText("Hint", s.root, 25, TextAnchor.MiddleLeft, new Color(0.012f, 0.012f, 0.012f, 0.72f), new Vector2(0f, 0f), new Vector2(40f + 270f, 30f), new Vector2(540f, 36f), false);
+            s.hint = MakeText("Hint", s.root, 24, TextAnchor.MiddleLeft, new Color(0.08f, 0.06f, 0.05f, 0.78f), new Vector2(0f, 0f), new Vector2(40f + 270f, 30f), new Vector2(540f, 36f), false);
+            s.hint.font = Ui.FontOf(UiFont.Body);
             var ho = s.hint.GetComponent<Outline>();
             if (ho != null) Destroy(ho);
-            s.strike = MakeImage("Strike", s.root, KMath.Hex("#C0392B"));
+            s.strike = MakeImage("Strike", s.root, KMath.Hex("#C8343A"));
             go.SetActive(false);
             return s;
         }

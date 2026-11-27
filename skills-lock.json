@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "skills": {
+    "effekseer-vfx": {
+      "source": "kanaworksai-hue/effekseer-vfx-skill",
+      "commit": "b0eea1085f2e3e0fa0b5cc77c58c9a845f0bec96",
+      "sourceType": "github",
+      "skillPath": "skills/effekseer-vfx/SKILL.md",
+      "computedHash": "bd59df122f1928db2d30ac14549a580dbd28acdd41a33550e7367323b9e95caf"
+    },
+    "vfx-review": {
+      "source": "kanaworksai-hue/effekseer-vfx-skill",
+      "commit": "b0eea1085f2e3e0fa0b5cc77c58c9a845f0bec96",
+      "sourceType": "github",
+      "skillPath": "skills/vfx-review/SKILL.md",
+      "computedHash": "91e7426a1aa1b3fa7d14ae5c7f5ebbc4502533598c20367cd3a79be261d623e9"
+    }
+  }
+}

@@ -25,7 +25,10 @@ namespace Kage
         void StartPhysicalFall(Vector2 v)
         {
             if (LegacyPhysics || rig == null) return;
-            float spin = facing * _tumbleVel;        // root-space degrees a second, mirrored into the world
+            // root-space degrees a second, mirrored into the world; no more than the turn still left to the rest angle over a quarter second,
+            // so the bodies don't overshoot the lying angle the tether holds (docs/combat-flow.md)
+            float left = _tumbleTo - _tumbleAng;
+            float spin = facing * Mathf.Sign(left) * Mathf.Min(Mathf.Abs(_tumbleVel), Mathf.Abs(left) * 4f);
             if (_ragdoll == null) _ragdoll = Ragdoll2D.ActivateFall(rig, v, spin, Gravity);
             else if (_ragdoll.Tethered) _ragdoll.AddMotion(v - _ragdoll.bodies[B.Hips].linearVelocity, spin * 0.5f);
         }
@@ -37,27 +40,34 @@ namespace Kage
             float s = Mathf.Abs(transform.lossyScale.y);
             Vector2 pivot = def.pivot[(int)B.Hips];
             Vector2 local;
-            float angle, settle = 0f;
+            float angle, settle = 0f, turn;
             if (state == FState.Down)
             {
                 var lie = _liePose ?? _lie;
                 local = new Vector2(pivot.x + lie.hip.x, pivot.y + lie.hip.y);
                 angle = lie.a[(int)B.Hips];
-                // the impact folds the limbs; then the muscles settle the body into the authored lie
-                settle = Mathf.Clamp01((stateFrame - 4) / 14f);
-                _ragdoll.DrivePose(lie, facing, Mathf.Lerp(8f, 160f, settle), Mathf.Lerp(2f, 18f, settle));
+                // the impact: the trunk is pulled flat first (the back or the chest takes the floor, never a sit-up on straight legs),
+                // the loose limbs fold and bounce, then the muscles ease the body into the authored lie
+                settle = Mathf.Clamp01((stateFrame - 4) / 16f);
+                turn = Mathf.Lerp(2.2f, 1f, settle);
+                _ragdoll.DrivePose(lie, facing, Mathf.Lerp(10f, 130f, settle * settle), Mathf.Lerp(2.5f, 16f, settle));
             }
             else
             {
                 // the hips come down to lying height as the body nears the floor, so it lands on its back or front
                 float h = Mathf.Lerp(LieHipsHeight, pivot.y, Mathf.Clamp01(rb.position.y / 0.7f));
                 local = new Vector2(pivot.x, h);
-                angle = _tumbleAng;
-                _ragdoll.DrivePose(_tumble, facing, 30f, 4f);      // loose: the limbs flail round the tumble shape
+                // coming down near the floor, the trunk turns ahead of the tumble to the side it will lie on, so a low fall (a sweep)
+                // lands on its back or front instead of sitting up with its legs out
+                float near = rb.linearVelocity.y < 0f ? 1f - Mathf.Clamp01(rb.position.y / 0.8f) : 0f;
+                angle = Mathf.Lerp(_tumbleAng, _tumbleTo, near);
+                turn = 1f + near;
+                // loose: the limbs trail and flail round a soft, curved tumble shape (onto the back, or the front)
+                _ragdoll.DrivePose(_tumbleTo < 0f ? _tumbleFront : _tumble, facing, 45f, 6f);
             }
             Vector2 target = rb.position + new Vector2(local.x * facing, local.y) * s;
             // once settled, a firmer pull slides the body (against the ground's friction) to where it lies in gameplay
-            _ragdoll.Drive(target, rb.linearVelocity, facing * angle, 1f, 1f + 2f * settle);
+            _ragdoll.Drive(target, rb.linearVelocity, facing * angle, turn, 1f + 2f * settle);
         }
 
         /// <summary>The fall is over (get-up, stagger, round reset): the captured fallen pose becomes the rig's pose again.</summary>

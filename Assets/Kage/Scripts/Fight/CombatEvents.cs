@@ -18,12 +18,13 @@ namespace Kage
         GuardBroken,      // Target's posture filled (SAN-86)
         PerfectDodged,    // Target perfect-dodged Source's MoveId (SAN-92)
         KnockedOut,       // Target was knocked out; Source landed the last hit
-        RageArt,          // Source started a rage art: MoveId = "crimsonMoon" | "thousandShadows"
+        RageArt,          // Source started a rage art: MoveId = "crimsonMoon" | "silentMoon" | "swallowStorm" | "hellSplitter" | "waterDragon" | "reaperRequiem" | "thousandShadows"
         BossPhaseChanged, // Target entered phase Index (Name = JS phase name) (SAN-102)
         WaveStarted,      // Index = wave number in the stretch, Name = encounter id (SAN-89)
         WaveCleared,      // same fields (SAN-89)
         StageCleared,     // Name = stage id
-        StageFailed       // Name = stage id
+        StageFailed,      // Name = stage id
+        CounterHit        // Source's MoveId was a counter hit on Target, the fighter Source parried (after the Hit; Damage = the Hit's)
     }
 
     /// <summary>
@@ -89,6 +90,13 @@ namespace Kage
         /// </summary>
         public static CombatEvent Clashed(int frame, Fighter source, Fighter target, string moveId, int window, string targetMoveId, float posture, Vector2 contact) =>
             new(frame, CombatEventType.Clashed, source, target, null, null, moveId, window, posture: posture, contact: contact, name: targetMoveId);
+
+        /// <summary>
+        /// Source's blow on Target was a counter hit (Target was reeling from Source's parry). Published right after that blow's Hit;
+        /// Damage is the Hit's (the counter bonus included).
+        /// </summary>
+        public static CombatEvent CounterHit(int frame, Fighter source, Fighter target, string moveId, int window, float damage, Vector2 contact) =>
+            new(frame, CombatEventType.CounterHit, source, target, null, null, moveId, window, damage, contact: contact);
 
         public static CombatEvent KnockedOut(int frame, Fighter source, Fighter target, string moveId, Vector2 contact, Vector2 impulse) =>
             new(frame, CombatEventType.KnockedOut, source, target, null, null, moveId, contact: contact, knockback: impulse);

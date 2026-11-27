@@ -65,7 +65,7 @@ namespace Kage
                 for (int i = 0; i <= _segs; i++)
                 {
                     float t = i / (float)_segs;
-                    float pin = Mathf.Pow(Mathf.Sin(t * Mathf.PI), 0.6f);          // the ends stay on a and b
+                    float pin = Mathf.Pow(Mathf.Max(0f, Mathf.Sin(t * Mathf.PI)), 0.6f);   // the ends stay on a and b (Sin(PI) dips below 0 in float: no NaN end)
                     float along = (i > 0 && i < _segs) ? (F() - 0.5f) * 0.6f / _segs : 0f;
                     main.Add(_a + d * (t + along) + n * ((F() - 0.5f) * 2f * _jit * pin));
                 }
@@ -109,9 +109,19 @@ namespace Kage
         /// <summary>
         /// A lightning stroke from <paramref name="a"/> to <paramref name="b"/>: dark rim, crimson body and white core on one jagged path that is re-struck
         /// every 3 frames, with forks, under <see cref="StrokeEnvelope"/>. <paramref name="width"/> is the body's half-width at <paramref name="b"/> (the
-        /// struck end is the thick one); <paramref name="jitter"/> &lt; 0 = 7 % of the length.
+        /// struck end is the thick one); <paramref name="jitter"/> &lt; 0 = 7 % of the length. <paramref name="bright"/> scales every layer (a distant
+        /// bolt in the backdrop is dimmer) and <paramref name="core"/> the white core alone (0 = none: the persistent aura's arcs, never a tell's white).
         /// </summary>
-        public void Bolt(Vector2 a, Vector2 b, float width, float life, Color body, int segments = 14, float jitter = -1f, int forks = 2, bool unscaled = false, int order = Order + 55)
+        public void Bolt(Vector2 a, Vector2 b, float width, float life, Color body, int segments = 14, float jitter = -1f, int forks = 2, bool unscaled = false, int order = Order + 55,
+            float bright = 1f, float core = 1f) => Bolt(a, b, width, life, body, BloodBlack, 2.6f, 0.55f, segments, jitter, forks, unscaled, order, bright, core);
+
+        /// <summary>
+        /// <see cref="Bolt(Vector2, Vector2, float, float, Color, int, float, int, bool, int, float, float)"/> with its own dark rim: <paramref name="rim"/>
+        /// colour, <paramref name="rimWidth"/> × the body's half-width, at <paramref name="rimAlpha"/>. Each sub-boss's lightning is set off by its own dark
+        /// (Garan's storm navy, Shiden's purple-black) instead of Raikon's blood black.
+        /// </summary>
+        public void Bolt(Vector2 a, Vector2 b, float width, float life, Color body, Color rim, float rimWidth, float rimAlpha, int segments = 14, float jitter = -1f,
+            int forks = 2, bool unscaled = false, int order = Order + 55, float bright = 1f, float core = 1f)
         {
             float len = (b - a).magnitude;
             var jag = new Jag(a, b, segments, jitter < 0f ? len * 0.07f : jitter, forks, Random.Range(1, 1 << 20));
@@ -124,9 +134,9 @@ namespace Kage
                 PolyStrip(rib, jag.main, width * wMul * 0.35f, width * wMul, cc, soft);
                 foreach (var f in jag.forks) PolyStrip(rib, f, width * wMul * 0.5f, width * wMul * 0.1f, cc.WithA(cc.a * 0.8f), soft);
             }
-            Dyn("BoltRim", MeshKit.Alpha, order - 6, life, unscaled, (rib, u) => Build(rib, u, 2.6f, BloodBlack, 0.55f, true));
-            Dyn("BoltBody", AddHDR(2.4f), order, life, unscaled, (rib, u) => Build(rib, u, 1.4f, body, 1f, true));
-            Dyn("BoltCore", AddHDR(3.2f), order + 1, life, unscaled, (rib, u) => Build(rib, u, 0.4f, Color.white, 1f, false));
+            Dyn("BoltRim", MeshKit.Alpha, order - 6, life, unscaled, (rib, u) => Build(rib, u, rimWidth, rim, rimAlpha * bright, true));
+            Dyn("BoltBody", AddHDR(2.4f), order, life, unscaled, (rib, u) => Build(rib, u, 1.4f, body, bright, true));
+            if (core > 0f) Dyn("BoltCore", AddHDR(3.2f), order + 1, life, unscaled, (rib, u) => Build(rib, u, 0.4f, Color.white, bright * core, false));
         }
 
         /// <summary>A short crawling arc between two points (blade static, a body aura): a thin stroke with no forks.</summary>

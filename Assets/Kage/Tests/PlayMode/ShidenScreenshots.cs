@@ -31,7 +31,7 @@ namespace Kage.Tests
         {
             if (_game != null) Object.DestroyImmediate(_game);
             KageGame.NextFoeId = null;
-            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) Object.DestroyImmediate(cam.gameObject);
+            foreach (var cam in Object.FindObjectsByType<Camera>()) Object.DestroyImmediate(cam.gameObject);
         }
 
         static bool In(Fighter s, string id) => s.state == FState.Attack && s.move != null && s.move.id == id;
@@ -254,7 +254,7 @@ namespace Kage.Tests
             cam.depth = 100;
             var data = cam.GetUniversalAdditionalCameraData();
             if (data != null) { data.renderPostProcessing = false; data.antialiasing = AntialiasingMode.None; }
-            foreach (var c in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            foreach (var c in Object.FindObjectsByType<Canvas>())
             {
                 if (!c.isRootCanvas || c.renderMode != RenderMode.ScreenSpaceOverlay) continue;
                 canvases.Add((c, c.renderMode, c.worldCamera));

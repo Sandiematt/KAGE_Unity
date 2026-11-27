@@ -18,6 +18,16 @@ namespace Kage
         public bool passive;           // training: just stands and guards sometimes
         /// <summary>How often a chosen attack is actually thrown (<see cref="CharacterDef.attackRate"/>): 1 is the profile as is, 0.3 holds back seven times in ten.</summary>
         public float attackRate = 1f;
+        /// <summary>Added to <see cref="level"/> for this character (<see cref="CharacterDef.aiSkill"/>): a sub-boss's rank on the Act I ladder.</summary>
+        public float skill;
+        /// <summary>
+        /// Metres (<see cref="CharacterDef.runInBeyond"/>): further from its target than this, a profiled AI holds forward until it breaks into a run, and stops
+        /// the moment it is back in its fighting range, instead of walking in short steps. 0 = never.
+        /// </summary>
+        public float runInBeyond;
+
+        /// <summary>The level every choice reads: the stage's <see cref="level"/> plus the character's <see cref="skill"/>, 0..1.</summary>
+        public float Level => Mathf.Clamp01(level + skill);
 
         /// <summary>
         /// Takes the character's AI knobs (ADR-0005): its <see cref="CharacterDef.aiProfile"/> (<see cref="AiProfiles"/>), <see cref="CharacterDef.attackRate"/>
@@ -28,6 +38,8 @@ namespace Kage
             if (def == null) return;
             profile = AiProfiles.Get(def.aiProfile);
             attackRate = def.attackRate;
+            skill = def.aiSkill;
+            runInBeyond = def.runInBeyond;
             parryRate = def.parryRate > 0f ? def.parryRate : (profile != null ? profile.parryRate : 0f);
         }
 
@@ -41,7 +53,7 @@ namespace Kage
         bool _parryTry;
         int _parryWait;
 
-        struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; public int ability; public bool dash; }
+        struct Step { public int frames; public int fwd, dy; public Btn btn; public bool tap; public int tapDir; public int ability; public bool dash; public bool pursue; }
         readonly Queue<Step> _plan = new();
         Step _cur;
         int _curLeft, _think, _guardFrames;
@@ -60,13 +72,17 @@ namespace Kage
             var opp = self.opponent;
             var o = new FrameInput();
             if (opp == null) return o;
+            WatchOpponent(opp);              // the read: which attacks the opponent keeps starting (AIInputSource.Profile.cs)
             float face = self.facing;
             float dist = Mathf.Abs(opp.Pos.x - self.Pos.x);
             bool waiting = self.ctx != null && !self.ctx.Engagement.MayAttack(self);   // not engaged: no attacks (SAN-83)
 
             // knocked down: mash for a quick kip-up (a waiting foe gets up in its own time: a mashed button would attack)
-            if (self.state == FState.Down) { if (!waiting && R() < 0.08f * level) o.p = true; return o; }
-            if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; _parryTry = ParryAttempt = false; return o; }
+            if (self.state == FState.Down) { if (!waiting && R() < 0.08f * Level) o.p = true; return o; }
+            if (self.state is FState.Hitstun or FState.Launched or FState.Thrown or FState.KO) { _plan.Clear(); _curLeft = 0; _parryTry = ParryAttempt = false; _stance = false; _stanceRepress = 0; DropChain(); return o; }
+
+            // it just parried: hold for its tier's beat, then answer (the wind-up shows a tell; AIInputSource.Profile.cs)
+            if (!passive && !waiting) AnswerParry(self, dist);
 
             // a reaction ability (Raikon's Iron Guard vs spam, Sky-Splitter vs a jump) answers the moment its situation holds
             if (!passive && !waiting && !self.Busy && _guardFrames <= 0)
@@ -84,7 +100,7 @@ namespace Kage
                 foreach (var w in m.hits) if (w.from >= opp.moveFrame && w.from < firstHit) { firstHit = w.from; lvl = w.level; }
                 float reach = m.swordFront ? 1.6f : 1.15f;
                 if (m.projectileFrame > 0) reach = 9f;
-                if (firstHit < 999 && dist < reach && R() < Mathf.Lerp(0.18f, 0.75f, level))
+                if (firstHit < 999 && dist < reach && R() < Mathf.Lerp(0.18f, 0.75f, Level))
                 {
                     int ahead = firstHit - opp.moveFrame;
                     _guardFrames = ahead + 10;
@@ -93,17 +109,19 @@ namespace Kage
                     _parryTry = parryRate > 0f && lvl != HitLevel.Unblockable && R() < parryRate;
                     _parryWait = _parryTry ? Mathf.Max(0, ahead - Tuning.Get<ParryTuning>().windowFrames / 2) : 0;
                     _plan.Clear(); _curLeft = 0;
-                    if (lvl == HitLevel.Unblockable && R() < level) { _guardFrames = 0; Backflip(Cornered(self, opp)); }
+                    if (lvl == HitLevel.Unblockable && R() < Level) { _guardFrames = 0; Backflip(Cornered(self, opp)); }
                 }
             }
             if (_guardFrames > 0)
             {
                 _guardFrames--;
-                o.guard = _parryWait <= 0;      // the same Guard input the player has; Down makes it a low guard
+                bool up = _parryWait <= 0;      // the same Guard input the player has; Down makes it a low guard
+                if (_stanceRepress > 0 && --_stanceRepress == 0) up = false;    // a stance parry: one frame down, then up again is the press
+                o.guard = up;
                 if (_parryWait > 0) _parryWait--;
                 o.dy = _guardLow ? -1 : 0;
                 ParryAttempt = _parryTry;
-                if (_guardFrames == 0) { _parryTry = false; ParryAttempt = false; }
+                if (_guardFrames == 0) { _parryTry = false; ParryAttempt = false; _stance = false; _stanceRepress = 0; }
                 if (_guardFrames == 0 && self.state == FState.Blockstun && !waiting) Punish(dist);
                 return o;
             }
@@ -111,10 +129,13 @@ namespace Kage
             if (waiting) return WaitTurn(self, opp, dist, o);
             if (_waited) { _waited = false; _plan.Clear(); _curLeft = 0; _think = 0; }   // just engaged: decide afresh
 
+            // a boss string: straight from one ability into the next on the string's beat (AbilityDef.chain; Raikon's)
+            if (Profiled && ChainStep(self, opp, dist, ref o)) return o;
+
             // chase a launch: jump-cancel the launcher and follow with an air attack
             if (self.IsAttacking && self.moveHit && self.move.jumpCancelFrom >= 0 && self.moveFrame >= self.move.jumpCancelFrom - 2 && _plan.Count == 0)
             {
-                if (R() < Mathf.Lerp(0.3f, 0.9f, level))
+                if (R() < Mathf.Lerp(0.3f, 0.9f, Level))
                 {
                     o.dy = 1;
                     o.dx = (int)face;
@@ -128,10 +149,15 @@ namespace Kage
             if (self.IsAttacking && self.moveHit && self.move.chain.Count > 0 && self.moveFrame >= self.move.cancelFrom - 3 && ChainRoll())
             {
                 var keys = new List<Btn>(self.move.chain.Keys);
+                if (!Profiled) keys.RemoveAll(k => self.move.chain[k] != null && self.move.chain[k].profiledOnly);     // the legacy AI's chains stay as they were
+                if (keys.Count == 0) return o;
                 Btn b = keys[N(keys.Count)];
                 Press(ref o, b);
                 return o;
             }
+
+            // a run-in ends the moment the target is back in fighting range: decide afresh this frame instead of running into it
+            if (_curLeft > 0 && _cur.pursue && dist <= PursueStop()) { _curLeft = 0; _plan.Clear(); _think = 0; }
 
             if (_curLeft <= 0)
             {
@@ -141,7 +167,7 @@ namespace Kage
                 {
                     if (Profiled) DecideProfiled(self, opp, dist); else Decide(self, opp, dist);
                     Restrain(dist);
-                    _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, level) * ThinkMul) + N(6);
+                    _think = Mathf.RoundToInt(Mathf.Lerp(16f, 5f, Level) * ThinkMul) + N(6);
                 }
             }
             if (_curLeft > 0)
@@ -217,7 +243,7 @@ namespace Kage
         /// </summary>
         public static bool Cornered(Fighter self, Fighter opp) => WallBehind(self, opp);
 
-        /// <summary>The backflip dodge (a double tap back); cornered, the roll forward out of the corner (a double tap forward) instead.</summary>
+        /// <summary>The back-step dodge, a flat slide (a double tap back); cornered, the forward slide out of the corner (a double tap forward) instead.</summary>
         void Backflip(bool cornered) => Enqueue(1, 0, 0, Btn.None, tap: true, tapDir: cornered ? 1 : -1);
 
         /// <summary>A walk back for <paramref name="frames"/>; cornered, a plain high guard held as long instead (no parry), since a step back walks into the wall.</summary>
@@ -226,6 +252,7 @@ namespace Kage
             if (!cornered) { Enqueue(frames, -1, 0, Btn.None); return; }
             _guardFrames = frames;
             _guardLow = false; _parryTry = false; _parryWait = 0;
+            _stance = true; _stanceRepress = 0;          // a held guard: a stance a skilled foe may parry out of (AIInputSource.Profile.cs)
         }
 
         static void Press(ref FrameInput o, Btn b)
@@ -233,9 +260,9 @@ namespace Kage
             switch (b) { case Btn.P: o.p = true; break; case Btn.K: o.k = true; break; case Btn.S: o.s = true; break; case Btn.X: o.x = true; break; }
         }
 
-        void Enqueue(int frames, int fwd, int dy, Btn b, bool tap = false, int tapDir = 0, int ability = 0, bool dash = false)
+        void Enqueue(int frames, int fwd, int dy, Btn b, bool tap = false, int tapDir = 0, int ability = 0, bool dash = false, bool pursue = false)
         {
-            _plan.Enqueue(new Step { frames = frames, fwd = fwd, dy = dy, btn = b, tap = tap, tapDir = tapDir, ability = ability, dash = dash });
+            _plan.Enqueue(new Step { frames = frames, fwd = fwd, dy = dy, btn = b, tap = tap, tapDir = tapDir, ability = ability, dash = dash, pursue = pursue });
         }
 
         /// <summary>
@@ -269,7 +296,7 @@ namespace Kage
                 if (dist > 1.3f) Enqueue(18 + N(12), 1, 0, Btn.None); else StepBack(18 + N(12), cornered);
                 return;
             }
-            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * level + 0.05f && self.moves.Select(Btn.X, 0, 0, false, self)?.projectileFrame >= 0) { Enqueue(2, 0, 0, Btn.X); return; }     // the ranged Special (a family whose Special is a melee move, like the fists, never throws it at range)
+            if (self.meter >= 35f && dist > 2.0f && r < 0.25f * Level + 0.05f && self.moves.Select(Btn.X, 0, 0, false, self)?.projectileFrame >= 0) { Enqueue(2, 0, 0, Btn.X); return; }     // the ranged Special (a family whose Special is a melee move, like the fists, never throws it at range)
             if (dist > 2.2f)
             {
                 if (r < 0.62f) Enqueue(14 + N(16), 1, 0, Btn.None);

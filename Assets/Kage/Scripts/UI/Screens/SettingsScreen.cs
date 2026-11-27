@@ -44,17 +44,19 @@ namespace Kage
             panelParent = panel;
             Enter(panel, UiAnims.WRise(.5f));
             float px = 40, py = 112, pw = 940;
-            float y = py + 30;
-            float ph = 582f;
-            Ui.Box(panel, px, py, pw, ph, Ui.PanelA(0.88f), "PanelBg");
+            float y = py + 28;
+            float ph = 560f;
+            Ui.Box(panel, px, py, pw, ph, Ui.PanelA(0.92f), "PanelBg");
+            Ui.Box(panel, px, py, pw, 2, Ui.Gold, "PanelAccent");
             var frame = Ui.Node(panel, "PanelFrame", px, py, pw, ph);
-            Ui.Frame(frame, 0, 0, pw, ph, 1.5f, Ui.GoldDim);
+            Ui.Frame(frame, 0, 0, pw, ph, 1.5f, Ui.A(Ui.GoldDim, 0.85f));
+            Ui.Frame(frame, 4, 4, pw - 8, ph - 8, 1f, Ui.A(Ui.Bone, 0.04f));
 
             UiParts.Section(panel, px + 40, y, "Development", "開発");
             y += 28;
             Row(px, ref y, pw, "Dev Mode", "On unlocks every stage and item and grants coins. Off starts the real economy from a fresh save.",
                 "devmode", new[] { "On", "Off" }, s.devMode ? 0 : 1, i => C.SetDevMode(i == 0), true);
-            y += 26;
+            y += 22;
             UiParts.Section(panel, px + 40, y, "Feel & Sound", "音");
             y += 28;
             Row(px, ref y, pw, "Screen Shake", "Camera shake on heavy impacts", "shake", new[] { "Full", "Half", "Off" }, IndexOf(new[] { "full", "half", "off" }, s.settings.shake),
@@ -65,18 +67,27 @@ namespace Kage
             Row(px, ref y, pw, "Music", "", "music", new[] { "On", "Off" }, s.settings.music ? 0 : 1, i => C.UpdateSettings(x => x.music = i == 0), false, last: true);
 
             // help card
-            var help = Ui.Node(Root, "Help", 1010, 112, 550, 300);
+            var help = Ui.Node(Root, "Help", 1010, 112, 550, 316);
             Enter(help, UiAnims.WRise(.5f, .16f));
-            Ui.Box(help, 0, 0, 550, 300, Ui.PanelA(0.9f));
-            Ui.Frame(help, 0, 0, 550, 300, 1.5f, Ui.GoldDim);
-            UiParts.Section(help, 32, 26, "Help & Data", null);
-            var guide = Ui.Node(help, "Guide", 32, 70, 486, 56);
-            Ui.Frame(guide, 0, 0, 486, 56, 1.5f, Ui.Gold);
+            Ui.Box(help, 0, 0, 550, 316, Ui.PanelA(0.92f));
+            Ui.Box(help, 0, 0, 550, 2, Ui.Gold);
+            Ui.Frame(help, 0, 0, 550, 316, 1.5f, Ui.A(Ui.GoldDim, 0.85f));
+            Ui.Frame(help, 4, 4, 542, 308, 1f, Ui.A(Ui.Bone, 0.04f));
+            UiParts.Section(help, 32, 28, "Help & Data", null);
+            var guide = Ui.Node(help, "Guide", 32, 72, 486, 56);
+            Ui.Box(guide, 0, 0, 486, 56, Ui.PanelA(0.85f));
             var ring = Ui.Box(guide, 0, 0, 486, 56, Color.clear);
+            Ui.Frame(guide, 0, 0, 486, 56, 1.5f, Ui.Gold);
+            var guideFocus = Ui.Frame2(guide, 486, 56);
             Ui.Label(guide, "CONTROLS GUIDE", UiFont.Title, 17, Ui.Gold, 0, 0, 486, 56, TextAnchor.MiddleCenter, 3.74f);
-            UiParts.Make(guide, Nav, "guide", () => flow.OpenControls(), f => ring.color = f ? Ui.A(Ui.Gold, 0.14f) : Color.clear);
-            Ui.Label(help, "Keyboard, gamepad and mouse all work in the menus: arrows or d-pad to move, Enter or A to choose, Esc or B to go back.", UiFont.Body, 14, Ui.Muted, 32, 146, 486, 60, TextAnchor.UpperLeft, 0, true, 1.4f);
-            Ui.Label(help, "Progress saves automatically to " + SaveStore.FileName + ".", UiFont.Body, 14, Ui.Muted, 32, 224, 486, 60, TextAnchor.UpperLeft, 0, true, 1.4f);
+            UiParts.Make(guide, Nav, "guide", () => flow.OpenControls(), f =>
+            {
+                ring.color = f ? Ui.A(Ui.Gold, 0.14f) : Color.clear;
+                guideFocus.color = f ? Ui.Gold : Color.clear;
+            });
+            Ui.Label(help, "Keyboard, gamepad and mouse all work in the menus: arrows or d-pad to move, Enter or A to choose, Esc or B to go back.", UiFont.Body, 14, Ui.Muted, 32, 150, 486, 62, TextAnchor.UpperLeft, 0, true, 1.4f);
+            Ui.Box(help, 32, 224, 486, 1, Ui.Hair);
+            Ui.Label(help, "Progress saves automatically to " + SaveStore.FileName + ".", UiFont.Body, 14, Ui.Muted, 32, 240, 486, 50, TextAnchor.UpperLeft, 0, true, 1.4f);
 
             UiParts.Keys(Root, 40, 800, new[] { "ENTER", "Select" }, new[] { "ESC", "Back" }, new[] { "← / →", "Change" });
         }

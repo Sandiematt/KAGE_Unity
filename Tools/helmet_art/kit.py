@@ -25,55 +25,59 @@ def hexc(h, a=1.0):
 # (shade, mid, lit), painted by OpponentKit.Cel; "rim" is the tier's back-light rim on the helmet's outline.
 PALETTES = {
     'common': {
-        'rim': '#8e8e96',
-        'cloth': ('#26262b', '#3f3f46', '#626269'),
-        'wrap': ('#34343a', '#55555d', '#7e7e87'),
-        'steel': ('#4c4f55', '#868990', '#c4c7cc'),
-        'straw': ('#3b3833', '#5e5a52', '#8a857a'),
-        'ink': ('#141316', '#1d1c20', '#2a292e'),
-        'gauze': ('#6a6a72', '#9a9aa2', '#c6c6cc'),
+        'rim': '#9CA3AF',
+        'cloth': ('#22252D', '#3B404D', '#60687B'),
+        'wrap': ('#2D313B', '#4B5263', '#768096'),
+        'ink': ('#101218', '#1A1D26', '#2A2F3D'),
+    },
+    'rare': {
+        'rim': '#38BDF8',
+        'straw': ('#58462C', '#9E8354', '#DBC08A'),
+        'straw_dark': ('#2B2217', '#483926', '#6F5A3E'),
+        'steel': ('#374254', '#69788F', '#A9B9D1'),
+        'cloth': ('#1B212E', '#323C4F', '#566582'),
+        'wrap': ('#263042', '#44536E', '#7488AD'),
+        'ink': ('#0E121A', '#1A212E', '#2D374A'),
+        'accent': ('#1D4E78', '#38BDF8', '#BAE6FD'),
     },
     'epic': {
-        'rim': '#9a62f2',
-        'shell': ('#0b0911', '#17131f', '#2a2338'),
-        'plate': ('#1a1428', '#2a2140', '#43375e'),
-        'blade': ('#3a1c6c', '#7340c8', '#ad7cf6'),
-        'wrap': ('#43246f', '#7347b2', '#a479e0'),
-        'glow': ('#7a3ad6', '#b47bff', '#ead4ff'),
-    },
-    'legendary': {
-        'rim': '#e8952c',
-        'shell': ('#0b0909', '#1a1516', '#352c2e'),
-        'gold': ('#7a5418', '#cf9833', '#ffd77d'),
-        'red': ('#4c0a0e', '#97181e', '#d8393c'),
-        'wrap': ('#550b10', '#9b171d', '#d9403f'),
-        'glow': ('#b86a12', '#ffb340', '#fff0c4'),
+        'rim': '#A855F7',
+        'steel': ('#2E3340', '#5E667A', '#9EA8BD'),
+        'iron_dark': ('#191A24', '#2F3242', '#525770'),
+        'shell': ('#100C1A', '#221A36', '#3F3261'),
+        'gold': ('#7A5B1F', '#C99B3B', '#F5D67D'),
+        'plume': ('#4C1D95', '#7E3AF2', '#B794F4'),
+        'wrap': ('#3B1B6E', '#6D36C7', '#A875F8'),
+        'glow': ('#7C3AED', '#A855F7', '#E9D5FF'),
     },
     'trophy': {
-        'rim': '#e3bc55',
-        'shell': ('#a8a296', '#e4dfd5', '#ffffff'),
-        'gold': ('#86601e', '#d3a43a', '#f8dc86'),
-        'ribbon': ('#b3ada1', '#ece8df', '#ffffff'),
-        'wrap': ('#aaa498', '#e2ded4', '#fbfaf6'),
-        'ink': ('#141316', '#24222a', '#3a3742'),
-        'glass': ('#4f8299', '#93c6db', '#e2f8ff'),
-        'straw': ('#9c8e70', '#d6c8a4', '#f3e9cc'),
+        'rim': '#EAB308',
+        'enamel': ('#9C968A', '#E8E2D5', '#FFFFFF'),
+        'gold': ('#7A5314', '#CC9A28', '#FBE07B'),
+        'antler': ('#5C401A', '#9E7333', '#D9AE5B'),
+        'crimson': ('#5C1214', '#A8221E', '#DF4A38'),
+        'ribbon': ('#A6A094', '#EEE9DE', '#FFFFFF'),
+        'wrap': ('#A39D91', '#E6E0D3', '#FCFBF7'),
+        'ink': ('#141218', '#25222C', '#3E394A'),
+        'glow': ('#B45309', '#EAB308', '#FEF08A'),
     },
-    'god': {
-        'rim': '#ff3a2e',
-        'shell': ('#060405', '#130e10', '#2b1f23'),
-        'plate': ('#1c1215', '#2c1b20', '#4a2c33'),
-        'fire': ('#6a0507', '#d2161b', '#ff6a3d'),
-        'wrap': ('#5a0709', '#b3141a', '#ee433a'),
-        'glow': ('#ff2a1c', '#ff7a3a', '#ffd9a0'),
+    'legendary': {
+        'rim': '#F97316',
+        'shell': ('#0D0707', '#221112', '#442022'),
+        'crimson': ('#5C090C', '#B81C1E', '#EF4444'),
+        'gold': ('#8A4D0A', '#E59A18', '#FDE047'),
+        'horn': ('#190808', '#521412', '#B02A1A'),
+        'fire': ('#B91C1C', '#F97316', '#FDE047'),
+        'wrap': ('#4D0B0E', '#9E1A1E', '#DF3E2E'),
+        'glow': ('#EF4444', '#F97316', '#FEF08A'),
     },
 }
 
-TIER_NAMES = {'common': 'COMMON', 'epic': 'EPIC', 'trophy': 'TROPHY', 'legendary': 'LEGENDARY', 'god': 'GOD MODE'}
-TIER_COLOURS = {'common': '#c9c9cf', 'epic': '#b469ff', 'trophy': '#f2c23c', 'legendary': '#ff8a1f', 'god': '#ff2f2f'}
-TIER_ORDER = ['common', 'epic', 'trophy', 'legendary', 'god']
+TIER_NAMES = {'common': 'COMMON', 'rare': 'RARE', 'epic': 'EPIC', 'trophy': 'TROPHY', 'legendary': 'LEGENDARY'}
+TIER_COLOURS = {'common': '#9CA3AF', 'rare': '#38BDF8', 'epic': '#A855F7', 'trophy': '#EAB308', 'legendary': '#F97316'}
+TIER_ORDER = ['common', 'rare', 'epic', 'trophy', 'legendary']
 
-SEAM = '#060509'
+SEAM = '#07060A'
 FACE = '#110d0f'  # Palette.Body: Kage's face, left bare round the eye
 
 # ------------------------------------------------------------------------------------------------ paths (head frame)
@@ -234,8 +238,8 @@ class Piece:
 
 
 class Helmet:
-    def __init__(self, hid, look, tier, hair, summary):
-        self.id, self.look, self.tier, self.hair, self.summary = hid, look, tier, hair, summary
+    def __init__(self, hid, look, tier, hair, summary, eye='kept'):
+        self.id, self.look, self.tier, self.hair, self.summary, self.eye = hid, look, tier, hair, summary, eye
         self.pieces = []
 
     def _name(self, name):
@@ -385,8 +389,8 @@ KAGE_CONTEXT = [
     ('Lapel', 48, V(838,238, 850,236, 860,300, 862,398, 850,398, 846,300), TRIM, None),
     ('Collar', 49, V(822,250, 842,232, 853,262, 838,292), TRIM_DEEP, None),
     ('Neck', 80, V(838,200, 868,200, 872,240, 842,240), BODY, None),
-    ('Scarf_Wrap', 100, V(818,232, 836,221, 860,213, 890,207, 920,203, 946,205, 958,217, 955,236, 940,244, 912,240, 884,242, 856,248, 834,254, 820,250), TRIM, TRIM_BRIGHT),
-    ('Scarf_Fold', 101, V(830,240, 858,232, 890,226, 925,222, 948,224, 946,231, 924,229, 890,233, 858,239, 832,247), TRIM_DEEP, None),
+    ('Scarf_Wrap', 100, V(818,228, 843,223, 871,214, 915,203, 946,207, 958,217, 953,233, 927,237, 900,234, 865,242, 832,254, 822,245), TRIM, TRIM_BRIGHT),
+    ('Scarf_Fold', 101, V(823,233, 853,230, 889,217, 936,211, 905,219, 876,231, 850,238, 830,246), TRIM_DEEP, None),
     ('Scarf_Knot', 102, V(942,204, 960,207, 968,220, 962,236, 948,234, 944,220), TRIM, None),
     ('Scarf_KnotShade', 103, V(950,214, 962,218, 960,230, 952,228), TRIM_DEEP, None),
     ('ArmN_Upper', 104, V(884,258, 924,248, 944,286, 950,334, 950,372, 904,380, 897,334, 888,296), BODY, RIM),
@@ -416,7 +420,8 @@ def draw_list(helmet, bare=False, scarf_tails=True):
         add(84 * 3 + 2, HEAD_PLAIN, BODY)
     else:
         for pts, col in hair: add(84 * 3 + 2, pts, col)
-    add(96 * 3 + 2, eye, hexc('#F4F1EE'))
+    if helmet is None or bare or helmet.eye != 'replaced':
+        add(96 * 3 + 2, eye, hexc('#F4F1EE'))
     if helmet is not None and not bare:
         pal = PALETTES[helmet.tier]
         rimc = hexc(pal['rim'])
@@ -444,7 +449,8 @@ def render(helmet, centre_uv=(0.0, 0.05), half=1.9, size=400, ss=3, bg=(42, 34, 
     """The helmet on Kage's head at bind, facing right (the game's facing), as a PIL image."""
     from PIL import Image, ImageDraw
     S = size * ss
-    img = Image.new('RGBA', (S, S), bg + (255,))
+    bg_rgba = bg if len(bg) == 4 else bg + (255,)
+    img = Image.new('RGBA', (S, S), bg_rgba)
     cx, cy = px(*centre_uv)
     scale = S / (2 * half * R)
     def tr(p):
@@ -452,6 +458,41 @@ def render(helmet, centre_uv=(0.0, 0.05), half=1.9, size=400, ss=3, bg=(42, 34, 
         return (S / 2 + x * scale, S / 2 + (p[1] - cy) * scale)
     for _, _, pts, col in draw_list(helmet, bare, scarf_tails):
         if len(pts) < 3: continue
+        q = [tr(p) for p in pts]
+        if col[3] >= 255:
+            ImageDraw.Draw(img).polygon(q, fill=col)
+        else:
+            layer = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+            ImageDraw.Draw(layer).polygon(q, fill=col)
+            img = Image.alpha_composite(img, layer)
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def render_icon(helmet, size=320, ss=3):
+    """Transparent 320x320 side-profile bust portrait for Armory cards (dark silhouette, white eye, flowing crimson scarf, helmet)."""
+    from PIL import Image, ImageDraw
+    S = size * ss
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    # Frame the bust so shoulders/crimson scarf anchor cleanly at the bottom edge while tall Trophy antlers & Legendary flames reach the top
+    tall = helmet is not None and helmet.tier in ('trophy', 'legendary')
+    centre_uv = (-0.22, -0.42 if tall else -0.18)
+    half = 3.15 if tall else 2.75
+    cx, cy = px(*centre_uv)
+    scale = S / (2 * half * R)
+
+    def tr(p):
+        return (S / 2 + (cx - p[0]) * scale, S / 2 + (p[1] - cy) * scale)
+
+    # Flowing crimson scarf tails draped downward along Kage's back (bust composition)
+    items = draw_list(helmet, bare=(helmet is None), scarf_tails=False)
+    back_tails = [
+        (-2, 0, [(938, 218), (968, 260), (998, 340), (1016, 430), (982, 430), (962, 344), (930, 248)], TRIM_DEEP),
+        (-1, 0, [(926, 224), (952, 276), (972, 355), (984, 430), (948, 430), (936, 350), (912, 244)], TRIM),
+    ]
+    all_items = sorted(back_tails + items, key=lambda t: (t[0], t[1]))
+    for _, _, pts, col in all_items:
+        if len(pts) < 3:
+            continue
         q = [tr(p) for p in pts]
         if col[3] >= 255:
             ImageDraw.Draw(img).polygon(q, fill=col)
@@ -525,8 +566,9 @@ def cs_floats(ref):
 
 
 def export_cs(helmets, path):
-    tiers = {'common': 'Common', 'epic': 'Epic', 'trophy': 'Trophy', 'legendary': 'Legendary', 'god': 'GodMode'}
+    tiers = {'common': 'Common', 'rare': 'Rare', 'epic': 'Epic', 'trophy': 'Trophy', 'legendary': 'Legendary'}
     hairs = {'hidden': 'Hidden', 'kept': 'Kept'}
+    eyes = {'kept': 'Kept', 'replaced': 'Replaced'}
     L = []
     L.append('// GENERATED by Tools/helmet_art/build.py from Tools/helmet_art/helmets.py (SAN-72 tier redesign). Do not edit by hand:')
     L.append('// change the design there, run `python Tools/helmet_art/build.py export`, and re-render the tiles (HelmetTierScreenshots).')
@@ -562,7 +604,7 @@ def export_cs(helmets, path):
                     ds.append(f'new HelmetDetail("{dt}", {which}, {alpha:.3f}f, {cs_floats(to_ref(d))})')
                 parts.append('detail = new[] { ' + ', '.join(ds) + ' }')
             L.append('                new HelmetPiece { ' + ', '.join(parts) + ' },')
-        L.append('            }),')
+        L.append('            }, EyeUnderHelmet.' + eyes[h.eye] + '),')
     L.append('        };')
     L.append('    }')
     L.append('')
