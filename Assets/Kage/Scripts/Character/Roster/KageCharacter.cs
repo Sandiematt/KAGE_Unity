@@ -37,7 +37,7 @@ namespace Kage
                 speedMul = perks.SpeedMul,
                 perks = perks,
                 partSet = "kage",
-                helmet = save.equipped?.helmet,
+                hairstyle = Hairstyles.Resolve(save.equipped?.hairstyle),
                 armor = save.equipped?.armor,
                 colors = new FighterColors(Palette.Trim, Color.white, Palette.TrimDeep),
                 family = WeaponFamilies.FamilyIdOf(weapon) ?? WeaponFamilies.Katana,
@@ -49,7 +49,7 @@ namespace Kage
         }
 
         /// <summary>
-        /// A text that is the same for two saves exactly when <see cref="Def"/> builds the same Kage from them (weapon, helmet and armour
+        /// A text that is the same for two saves exactly when <see cref="Def"/> builds the same Kage from them (weapon, hairstyle and armour
         /// with their levels, and the player level). A screen that already built a fight compares it to know when to build it again.
         /// </summary>
         public static string LoadoutKey(SaveData save)
@@ -57,7 +57,7 @@ namespace Kage
             save ??= GameRules.DefaultSave(false);
             int Lv(System.Collections.Generic.Dictionary<string, int> owned, string id) => id != null && owned != null && owned.TryGetValue(id, out var l) && l > 0 ? l : 1;
             var e = save.equipped;
-            return $"{e?.weapon}:{Lv(save.owned?.weapons, e?.weapon)}|{e?.helmet}:{Lv(save.owned?.helmets, e?.helmet)}|{e?.armor}:{Lv(save.owned?.armors, e?.armor)}|{save.level}";
+            return $"{e?.weapon}:{Lv(save.owned?.weapons, e?.weapon)}|{Hairstyles.Resolve(e?.hairstyle)}|{e?.armor}:{Lv(save.owned?.armors, e?.armor)}|{save.level}";
         }
     }
 }

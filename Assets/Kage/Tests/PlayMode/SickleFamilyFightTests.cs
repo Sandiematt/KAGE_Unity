@@ -115,7 +115,7 @@ namespace Kage.Tests
         [TestCase("S", 0, 0, "chain.reap")]
         [TestCase("S", 1, 0, "chain.lash")]
         [TestCase("S", 0, -1, "chain.graveHook")]
-        [TestCase("S", -1, 0, "chain.cyclone")]
+        [TestCase("S", -1, 0, "chain.counterGuard")]
         [TestCase("S", 0, 1, "chain.crescentLift")]
         public void Each_ground_button_and_direction_starts_its_chain_move(string button, int fwd, int dy, string expected)
         {

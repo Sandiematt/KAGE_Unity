@@ -155,9 +155,7 @@ namespace Kage.Tests
             Assert.AreEqual("kuroe", card.PortraitFoe);
             Assert.AreEqual("Kuroe", card.FoeName);
             Assert.AreEqual("the Ink Censor", card.FoeTitle);
-            Assert.AreEqual(1, card.Spoils.Length);
-            Assert.AreEqual("sumi_eboshi", card.Spoils[0].Id);
-            Assert.IsFalse(card.Spoils[0].Owned);
+            Assert.IsEmpty(card.Spoils);
 
             // only a sub-boss card is drawn with the foe himself
             Assert.IsNull(View(save, "act1", "act1.stretch1").Card.PortraitFoe);

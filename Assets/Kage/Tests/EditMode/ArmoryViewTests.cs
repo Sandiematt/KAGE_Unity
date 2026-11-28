@@ -17,7 +17,6 @@ namespace Kage.Tests
             s.gems = 30;
             s.owned.weapons["kagetsu"] = 3;
             s.owned.weapons["tsubame"] = 1;
-            s.owned.helmets["kuro_zukin"] = 2;
             s.owned.armors["ronin_yoroi"] = 1;
             s.equipped.weapon = "kagetsu";          // bought and worn (a new save starts with Mumei)
             return s;
@@ -75,7 +74,7 @@ namespace Kage.Tests
             var save = MidGame();
             save.equipped.weapon = "tsubame";
             Assert.AreEqual("tsubame", View(save, ArmoryTab.Weapons).SelectedId);
-            Assert.AreEqual("kuro_zukin", View(save, ArmoryTab.Helmets, "kuro_zukin").SelectedId);
+            Assert.AreEqual("messy_layers", View(save, ArmoryTab.Hairstyles, "messy_layers").SelectedId);
             // a worn armour the Armory does not list (a later-act one dev mode wore): the list's first item is selected
             save.equipped.armor = "shirabe_do";
             Assert.AreEqual("tachibana_yoroi", View(save, ArmoryTab.Armor).SelectedId);
@@ -97,8 +96,6 @@ namespace Kage.Tests
             Assert.IsTrue(onikiri.Selected);
             Assert.AreEqual(1400, onikiri.Coins);
             Assert.AreEqual(0, onikiri.Gems);
-            var helmets = View(MidGame(), ArmoryTab.Helmets);
-            Assert.AreEqual(12, helmets.Tiles.Single(t => t.Id == "oni_menpo").Gems);
         }
 
         // ---- the selected weapon ----
@@ -170,13 +167,6 @@ namespace Kage.Tests
         public void A_gem_item_checks_the_gems_and_the_Mugen_Armor_needs_both()
         {
             var save = MidGame();
-            var oni = View(save, ArmoryTab.Helmets, "oni_menpo");
-            Assert.AreEqual(12, oni.Primary.Gems);
-            Assert.AreEqual(0, oni.Primary.Coins);
-            Assert.IsTrue(oni.Primary.Enabled);
-            save.gems = 11;
-            Assert.IsFalse(View(save, ArmoryTab.Helmets, "oni_menpo").Primary.Enabled);
-
             save.coins = 4200; save.gems = 24;
             var mugen = View(save, ArmoryTab.Armor, "mugen_yoroi");
             Assert.AreEqual(4200, mugen.Primary.Coins);
@@ -218,16 +208,10 @@ namespace Kage.Tests
         // ---- locked items ----
 
         [Test]
-        public void A_locked_item_says_how_to_unlock_it_and_cannot_be_bought()
+        public void AllStylesAreAvailableOnANewSave()
         {
-            var v = View(MidGame(), ArmoryTab.Helmets, "sumi_eboshi");
-            Assert.AreEqual("Locked", v.Primary.Label);
-            Assert.AreEqual(ArmoryAction.None, v.Primary.Action);
-            Assert.IsFalse(v.Primary.Enabled);
-            Assert.IsFalse(v.Equip.Enabled);
-            var warn = v.Boxes.Single(b => b.Warn);
-            Assert.AreEqual("LOCKED", warn.Title);
-            Assert.AreEqual("Defeat Kuroe, the Ink Censor", warn.Text);
+            var view = View(GameRules.DefaultSave(false), ArmoryTab.Hairstyles);
+            Assert.IsTrue(view.Tiles.All(t => t.Owned && !t.Locked && t.Coins == 0 && t.Gems == 0));
         }
 
         [Test]
@@ -260,20 +244,17 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void A_helmet_with_the_rage_perk_and_an_unowned_state()
+        public void HairHasNoStatsOrPurchaseButton()
         {
-            var v = View(MidGame(), ArmoryTab.Helmets, "oni_menpo");
-            Assert.AreEqual("Epic", v.TierLine);
-            CollectionAssert.AreEqual(new[] { "8%", "+14", "100" }, v.Stats.Select(s => s.Value).ToArray());
-            Assert.AreEqual("+20% rage gain", v.Boxes.Single().Text);
+            var v = View(MidGame(), ArmoryTab.Hairstyles, "undercut");
+            Assert.IsEmpty(v.Stats);
+            Assert.IsNull(v.Primary);
         }
 
         [Test]
         public void Perks_read_the_way_the_JS_Armory_words_them()
         {
             var save = GameRules.SetDevMode(GameRules.DefaultSave(false), true);
-            Assert.AreEqual("+2 kunai", View(save, ArmoryTab.Helmets, "sugegasa").Boxes.Single().Text);
-            Assert.AreEqual("+12% dash", View(save, ArmoryTab.Helmets, "kuro_zukin").Boxes.Single().Text);
             Assert.AreEqual("20% stun resist · +4% damage", View(save, ArmoryTab.Armor, "ikazuchi_do").Boxes.Single().Text);
         }
 
@@ -282,7 +263,7 @@ namespace Kage.Tests
         {
             var v = View(MidGame(), ArmoryTab.Armor, "tachibana_yoroi");
             Assert.AreEqual("None: the plain coat he left home in", v.Boxes.Single().Text);
-            Assert.IsFalse(View(MidGame(), ArmoryTab.Helmets, "shiro_maki").Boxes.Any());
+            Assert.IsFalse(View(MidGame(), ArmoryTab.Hairstyles, "spike").Boxes.Any());
         }
 
         // ---- the Kage preview ----
@@ -293,17 +274,16 @@ namespace Kage.Tests
             var save = MidGame();
             var w = ArmoryView.PreviewSave(save, ArmoryTab.Weapons, "tsubame");
             Assert.AreEqual("tsubame", w.equipped.weapon);
-            Assert.AreEqual("shiro_maki", w.equipped.helmet);
+            Assert.AreEqual("spike", w.equipped.hairstyle);
             Assert.AreEqual("kagetsu", save.equipped.weapon, "the real save is not touched");
-            var h = ArmoryView.PreviewSave(save, ArmoryTab.Helmets, "kuro_zukin");
-            Assert.AreEqual("kuro_zukin", h.equipped.helmet);
+            var h = ArmoryView.PreviewSave(save, ArmoryTab.Hairstyles, "messy_layers");
+            Assert.AreEqual("messy_layers", h.equipped.hairstyle);
             Assert.AreEqual("kagetsu", h.equipped.weapon);
-            Assert.AreEqual("kuro_zukin", KageCharacter.Def(h).helmet);
-            Assert.AreEqual(2, h.owned.helmets["kuro_zukin"]);
+            Assert.AreEqual("messy_layers", KageCharacter.Def(h).hairstyle);
             // the armour cards wear the Crimson Scarf and carry no weapon so only the armour is displayed
             var a = ArmoryView.PreviewSave(save, ArmoryTab.Armor, "ronin_yoroi");
             Assert.AreEqual("ronin_yoroi", KageCharacter.Def(a).armor);
-            Assert.AreEqual("shiro_maki", KageCharacter.Def(a).helmet);
+            Assert.AreEqual(save.equipped.hairstyle, KageCharacter.Def(a).hairstyle);
             Assert.AreEqual("fists", a.equipped.weapon, "armour preview must be unarmed");
             Assert.AreEqual("fists", KageCharacter.Def(a).weaponId, "armour preview character must not carry a weapon");
         }

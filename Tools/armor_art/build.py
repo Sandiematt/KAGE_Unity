@@ -47,7 +47,12 @@ def main():
         icons_dir = os.path.join(kit.ROOT, 'Assets', 'Kage', 'Resources', 'UI', 'Img')
         os.makedirs(icons_dir, exist_ok=True)
         for a in armors.ALL:
-            img = kit.render(a, cx=915.0, cy=420.0, half=370.0, size=256, ss=2, bg=(0, 0, 0, 0))
+            # Keep the whole silhouette inside the card, including Mugen's halo and the boots.
+            points = [pt for _, _, polygon, _ in kit.draw_list(a) for pt in polygon]
+            xs, ys = zip(*points)
+            cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+            half = max(max(xs) - min(xs), max(ys) - min(ys)) * 0.53
+            img = kit.render(a, cx=cx, cy=cy, half=half, size=256, ss=2, bg=(0, 0, 0, 0))
             img.save(os.path.join(icons_dir, f'icon_a_{a.id}.png'))
         print('wrote', len(armors.ALL), 'armor icons to', icons_dir)
         return

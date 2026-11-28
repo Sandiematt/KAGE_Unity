@@ -207,7 +207,7 @@ namespace Kage.Tests
             // the Armory, from the title
             Start(false, s =>
             {
-                s.coins = 1500; s.gems = 30; s.owned.weapons["kagetsu"] = 3; s.owned.weapons["tsubame"] = 1; s.owned.helmets["kuro_zukin"] = 2; s.owned.armors["ronin_yoroi"] = 1;
+                s.coins = 1500; s.gems = 30; s.owned.weapons["kagetsu"] = 3; s.owned.weapons["tsubame"] = 1; s.owned.armors["ronin_yoroi"] = 1;
             });
             yield return Settle();
             yield return Strip("armory_open", new[] { 0.24f, 0.4f, 0.55f, 0.75f, 1.0f, 1.5f }, () => { flow.Controller.OpenArmory(); flow.Controller.Armory.Select("onikiri"); });

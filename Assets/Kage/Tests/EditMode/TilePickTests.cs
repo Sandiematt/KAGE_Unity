@@ -169,16 +169,16 @@ namespace Kage.Tests
         public void A_pointer_over_a_tile_of_another_tab_row_still_selects_nothing()
         {
             // helmets: the same wiring on another tab
-            armory.SelectTab(ArmoryTab.Helmets);
-            var a = Node("tile:shiro_maki", 0f, 0f);
-            var b = Node("tile:kuro_zukin", 137f, 0f);
-            ArmoryTilePick.Bind(a, "shiro_maki", armory.Select);
-            ArmoryTilePick.Bind(b, "kuro_zukin", armory.Select);
-            nav.SetFocus("tile:shiro_maki");
+            armory.SelectTab(ArmoryTab.Hairstyles);
+            var a = Node("tile:spike", 0f, 0f);
+            var b = Node("tile:messy_layers", 137f, 0f);
+            ArmoryTilePick.Bind(a, "spike", armory.Select);
+            ArmoryTilePick.Bind(b, "messy_layers", armory.Select);
+            nav.SetFocus("tile:spike");
             nav.FocusOn(b, true);
-            Assert.AreEqual("shiro_maki", armory.SelectedId);
+            Assert.AreEqual("spike", armory.SelectedId);
             nav.Handle(MenuCommand.Submit);
-            Assert.AreEqual("kuro_zukin", armory.SelectedId);
+            Assert.AreEqual("messy_layers", armory.SelectedId);
         }
     }
 }

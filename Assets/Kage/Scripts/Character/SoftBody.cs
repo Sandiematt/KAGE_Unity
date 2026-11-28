@@ -15,6 +15,8 @@ namespace Kage
         readonly float[] _w, _phi, _dist;
         readonly Vector2 _c;
         float _lag, _lagVel, _time, _wavePhase;
+        float _tipBend, _tipVelocity;
+        public bool HasLongLocks { get; }
         Vector2 _trail, _trailVel;
         Vector2 _pendingImpulse;
         float _pendingAngImpulse;
@@ -28,8 +30,9 @@ namespace Kage
         /// <param name="outerRadius">radius where hair reaches full weight</param>
         /// <param name="faceMinDeg">start of rigid face/neck sector in degrees</param>
         /// <param name="faceMaxDeg">end of rigid face/neck sector in degrees</param>
-        public HairField(Mesh mesh, Vector2 centre, float innerRadius = 0.1f, float outerRadius = 0.31f, float faceMinDeg = -150f, float faceMaxDeg = 8f)
+        public HairField(Mesh mesh, Vector2 centre, float innerRadius = 0.1f, float outerRadius = 0.31f, float faceMinDeg = -150f, float faceMaxDeg = 8f, float trailLength = 0f)
         {
+            HasLongLocks = trailLength > 0f;
             _mesh = mesh;
             _mesh.MarkDynamic();
             _c = centre;
@@ -54,7 +57,11 @@ namespace Kage
                     else mask = 0f;
                 }
                 float wd = KMath.Smooth01(Mathf.InverseLerp(innerRadius, outerRadius, dist));
-                _w[i] = wd * mask;
+                // The flowing cut includes the face in the same mesh. Anchor the entire skull and
+                // weight locks by distance behind the nape, including tips that hang below the neck.
+                _w[i] = HasLongLocks
+                    ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.10f, trailLength, -d.x))
+                    : wd * mask;
                 _phi[i] = phi * Mathf.Deg2Rad;
                 _dist[i] = dist;
             }
@@ -101,6 +108,14 @@ namespace Kage
                 wLocal = new Vector2(wWorld.x * facing, wWorld.y);
                 windBoost = 1f + Mathf.Clamp(wWorld.magnitude * 0.10f, 0f, 0.75f);
             }
+            Vector2 air = wLocal - vLocal;
+            if (HasLongLocks)
+            {
+                // Resolve airflow in head space as the head turns on attacks and knockdowns.
+                float angle = -headTiltDeg * Mathf.Deg2Rad;
+                float c = Mathf.Cos(angle), s = Mathf.Sin(angle);
+                air = new Vector2(c * air.x - s * air.y, s * air.x + c * air.y);
+            }
             _wavePhase += dt * (1f + Mathf.Clamp((windBoost - 1f) * 0.28f, 0f, 0.28f));
 
             // Gravity droop when character tilts or lies down
@@ -110,9 +125,17 @@ namespace Kage
                 vLocal.x * 3.2f + vLocal.y * 2.6f - headAngVel * 0.06f - wLocal.x * 3.4f + droop,
                 -48f, 48f
             );
-            Spring(ref _lag, ref _lagVel, target, 145f, 12.5f, dt);
+            if (HasLongLocks)
+            {
+                // A tailwind lifts the laid-back lengths. Crosswinds and vertical motion bend them up or down.
+                target = Mathf.Clamp(air.x * 2.8f - air.y * 5.5f - headAngVel * .045f + droop * .35f, -33f, 33f);
+                Spring(ref _lag, ref _lagVel, target, 105f, 15f, dt);
+                Spring(ref _tipBend, ref _tipVelocity, _lag, 48f, 8.5f, dt);
+            }
+            else Spring(ref _lag, ref _lagVel, target, 145f, 12.5f, dt);
 
             Vector2 tt = Vector2.ClampMagnitude(new Vector2(-vLocal.x + wLocal.x * 0.85f, -vLocal.y + wLocal.y * 0.6f) * 0.011f, 0.09f);
+            if (HasLongLocks) tt = Vector2.ClampMagnitude(air * .019f, .115f);
             int steps = Mathf.Max(1, Mathf.CeilToInt(dt / 0.008f));
             float h = dt / steps;
             for (int s = 0; s < steps; s++)
@@ -126,13 +149,26 @@ namespace Kage
 
             float gust = (Mathf.PerlinNoise(_time * 0.22f, 3.7f) - 0.5f) * 3.0f * windBoost;
             float amp = wind * windBoost;
+            float flowingAmplitude = Mathf.Lerp(.45f, 5.5f, Mathf.Clamp01(air.magnitude / 5f));
             for (int i = 0; i < _base.Length; i++)
             {
                 float w = _w[i];
                 if (w <= 0.0005f) { _out[i] = _base[i]; continue; }
-                float wave = Mathf.Sin(_wavePhase * 1.25f + _phi[i] * 1.6f - _dist[i] * 5.2f) * amp
-                           + Mathf.Sin(_wavePhase * 2.05f + _phi[i] * 2.6f - _dist[i] * 8.4f) * amp * 0.18f;
-                float ang = (_lag + gust + wave) * w * Mathf.Deg2Rad;
+                float bend;
+                if (HasLongLocks)
+                {
+                    // Phase moves down the length; upper and lower locks catch a gust slightly apart.
+                    float phase = _wavePhase * 2.8f - _dist[i] * 6f + (_base[i].y - _c.y) * 3f;
+                    float ripple = Mathf.Sin(phase) + .24f * Mathf.Sin(phase * 1.8f + .6f);
+                    bend = Mathf.Lerp(_lag, _tipBend, w) + ripple * flowingAmplitude;
+                }
+                else
+                {
+                    float wave = Mathf.Sin(_wavePhase * 1.25f + _phi[i] * 1.6f - _dist[i] * 5.2f) * amp
+                               + Mathf.Sin(_wavePhase * 2.05f + _phi[i] * 2.6f - _dist[i] * 8.4f) * amp * 0.18f;
+                    bend = _lag + gust + wave;
+                }
+                float ang = bend * w * Mathf.Deg2Rad;
                 float cs = Mathf.Cos(ang), sn = Mathf.Sin(ang);
                 float dx = _base[i].x - _c.x, dy = _base[i].y - _c.y;
                 _out[i] = new Vector3(_c.x + dx * cs - dy * sn + _trail.x * w * w, _c.y + dx * sn + dy * cs + _trail.y * w * w, 0f);
@@ -146,8 +182,14 @@ namespace Kage
         /// <summary>Back to rest (round reset, or recovery from a bad frame).</summary>
         public void Reset()
         {
-            _lag = _lagVel = 0f;
+            _lag = _lagVel = _tipBend = _tipVelocity = 0f;
             _wavePhase = 0f;
+            if (HasLongLocks)
+            {
+                _time = 0f;
+                _mesh.vertices = _base;
+                _mesh.RecalculateBounds();
+            }
             _trail = _trailVel = Vector2.zero;
             _pendingImpulse = Vector2.zero;
             _pendingAngImpulse = 0f;

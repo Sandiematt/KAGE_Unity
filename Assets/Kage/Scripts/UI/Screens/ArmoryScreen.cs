@@ -6,11 +6,8 @@ using Kage.Rules;
 namespace Kage
 {
     /// <summary>
-    /// The Armory (JS "Armory", wonder.css .ar-* and .al-*, SAN-90): tabs for weapons, helmets and armour; on the first two a live
-    /// Kage in front of the sun, the selected item's details on the right and a row of tiles under it; on the Armor tab a row of
-    /// tall cards, one Kage in each armour, with the details under the row. What it shows is <see cref="ArmoryView"/> and what its
-    /// buttons do is <see cref="ArmoryController"/>; this class only draws them. The backdrop is drawn into the world's camera-space
-    /// canvas (behind the fighters, <see cref="ArmoryWorld"/>), everything else here.
+    /// Draws the weapon shop, the six hairstyle profiles and the armor gallery.
+    /// The camera-space backdrop sits behind the live fighters and the selectable cards sit in front.
     /// </summary>
     public sealed class ArmoryScreen : FlowPanel
     {
@@ -63,7 +60,7 @@ namespace Kage
             var v = a.View;
             var save = C.Save;
             bool armor = v.Tab == ArmoryTab.Armor;
-            bool helmets = v.Tab == ArmoryTab.Helmets;
+            bool hairstyles = v.Tab == ArmoryTab.Hairstyles;
             var world = flow.ArmoryWorld;
             RectTransform back = world != null ? world.BackRoot : null;
             if (back != null)
@@ -74,18 +71,18 @@ namespace Kage
                     Object.Destroy(back.GetChild(i).gameObject);
                 }
                 if (armor) ArmorBackdrop(back);
-                else if (helmets) HelmetBackdrop(back, v.TierId);
+                else if (hairstyles) HairBackdrop(back);
                 else Backdrop(back);
             }
 
             enterTiles = Fresh || builtTab != v.Tab;
             enterDetail = enterTiles || builtSelection != v.SelectedId;
             builtTab = v.Tab; builtSelection = v.SelectedId;
-            if (!helmets)
+            if (!hairstyles)
                 Ui.Label(Root, v.Kanji, UiFont.Brush, armor ? 46 : 64, Ui.A(Ui.Bone, 0.2f), armor ? 44 : 64, armor ? 98 : 150, 400, armor ? 60 : 80, TextAnchor.UpperLeft);
             if (v.Preview == ArmoryPreview.Illustration) Preview(v);
             if (armor) ArmorBody(v, save, back);
-            else if (helmets) HelmetBody(v, save);
+            else if (hairstyles) HairstyleGallery(v);
             else
             {
                 Detail(v);
@@ -109,9 +106,9 @@ namespace Kage
                 world.ShowNone();
                 return;
             }
-            if (v.Tab != ArmoryTab.Armor)
+            if (v.Tab == ArmoryTab.Hairstyles)
             {
-                world.ShowSingle(ArmoryView.PreviewSave(save, v.Tab, v.SelectedId), v.Tab == ArmoryTab.Helmets);
+                world.ShowHairstyle(save, StudioWinds[windIndex]);
                 return;
             }
             var saves = new List<SaveData>();
@@ -124,7 +121,7 @@ namespace Kage
                 xs.Add(CardX(i) + CardW * 0.50f);
                 shown.Add(CardInWindow(i));
             }
-            string key = "armor|unarmed:" + KageCharacter.LoadoutKey(save).Split('|')[0] + "|" + v.Tiles.Length;
+            string key = "armor|" + KageCharacter.LoadoutKey(save) + "|" + string.Join(",", System.Array.ConvertAll(v.Tiles, tile => tile.Id));
             // the row scrolls by the camera panning with it, so each Kage stays in his card
             world.ShowRow(saves, xs, key, cardScroll, shown);
         }
@@ -153,7 +150,7 @@ namespace Kage
             UiParts.Back(Root, Nav, () => C.Back(), 40, 19);
             var title = Ui.Label(Root, "ARMORY", UiFont.Title, 36, Ui.Bone, 118, 0, 300, 96, TextAnchor.MiddleLeft, 0f);
             float titleW = UiParts.Width(title);
-            string[] names = { "Weapons", "Helmets", "Armor" };
+            string[] names = { "Weapons", "Hairstyle", "Armor" };
             var widths = new float[3];
             float total = 0f;
             for (int i = 0; i < 3; i++)
@@ -194,7 +191,7 @@ namespace Kage
             UiParts.Pills(Root, C.Save, 1560f, 26f);
         }
 
-        // ---------------- weapons and helmets: the detail panel ----------------
+        // ---------------- weapons: the detail panel ----------------
 
         static Color TierColor(string tier)
         {
@@ -233,9 +230,9 @@ namespace Kage
             var c = TierColor(v.TierId);
             if (v.TierId == JsTables.Legendary.Id)
             {
-                if (v.Tab == ArmoryTab.Helmets || v.Tab == ArmoryTab.Armor)
+                if (v.Tab == ArmoryTab.Armor)
                 {
-                    var st = HelmetTierStyle.Legendary;
+                    var st = ArmorTierStyle.Legendary;
                     Ui.Diamond(p, x + 6f, y + 11f, 10f, st.Highlight, st.Secondary, 1.4f);
                     Ui.Label(p, v.TierLine.ToUpperInvariant(), UiFont.TitleHeavy, 17, st.Primary, x + 22f, y, 460f, 22f, TextAnchor.MiddleLeft, 4.4f);
                     return 22f;
@@ -321,6 +318,29 @@ namespace Kage
             string glyph = b.Warn ? "鎖" : b.Title.StartsWith("RAGE") ? "怒" : "護";
             Ui.Label(ic, glyph, UiFont.Mincho, compact ? 20 : 22, b.Warn ? Ui.Bone : Ui.InkOnGold, 0, 0, icon, icon, TextAnchor.MiddleCenter);
             return h;
+        }
+
+        float StatsCompact(Transform p, float x, float y, float w, ArmoryView v)
+        {
+            float cy = y;
+            for (int i = 0; i < v.Stats.Length; i++)
+            {
+                var s = v.Stats[i];
+                Ui.Label(p, s.Label.ToUpperInvariant(), UiFont.Title, 13, Ui.Bone, x, cy, 260f, 19f, TextAnchor.MiddleLeft, 2.4f);
+                var val = Ui.Label(p, s.Value, UiFont.Title, 16, Ui.Bone, x, cy, w, 19f, TextAnchor.MiddleRight);
+                if (!string.IsNullOrEmpty(s.Preview))
+                {
+                    float vw = UiParts.Width(val);
+                    Ui.Label(p, s.Preview, UiFont.Title, 13, Ui.Gold, x, cy, w - vw - 8f, 19f, TextAnchor.MiddleRight);
+                }
+                float by = cy + 19f + 6f;
+                Ui.Box(p, x, by, w, 4f, Ui.A(Ui.Bone, 0.12f), "Track");
+                float fill = (float)s.Pct / 100f * w;
+                if (fill > 0.5f) Ui.Grad(p, x, by, fill, 4f, Ui.Deep, Ui.Hot, true);
+                if (s.PreviewPct > 0) Ui.Box(p, x + fill, by, (float)s.PreviewPct / 100f * w, 4f, Ui.Gold, "Preview");
+                cy += 29f + 10f;
+            }
+            return v.Stats.Length * 29f + (v.Stats.Length - 1) * 10f;
         }
 
         void Detail(ArmoryView v)
@@ -452,7 +472,7 @@ namespace Kage
             item.press = 0.97f;
         }
 
-        // ---------------- weapons and helmets: the row of tiles ----------------
+        // ---------------- weapons: the row of tiles ----------------
 
         void Tiles(ArmoryView v, SaveData save)
         {
@@ -501,8 +521,6 @@ namespace Kage
             // hover and focus only highlight: a faint gold wash and the lift; the selection changes when the tile is pressed
             var wash = Ui.Box(rt, 0, 0, TileW, H, Color.clear, "Focus");
 
-            // the picture: the item drawn the way the JS draws it (the sword, the helmet), dim when it is not owned (JS .locked .art)
-            // the JS drawings of helmets and armour are dark on a dark tile, so a locked one is dimmed less than a weapon render
             bool drawn = t.Art.Source != ArtSource.WeaponRender;
             var tint = t.Owned ? Color.white : drawn ? new Color(0.8f, 0.8f, 0.8f, 0.7f) : new Color(0.5f, 0.5f, 0.5f, 0.45f);
             var picture = t.Art.Texture;
@@ -602,323 +620,89 @@ namespace Kage
             Ui.Line(rt, new[] { new Vector2(4.5f, 6.5f), new Vector2(4.5f, 4f), new Vector2(5.5f, 2.5f), new Vector2(8.5f, 2.5f), new Vector2(9.5f, 4f), new Vector2(9.5f, 6.5f) }, 1.4f, c);
         }
 
-        // ---------------- the Helmets tab: 5-tier rarity gallery + live Kage preview + inspector ----------------
-
-        void HelmetBody(ArmoryView v, SaveData save)
+        static readonly Wind[] StudioWinds =
         {
-            // Cohesive warm obsidian backdrop matching the rest of KAGE, framing the top-right live Kage preview window (x 1030..1560, y 106..312)
-            var leftBg = Ui.Node(Root, "HelmetGalleryBg", 0, 96, 1024, 804);
-            Ui.Grad(leftBg, 0, 0, 1024, 804, Ui.Sky2, Ui.Sky3, false);
-            Ui.Box(Root, 1024, 96, 6, 804, Ui.Sky3, "MaskSplit");
-            Ui.Box(Root, 1560, 96, 40, 804, Ui.Sky3, "MaskRight");
-            Ui.Box(Root, 1024, 96, 576, 10, Ui.Sky3, "MaskTop");
-            Ui.Box(Root, 1024, 312, 576, 588, Ui.Sky3, "MaskBelow");
-            Ui.Box(Root, 1023, 96, 1, 804, Ui.A(Ui.GoldDim, 0.25f), "SplitRule");
+            Wind.Calm,
+            Wind.Blowing(new Vector2(-1.5f, .25f), gust: 1.25f, seed: 47, gustRate: .48f),
+            Wind.Blowing(new Vector2(-3.4f, .95f), gust: 3.5f, seed: 47, gustRate: 1.1f),
+        };
+        static readonly string[] WindLabels = { "Calm", "Breeze", "Gust" };
+        int windIndex = 1;
 
-            // Crisp frame around the transparent live Kage showcase window
-            var selStyle = HelmetTierStyle.For(v.TierId);
-            var previewFrame = Ui.Node(Root, "LivePreviewFrame", 1030, 106, 530, 206);
-            Ui.Frame(previewFrame, 0, 0, 530, 206, 1.5f, selStyle.Primary);
-            Ui.Frame(previewFrame, 4, 4, 522, 198, 1f, Ui.A(selStyle.Highlight, 0.18f));
-            var tag = Ui.Node(previewFrame, "LiveTag", 12, 10, 108, 22);
-            Ui.Box(tag, 0, 0, 108, 22, Ui.PanelA(0.86f));
-            Ui.Frame(tag, 0, 0, 108, 22, 1f, Ui.A(selStyle.Primary, 0.55f));
-            Ui.Label(tag, "LIVE PREVIEW", UiFont.Cond, 11, selStyle.Primary, 0, 0, 108, 22, TextAnchor.MiddleCenter, 2.0f);
-            Ui.Label(previewFrame, v.Kanji, UiFont.Brush, 36, Ui.A(Ui.Bone, 0.16f), 472, 8, 46, 46, TextAnchor.MiddleCenter);
-
-            // Overlay for one-shot selection particle bursts (sits above cards so bursts never clip)
-            var gallery = Ui.Node(Root, "HelmetGallery", 0, 0, 1024, 900);
-            var burstLayer = Ui.Node(Root, "HelmetBurstLayer", 0, 0, 1024, 900);
-
-            var byTier = new Dictionary<string, List<ArmoryTile>>();
-            foreach (var st in HelmetTierStyle.All) byTier[st.Id] = new List<ArmoryTile>();
-            foreach (var t in v.Tiles)
-            {
-                string tid = HelmetTierStyle.For(t.TierId).Id;
-                byTier[tid].Add(t);
-            }
-
-            tileIndex = 0;
-            const float CardSz = 132f, CardGap = 16f, LegSz = 144f, LegGap = 26f;
-
-            // Row 1: COMMON (2) + RARE (3), centered across x = 24..1000
-            var common = byTier["common"];
-            var rare = byTier["rare"];
-            float wCommon = GroupWidth(common.Count, CardSz, CardGap);
-            float wRare = GroupWidth(rare.Count, CardSz, CardGap);
-            float row1Gap = 52f;
-            float row1X = 24f + (976f - (wCommon + row1Gap + wRare)) * 0.5f;
-            HelmetTierGroup(gallery, burstLayer, HelmetTierStyle.Common, common, row1X, 106f, 142f, CardSz, CardGap);
-            HelmetTierGroup(gallery, burstLayer, HelmetTierStyle.Rare, rare, row1X + wCommon + row1Gap, 106f, 142f, CardSz, CardGap);
-
-            // Row 2: EPIC (3) + TROPHY (3), centered across x = 24..1000
-            var epic = byTier["epic"];
-            var trophy = byTier["trophy"];
-            float wEpic = GroupWidth(epic.Count, CardSz, CardGap);
-            float wTrophy = GroupWidth(trophy.Count, CardSz, CardGap);
-            float row2Gap = 40f;
-            float row2X = 24f + (976f - (wEpic + row2Gap + wTrophy)) * 0.5f;
-            HelmetTierGroup(gallery, burstLayer, HelmetTierStyle.Epic, epic, row2X, 342f, 382f, CardSz, CardGap);
-            HelmetTierGroup(gallery, burstLayer, HelmetTierStyle.Trophy, trophy, row2X + wEpic + row2Gap, 342f, 382f, CardSz, CardGap);
-
-            // Row 3: LEGENDARY (3), slightly larger ornate notched cards centered across x = 24..1000
-            var legendary = byTier["legendary"];
-            float wLeg = GroupWidth(legendary.Count, LegSz, LegGap);
-            float row3X = 24f + (976f - wLeg) * 0.5f;
-            HelmetTierGroup(gallery, burstLayer, HelmetTierStyle.Legendary, legendary, row3X, 586f, 632f, LegSz, LegGap);
-
-            HelmetDetail(v);
-            Actions(v, Root, 1030, 804, 530);
+        static void HairBackdrop(Transform p)
+        {
+            // Indigo sky and a lantern moon behind the actual head rig.
+            Ui.Box(p, 0, 96, 1600, 804, Ui.Hex("#14191B"));
+            Ui.Grad(p, 0, 96, 884, 804, Ui.Hex("#293C40"), Ui.Hex("#101719"), false);
+            Ui.Glow(p, 440, 379, 446, Ui.Hex("#485750"), 1.4f);
+            Ui.Disc(p, 438, 380, 216, Ui.Hex("#B7AD8E"));
+            Ui.Line(p, Ui.Circle(438, 380, 231, 96).Close(), 1f, Ui.A(Ui.Hex("#CDC6A7"), .37f));
+            // Low banks of mist break the disc and lead into the distant ridges.
+            Ui.Shape(p, 0, 96, 884, 804, Poly(0,281, 178,273, 294,280, 544,275, 627,280,
+                455,286, 352,285, 204,291, 0,295), Ui.Hex("#87938A"), null, null, false);
+            Ui.Shape(p, 0, 96, 884, 804, Poly(0,407, 96,372, 172,383, 282,324, 322,332, 391,315,
+                468,355, 552,348, 648,393, 757,370, 884,404, 884,804, 0,804), Ui.Hex("#556863"), null, null, false);
+            Ui.Shape(p, 0, 96, 884, 804, Poly(0,476, 90,442, 145,447, 227,405, 320,433,
+                445,411, 518,439, 602,424, 704,466, 810,430, 884,454, 884,804, 0,804), Ui.Hex("#384C4C"), null, null, false);
+            Ui.Shape(p, 0, 96, 884, 804, Poly(0,490, 65,476, 182,516, 249,507, 349,553, 430,545,
+                535,591, 673,562, 745,583, 884,534, 884,804, 0,804), Ui.Hex("#203235"), null, null, false);
         }
 
-        static float GroupWidth(int count, float size, float gap)
+        void HairstyleGallery(ArmoryView v)
         {
-            return count <= 0 ? 0f : count * size + (count - 1) * gap;
-        }
+            // Foreground caption overlaps the lower coat while leaving the head and trailing locks clear.
+            Ui.Grad(Root, 0, 550, 884, 223, Color.clear, Ui.Hex("#101614"), false);
+            Ui.Box(Root, 0, 773, 884, 127, Ui.Hex("#101614"));
+            Ui.Box(Root, 54, 716, 38, 3, Ui.Hot);
+            Ui.Label(Root, "EQUIPPED", UiFont.Title, 14, Ui.Gold, 54, 734, 300, 24, TextAnchor.MiddleLeft, 2.4f);
+            Ui.Label(Root, v.Name, UiFont.Mincho, 58, Ui.Bone, 52, 764, 804, 77, TextAnchor.MiddleLeft);
 
-        void HelmetTierGroup(Transform gallery, Transform burstLayer, HelmetTierStyle style, List<ArmoryTile> items,
-            float startX, float headerY, float cardY, float cardSize, float gap)
-        {
-            if (items.Count == 0) return;
-            float groupW = GroupWidth(items.Count, cardSize, gap);
-            float centerX = startX + groupW * 0.5f;
+            var panel = Ui.Node(Root, "StyleSelection", 884, 96, 716, 804);
+            Ui.Box(panel, 0, 0, 716, 804, Ui.Hex("#171819"));
+            Ui.Box(panel, 0, 0, 2, 804, Ui.Hex("#73654F"));
+            Ui.Label(panel, "Hairstyles", UiFont.Mincho, 45, Ui.Bone, 44, 27, 600, 67, TextAnchor.MiddleLeft);
+            for (int i = 0; i < v.Tiles.Length; i++)
+                StyleCard(panel, v.Tiles[i], 44 + i % 2 * 320f, 107 + i / 2 * 166f);
 
-            // Crisp structured tier header flanked by subtle hairlines (zero radial blur smudge)
-            int fontSize = style.Tier == HelmetTier.Legendary ? 20 : 18;
-            var heading = Ui.Label(gallery, style.Label, UiFont.TitleHeavy, fontSize,
-                style.Primary, startX - 10f, headerY, groupW + 20f, 26f, TextAnchor.MiddleCenter, 3.2f);
-            float textW = UiParts.Width(heading, 3.2f) + 20f;
-            float ruleW = Mathf.Max(14f, (groupW - textW) * 0.5f - 4f);
-            if (ruleW > 14f)
+            Ui.Box(panel, 44, 636, 624, 1, Ui.Hex("#49423C"));
+            Ui.Label(panel, "Preview wind", UiFont.Mincho, 23, Ui.Bone, 44, 659, 300, 38, TextAnchor.MiddleLeft);
+            for (int i = 0; i < StudioWinds.Length; i++)
             {
-                Ui.Grad(gallery, startX, headerY + 12.5f, ruleW, 1f, Color.clear, Ui.A(style.Primary, 0.55f), true);
-                Ui.Grad(gallery, centerX + textW * 0.5f + 4f, headerY + 12.5f, ruleW, 1f, Ui.A(style.Primary, 0.55f), Color.clear, true);
-            }
-            var hShadow = heading.gameObject.AddComponent<Shadow>();
-            hShadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            hShadow.effectDistance = new Vector2(0f, -1.5f);
-
-            for (int i = 0; i < items.Count; i++)
-                HelmetCard(gallery, burstLayer, style, items[i], startX + i * (cardSize + gap), cardY, cardSize);
-        }
-
-        void HelmetCard(Transform gallery, Transform burstLayer, HelmetTierStyle style, ArmoryTile t, float x, float y, float size)
-        {
-            int idx = tileIndex++;
-            // Centered pivot so smooth hover scaling (scale(1.04)) expands evenly around the card center
-            var rt = Ui.Node(gallery, "Tile_" + t.Id, x, y, size, size);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(x + size * 0.5f, -(y + size * 0.5f));
-            if (enterTiles) UiFx.In(rt, UiAnims.WRise(.42f, idx * 0.025f));
-
-            // 1. Contained card interior background & subtle clipped studio lighting (no blurry outer glow stack)
-            var bgClip = Ui.Node(rt, "BgClip", 2f, 2f, size - 4f, size - 4f);
-            bgClip.gameObject.AddComponent<RectMask2D>();
-            float iw = size - 4f;
-            if (style.HasNotchedFrame)
-                Ui.Shape(bgClip, 0f, 0f, iw, iw, HelmetTierStyle.NotchedFramePoints(0f, 0f, iw, iw, 0f, 10f), style.BgTop, style.BgBottom, null, false, "CardFill");
-            else
-                Ui.Grad(bgClip, 0f, 0f, iw, iw, style.BgTop, style.BgBottom, false);
-
-            if (style.HasRadialBackGlow)
-            {
-                float backAlpha = style.Tier == HelmetTier.Legendary ? 0.24f : style.Tier == HelmetTier.Trophy ? 0.20f : 0.16f;
-                Ui.Glow(bgClip, iw * 0.5f, iw * 0.48f, iw * 0.46f, Ui.A(style.Primary, backAlpha), 1.6f);
-            }
-            else if (style.Tier == HelmetTier.Rare)
-            {
-                Ui.Glow(bgClip, iw * 0.5f, iw * 0.46f, iw * 0.44f, Ui.A(style.Primary, 0.12f), 1.6f);
-            }
-
-            // 2. Restrained crisp ambient embers inside Epic, Trophy & Legendary cards (zero crackle bolts)
-            HelmetCardAmbient.Attach(rt, style, size, size, idx + 1);
-
-            // 3. Crisp mitered border frame (drawn under top-breakout portraits so horns/antlers clear the top edge)
-            if (style.HasNotchedFrame)
-            {
-                var outerPts = HelmetTierStyle.NotchedFramePoints(0f, 0f, size, size, 0f, 11f);
-                var innerPts = HelmetTierStyle.NotchedFramePoints(4.5f, 4.5f, size - 9f, size - 9f, 0f, 8f);
-                Ui.Stroke(rt, 0f, 0f, size, size, outerPts, 2.2f, style.Primary, -2.2f, "OuterFrame");
-                Ui.Stroke(rt, 0f, 0f, size, size, innerPts, 1.0f, Ui.A(style.Highlight, 0.45f), -1.0f, "InnerFrame");
-                foreach (var pt in new[] { new Vector2(9f, 9f), new Vector2(size - 9f, 9f), new Vector2(9f, size - 9f), new Vector2(size - 9f, size - 9f) })
-                    Ui.Diamond(rt, pt.x, pt.y, 5f, style.Highlight, style.Primary, 0.8f);
-            }
-            else
-            {
-                Ui.Frame(rt, 0f, 0f, size, size, 2f, style.Primary);
-                Ui.Frame(rt, 4f, 4f, size - 8f, size - 8f, 1f, style.InnerBorder);
-                if (style.Tier == HelmetTier.Trophy)
+                int choice = i;
+                var button = Ui.Node(panel, "Wind_" + WindLabels[i], 44 + i * 210, 710, 201, 48);
+                bool active = windIndex == i;
+                Ui.Box(button, 0, 0, 201, 48, active ? Ui.Hex("#574737") : Ui.Hex("#222426"));
+                Ui.Frame(button, 0, 0, 201, 48, 1, active ? Ui.Gold : Ui.Hex("#4B4943"));
+                Ui.Label(button, WindLabels[i], UiFont.Cond, 20, active ? Ui.Bone : Ui.Muted, 0, 0, 201, 48, TextAnchor.MiddleCenter);
+                var focus = Ui.Box(button, 0, 45, 201, 3, Color.clear);
+                UiParts.Make(button, Nav, "wind:" + i, () =>
                 {
-                    foreach (var pt in new[] { new Vector2(9f, 9f), new Vector2(size - 9f, 9f), new Vector2(9f, size - 9f), new Vector2(size - 9f, size - 9f) })
-                        Ui.Diamond(rt, pt.x, pt.y, 4.5f, style.Highlight, style.Primary, 0.6f);
-                }
+                    if (choice == windIndex) return;
+                    windIndex = choice;
+                    Rebuild("wind:" + choice);
+                }, on => focus.color = on ? Ui.Bone : Color.clear);
             }
-
-            // 4. Character silhouette + helmet portrait (clipped cleanly inside bottom/sides; Trophy antlers & Legendary horns break over top)
-            float topExtra = style.AllowTopBreakout ? 24f : 0f;
-            float inset = style.AllowTopBreakout ? 5f : 5.5f;
-            var portClip = Ui.Node(rt, "PortraitClip", inset, inset - topExtra, size - inset * 2f, size - inset * 2f + topExtra);
-            portClip.gameObject.AddComponent<RectMask2D>();
-            var picture = t.Art.Texture;
-            if (picture != null)
-            {
-                Color tint = t.Owned ? Color.white : new Color(0.76f, 0.76f, 0.80f, 0.88f);
-                float pw = size - inset * 2f;
-                float ph = style.AllowTopBreakout ? size + 16f : size - inset * 2f;
-                float py = style.AllowTopBreakout ? (topExtra - 18f) : 0f;
-                var pic = Ui.Pic(portClip, t.Art.Key, 0f, py, pw, ph, tint);
-                FitPic(pic, pw, ph);
-            }
-
-            // 5. Crisp mitered selection highlight ring
-            Graphic selectHighlight;
-            if (style.HasNotchedFrame)
-            {
-                var ring = Ui.Ring(rt, size, size, HelmetTierStyle.NotchedFramePoints(0f, 0f, size, size, 0f, 11f), 2f, 2f);
-                ring.color = t.Selected ? style.Highlight : Color.clear;
-                selectHighlight = ring;
-            }
-            else
-            {
-                var ring = Ui.Frame2(rt, size, size);
-                ring.color = t.Selected ? style.Highlight : Color.clear;
-                selectHighlight = ring;
-            }
-            HelmetCardPulse legendPulse = style.Tier == HelmetTier.Legendary
-                ? HelmetCardPulse.Attach(selectHighlight, style.Highlight, 0.92f, t.Selected)
-                : null;
-
-            // Hover wash
-            var wash = Ui.Box(rt, 3f, 3f, size - 6f, size - 6f, Color.clear, "HoverWash");
-
-            // 6. Distinct "EQUIPPED" badge/border state
-            if (t.Equipped)
-            {
-                if (!style.HasNotchedFrame) Ui.Frame(rt, -1.5f, -1.5f, size + 3f, size + 3f, 1.5f, Ui.Hex("#FDE047"));
-                var badge = Ui.Node(rt, "EquippedBadge", 5f, 5f, 76f, 18f);
-                Ui.Box(badge, 0f, 0f, 76f, 18f, Ui.PanelA(0.94f));
-                Ui.Frame(badge, 0f, 0f, 76f, 18f, 1f, Ui.Hex("#EAB308"));
-                Ui.Label(badge, "◆ EQUIPPED", UiFont.Cond, 10, Ui.Hex("#FDE047"), 0f, 0f, 76f, 18f, TextAnchor.MiddleCenter, 0.9f);
-            }
-
-            // 7. Compact price / lock tag in top-right when not owned
-            if (!t.Owned)
-            {
-                if (t.LockLabel != null)
-                {
-                    var lk = Ui.Node(rt, "LockPill", size - 24f, 6f, 18f, 18f);
-                    Ui.Box(lk, 0f, 0f, 18f, 18f, Ui.PanelA(0.90f));
-                    Ui.Frame(lk, 0f, 0f, 18f, 18f, 1f, Ui.A(style.Primary, 0.65f));
-                    PadLock(lk, 2f, 2f, style.Primary);
-                }
-                else
-                {
-                    bool gem = t.Gems > 0;
-                    string num = gem ? t.Gems.ToString() : UiParts.Num(t.Coins);
-                    var pill = Ui.Node(rt, "PricePill", size - 56f, 6f, 50f, 18f);
-                    Ui.Box(pill, 0f, 0f, 50f, 18f, Ui.PanelA(0.92f));
-                    Ui.Frame(pill, 0f, 0f, 50f, 18f, 1f, Ui.A(style.Primary, 0.55f));
-                    if (gem) Ui.Diamond(pill, 10f, 9f, 7f, Ui.Ruby, Ui.Ruby, 0f);
-                    else Ui.Disc(pill, 10f, 9f, 4.5f, Ui.Hex("#EAB308"));
-                    Ui.Label(pill, num, UiFont.Cond, 11, LabelLight, 17f, 0f, 31f, 18f, TextAnchor.MiddleLeft, 0.4f);
-                }
-            }
-
-            // 9. Centered helmet name below the card in bold serif (#F3F4F6), NEVER truncated with "..."
-            var nameLbl = Ui.Label(gallery, t.Name.ToUpperInvariant(), UiFont.Title, style.Tier == HelmetTier.Legendary ? 13 : 12,
-                t.Selected ? style.Highlight : LabelLight, x - 9f, y + size + 8f, size + 18f, 22f, TextAnchor.MiddleCenter, 0.45f);
-            var nShadow = nameLbl.gameObject.AddComponent<Shadow>();
-            nShadow.effectColor = new Color(0f, 0f, 0f, 0.88f);
-            nShadow.effectDistance = new Vector2(0f, -1.5f);
-
-            // Spawn one-shot selection particle burst if this card was just clicked
-            if (pendingBurstId == t.Id)
-            {
-                pendingBurstId = null;
-                HelmetSelectBurst.Spawn(burstLayer, new Vector2(x + size * 0.5f, y + size * 0.5f), style);
-            }
-
-            // 10. Smooth hover scaling (scale(1.05)) + click-to-select with sound & burst
-            string id = t.Id;
-            bool isSelected = t.Selected;
-            var hoverTween = UiFocusTween.On(rt, 0.14f, k =>
-            {
-                rt.localScale = Vector3.one * (1f + 0.05f * k);
-                wash.color = Ui.A(style.Primary, 0.10f * k);
-                if (legendPulse == null)
-                    selectHighlight.color = isSelected ? style.Highlight : Ui.A(style.Highlight, 0.72f * k);
-            });
-            var item = UiParts.Make(rt, Nav, "tile:" + id, null, f =>
-            {
-                hoverTween.Set(f);
-                if (legendPulse != null) legendPulse.SetActive(isSelected || f);
-            });
-            ArmoryTilePick.Bind(item, id, pickedId =>
-            {
-                pendingBurstId = pickedId;
-                HelmetSelectSfx.Play(style.Tier);
-                A.Select(pickedId);
-            });
         }
 
-        void HelmetDetail(ArmoryView v)
+        void StyleCard(Transform panel, ArmoryTile style, float x, float y)
         {
-            const float PanelX = 1030f, PanelY = 324f, PanelW = 530f, PanelH = 468f;
-            var style = HelmetTierStyle.For(v.TierId);
-            var det = Ui.Node(Root, "Detail", PanelX, PanelY, PanelW, PanelH);
-            if (enterDetail) UiFx.In(det, UiAnims.WFade(.3f));
-            Ui.Box(det, 0, 0, PanelW, PanelH, Ui.PanelA(0.94f));
-            Ui.Grad(det, 0, 0, PanelW, 110f, Ui.A(style.Primary, style.GlowAlpha > 0f ? 0.10f : 0.05f), Color.clear, false);
-            var clip = Ui.Node(det, "Clip", 0, 0, PanelW, PanelH);
-            clip.gameObject.AddComponent<RectMask2D>();
-            float x = 28f, w = PanelW - 56f, y = 20f;
-            y += Rarity(clip, x, y, v) + 6f;
-            NameRow(clip, x, y, v, 36, false); y += 38f + 8f;
-            if (!string.IsNullOrEmpty(v.Lore)) y += Para(clip, v.Lore, UiFont.Mincho, 13, Ui.Muted, x, y, w, 19.5f, 3) + 10f;
-            y += Level(clip, x, y, w, v) + 12f;
-            y += StatsCompact(clip, x, y, w, v);
-            for (int i = 0; i < v.Boxes.Length; i++)
+            const float w = 304, h = 151;
+            var card = Ui.Node(panel, "Style_" + style.Id, x, y, w, h);
+            Color edge = style.Equipped ? Ui.Hex("#AF7D51") : Ui.Hex("#47433D");
+            Ui.Grad(card, 0, 0, w, h, style.Equipped ? Ui.Hex("#4C3830") : Ui.Hex("#302F2C"),
+                style.Equipped ? Ui.Hex("#2E2322") : Ui.Hex("#242526"), true);
+            Ui.Frame(card, 0, 0, w, h, 1, edge);
+            Ui.Pic(card, style.Art.Key, (w - 121) / 2, 8, 121, 97).raycastTarget = false;
+            Ui.Label(card, style.Name, UiFont.Mincho, 22, Ui.Bone, 6, 104, w - 12, 38, TextAnchor.MiddleCenter);
+            if (style.Equipped)
             {
-                y += 10f;
-                y += Box(clip, x, y, w, v.Boxes[i], 10f, true);
+                Ui.Box(card, 0, 0, 4, h, Ui.Hot);
+                Ui.Disc(card, w - 23, 22, 10, Ui.Hex("#A53D35"));
+                Ui.Line(card, Poly(w-28,22, w-24,26, w-18,18), 2f, Ui.Bone);
             }
-            Ui.Box(det, 0, 0, PanelW, 2f, style.Primary);
-            Ui.Frame(det, 0, 0, PanelW, PanelH, 1.5f, Ui.A(style.Primary, 0.72f));
-        }
-
-        float StatsCompact(Transform p, float x, float y, float w, ArmoryView v)
-        {
-            float cy = y;
-            for (int i = 0; i < v.Stats.Length; i++)
-            {
-                var s = v.Stats[i];
-                Ui.Label(p, s.Label.ToUpperInvariant(), UiFont.Title, 13, Ui.Bone, x, cy, 260f, 19f, TextAnchor.MiddleLeft, 2.4f);
-                var val = Ui.Label(p, s.Value, UiFont.Title, 16, Ui.Bone, x, cy, w, 19f, TextAnchor.MiddleRight);
-                if (!string.IsNullOrEmpty(s.Preview))
-                {
-                    float vw = UiParts.Width(val);
-                    Ui.Label(p, s.Preview, UiFont.Title, 13, Ui.Gold, x, cy, w - vw - 8f, 19f, TextAnchor.MiddleRight);
-                }
-                float by = cy + 19f + 6f;
-                Ui.Box(p, x, by, w, 4f, Ui.A(Ui.Bone, 0.12f), "Track");
-                float fill = (float)s.Pct / 100f * w;
-                if (fill > 0.5f) Ui.Grad(p, x, by, fill, 4f, Ui.Deep, Ui.Hot, true);
-                if (s.PreviewPct > 0) Ui.Box(p, x + fill, by, (float)s.PreviewPct / 100f * w, 4f, Ui.Gold, "Preview");
-                cy += 29f + 10f;
-            }
-            return v.Stats.Length * 29f + (v.Stats.Length - 1) * 10f;
-        }
-
-        // Backdrop behind the live Kage on the Helmets tab: obsidian crimson matching the rest of the Armory
-        static void HelmetBackdrop(Transform p, string tierId)
-        {
-            var st = HelmetTierStyle.For(tierId);
-            Ui.Grad(p, 0, 0, 1600, 900, Ui.Sky2, Ui.Sky3, false);
-            // Focused crimson sun right behind the top-right Live Preview window (center 1295, 210)
-            Ui.Glow(p, 1295, 212, 200, Ui.A(Ui.Acc, 0.34f), 1.35f);
-            Ui.Disc(p, 1295, 212, 114, Ui.Mix(Ui.Deep, Ui.Sun2, 0.55f));
-            Ui.Glow(p, 1272, 186, 80, Ui.A(Ui.Sun1, 0.65f), 1.4f);
-            UiFx.Loop(Ui.Line(p, Ui.Circle(1295, 212, 130, 60).Close(), 1.2f, Ui.A(st.Primary, 0.38f)).transform, UiAnims.WGlow(4f));
+            var line = Ui.Box(card, 0, h - 3, w, 3, Color.clear);
+            var item = UiParts.Make(card, Nav, "tile:" + style.Id, null, on => line.color = on ? Ui.Gold : Color.clear);
+            ArmoryTilePick.Bind(item, style.Id, A.Select);
         }
 
         // ---------------- the Armor tab ----------------
@@ -993,9 +777,9 @@ namespace Kage
         void Card(ArmoryView v, ArmoryTile t, int index, float x, float w)
         {
             const float Y = 154f, H = 420f;
-            var style = HelmetTierStyle.For(t.TierId);
+            var style = ArmorTierStyle.For(t.TierId);
             var hue = HueOf(t.Id);
-            bool leg = style.Tier == HelmetTier.Legendary;
+            bool leg = style.Tier == ArmorTier.Legendary;
             bool sel = t.Selected;
             float bevel = leg ? 11f : 9f;
             var outerPoly = Octagon(0f, 0f, w, H, bevel);
@@ -1008,7 +792,7 @@ namespace Kage
                 bg.gameObject.AddComponent<RectMask2D>();
                 Ui.Shape(bg, 0, 0, w, H, outerPoly, Ui.A(style.BgTop, 0.94f), Ui.A(style.BgBottom, 0.98f), null, false);
                 float gr = 0.50f * w;
-                if (style.Tier == HelmetTier.Common)
+                if (style.Tier == ArmorTier.Common)
                 {
                     var glow = Ui.Glow(bg, 0, 0, gr, Ui.A(Ui.Acc, 0.16f), 1.6f);
                     glow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -1017,7 +801,7 @@ namespace Kage
                 }
                 else
                 {
-                    float ga = leg ? 0.30f : style.Tier == HelmetTier.Trophy ? 0.24f : style.Tier == HelmetTier.Epic ? 0.22f : 0.16f;
+                    float ga = leg ? 0.30f : style.Tier == ArmorTier.Trophy ? 0.24f : style.Tier == ArmorTier.Epic ? 0.22f : 0.16f;
                     var glow = Ui.Glow(bg, 0, 0, gr, Ui.A(style.GlowColor, ga), 1.6f);
                     glow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                     glow.rectTransform.anchoredPosition = new Vector2(w * 0.50f, -H * 0.42f);
@@ -1025,7 +809,7 @@ namespace Kage
                 }
                 // Grounded floor tint band inside the card behind Kage's boots and footer
                 Ui.Grad(bg, 2f, 444f - Y, w - 4f, H - (444f - Y) - 2f, Color.clear, Ui.PanelA(0.88f), false);
-                HelmetCardAmbient.Attach(bg, style, w, H, index + 101);
+                ArmorCardAmbient.Attach(bg, style, w, H, index + 101);
             }
 
             // 2. Front card frame: crisp mitered PolyRing borders (zero corner cracks or stacked blurry glow halos)
@@ -1035,7 +819,7 @@ namespace Kage
             var edge = sel ? style.Highlight : style.Primary;
             Ui.Stroke(rt, 0f, 0f, w, H, outerPoly, sel ? 2.2f : 1.8f, edge, sel ? -2.2f : -1.8f, "OuterBorder");
             Ui.Stroke(rt, 0f, 0f, w, H, innerPoly, 1.0f, sel ? Ui.A(style.Highlight, 0.55f) : style.InnerBorder, -1.0f, "InnerBorder");
-            if (leg || style.Tier == HelmetTier.Trophy)
+            if (leg || style.Tier == ArmorTier.Trophy)
             {
                 foreach (var pt in new[] { new Vector2(10f, 10f), new Vector2(w - 10f, 10f), new Vector2(10f, H - 10f), new Vector2(w - 10f, H - 10f) })
                     Ui.Diamond(rt, pt.x, pt.y, leg ? 5.2f : 4.4f, style.Highlight, style.Primary, 0.8f);
@@ -1109,7 +893,7 @@ namespace Kage
             nShadow.effectDistance = new Vector2(0f, -1.5f);
 
             float oy = 548f - Y;
-            Color orn = style.Tier == HelmetTier.Common ? hue : style.Primary;
+            Color orn = style.Tier == ArmorTier.Common ? hue : style.Primary;
             Ui.Grad(rt, w / 2f - 58f, oy - 0.5f, 48f, 1f, Color.clear, Ui.A(orn, 0.85f), true);
             Ui.Grad(rt, w / 2f + 10f, oy - 0.5f, 48f, 1f, Ui.A(orn, 0.85f), Color.clear, true);
             Ui.Diamond(rt, w / 2f, oy, 11f, Color.clear, orn, 1.4f);
@@ -1120,12 +904,12 @@ namespace Kage
             // 5. Crisp mitered outer selection ring + Legendary pulse
             var selectRing = Ui.Ring(rt, w, H, outerPoly, 2f, 2f);
             selectRing.color = sel ? style.Highlight : Color.clear;
-            HelmetCardPulse legendPulse = leg ? HelmetCardPulse.Attach(selectRing, style.Highlight, 0.92f, sel) : null;
+            ArmorCardPulse legendPulse = leg ? ArmorCardPulse.Attach(selectRing, style.Highlight, 0.92f, sel) : null;
 
             if (pendingBurstId == t.Id && armorBurstLayer != null)
             {
                 pendingBurstId = null;
-                HelmetSelectBurst.Spawn(armorBurstLayer, new Vector2(x + w * 0.5f, Y + H * 0.5f), style);
+                ArmorSelectBurst.Spawn(armorBurstLayer, new Vector2(x + w * 0.5f, Y + H * 0.5f), style);
             }
 
             string id = t.Id;
@@ -1152,21 +936,21 @@ namespace Kage
             ArmoryTilePick.Bind(item, id, pickedId =>
             {
                 pendingBurstId = pickedId;
-                HelmetSelectSfx.Play(style.Tier);
+                ArmorSelectSfx.Play(style.Tier);
                 A.Select(pickedId);
             });
         }
 
         void ArmorDetail(ArmoryView v)
         {
-            var style = HelmetTierStyle.For(v.TierId);
-            var tint = style.Tier == HelmetTier.Common ? HueOf(v.SelectedId) : style.Primary;
-            Color frameCol = style.Tier == HelmetTier.Common ? Ui.A(Ui.GoldDim, 0.85f) : Ui.A(style.Primary, 0.78f);
+            var style = ArmorTierStyle.For(v.TierId);
+            var tint = style.Tier == ArmorTier.Common ? HueOf(v.SelectedId) : style.Primary;
+            Color frameCol = style.Tier == ArmorTier.Common ? Ui.A(Ui.GoldDim, 0.85f) : Ui.A(style.Primary, 0.78f);
             // the details under the row
             var det = Ui.Node(Root, "Detail", 40f, 600f, 1040f, 262f);
             if (enterDetail) UiFx.In(det, UiAnims.WFade(.3f));
             Ui.Box(det, 0, 0, 1040f, 262f, Ui.PanelA(0.92f));
-            Ui.Grad(det, 0, 0, 440f, 262f, Ui.A(tint, style.Tier == HelmetTier.Legendary ? 0.12f : 0.08f), Color.clear, true);
+            Ui.Grad(det, 0, 0, 440f, 262f, Ui.A(tint, style.Tier == ArmorTier.Legendary ? 0.12f : 0.08f), Color.clear, true);
             Ui.Box(det, 0, 0, 1040f, 2f, tint);
             Ui.Box(det, 484f, 24f, 1f, 214f, Ui.Hair);
             Ui.Frame(det, 0, 0, 1040f, 262f, 1.5f, frameCol);

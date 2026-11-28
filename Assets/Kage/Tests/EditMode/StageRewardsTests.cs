@@ -162,7 +162,7 @@ namespace Kage.Tests
             Assert.AreEqual(5, o.Gems);
             Assert.AreEqual(300, o.Xp);
             Assert.AreEqual(1, s.stats.bosses);
-            CollectionAssert.AreEqual(new[] { "raijin_kabuto" }, o.Unlocks.Select(u => u.Id).ToArray());
+            Assert.IsEmpty(o.Unlocks);
 
             var again = GameRules.CompleteStage(s, "act1.boss", Dominant());
             Assert.AreEqual(0, again.Unlocks.Count);

@@ -133,7 +133,6 @@ namespace Kage.Tests
             }
             Assert.IsNull(flow.Controller.Save.cleared.Where(kv => !kv.Value).Select(kv => kv.Key).FirstOrDefault());
             Assert.IsFalse(GameRules.Owns(store.Load(), GearKind.Weapons, "raiko_no_tachi"), "Raikō no Tachi is withheld for now");
-            Assert.IsTrue(GameRules.Owns(store.Load(), GearKind.Helmets, "raijin_kabuto"), "the boss's helmet");
         }
 
         [UnityTest]

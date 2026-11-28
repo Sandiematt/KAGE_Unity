@@ -5,11 +5,11 @@ using Kage.Rules;
 
 namespace Kage
 {
-    /// <summary>The three tabs of the Armory (JS armTab: weapons, helmets, armors).</summary>
+    /// <summary>The three tabs of the Armory (JS armTab: weapons, hairstyles, armors).</summary>
     public enum ArmoryTab
     {
         Weapons,
-        Helmets,
+        Hairstyles,
         Armor,
     }
 
@@ -26,7 +26,7 @@ namespace Kage
     {
         /// <summary>The JS illustration of the selected blade, slowly turning in front of the sun with the faint warrior behind it (Weapons tab).</summary>
         Illustration,
-        /// <summary>A live Kage wearing the selection (Helmets and Armor tabs).</summary>
+        /// <summary>A live Kage wearing the selection (Hairstyle and Armor tabs).</summary>
         LiveKage,
     }
 
@@ -34,7 +34,7 @@ namespace Kage
     public sealed class ArmoryTile
     {
         public string Id, Name, TierId;
-        /// <summary>The drawn item the tile shows: the sword, the helmet or the armour itself.</summary>
+        /// <summary>The drawn item the tile shows: the weapon, hairstyle portrait or armor.</summary>
         public TileArt Art;
         public bool Owned, Equipped, Locked, Selected;
         public int Level;
@@ -83,7 +83,7 @@ namespace Kage
         public ArmoryPreview Preview;
         /// <summary>The image under Resources/UI/Img of the weapon illustration (Weapons tab only, else null).</summary>
         public string PreviewKey;
-        /// <summary>The big watermark kanji at the top left (the weapon's name in kanji, 兜 for helmets, 鎧 for armour).</summary>
+        /// <summary>The big watermark kanji at the top left (the weapon's name in kanji, 髪 for hair, 鎧 for armour).</summary>
         public string Kanji;
         public bool Owned, Equipped, Locked;
         /// <summary>The owned level, 0 when not owned.</summary>
@@ -95,14 +95,14 @@ namespace Kage
 
         public static GearKind KindOf(ArmoryTab tab)
         {
-            return tab == ArmoryTab.Weapons ? GearKind.Weapons : tab == ArmoryTab.Helmets ? GearKind.Helmets : GearKind.Armors;
+            return tab == ArmoryTab.Weapons ? GearKind.Weapons : tab == ArmoryTab.Hairstyles ? GearKind.Hairstyles : GearKind.Armors;
         }
 
         static int Round(double x) { return (int)Math.Floor(x + 0.5); }
 
         static string EquippedId(SaveData save, GearKind kind)
         {
-            return kind == GearKind.Weapons ? save.equipped.weapon : kind == GearKind.Helmets ? save.equipped.helmet : save.equipped.armor;
+            return kind == GearKind.Weapons ? save.equipped.weapon : kind == GearKind.Hairstyles ? save.equipped.hairstyle : save.equipped.armor;
         }
 
         static int Cost(GearItem it) { return it.Price + it.Gems * 100; }
@@ -113,12 +113,6 @@ namespace Kage
         /// (<see cref="ArmoryListing"/>); enemy-only gear and bare hands are left out. There is one armour list: an Act I reward
         /// armour (Ikazuchi-do, Shiden Yoroi) is in it after the shop armours once the save owns it, and not before.
         /// </summary>
-        static int HelmetSortIndex(string id)
-        {
-            int idx = Array.IndexOf(GameRules.HelmetOrder, id);
-            return idx >= 0 ? idx : GameRules.HelmetOrder.Length;
-        }
-
         static int ArmorSortIndex(string id)
         {
             int idx = Array.IndexOf(GameRules.ArmorOrder, id);
@@ -128,6 +122,7 @@ namespace Kage
         public static string[] Items(ArmoryTab tab, SaveData save)
         {
             var kind = KindOf(tab);
+            if (kind == GearKind.Hairstyles) return Hairstyles.Ids.ToArray();
             var items = ArmoryListing.Candidates(kind).Where(i => !i.Enemy && ArmoryListing.Listed(kind, i.Id));
             if (kind == GearKind.Armors)
             {
@@ -135,15 +130,6 @@ namespace Kage
                     .Where(i => !i.Exclusive || GameRules.Owns(save, kind, i.Id))
                     .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
                     .ThenBy(i => ArmorSortIndex(i.Id))
-                    .ThenBy(Cost)
-                    .Select(i => i.Id)
-                    .ToArray();
-            }
-            if (kind == GearKind.Helmets)
-            {
-                return items
-                    .OrderBy(i => JsTables.Tier(string.IsNullOrEmpty(i.Tier) ? "common" : i.Tier).Rank)
-                    .ThenBy(i => HelmetSortIndex(i.Id))
                     .ThenBy(Cost)
                     .Select(i => i.Id)
                     .ToArray();
@@ -163,16 +149,17 @@ namespace Kage
             {
                 level = save.level,
                 owned = save.owned,
-                equipped = new Equipped { weapon = e.weapon, helmet = e.helmet, armor = e.armor },
+                equipped = new Equipped { weapon = e.weapon, hairstyle = e.hairstyle, armor = e.armor },
             };
             switch (tab)
             {
                 case ArmoryTab.Weapons: preview.equipped.weapon = id; break;
-                case ArmoryTab.Helmets: preview.equipped.helmet = id; break;
+                case ArmoryTab.Hairstyles:
+                    preview.equipped.hairstyle = id;
+                    break;
                 default:
-                    // the armour cards wear the Crimson Scarf with no weapon, so every card displays the armour alone without blade overlap
+                    // The armor cards frame the garment by itself.
                     preview.equipped.armor = id;
-                    preview.equipped.helmet = "shiro_maki";
                     preview.equipped.weapon = "fists";
                     break;
             }
@@ -187,6 +174,19 @@ namespace Kage
             string id = selectedId;
             if (id == null || !ids.Contains(id)) id = worn;
             if (!ids.Contains(id) && ids.Length > 0) id = ids[0];
+
+            if (tab == ArmoryTab.Hairstyles)
+                return new ArmoryView
+                {
+                    Tab = tab, Kind = kind, SelectedId = id, Name = Hairstyles.Name(id),
+                    Preview = ArmoryPreview.LiveKage, Owned = true, Equipped = id == worn,
+                    Stats = Array.Empty<ArmoryStat>(), Boxes = Array.Empty<ArmoryBox>(),
+                    Tiles = ids.Select(style => new ArmoryTile
+                    {
+                        Id = style, Name = Hairstyles.Name(style), Selected = style == id, Equipped = style == worn,
+                        Owned = true, Art = GearArt.For(kind, style),
+                    }).ToArray(),
+                };
 
             var item = GameRules.Item(kind, id);
             int owned;
@@ -265,7 +265,7 @@ namespace Kage
             v.Primary = PrimaryButton(save, kind, item, owned, max);
             v.Equip = equipped
                 ? new ArmoryButton { Label = "Equipped", Enabled = false }
-                : new ArmoryButton { Label = "Equip", Enabled = owned > 0 };
+                : new ArmoryButton { Label = "Equip", Enabled = GameRules.CanEquip(save, kind, id) };
 
             v.Tiles = ids.Select(tid =>
             {
@@ -356,7 +356,7 @@ namespace Kage
 
         public static string Kanji(ArmoryTab tab, string id)
         {
-            if (tab == ArmoryTab.Helmets) return "兜";
+            if (tab == ArmoryTab.Hairstyles) return "髪";
             if (tab == ArmoryTab.Armor) return "鎧";
             string k;
             return WeaponKanji.TryGetValue(id ?? "", out k) ? k : "武器";

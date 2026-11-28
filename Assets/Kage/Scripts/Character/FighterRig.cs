@@ -186,7 +186,7 @@ namespace Kage
                     rt.main = MeshKit.MakeRenderer(p.name, parent, multi, MeshKit.Alpha, 0);
                     _all.Add(rt.main);
                     _parts.Add(rt);
-                    if (p.soft == SoftKind.Hair) _hair.Add(new HairField(multi, d.hairCentre - pivot));
+                    if (p.soft == SoftKind.Hair) _hair.Add(new HairField(multi, d.hairCentre - pivot, trailLength: p.hairTrailLength));
                     else if (p.soft == SoftKind.Coat) Cloth(d, p.clothLayer).Bind(multi);
                     else if (p.soft == SoftKind.Chain) _chains.Add(new SoftChains(multi, parent, Relative(p.chains, pivot), p.chainFeel));
                     else if (p.soft == SoftKind.Flow) _flows.Add(new FlowField(multi, parent, transform, p.flowRoot - pivot, p.chainFeel, _flows.Count * 1.37f));
@@ -480,7 +480,7 @@ namespace Kage
             foreach (var h in _hair)
             {
                 h.worldWind = effWind;
-                h.Tick(dt, vLocal, _headAngVel, facing, 0f, hipsNow);
+                h.Tick(dt, vLocal, _headAngVel, facing, h.HasLongLocks ? headAng : 0f, hipsNow);
             }
             float drive = -_headAngVel * 0.04f - vLocal.x * 1.2f + hv.y * -1.4f;
             foreach (var p in _parts)

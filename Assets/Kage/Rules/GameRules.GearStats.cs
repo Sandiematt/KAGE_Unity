@@ -20,7 +20,7 @@ namespace Kage.Rules
     {
         /// <summary>Maximum health in JS units (before the health scale, ADR-0010).</summary>
         public int Hp;
-        /// <summary>Damage reduction from helmet and armour, capped at 0.5.</summary>
+        /// <summary>Damage reduction from Kage and his armour, capped at 0.5.</summary>
         public double Defense;
         public double WeaponDmg;
         /// <summary>
@@ -28,7 +28,7 @@ namespace Kage.Rules
         /// (JS <c>makePlayer</c>: <c>(1 + 0.012 × (level − 1)) × (1 + perks.dmg)</c>). It does not include the weapon (<see cref="WeaponDmg"/>).
         /// </summary>
         public double DamageMul;
-        /// <summary>The summed helmet and armour perks (dash, speed, ammo, stunRes, rage, kunai, dmg, blockRage).</summary>
+        /// <summary>The summed armour perks (dash, speed, ammo, stunRes, rage, kunai, dmg, blockRage).</summary>
         public Dictionary<string, double> Perks = new Dictionary<string, double>();
     }
 
@@ -36,14 +36,15 @@ namespace Kage.Rules
     // Weapons: stats = [damage, speed, reach] at level 1; each level adds 8 % damage, 2.5 % speed and 1.5 % reach. A weapon's
     // combat damage multiplier is its damage over the damage of the weapon whose forms it uses, so a shop weapon starts at
     // x1 and a boss weapon on the same forms starts far above any upgraded shop weapon. Speed and reach are capped
-    // (x1.25 and x1.2). Helmets and armour: defence grows 0.012 per level, health 10 % per level.
+    // (x1.25 and x1.2). Armour: defence grows 0.012 per level, health 10 % per level.
     public static partial class GameRules
     {
         const double GrowthDamage = 0.08, GrowthSpeed = 0.025, GrowthReach = 0.015;
         const double SpeedMulCap = 1.25, ReachMulCap = 1.2;
         const double GearDefPerLevel = 0.012, GearHpGrowthPerLevel = 0.1;
-        const int PlayerBaseHealth = 220, PlayerHealthPerLevel = 4;
-        const double PlayerDefenseCap = 0.5;
+        const int PlayerBaseHealth = 224, PlayerHealthPerLevel = 4;
+        // The original starter loadout had 232 HP and 3% defense with the starter armor.
+        const double PlayerBaseDefense = 0.01, PlayerDefenseCap = 0.5;
         const double PlayerDamagePerLevel = 0.012;
 
         static readonly int[] FallbackStats = { 40, 50, 40 };
@@ -126,37 +127,22 @@ namespace Kage.Rules
             return JsTables.Tier(ItemTier(kind, id, level)).Label;
         }
 
-        /// <summary>Defence a helmet or armour gives at a level.</summary>
+        /// <summary>Defence armour gives at a level.</summary>
         public static double GearDef(GearKind kind, string id, int level)
         {
             var g = Item(kind, id);
             if (g == null || g.Gear == null || g.Gear.Def <= 0) return 0;
-            double def = IsLegendary(kind, id) ? MaxHelmetDef() : g.Gear.Def;
+            double def = g.Gear.Def;
             return def + GearDefPerLevel * ((level <= 0 ? 1 : level) - 1);
         }
 
-        /// <summary>Health (JS units) a helmet or armour gives at a level.</summary>
+        /// <summary>Health (JS units) armour gives at a level.</summary>
         public static int GearHp(GearKind kind, string id, int level)
         {
             var g = Item(kind, id);
             if (g == null || g.Gear == null || g.Gear.Hp <= 0) return 0;
-            double hp = IsLegendary(kind, id) ? MaxHelmetHp() : g.Gear.Hp;
+            double hp = g.Gear.Hp;
             return JsRound(hp * (1 + GearHpGrowthPerLevel * ((level <= 0 ? 1 : level) - 1)));
-        }
-
-        // the best base defence and health of any player helmet in the tables: what a legendary helmet gives
-        static double MaxHelmetDef()
-        {
-            double best = 0;
-            foreach (var h in JsTables.Helmets) if (!h.Enemy && !h.Retired && h.Def > best) best = h.Def;
-            return best;
-        }
-
-        static double MaxHelmetHp()
-        {
-            double best = 0;
-            foreach (var h in JsTables.Helmets) if (!h.Enemy && !h.Retired && h.Hp > best) best = h.Hp;
-            return best;
         }
 
         // The level an owned item is at, 1 when it isn't in the save.
@@ -166,30 +152,28 @@ namespace Kage.Rules
             return OwnedOf(save, kind).TryGetValue(id, out level) && level > 0 ? level : 1;
         }
 
-        /// <summary>Kage's maximum health in JS units: 220, +4 per player level, plus the equipped armour and helmet.</summary>
+        /// <summary>Kage's maximum health in JS units: 224, +4 per player level, plus the equipped armour.</summary>
         public static int PlayerMaxHp(SaveData save)
         {
-            string a = save.equipped.armor, h = save.equipped.helmet;
+            string a = save.equipped.armor;
             return JsRound(PlayerBaseHealth + (save.level - 1) * PlayerHealthPerLevel
-                + GearHp(GearKind.Armors, a, LevelOf(save, GearKind.Armors, a))
-                + GearHp(GearKind.Helmets, h, LevelOf(save, GearKind.Helmets, h)));
+                + GearHp(GearKind.Armors, a, LevelOf(save, GearKind.Armors, a)));
         }
 
         /// <summary>
         /// Everything the equipped gear does for Kage in a fight: health, damage reduction (capped at 50 %), the weapon's
-        /// damage multiplier and the summed helmet and armour perks.
+        /// damage multiplier and the equipped armour perks.
         /// </summary>
         public static PlayerGearStats PlayerCombatStats(SaveData save)
         {
-            string a = save.equipped.armor, h = save.equipped.helmet, w = save.equipped.weapon;
+            string a = save.equipped.armor, w = save.equipped.weapon;
             var stats = new PlayerGearStats
             {
                 Hp = PlayerMaxHp(save),
                 Defense = Math.Min(PlayerDefenseCap,
-                    GearDef(GearKind.Helmets, h, LevelOf(save, GearKind.Helmets, h)) + GearDef(GearKind.Armors, a, LevelOf(save, GearKind.Armors, a))),
+                    PlayerBaseDefense + GearDef(GearKind.Armors, a, LevelOf(save, GearKind.Armors, a))),
                 WeaponDmg = WeaponMul(w, LevelOf(save, GearKind.Weapons, w)).Dmg,
             };
-            AddPerks(stats.Perks, Item(GearKind.Helmets, h));
             AddPerks(stats.Perks, Item(GearKind.Armors, a));
             double dmgPerk;
             stats.Perks.TryGetValue("dmg", out dmgPerk);

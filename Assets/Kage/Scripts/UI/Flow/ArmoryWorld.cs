@@ -7,19 +7,12 @@ using UnityEngine.UI;
 namespace Kage
 {
     /// <summary>
-    /// The 3D side of the Armory (SAN-90): the camera and Kage, live and breathing, wearing the gear the screen has selected. On the
-    /// Weapons and Helmets tabs one Kage stands in front of the sun (the helmets tab frames his head); on the Armor tab a row of
-    /// Kages, one per armour card, each in his guard (JS startArmorCards). Each is built through <see cref="FightBuilder"/> from
-    /// <see cref="KageCharacter.Def(SaveData)"/> of a preview save, so he wears exactly what the fights would put on him (the SAN-72
-    /// helmet and SAN-85 armour layers, the weapon family's blade).
+    /// The live Kages in the hairstyle and armor galleries use the same fighter builder as a stage.
     /// The screen's backdrop is a camera-space canvas (<see cref="BackRoot"/>) that sorts behind the fighters; the foreground
     /// panels are the flow's overlay canvas, so the fighters stand between the two.
     /// </summary>
     public sealed class ArmoryWorld : MonoBehaviour
     {
-        /// <summary>The preview of a selection waits this long after the last change before it is built (arrow keys repeat fast).</summary>
-        public const float Debounce = 0.12f;
-
         /// <summary>Where a fighter stands on the stage, in 1600 x 900 stage px (feet), for the framing of each tab.</summary>
         public struct Frame
         {
@@ -43,9 +36,6 @@ namespace Kage
         GameObject studio;
         readonly List<Fighter> fighters = new List<Fighter>();
         readonly List<Transform> shadows = new List<Transform>();
-        string pendingSig;
-        System.Action pendingBuild;
-        float pendingAt;
         Frame frame, target;
         float aspectOverride;
         bool snap = true;
@@ -123,29 +113,11 @@ namespace Kage
 
         // ---------------- what stands on the stage ----------------
 
-        /// <summary>
-        /// Puts one Kage on the stage, built from <paramref name="save"/>'s loadout. A change of loadout builds him again after a short
-        /// pause; the same loadout keeps the fighter he is.
-        /// </summary>
-        public void ShowSingle(SaveData save, bool head)
-        {
-            rowShown = null;
-            string sig = (head ? "head|" : "body|") + KageCharacter.LoadoutKey(save);
-            SetFrame(head ? HeadFrame : BodyFrame);
-            if (sig == Signature || sig == pendingSig) return;
-            pendingSig = sig;
-            pendingBuild = () => BuildFighters(new List<SaveData> { save }, new List<float> { SingleX(head) }, sig);
-            pendingAt = Signature == null ? 0f : Time.unscaledTime + Debounce;
-            if (Signature == null) Flush();
-        }
-
         /// <summary>Nothing stands on the stage: the Weapons tab shows the weapon's illustration, not a fighter.</summary>
         public void ShowNone()
         {
             rowShown = null;
             SetFrame(BodyFrame);
-            pendingBuild = null;
-            pendingSig = null;
             if (Signature != null || fighters.Count > 0) Clear();
         }
 
@@ -160,25 +132,26 @@ namespace Kage
             string sig = "row|" + key;
             // a scrolled row: the camera pans along it by as many stage px as the cards moved
             var frameRow = RowFrame;
-            frameRow.cx += panPx * K(RowFrame);
+            frameRow.cx += panPx * K(frameRow);
             SetFrame(frameRow);
-            if (sig == Signature || sig == pendingSig) return;
-            pendingSig = sig;
+            if (sig == Signature) return;
             var list = new List<SaveData>(saves);
             var xs = new List<float>();
-            foreach (float px in stageX) xs.Add(StageToWorldX(px));
-            pendingBuild = () => BuildFighters(list, xs, sig);
-            pendingAt = 0f;
-            Flush();
+            foreach (float px in stageX) xs.Add((px - 800f) * K(frameRow));
+            BuildFighters(list, xs, sig);
         }
 
-        void Flush()
+        public void ShowHairstyle(SaveData save, Wind previewWind)
         {
-            if (pendingBuild == null) return;
-            var b = pendingBuild;
-            pendingBuild = null;
-            pendingSig = null;
-            b();
+            rowShown = null;
+            string key = "hairstyle|" + KageCharacter.LoadoutKey(save);
+            SetFrame(HairFrame);
+            if (Signature != key)
+            {
+                BuildFighters(new List<SaveData> { save }, new List<float> { 0f }, key);
+                snap = true;
+            }
+            fighters[0].rig.wind = previewWind;
         }
 
         void BuildFighters(List<SaveData> saves, List<float> xs, string sig)
@@ -195,28 +168,17 @@ namespace Kage
             }
             var ctx = fight.Build();
             ctx.Begin();
-            bool isRow = sig.StartsWith("row|");
-            bool isHead = sig.StartsWith("head|");
             for (int i = 0; i < fighters.Count; i++)
             {
                 fighters[i].ResetForRound(xs[i], 1f);
                 fighters[i].BeginFight();
                 if (fighters[i].rig != null)
                 {
-                    if (isRow)
-                    {
-                        // Armor cards show armor only (never a weapon) and keep scarf/cape breeze gentle so fabric stays inside each card
-                        fighters[i].rig.SetSwordVisible(false);
-                        fighters[i].rig.wind = Wind.Blowing(new Vector2(-0.14f, 0.04f), gust: 0.22f, seed: 101 + i * 17, gustRate: 0.35f);
-                        if (fighters[i].rig.scarf != null) fighters[i].rig.scarf.wind = 1.6f;
-                    }
-                    else
-                    {
-                        if (isHead) fighters[i].rig.SetSwordVisible(false);
-                        fighters[i].rig.wind = Wind.Blowing(new Vector2(-0.45f, 0.06f), gust: 0.55f, seed: 101 + i * 17, gustRate: 0.4f);
-                    }
+                    fighters[i].rig.SetSwordVisible(false);
+                    fighters[i].rig.wind = Wind.Blowing(new Vector2(-0.14f, 0.04f), gust: 0.22f, seed: 101 + i * 17, gustRate: 0.35f);
+                    if (fighters[i].rig.scarf != null) fighters[i].rig.scarf.wind = 1.6f;
                 }
-                shadows.Add(MakeShadow(studio.transform, isRow ? 0.42f : 0.55f));
+                shadows.Add(MakeShadow(studio.transform, 0.42f));
             }
             Signature = sig;
             Builds++;
@@ -249,19 +211,12 @@ namespace Kage
 
         // weapons: Kage whole, his feet low on the sun's left (JS: the ghost warrior at 0.42 of the 1000 px preview)
         static readonly Frame BodyFrame = new Frame { size = 1.55f, cx = 1.343f, cy = 0.964f };
-        // helmets: Kage's head, helmet and crimson scarf framed cleanly inside the top-right live preview showcase (stage x 1030..1560, y 106..312)
-        static readonly Frame HeadFrame = new Frame { size = 1.66f, cx = -1.78f, cy = 0.74f };
         // armour cards: a row of whole unarmed figures, feet cleanly above the card footer and head clear of top badges
+        static readonly Frame HairFrame = new Frame { size = .91f, cx = .70f, cy = 1.38f };
         static readonly Frame RowFrame = new Frame { size = 3.06f, cx = 0f, cy = 0.09f };
 
-        static float SingleX(bool head) { return 0f; }
 
         float K(Frame f) { return 2f * f.size / 900f; }
-
-        float StageToWorldX(float px)
-        {
-            return (px - 800f) * K(RowFrame) + RowFrame.cx;
-        }
 
         void SetFrame(Frame f)
         {
@@ -292,7 +247,6 @@ namespace Kage
         void LateUpdate()
         {
             if (cam == null) return;
-            if (pendingBuild != null && Time.unscaledTime >= pendingAt) Flush();
             float dt = Time.unscaledDeltaTime;
             if (snap || frame.size <= 0f) { frame = target; snap = false; }
             else

@@ -123,7 +123,7 @@ namespace Kage.Tests
         [TestCase("S", 0, 0, "cleaver.overhead")]
         [TestCase("S", 1, 0, "cleaver.charge")]
         [TestCase("S", 0, -1, "cleaver.slam")]
-        [TestCase("S", -1, 0, "cleaver.sweep")]
+        [TestCase("S", -1, 0, "cleaver.counterGuard")]
         public void Each_ground_button_and_direction_starts_its_cleaver_move(string button, int fwd, int dy, string expected)
         {
             var f = Alone();
@@ -609,7 +609,7 @@ namespace Kage.Tests
             Assert.IsTrue(src.Poll(f.Kage).s, "Y / triangle is the weapon button");
             Assert.AreSame(set.slam, set.Select(Btn.S, 0, -1, false, f.Kage), "with the stick down");
             Assert.AreSame(set.charge, set.Select(Btn.S, 1, 0, false, f.Kage), "with the stick forward");
-            Assert.AreSame(set.sweep, set.Select(Btn.S, -1, 0, false, f.Kage), "with the stick back");
+            Assert.AreSame(set.counterGuard, set.Select(Btn.S, -1, 0, false, f.Kage), "with the stick back");
 
             Press(gp.buttonWest); src.Sample(); Release(gp.buttonWest);
             Assert.IsTrue(src.Poll(f.Kage).p, "X / square is punch");

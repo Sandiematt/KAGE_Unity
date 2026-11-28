@@ -47,17 +47,14 @@ namespace Kage.Tests
             s.level = 4;
             s.owned.weapons["shizuka"] = 6;
             s.owned.weapons["onikiri"] = 2;
-            s.owned.helmets["kuro_zukin"] = 3;
             s.owned.armors["ronin_yoroi"] = 4;
             s.equipped.weapon = "shizuka";
-            s.equipped.helmet = "kuro_zukin";
+            s.equipped.hairstyle = "messy_layers";
             s.equipped.armor = "ronin_yoroi";
             return s;
         }
 
-        // Kuro Zukin L3: def 0.04 + 2 x 0.012 = 0.064, hp 8 x 1.2 = 9.6 -> 10; Ronin Armor L4: def 0.05 + 3 x 0.012 = 0.086, hp 15 x 1.3 = 19.5 -> 20;
-        // player level 4: 220 + 12; total 232 + 10 + 20 = 262 JS health, defence 0.15; perks dash 0.12 + 0.1
-        const float JsHealth = 262f, Defence = 0.15f;
+        const float JsHealth = 256f, Defence = 0.096f;
 
         static Renderer[] Drawn(Fighter f, string prefix) =>
             f.rig.GetComponentsInChildren<Renderer>(true).Where(r => r.name.StartsWith(prefix) && !r.name.EndsWith("_Rim")).ToArray();
@@ -68,8 +65,8 @@ namespace Kage.Tests
             Assert.AreEqual(weaponLevel, k.WeaponLevel);
             Assert.AreEqual(JsHealth * Scale, k.maxHealth, 1e-3f);
             Assert.AreEqual(Defence, k.Defense, 1e-5f);
-            Assert.AreEqual(0.22f, k.DashBonus, 1e-5f);
-            Assert.IsNotEmpty(Drawn(k, "Helmet_"), "the helmet is drawn");
+            Assert.AreEqual(0.1f, k.DashBonus, 1e-5f);
+            Assert.IsNotEmpty(Drawn(k, "Hair_messy_layers"), "the selected hairstyle is drawn");
             Assert.IsNotEmpty(Drawn(k, "Armor_"), "the armour is drawn");
         }
 
@@ -135,10 +132,10 @@ namespace Kage.Tests
             game = new GameObject("KAGE");
             var arena = game.AddComponent<KageGame>();
             yield return null;
-            Assert.AreEqual("kagetsu", arena.player.WeaponId);
+            Assert.AreEqual(GameRules.StarterWeaponId, arena.player.WeaponId);
             Assert.AreEqual(1, arena.player.WeaponLevel);
             Assert.AreEqual(100f, arena.player.maxHealth, 1e-3f);
-            Assert.IsEmpty(Drawn(arena.player, "Helmet_"));
+            Assert.IsNotEmpty(Drawn(arena.player, "Hair_spike"));
             Assert.IsEmpty(Drawn(arena.player, "Armor_"));
         }
     }

@@ -35,6 +35,9 @@ namespace Kage
         /// <summary>Thousand Shadows, 千影 (basic / shadow art): deep crimson, warm bone core, ink shadow. Finisher: SHADOWFALL.</summary>
         public static readonly RageArtLook Shadows = L(Fighter.ThousandShadows, "Thousand Shadows", "千影", "SHADOWFALL", "#e63242", "#f6e7d0", "#14060a");
 
+        /// <summary>Mikazuki, 三日月 (Mumei, the plain starter's basic art): moonlight silver-blue, a white core, a night blue. Its word: MIKAZUKI.</summary>
+        public static readonly RageArtLook Moon = L(Fighter.Mikazuki, "Mikazuki", "三日月", "MIKAZUKI", "#9fd4ff", "#ffffff", "#060c1c");
+
         static readonly RageArtLook[] All = { Crimson, Silent, Swallows, Hell, Dragon, Reaper, Earth };
 
         /// <summary>The look of the art with this id, or null (Thousand Shadows is not in the cinematic table).</summary>
@@ -45,7 +48,7 @@ namespace Kage
         }
 
         /// <summary>The HUD presentation look for any rage art, falling back to <see cref="Shadows"/> for Thousand Shadows or unknown ids.</summary>
-        public static RageArtLook ForHud(string artId) => Of(artId) ?? Shadows;
+        public static RageArtLook ForHud(string artId) => Of(artId) ?? (artId == Fighter.Mikazuki ? Moon : Shadows);
     }
 
     /// <summary>

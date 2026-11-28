@@ -38,7 +38,7 @@ namespace Kage.Tests
             Assert.AreEqual(arts.Count, arts.Values.Distinct().Count(), "no two shop weapons share an art");
             foreach (var weapon in new[] { "fists", "raiko_no_tachi", "cutter_blade", "shadow_daggers" })
                 Assert.IsNull(WeaponStyles.Of(weapon), weapon + " has no style: it plays its family's art");
-            Assert.AreEqual(Fighter.ThousandShadows, WeaponStyles.Of("mumei").rageArt, "the plain starter plays the basic art");
+            Assert.AreEqual(Fighter.Mikazuki, WeaponStyles.Of("mumei").rageArt, "the plain starter plays the basic art: one giant crescent moon");
             Assert.AreEqual("katana", WeaponFamilies.FamilyIdOf("shizuka"), "Shizuka still fights with the katana family's moves underneath");
         }
 
@@ -102,7 +102,7 @@ namespace Kage.Tests
         {
             var cases = new (string weaponId, string artId, string displayName, string cutInCaption, string stampWord, string stampCaption, bool legendary)[]
             {
-                ("mumei", Fighter.ThousandShadows, "Mumei", "SHADOW ART  ·  MUMEI", "SHADOWFALL", "THOUSAND SHADOWS  ·  MUMEI", false),
+                ("mumei", Fighter.Mikazuki, "Mumei", "RAGE ART  ·  MUMEI", "MIKAZUKI", "RAGE ART  ·  MUMEI", false),
                 ("fists", Fighter.ThousandShadows, "Bare Hands", "SHADOW ART  ·  BARE HANDS", "SHADOWFALL", "THOUSAND SHADOWS  ·  BARE HANDS", false),
                 ("raiko_no_tachi", Fighter.ThousandShadows, "Raikō no Tachi", "BOSS RAGE ART  ·  RAIKŌ NO TACHI", "SHADOWFALL", "THOUSAND SHADOWS  ·  RAIKŌ NO TACHI", false),
                 ("kagehira_yurei", Fighter.ThousandShadows, "Kagehira & Yūrei", "BOSS RAGE ART  ·  KAGEHIRA & YŪREI", "SHADOWFALL", "THOUSAND SHADOWS  ·  KAGEHIRA & YŪREI", false),

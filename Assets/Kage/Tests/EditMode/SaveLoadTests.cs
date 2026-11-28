@@ -21,13 +21,11 @@ namespace Kage.Tests
             // the starter weapon is Unity's plain Mumei now (docs/weapon-styles.md, the tiers); Kagetsu is sold
             var s = GameRules.DefaultSave(false);
             Assert.AreEqual(1, s.owned.weapons["mumei"]);
-            Assert.AreEqual(1, s.owned.helmets["shiro_maki"]);
             Assert.AreEqual(1, s.owned.armors["tachibana_yoroi"]);
             Assert.AreEqual(1, s.owned.weapons.Count);
-            Assert.AreEqual(1, s.owned.helmets.Count);
             Assert.AreEqual(1, s.owned.armors.Count);
             Assert.AreEqual("mumei", s.equipped.weapon);
-            Assert.AreEqual("shiro_maki", s.equipped.helmet);
+            Assert.AreEqual("spike", s.equipped.hairstyle);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
             Assert.AreEqual(250, s.coins);
             Assert.AreEqual(5, s.gems);
@@ -96,7 +94,7 @@ namespace Kage.Tests
         {
             var s = Open("{\"owned\":null,\"equipped\":null,\"cleared\":null,\"settings\":null,\"stats\":null,\"clues\":null}");
             Assert.AreEqual(1, s.owned.weapons["mumei"]);
-            Assert.AreEqual("shiro_maki", s.equipped.helmet);
+            Assert.AreEqual("spike", s.equipped.hairstyle);
             Assert.IsNotNull(s.cleared);
             Assert.IsNotNull(s.settings);
             Assert.IsNotNull(s.stats);
@@ -109,7 +107,6 @@ namespace Kage.Tests
             var s = Open("{\"owned\":{\"weapons\":{\"tsubame\":3}}}");
             Assert.AreEqual(1, s.owned.weapons["mumei"]);
             Assert.AreEqual(3, s.owned.weapons["tsubame"]);
-            Assert.AreEqual(1, s.owned.helmets["shiro_maki"]);
             Assert.AreEqual(1, s.owned.armors["tachibana_yoroi"]);
         }
 
@@ -121,7 +118,6 @@ namespace Kage.Tests
             Assert.IsFalse(s.owned.weapons.ContainsKey("fists"));
             Assert.IsFalse(s.owned.weapons.ContainsKey("tsubame"));
             Assert.AreEqual(2, s.owned.weapons["onikiri"]);
-            Assert.IsFalse(s.owned.helmets.ContainsKey("nope"));
             Assert.IsFalse(s.owned.armors.ContainsKey("nada"));
         }
 
@@ -130,7 +126,7 @@ namespace Kage.Tests
         {
             var s = Open("{\"equipped\":{\"weapon\":\"onikiri\",\"helmet\":\"made_up\",\"armor\":\"mugen_yoroi\"},\"owned\":{\"weapons\":{\"tsubame\":1}}}");
             Assert.AreEqual("mumei", s.equipped.weapon);
-            Assert.AreEqual("shiro_maki", s.equipped.helmet);
+            Assert.AreEqual("spike", s.equipped.hairstyle);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
         }
 

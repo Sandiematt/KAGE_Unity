@@ -7,19 +7,19 @@ using UnityEngine;
 namespace Kage.Tests
 {
     /// <summary>
-    /// Validates the 5-tier Act I armor designs (<see cref="ArmorDesigns"/>, generated from <c>Tools/armor_art/armors.py</c>):
-    /// all 9 designed Act I armors have valid triangulatable outlines, multi-bone structure, tier progression, soft cloth/tasset
+    /// Validates the five-tier armor catalogue (<see cref="ArmorDesigns"/>, generated from <c>Tools/armor_art/armors.py</c>):
+    /// all wearable tiered armors have valid triangulatable outlines, multi-bone structure, tier progression, soft cloth/tasset
     /// chains, and Legendary aura configuration.
     /// </summary>
     public class ArmorDesignTests
     {
-        static readonly (string id, HelmetTier tier)[] Tiers =
+        static readonly (string id, ArmorTier tier)[] Tiers =
         {
-            ("ronin_yoroi", HelmetTier.Common),
-            ("yami_yoroi", HelmetTier.Rare), ("shinsen_yoroi", HelmetTier.Rare),
-            ("raiko_yoroi", HelmetTier.Epic), ("kagehira_yoroi", HelmetTier.Epic),
-            ("ikazuchi_do", HelmetTier.Trophy), ("shiden_yoroi", HelmetTier.Trophy),
-            ("yurei_yoroi", HelmetTier.Legendary), ("mugen_yoroi", HelmetTier.Legendary),
+            ("ronin_yoroi", ArmorTier.Common),
+            ("yami_yoroi", ArmorTier.Rare), ("shinsen_yoroi", ArmorTier.Rare),
+            ("raiko_yoroi", ArmorTier.Epic), ("kagehira_yoroi", ArmorTier.Epic),
+            ("ikazuchi_do", ArmorTier.Trophy), ("shiden_yoroi", ArmorTier.Trophy),
+            ("yurei_yoroi", ArmorTier.Legendary), ("mugen_yoroi", ArmorTier.Legendary),
         };
 
         static IEnumerable<Vector2> Points(float[] xy)
@@ -39,10 +39,10 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void EveryAct1ArmorButTheStarterHasAStructuredDesign()
+        public void EveryTieredArmorHasAStructuredDesign()
         {
-            Assert.AreEqual(9, ArmorDesigns.All.Count());
-            CollectionAssert.AreEquivalent(Tiers.Select(t => t.id), ArmorDesigns.All.Select(d => d.id));
+            var wearable = JsTables.Armors.Where(a => !a.Retired && a.Tier != "starter");
+            CollectionAssert.AreEquivalent(wearable.Select(a => a.Id), ArmorDesigns.All.Select(d => d.id));
             foreach (var d in ArmorDesigns.All)
             {
                 Assert.IsNotNull(JsTables.Armor(d.id), $"{d.id} is a JS armor");
@@ -58,7 +58,7 @@ namespace Kage.Tests
                 Assert.IsTrue(d.pieces.Any(p => p.bone == B.Hips), $"{d.id}: waist tassets");
                 Assert.IsTrue(d.pieces.Any(p => p.bone == B.Hips && p.kind == PieceKind.Cloth && (p.name.StartsWith("HaoriTail") || p.name == "SashTail")), $"{d.id}: dynamic split coat/sash tail");
                 Assert.IsTrue(d.pieces.Any(p => p.bone == B.LegNL), $"{d.id}: shin greaves");
-                if (d.tier == HelmetTier.Legendary)
+                if (d.tier == ArmorTier.Legendary)
                     Assert.IsTrue(d.pieces.Any(p => p.bone == B.Hips && p.name == "HaoriTailFront" && p.kind == PieceKind.Cloth), $"{d.id}: Legendary front split coat panel");
             }
         }
@@ -69,26 +69,27 @@ namespace Kage.Tests
             foreach (var (id, tier) in Tiers)
             {
                 Assert.AreEqual(tier, ArmorDesigns.Get(id).tier, id);
-                Assert.AreEqual(tier, HelmetTiers.FromId(GameRules.Item(GearKind.Armors, id).Tier), $"{id} rules tier matches design tier");
+                Assert.AreEqual(tier, ArmorTiers.FromId(GameRules.Item(GearKind.Armors, id).Tier), $"{id} rules tier matches design tier");
             }
             Assert.AreEqual("starter", GameRules.Item(GearKind.Armors, "tachibana_yoroi").Tier);
 
             float MaxGlow(ArmorDesign d) => d.pieces.Max(p => p.glow);
             foreach (var d in ArmorDesigns.All)
             {
+                Assert.AreEqual(ArmorTiers.FromId(GameRules.Item(GearKind.Armors, d.id).Tier), d.tier, d.id);
                 switch (d.tier)
                 {
-                    case HelmetTier.Common:
-                    case HelmetTier.Rare:
+                    case ArmorTier.Common:
+                    case ArmorTier.Rare:
                         Assert.AreEqual(1f, MaxGlow(d), $"{d.id}: {d.tier} armor has no HDR bloom");
                         Assert.AreEqual(ArmorAuraKind.None, d.aura, d.id);
                         break;
-                    case HelmetTier.Epic:
-                    case HelmetTier.Trophy:
+                    case ArmorTier.Epic:
+                    case ArmorTier.Trophy:
                         Assert.Greater(MaxGlow(d), 1.5f, $"{d.id}: {d.tier} armor has glowing accent crest/rune");
                         Assert.AreEqual(ArmorAuraKind.None, d.aura, d.id);
                         break;
-                    case HelmetTier.Legendary:
+                    case ArmorTier.Legendary:
                         Assert.Greater(MaxGlow(d), 2.5f, $"{d.id}: Legendary armor has prestige glow");
                         Assert.AreNotEqual(ArmorAuraKind.None, d.aura, $"{d.id}: Legendary armor carries ArmorAura");
                         Assert.IsTrue(d.pieces.Any(p => p.name.StartsWith("Cape") && p.kind == PieceKind.Cloth), $"{d.id}: Legendary armor has flowing cape");
@@ -96,9 +97,9 @@ namespace Kage.Tests
                 }
             }
             // Escalation in structural richness from Common/Rare -> Epic/Trophy -> Legendary
-            float Mean(HelmetTier t) => (float)ArmorDesigns.All.Where(d => d.tier == t).Average(d => d.pieces.Length);
-            Assert.Less(Mean(HelmetTier.Common), Mean(HelmetTier.Epic));
-            Assert.Less(Mean(HelmetTier.Epic), Mean(HelmetTier.Legendary));
+            float Mean(ArmorTier t) => (float)ArmorDesigns.All.Where(d => d.tier == t).Average(d => d.pieces.Length);
+            Assert.Less(Mean(ArmorTier.Common), Mean(ArmorTier.Epic));
+            Assert.Less(Mean(ArmorTier.Epic), Mean(ArmorTier.Legendary));
         }
 
         [Test]

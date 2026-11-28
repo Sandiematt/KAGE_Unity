@@ -114,7 +114,10 @@ namespace Kage.Tests
         // chain.reapUp 6-11:7 -> 7-11:7, cleaver.charge 16-32:14 -> 17-26:15, cleaver.hack 11-16:8 -> 10-15:9, cleaver.hack2 12-17:9 -> 11-17:10,
         // cleaver.lowHack 10-15:7 -> 10-15:8, cleaver.slam 31-40:26 -> 27-36:26, cleaver.sweep 23-32:16 -> 22-30:16, spear.lunge 9-18:11 -> 10-20:12,
         // spear.sweep 10-16:8 -> 10-17:8, spear.vault 8-16:8 -> 8-17:9, and Shiden's chargingThrust 35-106:11 -> 35-106:12. Nothing else moved.
-        const string DamageHash = "2979bded56742b6a";
+        // The Back + Weapon counters for the spear, chain sickle and cleaver (2026-11-27) and Mumei's Mikazuki rage art add seven moves' lines only
+        // (spear.counterGuard/counterThrust 2-7:12, chain.counterGuard/counterReap 2-7:11, cleaver.counterGuard/counterHack 3-8:14, katana mikazuki);
+        // the signature without them still hashes to the old 2979bded56742b6a.
+        const string DamageHash = "95d206569737fb23";
 
         [Test]
         public void No_move_damage_changed_in_the_pacing_pass()

@@ -14,11 +14,10 @@ namespace Kage.Tests
             s.cleared["prologue.1"] = true;
             s.defeated["prologue.1"] = 2;
             s.owned.weapons["tsubame"] = 4;
-            s.owned.helmets["kuro_zukin"] = 2;
-            s.owned.armors["mugen_yoroi"] = 5;
+            s.owned.armors["ronin_yoroi"] = 5;
             s.equipped.weapon = "tsubame";
-            s.equipped.helmet = "kuro_zukin";
-            s.equipped.armor = "mugen_yoroi";
+            s.equipped.hairstyle = "messy_layers";
+            s.equipped.armor = "ronin_yoroi";
             s.settings.shake = "off"; s.settings.reduceFlash = true; s.settings.sound = false; s.settings.music = false;
             s.settings.touch = "on"; s.settings.stick = "fixed";
             s.stats.wins = 7; s.stats.losses = 3; s.stats.perfects = 1; s.stats.bosses = 2; s.stats.playTime = 4521.5;
@@ -49,11 +48,10 @@ namespace Kage.Tests
             Assert.AreEqual(2, back.defeated["prologue.1"]);
             Assert.AreEqual(1, back.owned.weapons["mumei"]);
             Assert.AreEqual(4, back.owned.weapons["tsubame"]);
-            Assert.AreEqual(2, back.owned.helmets["kuro_zukin"]);
-            Assert.AreEqual(5, back.owned.armors["mugen_yoroi"]);
+            Assert.AreEqual(5, back.owned.armors["ronin_yoroi"]);
             Assert.AreEqual("tsubame", back.equipped.weapon);
-            Assert.AreEqual("kuro_zukin", back.equipped.helmet);
-            Assert.AreEqual("mugen_yoroi", back.equipped.armor);
+            Assert.AreEqual("messy_layers", back.equipped.hairstyle);
+            Assert.AreEqual("ronin_yoroi", back.equipped.armor);
             Assert.AreEqual("off", back.settings.shake);
             Assert.IsTrue(back.settings.reduceFlash);
             Assert.IsFalse(back.settings.sound);
@@ -89,7 +87,7 @@ namespace Kage.Tests
             StringAssert.Contains("\"gems\": 5", json);
             StringAssert.Contains("\"equipped\"", json);
             StringAssert.Contains("\"weapon\": \"mumei\"", json);
-            StringAssert.Contains("\"helmet\": \"shiro_maki\"", json);
+            StringAssert.Contains("\"hairstyle\": \"spike\"", json);
             StringAssert.Contains("\"armor\": \"tachibana_yoroi\"", json);
             StringAssert.Contains("\"seenRewards\"", json);
             StringAssert.Contains("\"bossRushBest\"", json);

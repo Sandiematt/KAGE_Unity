@@ -11,8 +11,8 @@ namespace Kage
         WeaponRender,
         /// <summary>The weapon the JS draws itself on a canvas (<c>drawWeaponIcon</c>): every other weapon.</summary>
         WeaponIcon,
-        /// <summary>A head with the helmet on: for the 14 Act I helmets rendered from the game's rig (SAN-72 tiers, <c>HelmetTierScreenshots</c>), for later acts the JS <c>paintIcon</c> export.</summary>
-        HelmetIcon,
+        /// <summary>An ink emblem drawn from the hairstyle’s rig geometry.</summary>
+        HairstylePortrait,
         /// <summary>The armour the JS draws into its card and results chip: Kage wearing it.</summary>
         ArmorIcon,
     }
@@ -27,8 +27,8 @@ namespace Kage
     }
 
     /// <summary>
-    /// Which drawn picture shows each item of the Armory (SAN-67 rework): the sword, the helmet or the armour itself, the way the JS draws it.
-    /// The seven shop weapons have the design file's renders; every other weapon, every helmet and every armour is the JS canvas drawing, exported
+    /// Which drawn picture shows each item of the Armory (SAN-67 rework): the weapon, hairstyle portrait or armor, the way the JS draws it.
+    /// The seven shop weapons have the design file's renders; every other weapon and every armour is the JS canvas drawing, exported
     /// to PNG by <c>Tools/js_ui_capture/export_art.mjs</c>. The Weapons tab's big preview is the JS illustration of the blade (<see cref="PreviewKey"/>).
     /// </summary>
     public static class GearArt
@@ -46,8 +46,8 @@ namespace Kage
                     return HasRender(id)
                         ? new TileArt { Source = ArtSource.WeaponRender, Key = "ui_w_" + id }
                         : new TileArt { Source = ArtSource.WeaponIcon, Key = "icon_w_" + id };
-                case GearKind.Helmets:
-                    return new TileArt { Source = ArtSource.HelmetIcon, Key = "icon_h_" + id };
+                case GearKind.Hairstyles:
+                    return new TileArt { Source = ArtSource.HairstylePortrait, Key = "hair_" + id };
                 default:
                     return new TileArt { Source = ArtSource.ArmorIcon, Key = "icon_a_" + id };
             }

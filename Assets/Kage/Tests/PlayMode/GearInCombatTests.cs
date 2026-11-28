@@ -23,16 +23,14 @@ namespace Kage.Tests
             _fights.Clear();
         }
 
-        static SaveData SaveWith(string weapon = "kagetsu", int weaponLevel = 1, string helmet = "shiro_maki", int helmetLevel = 1,
+        static SaveData SaveWith(string weapon = "kagetsu", int weaponLevel = 1, 
             string armor = "tachibana_yoroi", int armorLevel = 1, int level = 1)
         {
             var s = GameRules.DefaultSave(false);
             s.level = level;
             s.owned.weapons[weapon] = weaponLevel;
-            s.owned.helmets[helmet] = helmetLevel;
             s.owned.armors[armor] = armorLevel;
             s.equipped.weapon = weapon;
-            s.equipped.helmet = helmet;
             s.equipped.armor = armor;
             return s;
         }
@@ -100,14 +98,14 @@ namespace Kage.Tests
             var cases = new[]
             {
                 (SaveWith(), 232f, 0.03f),
-                (SaveWith(helmet: "tetsu_kabuto", helmetLevel: 5, armor: "mugen_yoroi", armorLevel: 5), 317f, 0.346f),
-                (SaveWith(helmet: "raijin_kabuto", helmetLevel: 5, armor: "shinsei_yoroi", armorLevel: 5), 410f, 0.5f),
+                (SaveWith(armor: "mugen_yoroi", armorLevel: 5), 301f, 0.218f),
+                (SaveWith(armor: "shinsei_yoroi", armorLevel: 5), 364f, 0.318f),
                 (SaveWith(level: 11), 272f, 0.03f),
             };
             foreach (var (save, jsHp, defence) in cases)
             {
                 using var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: Kage(save));
-                Assert.AreEqual(jsHp * Scale, f.Kage.maxHealth, 1e-3f, save.equipped.helmet + "/" + save.equipped.armor);
+                Assert.AreEqual(jsHp * Scale, f.Kage.maxHealth, 1e-3f, save.equipped.hairstyle + "/" + save.equipped.armor);
                 Assert.AreEqual(f.Kage.maxHealth, f.Kage.health, 1e-3f);
                 Assert.AreEqual(defence, f.Kage.Defense, 1e-5f);
             }
@@ -116,16 +114,15 @@ namespace Kage.Tests
         [Test]
         public void UpgradedArmourLowersTheDamageKageTakes()
         {
-            // the Ronin's jab is 4: 4 x (1 - 0.03) = 3.88 -> 4 (starter gear); x (1 - 0.346) = 2.6 -> 3; x (1 - 0.5) = 2
             var plain = RoninJab(SaveWith());
-            var upgraded = RoninJab(SaveWith(helmet: "tetsu_kabuto", helmetLevel: 5, armor: "mugen_yoroi", armorLevel: 5));
-            var capped = RoninJab(SaveWith(helmet: "raijin_kabuto", helmetLevel: 5, armor: "shinsei_yoroi", armorLevel: 5));
+            var upgraded = RoninJab(SaveWith(armor: "mugen_yoroi", armorLevel: 5));
+            var capped = RoninJab(SaveWith(armor: "shinsei_yoroi", armorLevel: 5));
             float crit(CombatEvent e) => e.Crit ? 1.5f : 1f;
             Assert.AreEqual(Mathf.RoundToInt(4f * crit(plain.hit) * 0.97f), plain.hit.Damage);
-            Assert.AreEqual(Mathf.RoundToInt(4f * crit(upgraded.hit) * 0.654f), upgraded.hit.Damage);
-            Assert.AreEqual(Mathf.RoundToInt(4f * crit(capped.hit) * 0.5f), capped.hit.Damage);
+            Assert.AreEqual(Mathf.RoundToInt(4f * crit(upgraded.hit) * 0.782f), upgraded.hit.Damage);
+            Assert.AreEqual(Mathf.RoundToInt(4f * crit(capped.hit) * 0.682f), capped.hit.Damage);
             Assert.Less(upgraded.hit.Damage, plain.hit.Damage, "upgraded armour: less damage taken");
-            Assert.Less(capped.hit.Damage, upgraded.hit.Damage);
+            Assert.LessOrEqual(capped.hit.Damage, upgraded.hit.Damage);
         }
 
         // ---- weapon level ----
@@ -155,11 +152,10 @@ namespace Kage.Tests
         [Test]
         public void TheDamagePerkAndPlayerLevelRaiseDamageDealt()
         {
-            // Kage's jab is 4: x1.12 x1.12 (level 11, Raijin Kabuto 5 % + Mugen 7 % = 12 %) = 5.02 -> 5
             var plain = KageJab(SaveWith()).hit;
-            var strong = KageJab(SaveWith(helmet: "raijin_kabuto", armor: "mugen_yoroi", level: 11)).hit;
+            var strong = KageJab(SaveWith(armor: "mugen_yoroi", level: 11)).hit;
             Assert.AreEqual(4f, plain.Damage);
-            Assert.AreEqual(Mathf.RoundToInt(4f * 1.2544f * (strong.Crit ? 1.5f : 1f)), strong.Damage);
+            Assert.AreEqual(Mathf.RoundToInt(4f * 1.1984f * (strong.Crit ? 1.5f : 1f)), strong.Damage);
             Assert.Greater(strong.Damage, plain.Damage);
         }
 
@@ -168,13 +164,13 @@ namespace Kage.Tests
         {
             // Oni Menpo: rage 0.2. A hit gives 5 + 0.6 x damage; being hit 3 + 0.3 x damage (Unity's meter, unchanged), times 1.2
             var plain = KageJab(SaveWith());
-            var rage = KageJab(SaveWith(helmet: "oni_menpo"));
+            var rage = KageJab(SaveWith(armor: "mugen_yoroi"));
             Assert.AreEqual(plain.hit.Damage, rage.hit.Damage);
             Assert.AreEqual((5f + plain.hit.Damage * 0.6f), plain.meter, 1e-3f);
             Assert.AreEqual((5f + rage.hit.Damage * 0.6f) * 1.2f, rage.meter, 1e-3f);
 
             var hurtPlain = RoninJab(SaveWith());
-            var hurtRage = RoninJab(SaveWith(helmet: "oni_menpo"));
+            var hurtRage = RoninJab(SaveWith(armor: "mugen_yoroi"));
             Assert.AreEqual(3f + hurtPlain.hit.Damage * 0.3f, hurtPlain.meter, 1e-3f);
             Assert.AreEqual((3f + hurtRage.hit.Damage * 0.3f) * 1.2f, hurtRage.meter, 1e-3f);
         }
@@ -182,26 +178,25 @@ namespace Kage.Tests
         [Test]
         public void TheStunResistPerkShortensHitStun()
         {
-            // Tetsu Kabuto: 30 % stun resist, hit-stun x (1 - 0.3 x 0.4)
             var plain = RoninJab(SaveWith());
-            var tough = RoninJab(SaveWith(helmet: "tetsu_kabuto"));
+            var tough = RoninJab(SaveWith(armor: "mugen_yoroi"));
             Assert.Greater(plain.stunFrames, 5, "the jab stuns him");
             Assert.Less(tough.stunFrames, plain.stunFrames);
-            Assert.AreEqual(plain.stunFrames * 0.88f, tough.stunFrames, 1.5f);
+            Assert.AreEqual(plain.stunFrames * 0.92f, tough.stunFrames, 1.5f);
         }
 
         [Test]
         public void TheAmmoPerkRaisesTheKunaiCountAndTheKunaiPerkTheirDamage()
         {
             // Sugegasa: +2 kunai. Raiko Armor: +40 % kunai damage (and 4 % speed): 3 x 1.4 = 4.2 -> 4
-            var s = SaveWith(helmet: "sugegasa", armor: "raiko_yoroi");
+            var s = SaveWith(armor: "raiko_yoroi");
             var f = Duel(s, 0.6f, HeadlessFight.KageX);
-            Assert.AreEqual(7, f.Kage.KunaiMax);
-            Assert.AreEqual(7, f.Kage.KunaiCount);
+            Assert.AreEqual(5, f.Kage.KunaiMax);
+            Assert.AreEqual(5, f.Kage.KunaiCount);
             f.RoninInput.Add(1200);
             f.KageInput.Add(1, dy: -1, buttons: "X").Add(60);
             f.Run(70);
-            Assert.AreEqual(6, f.Kage.KunaiCount);
+            Assert.AreEqual(4, f.Kage.KunaiCount);
             var hit = First(f, "kage", "kunai");
             Assert.AreEqual(Mathf.RoundToInt(3f * 1.4f * (hit.Crit ? 1.5f : 1f)), hit.Damage);
             Done(f);
@@ -258,10 +253,10 @@ namespace Kage.Tests
         {
             // Kuro Zukin 0.12 + Ronin Armor 0.1 = 0.22: 0.22 x 0.5 s = 6.6 -> 7 frames of invulnerability, cooldown x 0.78
             var plain = Dashes(SaveWith());
-            var quick = Dashes(SaveWith(helmet: "kuro_zukin", armor: "ronin_yoroi"));
+            var quick = Dashes(SaveWith(armor: "ronin_yoroi"));
             Assert.GreaterOrEqual(plain.starts.Count, 3);
             Assert.AreEqual(0, plain.invulnerable, "a plain forward dash is hittable");
-            Assert.AreEqual(7, quick.invulnerable);
+            Assert.AreEqual(3, quick.invulnerable);
             Assert.GreaterOrEqual(quick.starts.Count, 3);
             Assert.Less(quick.starts[2] - quick.starts[1], plain.starts[2] - plain.starts[1], "dashes come sooner after one another");
         }
@@ -284,7 +279,7 @@ namespace Kage.Tests
             }
             int plain = RollInvulnerable(SaveWith());
             Assert.Greater(plain, 10, "a roll is untouchable for most of its length");
-            Assert.AreEqual(plain + 7, RollInvulnerable(SaveWith(helmet: "kuro_zukin", armor: "ronin_yoroi")), "0.22 x 0.5 s = 7 more frames");
+            Assert.AreEqual(plain + 3, RollInvulnerable(SaveWith(armor: "ronin_yoroi")), "0.22 x 0.5 s = 7 more frames");
         }
 
         [Test]

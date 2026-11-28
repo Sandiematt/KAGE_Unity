@@ -39,6 +39,9 @@ namespace Kage.Tests
         GameFlow StartFlow(bool dev, System.Action<SaveData> tweak = null)
         {
             var save = dev ? GameRules.SetDevMode(GameRules.DefaultSave(false), true) : GameRules.DefaultSave(false);
+            // Menu navigation starts on Kagetsu with Tsubame immediately to its right.
+            save.owned.weapons["kagetsu"] = 1;
+            save.equipped.weapon = "kagetsu";
             if (tweak != null) tweak(save);
             new SaveStore(dir).Save(save);
             flow = GameFlow.Create(dir);
@@ -135,22 +138,36 @@ namespace Kage.Tests
             }
         }
 
-        [UnityTest]
-        public IEnumerator Q_and_E_turn_the_tabs_and_the_preview_wears_the_selected_helmet()
+        [Category("Hairstyles"), UnityTest]
+        public IEnumerator SixStyleCardsControlOneLivePreviewAndItsWind()
         {
-            StartFlow(true);
+            StartFlow(false);
             yield return null;
             flow.Controller.OpenArmory();
-            yield return null;
             flow.Send(MenuCommand.Next);
-            Assert.AreEqual(ArmoryTab.Helmets, Armory.Tab);
-            Assert.AreEqual("tile:shiro_maki", Focus, "the focus goes to the new tab's worn item");
-            Armory.Select("oni_menpo");
-            yield return Until(() => Preview != null && Preview.Character.helmet == "oni_menpo", 3f, "the preview to wear Oni Menpo");
-            Assert.AreEqual("tachibana_yoroi", Preview.Character.armor);
-            Assert.AreEqual("shiro_maki", flow.Controller.Save.equipped.helmet, "not equipped yet");
-            flow.Send(MenuCommand.Prev);
-            Assert.AreEqual(ArmoryTab.Weapons, Armory.Tab);
+            yield return Until(() => flow.ArmoryWorld.Fighters.Count == 1, 4f, "the hairstyle preview");
+            CollectionAssert.AreEqual(Hairstyles.Ids, Armory.View.Tiles.Select(t => t.Id));
+            Assert.AreEqual("tile:spike", Focus);
+            flow.Send(MenuCommand.Right);
+            Assert.AreEqual("spike", flow.Controller.Save.equipped.hairstyle);
+            flow.Send(MenuCommand.Submit);
+            Assert.AreEqual("messy_layers", new SaveStore(dir).Load().equipped.hairstyle);
+
+            foreach (var id in Hairstyles.Ids)
+            {
+                Armory.Select(id);
+                Assert.AreEqual(id, Preview.Character.hairstyle);
+                Assert.IsTrue(Preview.rig.GetComponentsInChildren<MeshRenderer>().Any(r => r.name == "Hair_" + id));
+            }
+            var live = Preview;
+            flow.Active.Nav.SetFocus("wind:2");
+            flow.Send(MenuCommand.Submit);
+            Assert.AreSame(live, Preview);
+            Assert.Greater(Preview.rig.wind.gust, 3f);
+            flow.Active.Nav.SetFocus("wind:0");
+            flow.Send(MenuCommand.Submit);
+            Assert.IsTrue(Preview.rig.wind.IsCalm);
+            Assert.AreEqual("undercut", new SaveStore(dir).Load().equipped.hairstyle);
         }
 
         [UnityTest]
@@ -170,7 +187,7 @@ namespace Kage.Tests
             for (int i = 0; i < 10; i++)
             {
                 Assert.AreEqual(ids[i], flow.ArmoryWorld.Fighters[i].Character.armor, "card " + i);
-                Assert.AreEqual("shiro_maki", flow.ArmoryWorld.Fighters[i].Character.helmet);
+                Assert.AreEqual("spike", flow.ArmoryWorld.Fighters[i].Character.hairstyle);
                 Assert.AreEqual("fists", flow.ArmoryWorld.Fighters[i].Character.weaponId, "armor card " + i + " must not equip a weapon");
                 Assert.IsFalse(flow.ArmoryWorld.Fighters[i].rig.SwordVisible, "armor card " + i + " must hide any weapon mesh");
             }
@@ -224,23 +241,20 @@ namespace Kage.Tests
             Assert.AreEqual(250, flow.Controller.Save.coins);
         }
 
-        [UnityTest]
-        public IEnumerator Equipping_dresses_Kage_for_the_fights_and_the_Upgrade_shows_the_next_level_first()
+        [Category("Hairstyles"), UnityTest]
+        public IEnumerator SelectedHairReachesTheStageFighter()
         {
-            StartFlow(false, s => { s.coins = 5000; s.owned.helmets["kuro_zukin"] = 2; });
+            StartFlow(false);
             yield return null;
             flow.Controller.OpenArmory();
-            yield return null;
             flow.Send(MenuCommand.Next);
-            Armory.Select("kuro_zukin");
-            flow.Active.Nav.SetFocus("equip");
-            flow.Send(MenuCommand.Submit);
-            Assert.AreEqual("kuro_zukin", flow.Controller.Save.equipped.helmet);
-            Assert.AreEqual("kuro_zukin", new SaveStore(dir).Load().equipped.helmet);
-            Assert.AreEqual("Equipped", Armory.View.Equip.Label);
-
-            var v = Armory.View;
-            Assert.IsTrue(v.Stats.Any(s => !string.IsNullOrEmpty(s.Preview)), "an upgradable helmet previews what the next level adds");
+            Armory.Select("long_flowing");
+            flow.Send(MenuCommand.Back);
+            flow.Controller.OpenCampaign();
+            flow.Controller.BeginLoadout();
+            yield return null;
+            Assert.AreEqual("long_flowing", flow.World.Player.Character.hairstyle);
+            Assert.IsTrue(flow.World.Player.rig.GetComponentsInChildren<MeshRenderer>().Any(r => r.name == "Hair_long_flowing"));
         }
 
         // ---- the other ways in ----
@@ -306,7 +320,7 @@ namespace Kage.Tests
             yield return null;
             Release(pad.rightShoulder);
             yield return null;
-            Assert.AreEqual(ArmoryTab.Helmets, Armory.Tab, "the right shoulder button turns to the next tab");
+            Assert.AreEqual(ArmoryTab.Hairstyles, Armory.Tab, "the right shoulder button turns to the next tab");
 
             Press(pad.leftShoulder);
             yield return null;

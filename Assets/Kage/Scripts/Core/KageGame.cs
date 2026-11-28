@@ -47,7 +47,7 @@ namespace Kage
         /// <summary>True in the group fight.</summary>
         public bool Group => foes.Count > 1;
         /// <summary>
-        /// Where the arena reads Kage's loadout from: the equipped weapon, helmet and armour and their levels (SAN-84). Null = the
+        /// Where the arena reads Kage's loadout from: the equipped weapon, hairstyle and armour and their levels (SAN-84). Null = the
         /// save file on disk (<see cref="SaveStore"/>), so the arena shows what the campaign would fight with. Tests set it.
         /// </summary>
         public static System.Func<Rules.SaveData> SaveSource;

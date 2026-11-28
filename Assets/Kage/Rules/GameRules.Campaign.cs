@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Kage.Rules
 {
-    /// <summary>Something a stage clear opened: the next chapter, or an item (Kind is "weapons", "helmets" or "armors").</summary>
+    /// <summary>Something a stage clear opened: the next chapter, or an item (Kind is "weapons", "hairstyles" or "armors").</summary>
     public sealed class StageUnlock
     {
         public string Kind, Id;
@@ -42,7 +42,6 @@ namespace Kage.Rules
         {
             var s = new SaveData { devMode = devMode };
             s.owned.weapons[StarterWeaponId] = 1;          // Mumei, the plain katana (Kagetsu is sold now)
-            s.owned.helmets["shiro_maki"] = 1;
             s.owned.armors["tachibana_yoroi"] = 1;
             return s;
         }
@@ -151,7 +150,6 @@ namespace Kage.Rules
             var got = new List<StageUnlock>();
             if (stage == null || stage.Reward == null) return got;
             Grant(save, GearKind.Weapons, stage.Reward.Weapons, got);
-            Grant(save, GearKind.Helmets, stage.Reward.Helmets, got);
             Grant(save, GearKind.Armors, stage.Reward.Armors, got);
             return got;
         }

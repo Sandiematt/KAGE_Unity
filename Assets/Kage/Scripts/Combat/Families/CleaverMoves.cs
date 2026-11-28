@@ -24,6 +24,8 @@ namespace Kage
     {
         public MoveDef hack, hack2, stepHack, lowHack, hew, kick, pushKick, lowKick, pommel;
         public MoveDef overhead, sweep, charge, slam;
+        /// <summary>Back + S: the cleaver's counter stance (Oni Wall) and the answer it hacks back with (Oni Rebuke).</summary>
+        public MoveDef counterGuard, counterHack;
         public MoveDef airChop, airKick, airPlunge;
 
         /// <summary>Metres from the lead hand's guard point to the cleaver's tip (JS Onikiri length 104 against the katana's 82).</summary>
@@ -280,6 +282,29 @@ namespace Kage
                 .Gust(12, new Vector2(6.5f, -9.5f), 0.18f)
                 .Fx(9, 32, FxKind.TrailBlade).Sword().Air();
 
+            // Oni Wall (Back + S, the cleaver's counter like the katana's Mirror Guard): the broad blade stood upright before the chest, the
+            // flat a wall. A blow caught in frames 4-24 is turned aside (the attacker reels as from a parry) and Oni Rebuke answers it
+            m.counterGuard = new MoveDef("cleaver.counterGuard", "Oni Wall", 34)
+                .Key(5, Hold(P().Hip(-0.05f, -0.16f, 2f).Chest(-2f).Head(-2f).Feet(0.30f, -0.34f), 0.30f, 1.06f, 86f))
+                .Key(26, Hold(P().Hip(-0.05f, -0.17f, 2f).Chest(-2f).Head(-2f).Feet(0.30f, -0.34f), 0.30f, 1.05f, 88f))
+                .Key(34, Guard(), Ease.InOutQuad)
+                .Fx(4, 4, FxKind.Glint).Sword();
+            m.counterGuard.counterFrom = 4;
+            m.counterGuard.counterTo = 24;
+
+            // Oni Rebuke: straight off the wall, the blade drops in one short brutal diagonal hack through the reeling foe
+            m.counterHack = new MoveDef("cleaver.counterHack", "Oni Rebuke", 32)
+                .Key(2, Hold(P().Hip(-0.02f, -0.12f, 4f).Chest(8f).Head(-4f).Feet(0.30f, -0.30f), 0.12f, 1.50f, 118f), Ease.OutQuad)
+                .Key(5, Hold(Chop(0.14f, -0.16f, -14f, -28f, 0.42f, -0.26f), 0.54f, 0.90f, -42f), Ease.InCubic)
+                .Key(14, Hold(Chop(0.14f, -0.16f, -14f, -28f, 0.42f, -0.26f), 0.52f, 0.88f, -46f))
+                .Key(32, Guard(), Ease.InOutQuad)
+                .Move(0, 4, 1.8f)
+                .Hit(3, 8, Blade, 14, HitLevel.Unblockable, new Vector2(2.2f, 1.0f), stun: 30, hitstop: 12, shake: 0.45f, knockdown: true, heavy: true, radius: 0.11f, postureMul: 1.4f)
+                .Vector(StrikeVector.HighOverhead).Segment(0.05f, 1f)
+                .Gust(3, new Vector2(9.5f, -5.0f), 0.16f)
+                .Invuln(0, 12).Fx(1, 9, FxKind.TrailBlade).Fx(4, 4, FxKind.SlashLine).Fx(5, 5, FxKind.Dust).Sword();
+            m.counterGuard.counterAnswer = m.counterHack;
+
             return m;
         }
 
@@ -306,7 +331,7 @@ namespace Kage
                     if (dy > 0) return sweep;
                     if (dy < 0) return slam;
                     if (fwd > 0) return charge;
-                    if (fwd < 0) return sweep;
+                    if (fwd < 0) return LegacyAi(self) ? sweep : counterGuard;   // Back + S: Oni Wall (legacy AI keeps the sweep)
                     return overhead;
             }
             return null;
@@ -314,7 +339,7 @@ namespace Kage
 
         public override IEnumerable<MoveDef> All => new[]
         {
-            hack, hack2, stepHack, lowHack, hew, kick, pushKick, lowKick, pommel, overhead, sweep, charge, slam,
+            hack, hack2, stepHack, lowHack, hew, kick, pushKick, lowKick, pommel, overhead, sweep, charge, slam, counterGuard, counterHack,
             airChop, airKick, airPlunge,
             throwGrab, throwWhiff, roll, backflip, getUp, getUpFront,
         };

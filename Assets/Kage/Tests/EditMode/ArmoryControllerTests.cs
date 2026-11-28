@@ -41,15 +41,15 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Buying_with_gems_takes_the_gems_not_the_coins()
+        public void SelectingHairAppliesAndPersistsOnce()
         {
-            var save = Money(1500, 30);
+            var save = Money(0, 0);
             var a = New(save);
-            a.SelectTab(ArmoryTab.Helmets);
-            a.Select("oni_menpo");
-            Assert.IsTrue(a.Buy());
-            Assert.AreEqual(18, save.gems);
-            Assert.AreEqual(1500, save.coins);
+            a.SelectTab(ArmoryTab.Hairstyles);
+            a.Select("low_ponytail");
+            a.Select("low_ponytail");
+            Assert.AreEqual("low_ponytail", save.equipped.hairstyle);
+            Assert.AreEqual(1, saved.Count);
         }
 
         [Test]
@@ -79,15 +79,13 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Locked_gear_cannot_be_bought()
+        public void UnlistedHairIsIgnored()
         {
-            var save = Money(99999, 999);
-            var a = New(save);
-            a.SelectTab(ArmoryTab.Helmets);
-            a.Select("sumi_eboshi");
-            Assert.AreEqual("sumi_eboshi", a.SelectedId);
-            Assert.IsFalse(a.Buy());
-            Assert.IsFalse(save.owned.helmets.ContainsKey("sumi_eboshi"));
+            var a = New(Money(0, 0));
+            a.SelectTab(ArmoryTab.Hairstyles);
+            a.Select("kuro_zukin");
+            Assert.AreEqual("spike", a.SelectedId);
+            Assert.IsEmpty(saved);
         }
 
         [Test]
@@ -133,23 +131,20 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Equipping_other_gear_changes_the_loadout_the_fights_are_built_from()
+        public void HairSurvivesAnArmorChange()
         {
             var save = Money(0, 0);
-            save.owned.helmets["kuro_zukin"] = 2;
             save.owned.armors["ronin_yoroi"] = 1;
-            string before = KageCharacter.LoadoutKey(save);
             var a = New(save);
-            a.SelectTab(ArmoryTab.Helmets);
-            a.Select("kuro_zukin");
-            a.Equip();
+            string before = KageCharacter.LoadoutKey(save);
+            a.SelectTab(ArmoryTab.Hairstyles);
+            a.Select("messy_layers");
+            Assert.AreNotEqual(before, KageCharacter.LoadoutKey(save));
+            Assert.AreEqual("tachibana_yoroi", save.equipped.armor);
             a.SelectTab(ArmoryTab.Armor);
             a.Select("ronin_yoroi");
-            a.Equip();
-            Assert.AreNotEqual(before, KageCharacter.LoadoutKey(save));
-            var def = KageCharacter.Def(save);
-            Assert.AreEqual("kuro_zukin", def.helmet);
-            Assert.AreEqual("ronin_yoroi", def.armor);
+            Assert.IsTrue(a.Equip());
+            Assert.AreEqual("messy_layers", KageCharacter.Def(save).hairstyle);
         }
 
         [Test]
@@ -170,10 +165,10 @@ namespace Kage.Tests
             var a = New(save);
             Assert.AreEqual(ArmoryTab.Weapons, a.Tab);
             Assert.AreEqual("mumei", a.View.SelectedId);
-            a.SelectTab(ArmoryTab.Helmets);
-            Assert.AreEqual("shiro_maki", a.View.SelectedId);
-            a.Select("kuro_zukin");
-            Assert.AreEqual("kuro_zukin", a.View.SelectedId);
+            a.SelectTab(ArmoryTab.Hairstyles);
+            Assert.AreEqual("spike", a.View.SelectedId);
+            a.Select("messy_layers");
+            Assert.AreEqual("messy_layers", a.View.SelectedId);
             a.SelectTab(ArmoryTab.Armor);
             Assert.AreEqual("tachibana_yoroi", a.View.SelectedId);
             Assert.AreEqual(3, changes);
@@ -186,7 +181,7 @@ namespace Kage.Tests
             a.StepTab(-1);
             Assert.AreEqual(ArmoryTab.Weapons, a.Tab);
             a.StepTab(1);
-            Assert.AreEqual(ArmoryTab.Helmets, a.Tab);
+            Assert.AreEqual(ArmoryTab.Hairstyles, a.Tab);
             a.StepTab(1);
             a.StepTab(1);
             Assert.AreEqual(ArmoryTab.Armor, a.Tab);

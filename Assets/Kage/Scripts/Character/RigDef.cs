@@ -55,6 +55,7 @@ namespace Kage
         public List<(Vector2[] pts, Color col)> polys;   // many polygons painted in order into one mesh (SVG groups)
         public Vector2[] rimPts;       // a polys part's silhouette for the world-fixed back-light rim (SAN-112 cel parts; null: no rim)
         public SoftKind soft;          // deformed every frame by HairField / CoatCloth
+        public float hairTrailLength;   // metres behind the skull over which loose hair bends, zero for short styles
         public int clothLayer;         // coat: 0 = front flap cloth, 1 = tail cloth (side + back panels)
         public List<Vector2[]> chains; // SoftKind.Chain: spring chains (bind space, root first) the mesh is bound to
         public ChainFeel chainFeel;

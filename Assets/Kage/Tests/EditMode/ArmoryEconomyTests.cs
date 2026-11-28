@@ -23,9 +23,6 @@ namespace Kage.Tests
         [TestCase(GearKind.Weapons, "tsubame", 1, 290)]
         [TestCase(GearKind.Weapons, "onikiri", 1, 910)]
         [TestCase(GearKind.Weapons, "iwakudaki", 4, 4960)]
-        [TestCase(GearKind.Helmets, "kuro_zukin", 1, 190)]
-        [TestCase(GearKind.Helmets, "kuro_zukin", 4, 460)]
-        [TestCase(GearKind.Helmets, "oni_menpo", 1, 470)]
         [TestCase(GearKind.Armors, "tachibana_yoroi", 1, 320)]
         [TestCase(GearKind.Armors, "mugen_yoroi", 1, 2730)]
         [TestCase(GearKind.Armors, "mugen_yoroi", 4, 6510)]
@@ -37,14 +34,11 @@ namespace Kage.Tests
         // ---- level caps ----
 
         [Test]
-        public void Level_caps_are_8_for_weapons_5_for_helmets_and_armour_and_1_for_trophies()
+        public void Level_caps_are_8_for_weapons_5_for_armour_and_1_for_trophies()
         {
             Assert.AreEqual(8, GameRules.MaxLevel(GearKind.Weapons, "tsubame"));
             Assert.AreEqual(8, GameRules.MaxLevel(GearKind.Weapons, "kagetsu"));
-            Assert.AreEqual(5, GameRules.MaxLevel(GearKind.Helmets, "tetsu_kabuto"));
             Assert.AreEqual(5, GameRules.MaxLevel(GearKind.Armors, "tachibana_yoroi"));
-            Assert.AreEqual(1, GameRules.MaxLevel(GearKind.Helmets, "kasa"));
-            Assert.AreEqual(1, GameRules.MaxLevel(GearKind.Helmets, "raijin_kabuto"));
             Assert.AreEqual(1, GameRules.MaxLevel(GearKind.Armors, "shiden_yoroi"));
             Assert.AreEqual(1, GameRules.MaxLevel(GearKind.Weapons, "raiko_no_tachi"), "boss weapons are fixed at level 1");
             Assert.AreEqual(1, GameRules.MaxLevel(GearKind.Weapons, "shinsen"));
@@ -90,7 +84,6 @@ namespace Kage.Tests
             s.coins = 1000000000;
             s.gems = 1000000000;
             Assert.IsFalse(GameRules.BuyItem(s, GearKind.Weapons, "raiko_no_tachi"));
-            Assert.IsFalse(GameRules.BuyItem(s, GearKind.Helmets, "raijin_kabuto"));
             Assert.IsFalse(GameRules.BuyItem(s, GearKind.Armors, "ikazuchi_do"));
             Assert.IsFalse(GameRules.BuyItem(s, GearKind.Weapons, "cutter_blade"), "an enemy-only weapon");
             Assert.IsFalse(GameRules.BuyItem(s, GearKind.Weapons, "no_such_weapon"));
@@ -116,14 +109,17 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void A_gem_priced_helmet_costs_gems_only()
+        public void HairstylesAreFreeCosmetics()
         {
             var s = Fresh();
-            s.coins = 0;
-            s.gems = 12;
-            Assert.IsTrue(GameRules.BuyItem(s, GearKind.Helmets, "oni_menpo"));
-            Assert.AreEqual(0, s.gems);
-            Assert.AreEqual(0, s.coins);
+            foreach (var id in Hairstyles.Ids)
+            {
+                Assert.IsTrue(GameRules.EquipItem(s, GearKind.Hairstyles, id));
+                Assert.IsFalse(GameRules.BuyItem(s, GearKind.Hairstyles, id));
+                Assert.IsFalse(GameRules.UpgradeItem(s, GearKind.Hairstyles, id));
+            }
+            Assert.AreEqual(250, s.coins);
+            Assert.AreEqual(5, s.gems);
         }
 
         [Test]
@@ -191,10 +187,31 @@ namespace Kage.Tests
             var s = Fresh();
             Assert.IsFalse(GameRules.EquipItem(s, GearKind.Weapons, "iwakudaki"));
             Assert.AreEqual("mumei", s.equipped.weapon);
-            s.owned.helmets["kuro_zukin"] = 1;
-            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Helmets, "kuro_zukin"));
-            Assert.AreEqual("kuro_zukin", s.equipped.helmet);
-            Assert.AreEqual("tachibana_yoroi", s.equipped.armor, "other slots are untouched");
+            s.coins = 1000;
+            Assert.IsTrue(GameRules.BuyItem(s, GearKind.Armors, "ronin_yoroi"));
+            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Armors, "ronin_yoroi"));
+            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Armors, "tachibana_yoroi"));
+        }
+
+        [Test]
+        public void LegacyHeadgearIsIgnoredOnLoad()
+        {
+            var loaded = GameRules.OpenSave("{\"coins\":1200,\"equipped\":{\"helmet\":\"kuro_zukin\"},\"owned\":{\"helmets\":{\"kuro_zukin\":4}}}").Save;
+            Assert.AreEqual("spike", loaded.equipped.hairstyle);
+            Assert.AreEqual(1200, loaded.coins);
+            StringAssert.DoesNotContain("helmet", SaveSerializer.Serialize(loaded));
+        }
+
+        [Test]
+        public void ArmorRewardsAreIndependentOfHair()
+        {
+            var save = Fresh();
+            save.equipped.hairstyle = "topknot";
+            var stage = new JsStage { Reward = new JsReward { Armors = new[] { "kudamaki_do" } } };
+            Assert.AreEqual(1, GameRules.GrantStageReward(save, stage).Count);
+            Assert.IsEmpty(GameRules.GrantStageReward(save, stage));
+            Assert.IsTrue(GameRules.EquipItem(save, GearKind.Armors, "kudamaki_do"));
+            Assert.AreEqual("topknot", GameRules.OpenSave(SaveSerializer.Serialize(save)).Save.equipped.hairstyle);
         }
 
         [Test]
@@ -207,8 +224,8 @@ namespace Kage.Tests
                 GameRules.MarkStageCleared(s, st.Id);
             }
             GameRules.MarkStageCleared(s, "act1.boss");
-            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Helmets, "raijin_kabuto"), "Raikon's helmet trophy is granted and wearable");
-            Assert.AreEqual("raijin_kabuto", s.equipped.helmet);
+            s.owned.armors["mugen_yoroi"] = 1;
+            Assert.IsTrue(GameRules.EquipItem(s, GearKind.Armors, "mugen_yoroi"));
             // his blade is withheld for now (GameRules.WithheldWeapons, the owner's call): the stage keeps the reward row but never grants it
             Assert.IsTrue(GameRules.IsWithheld(GearKind.Weapons, "raiko_no_tachi"));
             Assert.IsFalse(GameRules.EquipItem(s, GearKind.Weapons, "raiko_no_tachi"), "a withheld blade is not owned, so it cannot be equipped");

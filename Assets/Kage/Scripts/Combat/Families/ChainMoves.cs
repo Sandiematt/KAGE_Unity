@@ -26,6 +26,8 @@ namespace Kage
         public MoveDef kick1, kick2, pushKick, backKick, sweep;
         public MoveDef reap, reapUp, lash, cyclone, graveHook, crescentLift, dashHook;
         public MoveDef airJab, airKick, airReap, shadowFall;
+        /// <summary>Back + S: the chain sickle's counter stance (Reaper's Snare) and the answer it reaps back with (Reaper's Reply).</summary>
+        public MoveDef counterGuard, counterReap;
 
         /// <summary>Metres from the far hand's guard point to the sickle's tip.</summary>
         public const float BladeLength = 0.5f;
@@ -361,6 +363,31 @@ namespace Kage
                 .Gust(4, new Vector2(3.0f, -9.5f), 0.16f)
                 .Fx(2, 28, FxKind.TrailBlade).Sword().Air();
 
+            // Reaper's Snare (Back + S, the chain sickle's counter like the katana's Mirror Guard): the chain drawn taut between both hands
+            // across the face, the sickle raised high. A blow caught in frames 4-24 is snared aside (the attacker reels as from a parry)
+            // and Reaper's Reply answers it
+            m.counterGuard = new MoveDef("chain.counterGuard", "Reaper's Snare", 34)
+                .Key(5, P().Hip(-0.05f, -0.13f, 2f).Chest(2f).Head(-2f).Feet(0.28f, -0.32f).HandF(0.30f, 1.22f).Blade(74f).HandN(0.08f, 1.04f, 12f))
+                .Key(26, P().Hip(-0.05f, -0.14f, 2f).Chest(2f).Head(-2f).Feet(0.28f, -0.32f).HandF(0.30f, 1.21f).Blade(76f).HandN(0.08f, 1.03f, 12f))
+                .Key(34, Guard(), Ease.InOutQuad)
+                .Fx(4, 4, FxKind.Glint).Sword();
+            m.counterGuard.counterFrom = 4;
+            m.counterGuard.counterTo = 24;
+
+            // Reaper's Reply: the snare released, the sickle whips down and across in one short reaping cut through the reeling foe
+            m.counterReap = new MoveDef("chain.counterReap", "Reaper's Reply", 28)
+                .Key(2, P().Hip(-0.02f, -0.12f, 4f).Chest(6f).Head(-2f).Feet(0.28f, -0.28f).HandF(0.10f, 1.20f).Blade(140f).HandN(0.20f, 0.98f, 10f), Ease.OutQuad)
+                .Key(5, Lunge(0.12f, -0.14f, -12f, -24f).HandF(0.54f, 1.06f).Blade(-12f).HandN(-0.06f, 0.96f, -12f), Ease.OutExpo)
+                .Key(12, Lunge(0.12f, -0.14f, -12f, -24f).HandF(0.52f, 1.04f).Blade(-22f).HandN(-0.08f, 0.96f, -12f))
+                .Key(18, P().Hip(0.06f, -0.12f, -6f).Chest(-16f).Head(10f).Feet(0.36f, -0.28f).HandF(0.42f, 0.96f).Blade(8f).HandN(-0.02f, 0.94f, -10f), Ease.OutQuad)
+                .Key(28, Guard(), Ease.InOutQuad)
+                .Move(0, 4, 2.0f)
+                .Hit(2, 7, Blade, 11, HitLevel.Unblockable, new Vector2(1.8f, 1.4f), stun: 30, hitstop: 12, shake: 0.38f, knockdown: true, heavy: true, radius: 0.1f)
+                .Vector(StrikeVector.Mid)
+                .Gust(2, new Vector2(7.5f, 1.0f), 0.13f)
+                .Invuln(0, 12).Fx(0, 8, FxKind.TrailBlade).Fx(3, 3, FxKind.SlashLine).Sword();
+            m.counterGuard.counterAnswer = m.counterReap;
+
             return m;
         }
 
@@ -396,7 +423,7 @@ namespace Kage
                     if (dy > 0) return crescentLift;
                     if (dy < 0) return graveHook;
                     if (fwd > 0) return lash;
-                    if (fwd < 0) return cyclone;
+                    if (fwd < 0) return LegacyAi(self) ? cyclone : counterGuard;   // Back + S: Reaper's Snare (legacy AI keeps the Cyclone)
                     return reap;
             }
             return null;
@@ -406,7 +433,7 @@ namespace Kage
         {
             jab, hilt, crouchJab, pull, groundHook, kick1, kick2, pushKick, backKick, sweep,
             reap, reapUp, lash, cyclone, graveHook, crescentLift, dashHook,
-            airJab, airKick, airReap, shadowFall,
+            airJab, airKick, airReap, shadowFall, counterGuard, counterReap,
             throwGrab, throwWhiff, roll, backflip, getUp, getUpFront,
         };
     }

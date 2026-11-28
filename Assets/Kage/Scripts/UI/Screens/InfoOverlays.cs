@@ -126,7 +126,7 @@ namespace Kage
 
     /// <summary>
     /// The title's Profile diamond (JS openLoadout): Kage himself, live, in what he wears (<see cref="ProfileKage"/>), his weapon,
-    /// helmet and armour beside him (each with its Armory tile art), his health and defence, his level and experience, and a way
+    /// hairstyle and armor beside him (each with its Armory tile art), his health and defence, his level and experience, and a way
     /// into the Armory.
     /// </summary>
     public sealed class ProfileOverlay : FlowPanel
@@ -168,13 +168,13 @@ namespace Kage
             Portrait(card, s);
 
             float cx = Pad + PortW + ColGap, cw = W - Pad - cx;
-            string[] ids = { s.equipped.weapon, s.equipped.helmet, s.equipped.armor };
-            GearKind[] kinds = { GearKind.Weapons, GearKind.Helmets, GearKind.Armors };
-            string[] kindNames = { "Weapon", "Helm", "Armor" };
+            string[] ids = { s.equipped.weapon, s.equipped.hairstyle, s.equipped.armor };
+            GearKind[] kinds = { GearKind.Weapons, GearKind.Hairstyles, GearKind.Armors };
+            string[] kindNames = { "Weapon", "Hairstyle", "Armor" };
             for (int i = 0; i < 3; i++)
             {
                 var item = GameRules.Item(kinds[i], ids[i]);
-                int lv = GearLevel(s, kinds[i], ids[i]);
+                int lv = kinds[i] == GearKind.Hairstyles ? 0 : GearLevel(s, kinds[i], ids[i]);
                 GearRow(card, cx, TopY + i * (RowH + RowGap), cw, kinds[i], ids[i], item != null ? Clean(item.Name) : "—", kindNames[i], lv);
             }
 
@@ -192,7 +192,7 @@ namespace Kage
 
         static int GearLevel(SaveData s, GearKind kind, string id)
         {
-            var owned = kind == GearKind.Weapons ? s.owned.weapons : kind == GearKind.Helmets ? s.owned.helmets : s.owned.armors;
+            var owned = kind == GearKind.Weapons ? s.owned.weapons : s.owned.armors;
             int lv;
             return id != null && owned != null && owned.TryGetValue(id, out lv) && lv > 0 ? lv : 1;
         }
@@ -224,7 +224,7 @@ namespace Kage
             well.gameObject.AddComponent<RectMask2D>();
             Ui.Grad(well, 0, 0, RowH, RowH, Ui.A(Ui.Acc, 0.24f), Ui.PanelA(0.92f));
             var a = GearArt.For(kind, id);
-            if (a.Texture != null)
+            if (!string.IsNullOrEmpty(id) && a.Texture != null)
             {
                 float pad = 8f, inner = RowH - pad * 2f;
                 var pic = Ui.Pic(well, a.Key, pad, pad, inner, inner);
@@ -234,7 +234,7 @@ namespace Kage
             float tx = RowH + 18f;
             Ui.Label(row, name, UiFont.Cond, 25, Ui.Bone, tx, 12, w - tx - 70, 32, TextAnchor.MiddleLeft);
             Ui.Label(row, kindName.ToUpperInvariant(), UiFont.Cond, 13, Ui.Muted, tx, 46, 200, 18, TextAnchor.MiddleLeft, 2.8f);
-            Ui.Label(row, "LV " + lv, UiFont.Cond, 16, Ui.Gold, w - 76, 0, 60, RowH, TextAnchor.MiddleRight, 2f);
+            if (lv > 0) Ui.Label(row, "LV " + lv, UiFont.Cond, 16, Ui.Gold, w - 76, 0, 60, RowH, TextAnchor.MiddleRight, 2f);
         }
 
         static void Stat(RectTransform card, float x, float y, float w, string value, string label)

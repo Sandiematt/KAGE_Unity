@@ -89,7 +89,7 @@ namespace Kage.Tests
             Assert.AreEqual(1f, plain.moveMul);
             Assert.AreEqual(1f, plain.damageMul);
             Assert.IsNull(plain.buildMoves);
-            Assert.AreEqual(Fighter.ThousandShadows, plain.rageArt);
+            Assert.AreEqual(Fighter.Mikazuki, plain.rageArt);
             Assert.IsFalse(plain.legendary);
         }
 
@@ -112,6 +112,8 @@ namespace Kage.Tests
             Assert.AreSame(set.shinBreaker, set.Select(Btn.S, 0, -1, false, self), "Down + Weapon is Shin-Breaker Drag");
             Assert.AreSame(set.meteorSunder, set.Select(Btn.S, 1, 0, false, self), "Forward + Weapon is Meteor Sunder");
             Assert.AreSame(set.risingAnvil, set.Select(Btn.S, 0, 1, false, self), "Up + Weapon is Rising Anvil");
+            Assert.AreSame(set.counterGuard, set.Select(Btn.S, -1, 0, false, self), "Back + Weapon is the Anvil Guard counter");
+            Assert.AreSame(set.counterSmash, set.counterGuard.counterAnswer, "a caught blow is answered by Anvil Rebound");
             Assert.AreSame(cleaver.Select(Btn.P, 0, 0, false, self), set.Select(Btn.P, 0, 0, false, self));
             Assert.AreSame(cleaver.roll, set.roll);
             // the smash splits the ground on its impact frame, and is armoured up to its blow

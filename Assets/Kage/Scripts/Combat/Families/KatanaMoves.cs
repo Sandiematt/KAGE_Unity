@@ -15,6 +15,8 @@ namespace Kage
         public MoveDef jab, cross, crossFist, uppercut, kick1, kick2, axeKick, sweep, crouchPunch, pushKick, lunge;
         public MoveDef airKick, airPunch, airSlash, groundPound;
         public MoveDef iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, crescent;
+        /// <summary>Mikazuki, the plain starter's rage art (Mumei): one giant crescent moon sent down the floor (<see cref="Fighter.Mikazuki"/>).</summary>
+        public MoveDef mikazuki;
         /// <summary>The two reference kenjutsu patterns: Crown Wheel (a low reverse sweep, then the crown whip into a level cut) and Poised Fang (tame-giri).</summary>
         public MoveDef crownWheel, tameCut;
 
@@ -454,6 +456,20 @@ namespace Kage
                 .Fx(1, 12, FxKind.ChargeDark).Fx(10, 15, FxKind.TrailBlade).Sword();
             m.crescent.projectileFrame = 12;
             m.crescent.meterCost = 35;
+
+            // ===================== RAGE ART: MIKAZUKI =====================
+            // Mikazuki (三日月, the plain starter's rage art): the Crimson Crescent's cut, held longer in hassō while the dark gathers, then
+            // one kesa-giri that sends a giant crescent moon down the floor. Untouchable from the first frame to the end of the cut.
+            m.mikazuki = new MoveDef(Fighter.Mikazuki, "Mikazuki", 50)
+                .Key(16, Hasso(P().Hip(-0.07f, -0.16f, -2f).Chest(12f).Head(-6f).Feet(0.22f, -0.3f)), Ease.InOutQuad)
+                .Key(18, P().Hip(0.04f, -0.14f, -8f).Chest(-6f).Head(4f).Feet(0.28f, -0.26f).Grip().HandF(0.04f, 1.4f).Blade(102f), Ease.InQuad)
+                .Key(20, P().Hip(0.1f, -0.13f, -12f).Chest(-24f).Head(12f).Feet(0.33f, -0.24f).Grip().HandF(0.56f, 1.02f).Blade(-12f), Ease.OutExpo)
+                .Key(28, P().Hip(0.1f, -0.14f, -12f).Chest(-26f).Head(13f).Feet(0.33f, -0.2f).Grip().HandF(0.5f, 0.88f).Blade(-30f))
+                .Key(38, P().Hip(0.05f, -0.12f, -8f).Chest(-16f).Head(9f).Feet(0.3f, -0.23f).Grip().HandF(0.36f, 0.96f).Blade(12f), Ease.InOutQuad)
+                .Key(50, Stance(), Ease.InOutQuad)
+                .Throw(19, Fighter.MikazukiWave, new Vector2(0.7f, 1.05f))
+                .Invuln(0, 30)
+                .Fx(1, 18, FxKind.ChargeDark).Fx(17, 22, FxKind.TrailBlade).Fx(19, 19, FxKind.SlashLine).Fx(19, 19, FxKind.Dust).Sword();
             return m;
         }
 
@@ -498,7 +514,7 @@ namespace Kage
             jab, cross, crossFist, uppercut, crouchPunch, lunge, kick1, kick2, axeKick, sweep, pushKick,
             throwGrab, throwWhiff, airKick, airPunch, airSlash, roll, backflip, groundPound, getUp, getUpFront,
             iai, risingMoon, cleave, airCleave, shadowStep, lowReap, counterStance, counterSlash, crescent,
-            crownWheel, tameCut,
+            crownWheel, tameCut, mikazuki,
         };
     }
 }

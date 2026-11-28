@@ -130,7 +130,7 @@ namespace Kage
             }
             Hud.gameObject.SetActive(false);
 
-            Player = fight.Spawn(KageCharacter.Def(save), 0, new PlayerInputSource());     // the save's equipped weapon, helmet and armour (SAN-84)
+            Player = fight.Spawn(KageCharacter.Def(save), 0, new PlayerInputSource());     // the save's equipped weapon, hairstyle and armour (SAN-84)
             if (!road)
             {
                 Foe = fight.Spawn(foeDef, 1, new AIInputSource { level = FoeLevel(Kind) });

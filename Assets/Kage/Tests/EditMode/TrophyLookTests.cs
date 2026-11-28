@@ -128,7 +128,7 @@ namespace Kage.Tests
                 Assert.AreEqual(bare.scarfColor, d.scarfColor, id);
                 Assert.AreEqual(bare.rimColor, d.rimColor, id);
                 for (int i = 0; i < (int)B.COUNT; i++) Assert.AreEqual(bare.pivot[i], d.pivot[i], $"{id} pivot {(B)i}");
-                CollectionAssert.AreEqual(bare.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col), d.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col), id);
+                CollectionAssert.AreEqual(bare.parts.Single(p => p.soft == SoftKind.Hair).polys.Select(q => q.col), d.parts.Single(p => p.soft == SoftKind.Hair).polys.Select(q => q.col), id);
                 Assert.AreEqual(bare.scarfStrands.Count, d.scarfStrands.Count, id);
             }
         }

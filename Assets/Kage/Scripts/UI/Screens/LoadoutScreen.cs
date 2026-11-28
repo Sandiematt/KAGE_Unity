@@ -9,7 +9,7 @@ namespace Kage
     /// <summary>
     /// The pre-fight screen (JS "Pre Fight Screen", wonder.css .pf-*): Kage's loadout on the left, the foe on the right, the weapon
     /// row and the Fight button in the dock. The two fighters themselves are the live stage world behind this screen
-    /// (<see cref="StageWorld"/> in its tableau phase). The helmet and armour are the equipped ones; Change gear opens the
+    /// (<see cref="StageWorld"/> in its tableau phase). The hairstyle and armour are the equipped ones; Change gear opens the
     /// Armory (SAN-90).
     /// </summary>
     public sealed class LoadoutScreen : FlowPanel
@@ -69,11 +69,11 @@ namespace Kage
             Ui.Label(stats, "HP", UiFont.Title, 14, Ui.Gold, 110, 0, 40, 52, TextAnchor.MiddleLeft, 2f);
             Ui.Label(stats, GameRules.PlayerMaxHp(save).ToString(), UiFont.Title, 26, Ui.Mix(Ui.Hot, Ui.Bone, 0.7f), 140, 0, 80, 52, TextAnchor.MiddleLeft);
 
-            var helm = JsTables.Helmet(save.equipped.helmet);
+            string hair = Hairstyles.Name(save.equipped.hairstyle);
             var armor = JsTables.Armor(save.equipped.armor);
             float cx = 64;
             cellIndex = 0;
-            cx += Cell(cx, 182, "Helm", helm != null ? helm.Name : "-") + 10;
+            cx += Cell(cx, 182, "Hairstyle", hair) + 10;
             cx += Cell(cx, 182, "Armor", armor != null ? armor.Name : "-") + 10;
             cx += Cell(cx, 182, "Mode", "Normal") + 10;
             ChangeGear(cx, 182);

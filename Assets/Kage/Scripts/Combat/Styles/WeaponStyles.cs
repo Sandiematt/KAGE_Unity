@@ -20,7 +20,7 @@ namespace Kage
     /// damage and drags the foe in.</item>
     /// <item><b>Iwakudaki</b>, Earthbreaker (legendary): the war hammer's smash string splits the ground, and every smash shakes the floor,
     /// stunning the grounded foes near it.</item>
-    /// <item><b>Mumei</b>, Plain Steel (the common starter): the katana set with no trait at all and the basic rage art.</item>
+    /// <item><b>Mumei</b>, Plain Steel (the common starter): the katana set with no trait at all and the basic rage art, Mikazuki (one giant crescent moon).</item>
     /// </list>
     /// Foe weapons have no style: they fight exactly as their family does.
     /// </summary>
@@ -54,8 +54,8 @@ namespace Kage
             Add(new WeaponStyle
             {
                 // the plain starter (common): no trait, no trail, the basic rage art. Every other katana is measured against it in feel.
-                weaponId = "mumei", name = "Plain Steel", summary = "The katana and nothing else: every cut is the family's own, the rage art is the basic Thousand Shadows.",
-                rageArt = Fighter.ThousandShadows,
+                weaponId = "mumei", name = "Plain Steel", summary = "The katana and nothing else: every cut is the family's own, the rage art sends one giant crescent moon.",
+                rageArt = Fighter.Mikazuki,
             });
 
             Add(new WeaponStyle

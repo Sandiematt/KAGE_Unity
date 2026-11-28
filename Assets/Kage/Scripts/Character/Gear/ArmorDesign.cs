@@ -95,12 +95,12 @@ namespace Kage
     public sealed class ArmorDesign
     {
         public readonly string id, look;
-        public readonly HelmetTier tier;
+        public readonly ArmorTier tier;
         public readonly ArmorAuraKind aura;
         public readonly ArmorPalette palette;
         public readonly ArmorPiece[] pieces;
 
-        public ArmorDesign(string id, string look, HelmetTier tier, ArmorAuraKind aura, ArmorPalette palette, ArmorPiece[] pieces)
+        public ArmorDesign(string id, string look, ArmorTier tier, ArmorAuraKind aura, ArmorPalette palette, ArmorPiece[] pieces)
         {
             this.id = id;
             this.look = look;
@@ -111,7 +111,7 @@ namespace Kage
         }
     }
 
-    /// <summary>Every structured Act I armor design by JS armor id (generated: <c>ArmorDesigns.g.cs</c>).</summary>
+    /// <summary>Every tiered armor design by JS armor id (generated: <c>ArmorDesigns.g.cs</c>).</summary>
     public static partial class ArmorDesigns
     {
         static Dictionary<string, ArmorDesign> _byId;
@@ -129,8 +129,10 @@ namespace Kage
 
         public static bool Has(string armorId) => armorId != null && ById.ContainsKey(armorId);
 
-        /// <summary>The structured design, or null when the armor uses a legacy/later-act drawing or starter look.</summary>
+        /// <summary>The structured design, or null for the starter, retired or unknown armour.</summary>
         public static ArmorDesign Get(string armorId) => Has(armorId) ? ById[armorId] : null;
+
+        public static IEnumerable<string> Ids => ById.Keys;
 
         public static IEnumerable<ArmorDesign> All => Generated;
     }

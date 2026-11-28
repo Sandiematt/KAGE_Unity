@@ -162,7 +162,7 @@ namespace Kage.Tests
         public void Every_rage_art_id_reads_as_a_rage_art_and_nothing_else_does()
         {
             foreach (var art in new[] { Fighter.CrimsonMoon, Fighter.SilentMoon, Fighter.SwallowStorm, Fighter.HellSplitter, Fighter.WaterDragon,
-                                        Fighter.ReaperRequiem, Fighter.Earthsplitter, Fighter.ThousandShadows })
+                                        Fighter.ReaperRequiem, Fighter.Earthsplitter, Fighter.ThousandShadows, Fighter.Mikazuki })
                 Assert.IsTrue(Fighter.IsRageArtId(art), art);
             foreach (var other in new[] { "katana1", "kuroe.censurePunish", "", null })
                 Assert.IsFalse(Fighter.IsRageArtId(other), other ?? "null");

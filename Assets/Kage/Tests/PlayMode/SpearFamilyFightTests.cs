@@ -119,7 +119,7 @@ namespace Kage.Tests
         [TestCase("S", 0, 0, "spear.thrust")]
         [TestCase("S", 1, 0, "spear.lunge")]
         [TestCase("S", 0, -1, "spear.sweep")]
-        [TestCase("S", -1, 0, "spear.guardRaise")]
+        [TestCase("S", -1, 0, "spear.counterGuard")]
         public void Each_ground_button_and_direction_starts_its_spear_move(string button, int fwd, int dy, string expected)
         {
             var f = Alone();

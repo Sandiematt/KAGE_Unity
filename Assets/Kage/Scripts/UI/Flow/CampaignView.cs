@@ -211,7 +211,6 @@ namespace Kage
                 }
             }
             Add(GearKind.Weapons, st.Reward.Weapons);
-            Add(GearKind.Helmets, st.Reward.Helmets);
             Add(GearKind.Armors, st.Reward.Armors);
             return list.ToArray();
         }

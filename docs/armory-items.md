@@ -1,20 +1,16 @@
 # What the Armory lists (SAN-85, SAN-108)
 
-The owner's review: "there are many helmets that don't even exist and have names on them; check if it is going to be implemented or already done, and if it is a placeholder, remove it", and "remove the trophies section completely".
-
-The Armory lists only gear that exists in Unity. The tables (`JsTables`, from the JS data), the save format, `GameRules` and the drawings (`HelmetVisuals`, `ArmorVisuals`, `ArmorLooksTrophies.cs`) keep every row, so a later act turns an item back on by making it implemented. The listing is `ArmoryListing` (`Scripts/UI/Flow/ArmoryListing.cs`): `Classify(kind, id)` gives the class below, `Listed` is "class (a), and not bare hands", and `ArmoryView.Items(tab, save)` is the listing.
+The Armory has weapon, hairstyle and armor tabs. The gear lists come from `ArmoryListing` and `ArmoryView.Items`.
 
 ## The classes
 
-- **(a) Implemented**: drawn on Kage in fights (a registered weapon family with its own drawing, a `HelmetVisuals` or `ArmorVisuals` look, or the starter's own design), and the player can get it in the Prologue or Act I (starter, sold in the shop, or granted by an Act I stage in `JsTables.Stages`). Listed.
+- **(a) Implemented**: drawn on Kage in fights (a registered weapon family with its own drawing, an `ArmorVisuals` look, or the starter's own design), and the player can get it in the Prologue or Act I (starter, sold in the shop, or granted by an Act I stage in `JsTables.Stages`). Listed.
 - **(b) Later act**: planned, with no Unity implementation yet: no drawing, no way to get it before a later act, or a stand-in for a family that is out of scope. Not listed.
 - **(c) Placeholder**: enemy-only or retired JS gear that was never meant for the player. Not listed (it never was).
 
 ## One armour list, no Trophies section
 
 The Armor tab shows one list: the starter and the seven shop armours, then the Act I reward armours (Ikazuchi-dō from Garan, Shiden Yoroi from Shiden) once the save owns them, and not before, so there is no locked "Trophy" card. A worn reward armour is selected when the tab opens and can be equipped like any other. The trophy armours' data and drawings (`ArmorLooksTrophies.cs`) stay: fights, results and the profile still draw them. The title's Trophies diamond and overlay (every boss stage and whether it has fallen) is a different feature and is unchanged.
-
-Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raijin Kabuto): they are real, you can get them in Act I, and the lock box says how.
 
 ## Weapons
 
@@ -35,22 +31,9 @@ Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raij
 | Bare Hands | what Kage fights with when no weapon is held | fists | fallback | never an item |
 | 30 foe weapons (Shadow Daggers, Chain Hook, Raider Cleaver, Bokken, ...) | foes only | | (c) | never listed |
 
-## Helmets
+## Hairstyles
 
-| Item | Where from | Drawing | Class | Armory |
-| --- | --- | --- | --- | --- |
-| Crimson Scarf (`shiro_maki`) | starter | Kage's own look | (a) | listed |
-| Kuro Zukin, Sugegasa, Hachigane, Kasumi Veil | shop 300 to 750 | `HelmetVisuals` | (a) | listed |
-| Tetsu Kabuto, Oni Menpō, Hoshi Kabuto | shop | `HelmetVisuals` | (a) | listed |
-| Shika Kabuto, Utsuro Kabuto, Shikkō Zukin | shop | `HelmetVisuals` | (a) | listed |
-| Sumi Eboshi | Act I, Kuroe | `HelmetVisuals` | (a) | listed, locked until Kuroe falls |
-| Hisame Zukin | Act I, Hisame | `HelmetVisuals` | (a) | listed, locked until Hisame falls |
-| Raijin Kabuto | Act I boss (Raikon) | `HelmetVisuals` | (a) | listed, locked until Raikon falls |
-| Hakobi-gasa | "Defeat Tsugumi" (later act) | none | (b) | removed |
-| Utsushi-men | "Defeat Utsushi" (later act) | none | (b) | removed |
-| Deshi Tenugui | "Defeat Shizune" (later act) | none | (b) | removed |
-| Mokushi Kabuto | "Defeat Soma" (later act) | none | (b) | removed |
-| Kasa | "Defeat Takashi" (later act) | none | (b) | removed |
+Spike, Messy Layers, Low Ponytail, Topknot (Samurai), Long Flowing and Undercut are available from the start. Selecting an ink silhouette saves the style and shows it on the live preview. Calm, Breeze and Gust adjust the preview wind. Every armor can be worn with every style. Hairstyles use the head rig in the gallery, profile and combat. Existing saves default to Spike.
 
 ## Armour
 
@@ -72,7 +55,7 @@ Helmets keep their locked Act I rewards visible (Sumi Eboshi, Hisame Zukin, Raij
 
 ## Counts
 
-Before: 48 items a player could hold were listed (11 weapons, 19 helmets, 18 armours). Then (SAN-108): 31 listed (7 weapons, 14 helmets, 10 armours), 17 removed, all class (b): 4 weapons (Iwakudaki, Shinsen, Kagehira & Yūrei, Mugen no Ha), 5 helmets and 8 armours. Now (2026-11-23, docs/weapon-styles.md): 8 weapons are listed (Iwakudaki back, Mumei added) in the owner's tiers: one common (Mumei), rare (Kagetsu, Tsubame), epic (Shizuka, Onikiri, Mizuchi), legendary (Yamigama, Iwakudaki), on `GameRules.WeaponTiers`. Class (c) gear (30 foe weapons, 10 retired armours) was never listed.
+The current campaign offers eight weapons, six hairstyles and ten armors, including two reward armors.
 
 ## Withheld weapons
 

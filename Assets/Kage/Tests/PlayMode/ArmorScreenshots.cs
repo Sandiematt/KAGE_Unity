@@ -10,7 +10,7 @@ namespace Kage.Tests
 {
     /// <summary>
     /// The review sheets of SAN-85: Kage in each of the armours Act I can give him (the starter, the 7 shop armours, the 2 Act I
-    /// trophies), upper-body close-ups in idle, walk, attack, hit and K.O. ragdoll poses, a full-body idle sheet, a helmet and armour
+    /// trophies), upper-body close-ups in idle, walk, attack, hit and K.O. ragdoll poses, a full-body idle sheet, a hairstyle and armour
     /// combination sheet, and one large picture per armour, written to Screenshots/review/SAN-85/. Each cell is labelled with the JS
     /// name and id. Needs a GPU: it skips itself under -nographics. Run
     /// <c>Unity.exe -batchmode -projectPath ... -runTests -testPlatform PlayMode -testFilter ArmorScreenshots</c> (no -nographics).
@@ -26,29 +26,30 @@ namespace Kage.Tests
         };
 
         static readonly string[] Poses = { "idle", "walk", "attack", "hit", "ragdoll" };
-        static readonly string[] Combos = { null, "kuro_zukin", "tetsu_kabuto", "sugegasa", "hoshi_kabuto", "raijin_kabuto" };
+        static readonly string[] Combos = { "spike", "messy_layers", "low_ponytail", "topknot", "long_flowing", "undercut" };
 
         const int Cell = 400, Cols = 5;
         static readonly Color Back = new(0.16f, 0.13f, 0.14f, 1f);
 
-        static string OutDir => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-85"));
+        static string OutDir => System.Environment.GetEnvironmentVariable("KAGE_ARMOR_CAPTURE_DIR")
+            ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-85"));
 
-        static CharacterDef KageWearing(string armor, string helmet = null)
+        static CharacterDef KageWearing(string armor, string hairstyle = null)
         {
             var def = CharacterCatalog.Get(KageCharacter.Id);
             def.armor = armor;
-            def.helmet = helmet;
+            def.hairstyle = hairstyle;
             return def;
         }
 
         static string Label(string id) => $"{JsTables.Armor(id).Name}  ({id})";
 
         /// <summary>A fight with Kage in the pose, ready to photograph; the caller disposes it.</summary>
-        static HeadlessFight Pose(string armor, string pose, string helmet = null)
+        static HeadlessFight Pose(string armor, string pose, string hairstyle = null)
         {
             if (pose == "ragdoll")
             {
-                var k = KageWearing(armor, helmet);
+                var k = KageWearing(armor, hairstyle);
                 var f = new HeadlessFight(KageMoveScenarios.Seed, Foe.Scripted, -0.4f, 0.4f, kageDef: k);
                 f.Kage.health = 1f;
                 f.KageInput.Add(300);
@@ -56,7 +57,7 @@ namespace Kage.Tests
                 f.Run(85);
                 return f;
             }
-            var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, -0.2f, kageDef: KageWearing(armor, helmet));
+            var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, -0.2f, kageDef: KageWearing(armor, hairstyle));
             switch (pose)
             {
                 case "idle": fight.Run(30); break;
@@ -159,19 +160,19 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void SheetOfHelmetAndArmourCombinations()
+        public void SheetOfHairstyleAndArmourCombinations()
         {
             Assume.That(SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null, "needs a GPU: run without -nographics");
             Directory.CreateDirectory(OutDir);
             var cells = new List<Color32[]>();
             foreach (var id in Act1Armors)
-                foreach (var helmet in Combos)
+                foreach (var hairstyle in Combos)
                 {
-                    using var f = Pose(id, "idle", helmet);
-                    cells.Add(Render((Vector2)f.Kage.rig.Bone(B.Head).position + new Vector2(0.0f, -0.2f), 0.62f, $"{id} + {helmet ?? "no helmet"}"));
+                    using var f = Pose(id, "idle", hairstyle);
+                    cells.Add(Render((Vector2)f.Kage.rig.Bone(B.Head).position + new Vector2(0.0f, -0.2f), 0.62f, $"{id} + {hairstyle ?? "no hairstyle"}"));
                 }
-            SheetCols("armors_with_helmets.png", cells, Combos.Length);
-            FileAssert.Exists(Path.Combine(OutDir, "armors_with_helmets.png"));
+            SheetCols("armors_with_hairstyles.png", cells, Combos.Length);
+            FileAssert.Exists(Path.Combine(OutDir, "armors_with_hairstyles.png"));
         }
 
         static void Sheet(string name, List<Color32[]> cells) => SheetCols(name, cells, Cols);

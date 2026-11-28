@@ -539,7 +539,7 @@ namespace Kage
             }
             Ui.Box(row, SpoilH, 0, 1, SpoilH, Ui.Hair);
             float lx = SpoilH + 14;
-            string kind = s.Kind == GearKind.Weapons ? "Weapon" : s.Kind == GearKind.Helmets ? "Helmet" : "Armour";
+            string kind = s.Kind == GearKind.Weapons ? "Weapon" : "Armour";
             Ui.Label(row, s.Name, UiFont.Cond, 20, s.Owned ? Ui.Muted : Ui.Bone, lx, 6, w - lx - 110, 24, TextAnchor.MiddleLeft);
             Ui.Label(row, kind.ToUpperInvariant(), UiFont.Cond, 12, Ui.Muted, lx, 30, 160, 16, TextAnchor.MiddleLeft, 2.8f);
             Ui.Label(row, s.Owned ? "CLAIMED" : "FIRST CLEAR", UiFont.Cond, 12, s.Owned ? Ui.Muted : Ui.Gold, w - 120, 0, 106, SpoilH, TextAnchor.MiddleRight, 2.4f);

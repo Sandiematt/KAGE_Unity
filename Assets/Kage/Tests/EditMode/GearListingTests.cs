@@ -19,7 +19,6 @@ namespace Kage.Tests
         static SaveData Dev() { return GameRules.SetDevMode(GameRules.DefaultSave(false), true); }
 
         static string[] Weapons(SaveData s) { return ArmoryView.Items(ArmoryTab.Weapons, s); }
-        static string[] Helmets(SaveData s) { return ArmoryView.Items(ArmoryTab.Helmets, s); }
         static string[] Armours(SaveData s) { return ArmoryView.Items(ArmoryTab.Armor, s); }
 
         static readonly string[] ShopArmours =
@@ -52,41 +51,11 @@ namespace Kage.Tests
             Assert.AreEqual(ArmoryClass.LaterAct, ArmoryListing.Classify(GearKind.Weapons, id));
         }
 
-        // ---- helmets ----
-
         [Test]
-        public void Helmets_list_all_fourteen_Act_I_helmets_in_five_tier_rarity_order()
+        public void HairstylesFollowTheSixReferenceProfiles()
         {
-            var expected = new[]
-            {
-                "shiro_maki", "kuro_zukin",
-                "sugegasa", "hachigane", "kasumi_men",
-                "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
-                "shika_kabuto", "sumi_eboshi", "hisame_zukin",
-                "raijin_kabuto", "utsuro_kabuto", "shikko_zukin",
-            };
-            var listed = Helmets(Dev());
-            Assert.AreEqual(14, listed.Length);
-            CollectionAssert.AreEqual(expected, listed);
-            // Verify each tier assignment matches the 5-tier rarity roster
-            foreach (var id in new[] { "shiro_maki", "kuro_zukin" }) Assert.AreEqual("common", GameRules.Item(GearKind.Helmets, id).Tier, id);
-            foreach (var id in new[] { "sugegasa", "hachigane", "kasumi_men" }) Assert.AreEqual("rare", GameRules.Item(GearKind.Helmets, id).Tier, id);
-            foreach (var id in new[] { "tetsu_kabuto", "oni_menpo", "hoshi_kabuto" }) Assert.AreEqual("epic", GameRules.Item(GearKind.Helmets, id).Tier, id);
-            foreach (var id in new[] { "shika_kabuto", "sumi_eboshi", "hisame_zukin" }) Assert.AreEqual("trophy", GameRules.Item(GearKind.Helmets, id).Tier, id);
-            foreach (var id in new[] { "raijin_kabuto", "utsuro_kabuto", "shikko_zukin" }) Assert.AreEqual("legendary", GameRules.Item(GearKind.Helmets, id).Tier, id);
-        }
-
-        [TestCase("hakobi_gasa")]
-        [TestCase("utsushi_men")]
-        [TestCase("deshi_tenugui")]
-        [TestCase("mokushi_kabuto")]
-        [TestCase("kasa")]
-        public void A_later_act_helmet_with_no_drawing_is_not_listed_but_stays_in_the_tables(string id)
-        {
-            Assert.IsNotNull(JsTables.Helmet(id), "the JS-derived row stays");
-            Assert.IsFalse(HelmetVisuals.Has(id), "it has no drawing on Kage");
-            CollectionAssert.DoesNotContain(Helmets(Dev()), id);
-            Assert.AreEqual(ArmoryClass.LaterAct, ArmoryListing.Classify(GearKind.Helmets, id));
+            CollectionAssert.AreEqual(new[] { "spike", "messy_layers", "low_ponytail", "topknot", "long_flowing", "undercut" },
+                ArmoryView.Items(ArmoryTab.Hairstyles, Fresh()));
         }
 
         // ---- armour: no Trophies section ----
@@ -168,9 +137,9 @@ namespace Kage.Tests
         [Test]
         public void Every_listed_item_is_drawn_on_Kage_and_the_player_can_get_it_in_Act_I()
         {
-            foreach (var kind in new[] { GearKind.Weapons, GearKind.Helmets, GearKind.Armors })
+            foreach (var kind in new[] { GearKind.Weapons, GearKind.Hairstyles, GearKind.Armors })
             {
-                var tab = kind == GearKind.Weapons ? ArmoryTab.Weapons : kind == GearKind.Helmets ? ArmoryTab.Helmets : ArmoryTab.Armor;
+                var tab = kind == GearKind.Weapons ? ArmoryTab.Weapons : kind == GearKind.Hairstyles ? ArmoryTab.Hairstyles : ArmoryTab.Armor;
                 foreach (var id in ArmoryView.Items(tab, Dev()))
                 {
                     var it = GameRules.Item(kind, id);
@@ -184,19 +153,18 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void The_Armory_lists_thirty_one_of_the_forty_eight_items_a_player_could_hold()
+        public void The_Armory_lists_the_current_campaign_gear()
         {
             int all = 0, listed = 0;
-            foreach (var kind in new[] { GearKind.Weapons, GearKind.Helmets, GearKind.Armors })
+            foreach (var kind in new[] { GearKind.Weapons, GearKind.Hairstyles, GearKind.Armors })
                 foreach (var it in ArmoryListing.Candidates(kind).Where(i => !i.Enemy && i.Id != "fists"))
                 {
                     all++;
                     if (ArmoryListing.Listed(kind, it.Id)) listed++;
                 }
-            // 11 weapons + 19 helmets + 18 armours (the shop and the trophies) before; 7 + 14 + 10 after SAN-108 (the four boss blades are
-            // withheld); then Unity's Mumei, the plain starter, joined the weapons (docs/weapon-styles.md): 12 + 19 + 18, and 8 + 14 + 10 listed
-            Assert.AreEqual(49, all);
-            Assert.AreEqual(32, listed);
+            // 12 weapons, six hairstyles and 18 armors. Act I exposes eight weapons and ten armors.
+            Assert.AreEqual(36, all);
+            Assert.AreEqual(24, listed);
         }
     }
 }

@@ -1,46 +1,24 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Kage
 {
     /// <summary>
-    /// Armour visuals, the second gear layer on Kage's part set (SAN-85, ADR-0005). Structured Act I armors build cel-shaded
-    /// plates, tailored collars/lapels, riveted pauldrons, and dynamic split coat/haori tails from <see cref="ArmorDesigns"/>,
-    /// while trimming/suppressing redundant base cloth and straps underneath bulky armor so nothing pokes out or Z-fights.
-    /// Later-act trophies use <see cref="ArmorLooks"/>. The starter Shinobi Garb leaves Kage unchanged.
+    /// Dresses Kage's articulated rig with the equipped armour. The shop sets also dye his base garb.
     /// </summary>
     public static class ArmorVisuals
     {
-        sealed class Look
+        static readonly Dictionary<string, ArmorTheme> ShopDyes = new()
         {
-            public string name;                 // the JS look key
-            public ArmorTheme theme;            // a recut of his coat, scarf and belt (shop armours)
-            public Action<ArmorArt> draw;       // plates only (trophies)
-        }
-
-        static readonly Dictionary<string, Look> Looks = new()
-        {
-            ["ronin_yoroi"] = new Look { name = "ronin", theme = ArmorLooks.Ronin },
-            ["yami_yoroi"] = new Look { name = "yami", theme = ArmorLooks.Yami },
-            ["shinsen_yoroi"] = new Look { name = "shinsen", theme = ArmorLooks.Shinsen },
-            ["raiko_yoroi"] = new Look { name = "raiko", theme = ArmorLooks.Raiko },
-            ["kagehira_yoroi"] = new Look { name = "kagehira", theme = ArmorLooks.Kagehira },
-            ["yurei_yoroi"] = new Look { name = "yurei", theme = ArmorLooks.Yurei },
-            ["mugen_yoroi"] = new Look { name = "mugen", theme = ArmorLooks.Mugen },
-            ["ikazuchi_do"] = new Look { name = "half_do", draw = ArmorLooks.HalfDo },
-            ["shiden_yoroi"] = new Look { name = "vanguard_plate", draw = ArmorLooks.VanguardPlate },
-            ["shirabe_do"] = new Look { name = "operative_vest", draw = ArmorLooks.OperativeVest },
-            ["kasane_haori"] = new Look { name = "ledger_coat", draw = ArmorLooks.LedgerCoat },
-            ["tetsumon_do"] = new Look { name = "gate_plate", draw = ArmorLooks.GatePlate },
-            ["kudamaki_do"] = new Look { name = "conduit_harness", draw = ArmorLooks.ConduitHarness },
-            ["mei_en_garb"] = new Look { name = "mei_en", draw = ArmorLooks.MeiEn },
-            ["kysmei_robe"] = new Look { name = "kysmei", draw = ArmorLooks.KysmeiRobe },
-            ["kurokumo_yoroi"] = new Look { name = "tyrant", draw = ArmorLooks.Tyrant },
-            ["shinsei_yoroi"] = new Look { name = "shinsei", draw = ArmorLooks.Shinsei },
+            ["ronin_yoroi"] = ArmorLooks.Ronin,
+            ["yami_yoroi"] = ArmorLooks.Yami,
+            ["shinsen_yoroi"] = ArmorLooks.Shinsen,
+            ["raiko_yoroi"] = ArmorLooks.Raiko,
+            ["kagehira_yoroi"] = ArmorLooks.Kagehira,
+            ["yurei_yoroi"] = ArmorLooks.Yurei,
+            ["mugen_yoroi"] = ArmorLooks.Mugen,
         };
 
-        // Base straps, belt and chest lapel completely swallowed by structured full-body Act I armor
         static readonly HashSet<string> CoveredByStructuredArmor = new()
         {
             "Lapel", "Collar",
@@ -50,69 +28,30 @@ namespace Kage
             "LegF_KneeStrap", "LegF_AnkleStrap",
         };
 
-        /// <summary>True when this JS armour id has a drawing.</summary>
-        public static bool Has(string armorId) => armorId != null && Looks.ContainsKey(armorId);
+        public static bool Has(string armorId) => ArmorDesigns.Has(armorId);
+        public static IEnumerable<string> Ids => ArmorDesigns.Ids;
 
-        /// <summary>The ids of every armour with a drawing.</summary>
-        public static IEnumerable<string> Ids => Looks.Keys;
-
-        /// <summary>
-        /// Layers the armour on Kage's rig. Returns false and leaves the rig exactly as it was when the armour has no drawing
-        /// (null, the starter, a later-act or retired armour, an unknown id).
-        /// </summary>
         public static bool Apply(RigDef rig, string armorId, Color trim, Color trimDeep)
         {
-            if (!Has(armorId)) return false;
-            var look = Looks[armorId];
             var design = ArmorDesigns.Get(armorId);
-            if (design != null)
+            if (design == null) return false;
+
+            if (ShopDyes.TryGetValue(armorId, out var theme))
             {
-                if (look.theme != null)
+                ArmorLooks.Retone(rig, theme, trim, trimDeep);
+                if (design.tier == ArmorTier.Common)
                 {
-                    ArmorLooks.Retone(rig, look.theme, trim, trimDeep);
-                    // Only Ronin uses the tattered base coat as its primary lower coat; armors with tailored split haori tails
-                    // suppress overlapping jagged coat teeth while keeping their scarf strands intact.
-                    if (design.tier == HelmetTier.Common)
-                    {
-                        var coatArt = new ArmorArt(rig, look.name);
-                        ArmorLooks.DressCoatAndStrands(coatArt, look.theme);
-                        coatArt.Commit();
-                    }
-                    else ArmorLooks.DressStrandsOnly(rig, look.theme);
+                    var coatArt = new ArmorArt(rig, design.look);
+                    ArmorLooks.DressCoatAndStrands(coatArt, theme);
+                    coatArt.Commit();
                 }
-                SuppressCoveredBaseParts(rig, CoveredByStructuredArmor);
-                TrimBaseCoatForArmor(rig, design);
-                AddStructuredPieces(rig, design);
-                return true;
+                else ArmorLooks.DressStrandsOnly(rig, theme);
             }
-            TrimLegacyChestUnderCloth(rig);
-            var art = new ArmorArt(rig, look.name);
-            if (look.theme != null)
-            {
-                ArmorLooks.Retone(rig, look.theme, trim, trimDeep);
-                ArmorLooks.Dress(art, look.theme);
-            }
-            else look.draw(art);
-            art.Commit();
+
+            rig.parts.RemoveAll(p => CoveredByStructuredArmor.Contains(p.name));
+            TrimBaseCoatForArmor(rig, design);
+            AddStructuredPieces(rig, design);
             return true;
-        }
-
-        // ---------------------------------------------------------------- redundant cloth suppression & trimming
-
-        static void SuppressCoveredBaseParts(RigDef rig, HashSet<string> covered)
-        {
-            rig.parts.RemoveAll(p => covered.Contains(p.name));
-        }
-
-        /// <summary>Tucks Kage's base Lapel &amp; Collar strictly inside the chest plate bounds on legacy later-act trophies.</summary>
-        static void TrimLegacyChestUnderCloth(RigDef rig)
-        {
-            var lapel = rig.parts.Find(p => p.name == "Lapel");
-            if (lapel != null && lapel.pts != null)
-                lapel.pts = Pts(new float[] { 844, 268, 854, 268, 858, 352, 848, 352 });
-            var collar = rig.parts.Find(p => p.name == "Collar");
-            if (collar != null && collar.pts != null)
-                collar.pts = Pts(new float[] { 834, 266, 846, 262, 850, 282, 838, 286 });
         }
 
         /// <summary>
@@ -125,14 +64,14 @@ namespace Kage
             Color rim = rig.rimColor;
             switch (design.tier)
             {
-                case HelmetTier.Common:
+                case ArmorTier.Common:
                     // Ronin keeps his ragged side/back coat; only trim the front coat top seam neatly under Kusazuri
                     ReplaceCoatPanel(rig, "Coat", rim, new float[]
                     {
                         806, 418, 886, 418, 888, 554, 866, 668, 848, 736, 816, 742, 782, 734, 792, 646, 800, 530
                     });
                     break;
-                case HelmetTier.Rare:
+                case ArmorTier.Rare:
                     // Short tactical / shrine haori tails cover upper hips; lower under-coat emerges cleanly below hem
                     ReplaceCoatPanel(rig, "Coat", rim, new float[]
                     {
@@ -147,8 +86,8 @@ namespace Kage
                         884, 420, 950, 420, 978, 518, 1008, 626, 1034, 726, 990, 738, 936, 736, 910, 628, 892, 518
                     });
                     break;
-                case HelmetTier.Epic:
-                case HelmetTier.Trophy:
+                case ArmorTier.Epic:
+                case ArmorTier.Trophy:
                     // Mid-length structured battle haori & surcoats: slim base coat into a crisp inner under-hakama
                     ReplaceCoatPanel(rig, "Coat", rim, new float[]
                     {
@@ -163,7 +102,7 @@ namespace Kage
                         890, 436, 948, 436, 966, 520, 986, 622, 1000, 724, 966, 730, 926, 726, 908, 626, 896, 528
                     });
                     break;
-                case HelmetTier.Legendary:
+                case ArmorTier.Legendary:
                     // Ornate long 3-panel warlord coat + 2-layer cape: slim base coat tightly around the inner legs
                     ReplaceCoatPanel(rig, "Coat", rim, new float[]
                     {

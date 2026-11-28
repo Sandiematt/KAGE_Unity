@@ -10,7 +10,7 @@ Code: `Combat/Styles/` (`WeaponStyle`, `WeaponStyles`, `ShizukaMoves`, `HammerMo
 
 | Tier | Weapons | Notes |
 | --- | --- | --- |
-| Common | **Mumei** (無銘, "unsigned") | the plain starting katana, the only common: free, owned by every save, Kagetsu's steel numbers (x1), no style trait, Thousand Shadows |
+| Common | **Mumei** (無銘, "unsigned") | the plain starting katana, the only common: free, owned by every save, Kagetsu's steel numbers (x1), no style trait, Mikazuki (one giant crescent moon) |
 | Rare | Kagetsu (now sold, 300), Tsubame | |
 | Epic | Shizuka, Onikiri, Mizuchi | |
 | Legendary | Yamigama, Iwakudaki | the rainbow tier line in the Armory (the legendary helmets' treatment); their arts' names and finisher words drift in a rainbow and their finishers add a prism ring |
@@ -46,7 +46,7 @@ Each weapon gets one or two traits, chosen so no two weapons win the same way (`
 | **Mizuchi** (spear) | Tide Spear | Spacing. The outer third of the reach is the sweet spot; a foe inside the shaft takes less. | Tip (outer 34 % of the blade line): × 1.35 damage, × 1.45 push, a "TIP" splash; inner 30 %: × 0.8 damage. Walk and run × 0.96. Footwork water. |
 | **Yamigama** (chain sickle, legendary) | Reaper Chain | Hook and reap. A blade blow marks the foe; the next one spends the mark. | The mark lasts 90 frames ("HOOKED"); the blow that spends it deals × 1.4 and drags the foe in instead of knocking it away ("REAP"). Footwork shadow; prismatic sparks. |
 | **Iwakudaki** (war hammer, legendary) | Earthbreaker | The slowest and the heaviest. The Weapon button is the hammer's own two-blow string: **Rock Smash** (raised high and held, down into the floor in front, armoured, 30; the head splits the ground and a fissure races 4 m along the floor, a low blow) then **Rising Break** (from low behind up through the foe, 24, throws it). Every smash shakes the floor. | The tremor: the Rock Smash and the cleaver's Ground Slam (Down + Weapon) stun every grounded foe within 2.4 m for 22 frames ("QUAKE"), guarding or not; walk and run × 0.78, dash × 0.8, heavy steps, posture × 1.5. It still fights with the cleaver family underneath (no hammer family yet, ADR-0006). Footwork earth (dust, thrown rock, gold); prismatic sparks. |
-| **Mumei** (katana, common) | Plain Steel | The starter: the katana set exactly, nothing added. | none; Thousand Shadows |
+| **Mumei** (katana, common) | Plain Steel | The starter: the katana set exactly, nothing added. | none; Mikazuki (三日月): no cinematic, Kage holds hassō, cuts once and sends one giant crescent moon down the floor (unblockable, 30 damage, through up to three foes) |
 
 ## The rage arts
 
@@ -98,3 +98,18 @@ The weapon styles add smaller cues with the same palettes: each dash leaves its 
 - **EditMode**: 925 tests, 916 pass, 1 skipped; the 8 that fail already failed on the commit before this work (Raikon's Ascendant tests, a stage trophy, the pacing damage hash, a foe's ability slots, a rope sag tolerance), checked by running them on a clean checkout.
 - **Feel numbers are first guesses** (speeds, momentum, armour, sweet spot, hook, the arts' frames): they want the owner's playtest.
 - **The baseline replay** (Kagetsu at level 1) should be unchanged: Kagetsu's only new rule fires after Kage guards or parries. If a recorded scenario has Kage guard and then press Weapon within 45 frames, it changes there.
+
+## Back + Weapon counters (2026-11-27)
+
+Every weapon now has a counter stance on Back + Weapon, as the katana's Mirror Guard always had. The stance catches a blow in frames 4-24; the blow is turned aside (the attacker reels as from a parry) and the weapon's riposte plays at once: fast, untouchable through its first frames, unblockable.
+
+| Weapon (family) | Stance | Riposte |
+|---|---|---|
+| Kagetsu, Mumei, Shizuka (katana) | Mirror Guard | Kage Counter (teleports behind the attacker) |
+| Mizuchi (spear) | Tide Turn (`spear.counterGuard`) | Tide Riposte, a sliding thrust (`spear.counterThrust`, 12) |
+| Yamigama (chain sickle) | Reaper's Snare (`chain.counterGuard`) | Reaper's Reply, a reaping cut (`chain.counterReap`, 11) |
+| Onikiri (cleaver) | Oni Wall (`cleaver.counterGuard`) | Oni Rebuke, a diagonal hack (`cleaver.counterHack`, 14) |
+| Iwakudaki (hammer) | Anvil Guard (`iwakudaki.counterGuard`) | Anvil Rebound, a chopping slam (`iwakudaki.counterSmash`, 15) |
+
+What Back + Weapon did before stays for the legacy (unprofiled) AI only: the spear's Raised Guard, the chain's Cyclone Chain Arc, the cleaver's sweep, the hammer's Rising Anvil (still on Up + Weapon). For the player the Cyclone Chain Arc has no button now. `WeaponCounterTests` (EditMode) fights each stance against a test blow, and Mikazuki against a foe.
+

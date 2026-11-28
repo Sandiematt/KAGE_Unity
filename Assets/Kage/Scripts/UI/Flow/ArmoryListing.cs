@@ -5,9 +5,7 @@ using Kage.Rules;
 namespace Kage
 {
     /// <summary>
-    /// How far an item has come in Unity (SAN-108: "many helmets don't even exist and have names on them"). The Armory lists only
-    /// <see cref="Implemented"/> gear; the JS-derived tables, the save format and <see cref="GameRules"/> keep every row, so a later
-    /// act turns an item back on by making it implemented (a drawing on Kage and a way to get it), not by editing the Armory.
+    /// Whether an item is available in the current campaign.
     /// </summary>
     public enum ArmoryClass
     {
@@ -19,7 +17,7 @@ namespace Kage
         Placeholder,
     }
 
-    /// <summary>Which weapons, helmets and armour the Armory lists, and why (<c>docs/armory-items.md</c> is this table in prose).</summary>
+    /// <summary>Which weapons, hairstyles and armour the Armory lists, and why (<c>docs/armory-items.md</c> is this table in prose).</summary>
     public static class ArmoryListing
     {
         // A weapon whose family has no Unity implementation: it fights with another family's moves and drawing as a stand-in.
@@ -32,7 +30,7 @@ namespace Kage
         {
             IEnumerable<string> ids = kind == GearKind.Weapons
                 ? JsTables.AllWeapons.Select(w => w.Id)
-                : kind == GearKind.Helmets ? JsTables.Helmets.Select(g => g.Id) : JsTables.Armors.Select(g => g.Id);
+                : kind == GearKind.Hairstyles ? Hairstyles.Ids : JsTables.Armors.Select(g => g.Id);
             return ids.Select(id => GameRules.Item(kind, id));
         }
 
@@ -57,8 +55,8 @@ namespace Kage
             {
                 case GearKind.Weapons:
                     return !StandIns.Contains(it.Id) && WeaponFamilies.Get(WeaponFamilies.FamilyIdOf(it.Id)) != null;
-                case GearKind.Helmets:
-                    return it.Id == "shiro_maki" || it.Tier == "starter" || HelmetVisuals.Has(it.Id);
+                case GearKind.Hairstyles:
+                    return Hairstyles.Name(it.Id) != null;
                 default:
                     return it.Tier == "starter" || ArmorVisuals.Has(it.Id);
             }
@@ -73,7 +71,7 @@ namespace Kage
 
         static string[] Rewards(JsReward r, GearKind kind)
         {
-            var list = kind == GearKind.Weapons ? r.Weapons : kind == GearKind.Helmets ? r.Helmets : r.Armors;
+            var list = kind == GearKind.Weapons ? r.Weapons : r.Armors;
             return list ?? new string[0];
         }
     }

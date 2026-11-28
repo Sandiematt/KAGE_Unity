@@ -11,11 +11,11 @@ namespace Kage.Tests
     /// </summary>
     public class ArmorFighterTests
     {
-        static CharacterDef KageWearing(string armor, string helmet = null)
+        static CharacterDef KageWearing(string armor, string hairstyle = null)
         {
             var def = CharacterCatalog.Get(KageCharacter.Id);
             def.armor = armor;
-            def.helmet = helmet;
+            def.hairstyle = hairstyle;
             return def;
         }
 
@@ -189,16 +189,16 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void EveryHelmetAndArmourCombinationSpawnsAndStandsStill()
+        public void EveryHairstyleAndArmourCombinationSpawnsAndStandsStill()
         {
-            var helmets = new[] { null, "shiro_maki", "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto", "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "sumi_eboshi", "hisame_zukin", "raijin_kabuto" };
+            var hairstyles = Kage.Rules.Hairstyles.Ids;
             foreach (var armor in ArmorVisuals.Ids.Concat(new[] { "tachibana_yoroi" }))
-                foreach (var helmet in helmets)
+                foreach (var hairstyle in hairstyles)
                 {
-                    using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: KageWearing(armor, helmet));
+                    using var fight = new HeadlessFight(KageMoveScenarios.Seed, Foe.None, kageDef: KageWearing(armor, hairstyle));
                     fight.Run(3);
-                    Assert.IsNotNull(Named(fight.Kage, "Eye"), $"{helmet}+{armor}");
-                    AssertAllFinite(fight.Kage, $"{helmet}+{armor}");
+                    Assert.IsNotNull(Named(fight.Kage, "Eye"), $"{hairstyle}+{armor}");
+                    AssertAllFinite(fight.Kage, $"{hairstyle}+{armor}");
                 }
         }
     }

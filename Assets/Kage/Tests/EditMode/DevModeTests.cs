@@ -16,14 +16,12 @@ namespace Kage.Tests
         // ---- on ----
 
         [Test]
-        public void Dev_mode_on_owns_every_weapon_helmet_and_armour_that_is_not_enemy_only()
+        public void Dev_mode_on_owns_every_weapon_and_armour_that_is_not_enemy_only()
         {
             var s = DevSave();
             Assert.IsTrue(s.devMode);
             foreach (var w in JsTables.Weapons.Where(w => !w.Enemy && w.Id != "fists"))
                 Assert.GreaterOrEqual(s.owned.weapons[w.Id], 1, "weapon " + w.Id);
-            foreach (var h in JsTables.Helmets.Where(h => !h.Enemy && !h.Retired))
-                Assert.GreaterOrEqual(s.owned.helmets[h.Id], 1, "helmet " + h.Id);
             foreach (var a in JsTables.Armors.Where(a => !a.Enemy && !a.Retired))
                 Assert.GreaterOrEqual(s.owned.armors[a.Id], 1, "armour " + a.Id);
         }
@@ -79,7 +77,7 @@ namespace Kage.Tests
         {
             var s = DevSave();
             Assert.AreEqual("mumei", s.equipped.weapon);
-            Assert.AreEqual("shiro_maki", s.equipped.helmet);
+            Assert.AreEqual("spike", s.equipped.hairstyle);
             Assert.AreEqual("tachibana_yoroi", s.equipped.armor);
         }
 
@@ -110,7 +108,6 @@ namespace Kage.Tests
             Assert.AreEqual(0, real.stats.wins);
             Assert.AreEqual(0, real.cleared.Count);
             Assert.AreEqual(1, real.owned.weapons.Count);
-            Assert.AreEqual(1, real.owned.helmets.Count);
             Assert.AreEqual(1, real.owned.armors.Count);
             Assert.AreEqual("mumei", real.equipped.weapon);
         }

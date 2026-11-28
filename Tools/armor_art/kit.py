@@ -471,7 +471,7 @@ KAGE_BODY = [
 ]
 
 
-def draw_list(armor):
+def draw_list(armor, *, hair=True, eye=True):
     items = []
     seq = [0]
     def add(sort, pts, col):
@@ -535,10 +535,12 @@ def draw_list(armor):
             add((order - order % 4) * 3, [(x + RIM_SHIFT_REF[0], y + RIM_SHIFT_REF[1]) for (x, y) in grow(pts, RIM_GROW)], rim_col)
         add(order * 3 + 2, pts, c)
 
-    hair, eye = kage_svg_hair()
-    for pts, col in hair:
-        add(84 * 3 + 2, pts, col)
-    add(96 * 3 + 2, eye, hexc('#F4F1EE'))
+    hair_polys, eye_shape = kage_svg_hair()
+    if hair:
+        for pts, col in hair_polys:
+            add(84 * 3 + 2, pts, col)
+    if eye:
+        add(96 * 3 + 2, eye_shape, hexc('#F4F1EE'))
 
     if armor is not None:
         arim = hexc(pal['rim'])
@@ -688,7 +690,7 @@ def export_cs(armors, path):
                 continue
             pal_entries.append(f'["{k}"] = new[] {{ "{v[0]}", "{v[1]}", "{v[2]}" }}')
         pal_str = f'new ArmorPalette("{a.palette["rim"]}", new Dictionary<string, string[]> {{ {", ".join(pal_entries)} }})'
-        L.append(f'            new ArmorDesign("{a.id}", "{a.look}", HelmetTier.{tiers[a.tier]}, ArmorAuraKind.{auras[a.aura]}, {pal_str}, new[]')
+        L.append(f'            new ArmorDesign("{a.id}", "{a.look}", ArmorTier.{tiers[a.tier]}, ArmorAuraKind.{auras[a.aura]}, {pal_str}, new[]')
         L.append('            {')
         for p in a.pieces:
             kind = {'cel': 'PieceKind.Cel', 'flat': 'PieceKind.Flat', 'cloth': 'PieceKind.Cloth'}[p.kind]

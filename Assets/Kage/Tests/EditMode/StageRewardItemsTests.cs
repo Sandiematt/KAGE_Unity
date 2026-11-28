@@ -47,53 +47,44 @@ namespace Kage.Tests
         public void Trophies_are_locked_until_their_stage_is_cleared_and_then_owned_at_level_1()
         {
             var s = Fresh();
-            ClearUpTo(s, "act1.sub1");
-            Assert.IsTrue(GameRules.IsLocked(s, GearKind.Helmets, "sumi_eboshi"));
+            ClearUpTo(s, "act1.sub2");
+            Assert.IsTrue(GameRules.IsLocked(s, GearKind.Armors, "ikazuchi_do"));
 
-            var clear = GameRules.MarkStageCleared(s, "act1.sub1");
+            var clear = GameRules.MarkStageCleared(s, "act1.sub2");
 
-            Assert.IsFalse(GameRules.IsLocked(s, GearKind.Helmets, "sumi_eboshi"));
-            Assert.AreEqual(1, s.owned.helmets["sumi_eboshi"]);
+            Assert.IsFalse(GameRules.IsLocked(s, GearKind.Armors, "ikazuchi_do"));
+            Assert.AreEqual(1, s.owned.armors["ikazuchi_do"]);
             Assert.AreEqual(1, clear.Gear.Count);
-            Assert.AreEqual("helmets", clear.Gear[0].Kind);
-            Assert.AreEqual("sumi_eboshi", clear.Gear[0].Id);
-            Assert.AreEqual(1, clear.Unlocks.Count(u => u.Kind == "helmets" && u.Id == "sumi_eboshi"));
+            Assert.AreEqual("armors", clear.Gear[0].Kind);
+            Assert.AreEqual("ikazuchi_do", clear.Gear[0].Id);
+            Assert.AreEqual(1, clear.Unlocks.Count(u => u.Kind == "armors" && u.Id == "ikazuchi_do"));
         }
 
         [Test]
-        public void Raikon_grants_the_helmet_but_not_the_withheld_tachi_and_replaying_grants_nothing_new()
+        public void RaikonGrantsNoHeadgearOrWithheldWeapon()
         {
-            var s = Fresh();
-            ClearUpTo(s, "act1.boss");
-            Assert.IsTrue(GameRules.IsLocked(s, GearKind.Weapons, "raiko_no_tachi"));
-
-            var clear = GameRules.MarkStageCleared(s, "act1.boss");
-            CollectionAssert.AreEqual(new[] { "raijin_kabuto" }, clear.Gear.Select(g => g.Id).ToArray());
-            Assert.IsFalse(s.owned.weapons.ContainsKey("raiko_no_tachi"));
-            Assert.AreEqual(1, s.owned.helmets["raijin_kabuto"]);
-
-            var again = GameRules.MarkStageCleared(s, "act1.boss");
-            Assert.AreEqual(0, again.Gear.Count);
-            Assert.AreEqual(0, again.Unlocks.Count);
-            Assert.IsFalse(s.owned.weapons.ContainsKey("raiko_no_tachi"));
+            var save = Fresh();
+            ClearUpTo(save, "act1.boss");
+            Assert.IsEmpty(GameRules.MarkStageCleared(save, "act1.boss").Gear);
+            Assert.IsFalse(save.owned.weapons.ContainsKey("raiko_no_tachi"));
+            Assert.IsEmpty(GameRules.MarkStageCleared(save, "act1.boss").Gear);
         }
 
         [Test]
         public void An_item_the_player_already_owns_is_not_granted_again_or_reset()
         {
             var s = Fresh();
-            s.owned.helmets["sumi_eboshi"] = 3;
-            ClearUpTo(s, "act1.sub1");
-            var clear = GameRules.MarkStageCleared(s, "act1.sub1");
+            s.owned.armors["ikazuchi_do"] = 3;
+            ClearUpTo(s, "act1.sub2");
+            var clear = GameRules.MarkStageCleared(s, "act1.sub2");
             Assert.AreEqual(0, clear.Gear.Count);
-            Assert.AreEqual(3, s.owned.helmets["sumi_eboshi"]);
+            Assert.AreEqual(3, s.owned.armors["ikazuchi_do"]);
         }
 
         [Test]
         public void The_lock_hint_names_the_foe_to_defeat()
         {
             Assert.AreEqual("Defeat Raikon", GameRules.LockHint(GearKind.Weapons, "raiko_no_tachi"));
-            Assert.AreEqual("Defeat Kuroe, the Ink Censor", GameRules.LockHint(GearKind.Helmets, "sumi_eboshi"));
             Assert.AreEqual("Defeat Garan, the Stormbroken", GameRules.LockHint(GearKind.Armors, "ikazuchi_do"));
         }
 
@@ -102,7 +93,7 @@ namespace Kage.Tests
         {
             var s = Fresh();
             Assert.IsFalse(GameRules.IsLocked(s, GearKind.Weapons, "tsubame"));
-            Assert.IsFalse(GameRules.IsLocked(s, GearKind.Helmets, "kuro_zukin"));
+            Assert.IsFalse(GameRules.IsLocked(s, GearKind.Hairstyles, "kuro_zukin"));
         }
 
         [Test]

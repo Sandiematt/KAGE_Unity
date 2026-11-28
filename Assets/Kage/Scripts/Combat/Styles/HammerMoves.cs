@@ -14,8 +14,9 @@ namespace Kage
     /// 3. Light 3 — Battering Haymaker (<c>iwakudaki.haymaker</c>, S->S->S): deep trailing-hip pivot unleashing a full-body horizontal battering arc.
     /// 4. Heavy / Charged — Meteor Sunder (<c>iwakudaki.meteorSunder</c>, Fwd+S): low back-foot charge surging into a hopping lunge overhead slam for maximum posture damage.
     /// 5. Low Attack — Shin-Breaker Drag (<c>iwakudaki.shinBreaker</c>, Down+S): deep crouched horizontal sweep inches above ground.
-    /// 6. Up / Anti-Air — Rising Anvil (<c>iwakudaki.risingAnvil</c>, Up+S / Back+S): explosive vertical upward hammer thrust waist-to-sky.
+    /// 6. Up / Anti-Air — Rising Anvil (<c>iwakudaki.risingAnvil</c>, Up+S): explosive vertical upward hammer thrust waist-to-sky.
     /// 7. Dash Attack — Iron Ram (<c>iwakudaki.ironRam</c>, Dash+S / Dash+P): braced diagonal haft driving the hammer head straight forward like a battering ram.
+    /// Counter — Anvil Guard (<c>iwakudaki.counterGuard</c>, Back+S): a counter stance; a caught blow is turned aside and Anvil Rebound answers it.
     /// </para>
     /// </summary>
     public sealed class HammerMoves : MoveSet
@@ -39,6 +40,9 @@ namespace Kage
 
         readonly CleaverMoves _cleaver;
         public readonly MoveDef smash, rise, haymaker, meteorSunder, shinBreaker, risingAnvil, ironRam;
+        /// <summary>Back + S: the hammer's counter stance (Anvil Guard) and the answer it crushes back with (Anvil Rebound).</summary>
+        public readonly MoveDef counterGuard, counterSmash;
+        public const string CounterGuardId = "iwakudaki.counterGuard", CounterSmashId = "iwakudaki.counterSmash";
 
         static readonly HitPoint[] Blade = { HitPoint.Blade };
         static Pose P() => new Pose();
@@ -178,6 +182,30 @@ namespace Kage
             // 3-hit Light combo chain on S: Crushing Overhead Smash -> Earth-Scoop Uppercut -> Battering Haymaker
             smash.chain[Btn.S] = rise;
             rise.chain[Btn.S] = haymaker;
+
+            // Anvil Guard (Back + S, the hammer's counter like the katana's Mirror Guard): the haft held level across the chest in both
+            // fists, the head braced high. A blow caught in frames 4-24 is turned aside on the iron (the attacker reels as from a parry)
+            // and Anvil Rebound answers it
+            counterGuard = new MoveDef(CounterGuardId, "Anvil Guard", 34)
+                .Key(5, Hold(P().Hip(-0.05f, -0.16f, 2f).Chest(-2f).Head(-2f).Feet(0.32f, -0.34f), 0.28f, 1.18f, 78f))
+                .Key(26, Hold(P().Hip(-0.05f, -0.17f, 2f).Chest(-2f).Head(-2f).Feet(0.32f, -0.34f), 0.28f, 1.17f, 80f))
+                .Key(34, Guard(), Ease.InOutQuad)
+                .Fx(4, 4, FxKind.Glint).Sword();
+            counterGuard.counterFrom = 4;
+            counterGuard.counterTo = 24;
+
+            // Anvil Rebound: the turned blow's force rolled straight back into a short chopping slam of the head down through the reeling foe
+            counterSmash = new MoveDef(CounterSmashId, "Anvil Rebound", 36)
+                .Key(2, Hold(P().Hip(-0.06f, -0.08f, 6f).Chest(14f).Head(-8f).Feet(0.30f, -0.32f), 0.0f, 1.66f, 132f), Ease.OutQuad)
+                .Key(6, Hold(P().Hip(0.14f, -0.24f, -10f).Chest(-32f).Head(16f).FootN(0.40f, 0.13f).FootF(-0.28f, 0.15f, -24f), 0.50f, 0.86f, -30f), Ease.InCubic)
+                .Key(16, Hold(P().Hip(0.14f, -0.24f, -10f).Chest(-32f).Head(16f).FootN(0.40f, 0.13f).FootF(-0.28f, 0.15f, -24f), 0.48f, 0.84f, -32f))
+                .Key(36, Guard(), Ease.InOutQuad)
+                .Move(0, 5, 1.6f)
+                .Hit(4, 9, Blade, 15, HitLevel.Unblockable, new Vector2(1.6f, 2.0f), stun: 32, hitstop: 13, shake: 0.55f, knockdown: true, heavy: true, radius: 0.13f, postureMul: 1.6f)
+                .Vector(StrikeVector.HighOverhead).Segment(0.05f, 1f)
+                .Gust(4, new Vector2(5.5f, -11.5f), 0.2f)
+                .Invuln(0, 14).Fx(1, 10, FxKind.TrailBlade).Fx(6, 6, FxKind.Dust).Sword();
+            counterGuard.counterAnswer = counterSmash;
         }
 
         /// <summary>Routes all 7 signature Hammer techniques on the ground; air and auxiliary moves fall back to Cleaver.</summary>
@@ -190,7 +218,7 @@ namespace Kage
                 if (dy > 0) return risingAnvil;
                 if (dy < 0) return shinBreaker;
                 if (fwd > 0) return meteorSunder;
-                if (fwd < 0) return risingAnvil;
+                if (fwd < 0) return LegacyAi(self) ? risingAnvil : counterGuard;   // Back + S: Anvil Guard (legacy AI keeps the Rising Anvil)
                 return smash;
             }
             return _cleaver.Select(b, fwd, dy, air, self);
@@ -211,6 +239,8 @@ namespace Kage
                 yield return shinBreaker;
                 yield return risingAnvil;
                 yield return ironRam;
+                yield return counterGuard;
+                yield return counterSmash;
             }
         }
     }

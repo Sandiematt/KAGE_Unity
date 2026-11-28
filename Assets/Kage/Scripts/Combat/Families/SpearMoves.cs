@@ -23,6 +23,8 @@ namespace Kage
     {
         public MoveDef jab, poke2, stepPoke, lowPoke, skewer, kick, pushKick, lowKick;
         public MoveDef thrust, twinFang, crescentCleave, lunge, sweep, guardRaise, vault, dashSkewer;
+        /// <summary>Back + S: the spear's counter stance (Tide Turn) and the riposte it answers a caught blow with (Tide Riposte).</summary>
+        public MoveDef counterGuard, counterThrust;
         public MoveDef airPoke, airDive, airSweep;
 
         /// <summary>Metres from the lead hand's guard point to the spear's tip (JS Mizuchi reach 96 against the katana's 58).</summary>
@@ -257,6 +259,29 @@ namespace Kage
                 .Armour(5, 24)
                 .Fx(4, 4, FxKind.Glint).Sword();
 
+            // Tide Turn (Back + S, the spear's counter like the katana's Mirror Guard): the shaft laid level across the line of attack, the
+            // point on the foe. A blow caught in frames 4-24 is turned aside (the attacker reels as from a parry) and Tide Riposte answers it
+            m.counterGuard = new MoveDef("spear.counterGuard", "Tide Turn", 34)
+                .Key(5, Hold(P().Hip(-0.05f, -0.13f, 2f).Chest(2f).Head(-4f).Feet(0.26f, -0.32f), 0.26f, 1.14f, 22f, -0.12f, -0.36f, -0.62f))
+                .Key(26, Hold(P().Hip(-0.05f, -0.14f, 2f).Chest(2f).Head(-4f).Feet(0.26f, -0.32f), 0.26f, 1.13f, 24f, -0.12f, -0.36f, -0.62f))
+                .Key(34, Guard(), Ease.InOutQuad)
+                .Fx(4, 4, FxKind.Glint).Sword();
+            m.counterGuard.counterFrom = 4;
+            m.counterGuard.counterTo = 24;
+
+            // Tide Riposte: the turned shaft snaps straight back down its own line, a sliding-grip thrust into the reeling body
+            m.counterThrust = new MoveDef("spear.counterThrust", "Tide Riposte", 30)
+                .Key(3, Hold(Lunge(0.16f, -0.15f, -12f, -24f, 0.44f, -0.30f), 0.60f, 1.08f, 6f, 0.34f, -0.46f, -0.66f), Ease.OutExpo)
+                .Key(10, Hold(Lunge(0.16f, -0.15f, -12f, -24f, 0.44f, -0.30f), 0.58f, 1.08f, 6f, 0.32f, -0.46f, -0.66f))
+                .Key(18, Hold(P().Hip(0.06f, -0.13f, -6f).Chest(-14f).Head(8f).Feet(0.36f, -0.30f), 0.40f, 1.02f, 12f, 0.08f, -0.42f, -0.64f), Ease.OutQuad)
+                .Key(30, Guard(), Ease.InOutQuad)
+                .Move(0, 4, 2.0f)
+                .Hit(2, 7, Blade, 12, HitLevel.Unblockable, new Vector2(2.8f, 1.2f), stun: 30, hitstop: 12, shake: 0.4f, knockdown: true, heavy: true, radius: 0.14f)
+                .Vector(StrikeVector.Thrust).Segment(0f, 1f)                   // the whole shaft: a foe caught up close is struck too
+                .Gust(2, new Vector2(9.0f, 0.6f), 0.14f)
+                .Invuln(0, 12).Fx(0, 8, FxKind.TrailBlade).Fx(2, 2, FxKind.SlashLine).Sword();
+            m.counterGuard.counterAnswer = m.counterThrust;
+
             // chains: Light 1 -> Light 2 -> Light 3 on S, plus P pokes into thrust/sweep
             m.jab.chain[Btn.P] = m.poke2;
             m.jab.chain[Btn.S] = m.thrust;
@@ -328,7 +353,7 @@ namespace Kage
                     if (dy > 0) return vault;
                     if (dy < 0) return sweep;
                     if (fwd > 0) return lunge;
-                    if (fwd < 0) return guardRaise;
+                    if (fwd < 0) return LegacyAi(self) ? guardRaise : counterGuard;   // Back + S: Tide Turn (legacy AI keeps the Raised Guard)
                     return thrust;
             }
             return null;
@@ -337,7 +362,7 @@ namespace Kage
         public override IEnumerable<MoveDef> All => new[]
         {
             jab, poke2, stepPoke, lowPoke, skewer, kick, pushKick, lowKick, vault,
-            thrust, twinFang, crescentCleave, lunge, sweep, guardRaise, dashSkewer,
+            thrust, twinFang, crescentCleave, lunge, sweep, guardRaise, dashSkewer, counterGuard, counterThrust,
             airPoke, airDive, airSweep,
             throwGrab, throwWhiff, roll, backflip, getUp, getUpFront,
         };

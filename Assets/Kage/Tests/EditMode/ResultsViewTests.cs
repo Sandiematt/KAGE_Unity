@@ -125,8 +125,8 @@ namespace Kage.Tests
         [Test]
         public void Boss_gear_dropped_by_the_stage_is_listed_by_name_and_chapters_are_not()
         {
-            var v = PlayDev("act1.sub1", Win());
-            CollectionAssert.Contains(v.Items, GameRules.Item(GearKind.Helmets, "sumi_eboshi").Name);
+            var v = PlayDev("act1.sub2", Win());
+            CollectionAssert.Contains(v.Items, GameRules.Item(GearKind.Armors, "ikazuchi_do").Name);
             Assert.IsFalse(v.Items.Any(n => n.Contains("Act")), "chapter unlocks are a toast, not an item");
         }
 

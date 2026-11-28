@@ -5,7 +5,6 @@ using NUnit.Framework;
 namespace Kage.Tests
 {
     /// <summary>
-    /// Winning against Raikon grants Raikō no Tachi and Raijin Kabuto (SAN-107, ADR-0009), through the game rules and the campaign flow: the
     /// stage's JS reward (<c>act1.boss</c>) is handed over when the fight is won and not when it is lost.
     /// </summary>
     public class RaikonFightRewardTests
@@ -42,20 +41,19 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Beating_Raikon_through_the_flow_grants_Raijin_Kabuto_but_not_the_withheld_tachi_and_saves()
+        public void BeatingRaikonSavesProgressAndWithholdsTheTachi()
         {
             var f = FlowAtTheBoss(out var persisted);
             Assert.IsFalse(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"), "not owned before the fight");
-            Assert.IsFalse(f.Save.owned.helmets.ContainsKey("raijin_kabuto"));
             persisted.Clear();
             f.FinishStage(Win());
             Assert.IsTrue(f.LastOutcome.Win);
             Assert.IsTrue(f.LastOutcome.FirstClear);
             Assert.IsFalse(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"), "Raikō no Tachi is withheld for now");
-            Assert.IsTrue(f.Save.owned.helmets.ContainsKey("raijin_kabuto"), "Raijin Kabuto");
             Assert.IsTrue(GameRules.IsStageComplete(f.Save, Boss));
             Assert.IsNotEmpty(persisted, "the save was written");
-            Assert.IsTrue(GameRules.EquipItem(f.Save, GearKind.Helmets, "raijin_kabuto"));
+            f.Save.owned.armors["mugen_yoroi"] = 1;
+            Assert.IsTrue(GameRules.EquipItem(f.Save, GearKind.Armors, "mugen_yoroi"));
         }
 
         [Test]
@@ -65,7 +63,6 @@ namespace Kage.Tests
             f.FinishStage(new FightResult { win = false, hpLeft = 0, time = 80 });
             Assert.IsFalse(f.LastOutcome.Win);
             Assert.IsFalse(f.Save.owned.weapons.ContainsKey("raiko_no_tachi"));
-            Assert.IsFalse(f.Save.owned.helmets.ContainsKey("raijin_kabuto"));
             Assert.IsFalse(GameRules.IsStageComplete(f.Save, Boss));
         }
     }

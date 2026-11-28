@@ -13,14 +13,13 @@ namespace Kage.Rules
     {
         /// <summary>Weapon id to weapon level.</summary>
         public Dictionary<string, int> weapons = new Dictionary<string, int>();
-        public Dictionary<string, int> helmets = new Dictionary<string, int>();
         public Dictionary<string, int> armors = new Dictionary<string, int>();
     }
 
     public sealed class Equipped
     {
         public string weapon = GameRules.StarterWeaponId;
-        public string helmet = "shiro_maki";
+        public string hairstyle = Hairstyles.Default;
         public string armor = "tachibana_yoroi";
     }
 

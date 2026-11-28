@@ -22,15 +22,14 @@ namespace Kage.Tests
 
         static string OutDir => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "SAN-84"));
 
-        static SaveData Save(string weapon, int wl, string helmet, int hl, string armor, int al, int level)
+        static SaveData Save(string weapon, int wl, string hairstyle, string armor, int al, int level)
         {
             var s = GameRules.DefaultSave(false);
             s.level = level;
             s.owned.weapons[weapon] = wl;
-            s.owned.helmets[helmet] = hl;
             s.owned.armors[armor] = al;
             s.equipped.weapon = weapon;
-            s.equipped.helmet = helmet;
+            s.equipped.hairstyle = hairstyle;
             s.equipped.armor = armor;
             return s;
         }
@@ -41,7 +40,7 @@ namespace Kage.Tests
             var e = s.equipped;
             string Name(JsGear g, string id) => g != null ? g.Name : id;
             return $"{JsTables.Weapon(e.weapon).Name} L{d.weaponLevel}   player level {s.level}\n"
-                 + $"{Name(JsTables.Helmet(e.helmet), e.helmet)} L{s.owned.helmets[e.helmet]}   {Name(JsTables.Armor(e.armor), e.armor)} L{s.owned.armors[e.armor]}\n"
+                 + $"{Hairstyles.Name(e.hairstyle)}   {Name(JsTables.Armor(e.armor), e.armor)} L{s.owned.armors[e.armor]}\n"
                  + $"health {d.jsHealth:0} JS = {d.MaxHealth():0.0}   defence {d.defense * 100:0.#} %\n"
                  + $"damage x{d.damageMul:0.###}   speed x{d.speedMul:0.##}";
         }
@@ -53,9 +52,9 @@ namespace Kage.Tests
             Directory.CreateDirectory(OutDir);
             var saves = new[]
             {
-                Save("kagetsu", 1, "shiro_maki", 1, "tachibana_yoroi", 1, 1),
-                Save("shizuka", 6, "kuro_zukin", 3, "ronin_yoroi", 4, 4),
-                Save("kagetsu", 8, "raijin_kabuto", 5, "mugen_yoroi", 5, 11),
+                Save("kagetsu", 1, "spike", "tachibana_yoroi", 1, 1),
+                Save("shizuka", 6, "messy_layers", "ronin_yoroi", 4, 4),
+                Save("kagetsu", 8, "undercut", "mugen_yoroi", 5, 11),
             };
             var cells = new List<Color32[]>();
             foreach (var s in saves)

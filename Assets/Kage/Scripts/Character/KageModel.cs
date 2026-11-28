@@ -79,7 +79,7 @@ namespace Kage
             return d;
         }
 
-        public static RigDef Build(Look look)
+        public static RigDef Build(Look look, string hairstyle = null)
         {
             bool ronin = look == Look.Ronin;
             var d = Skeleton(ronin ? "RONIN" : "KAGE");
@@ -144,7 +144,7 @@ namespace Kage
 
             // ---------- head ----------
             Part("Neck", B.Neck, 20, body, PartRole.Body, V(838,200, 868,200, 872,240, 842,240), false);
-            if (!ronin) BuildHeadFromSvg(d);
+            if (!ronin) HairstyleVisuals.AddHead(d, hairstyle);
             else
             {
                 Part("Head", B.Head, 21, body, PartRole.Body, V(813,146, 805,160, 806,178, 799,191, 806,197, 809,205, 818,214, 832,223, 852,225, 872,216, 890,198, 899,172, 896,146, 882,126, 858,116, 833,121));
@@ -198,39 +198,11 @@ namespace Kage
         }
 
         // ---------------------------------------------------------------------------------------
-        static Vector2[] FromSvg(float[] xy)
-        {
-            var r = new Vector2[xy.Length / 2];
-            for (int i = 0; i < r.Length; i++) r[i] = P(xy[i * 2], xy[i * 2 + 1]);
-            return r;
-        }
-
         static Vector2[] Shift(Vector2[] pts, Vector2 by)
         {
             var r = new Vector2[pts.Length];
             for (int i = 0; i < r.Length; i++) r[i] = pts[i] + by;
             return r;
-        }
-
-        /// <summary>Kage's head and hair exactly as drawn: the SVG's 99 head shapes (silhouette, shaded
-        /// planes, red highlight strokes, eye) painted in SVG order into one deformable mesh.</summary>
-        static void BuildHeadFromSvg(RigDef d)
-        {
-            d.hairCentre = P(862, 150);
-            var polys = new List<(Vector2[] pts, Color col)>();
-            foreach (var sp in KageSvg.Hair)
-            {
-                var pts = FromSvg(sp.xy);
-                if (sp.role == 6)
-                {
-                    d.parts.Add(new PartDef { name = "Eye", bone = B.Head, order = 24 * 4, color = Palette.Eye, role = PartRole.Eye, pts = pts, rim = false, glow = 3.6f });
-                    continue;
-                }
-                Color c = new Color32(sp.r, sp.g, sp.b, 255);
-                if (sp.role >= 4) c = Color.Lerp(c, Palette.TrimBright, 0.18f);     // keep the strokes readable against a red sky
-                polys.Add((pts, c));
-            }
-            d.parts.Add(new PartDef { name = "Head_Hair", bone = B.Head, order = 21 * 4, role = PartRole.Hair, polys = polys, soft = SoftKind.Hair, rim = false });
         }
 
         /// <summary>

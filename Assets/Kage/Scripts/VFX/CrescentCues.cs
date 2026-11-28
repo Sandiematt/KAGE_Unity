@@ -11,6 +11,9 @@ namespace Kage
     public static class CrescentCues
     {
         public const string Flight = "VFX_Kage_Crescent", Hit = "VFX_Kage_CrescentHit", Fade = "VFX_Kage_CrescentFade";
+        /// <summary>Mikazuki's giant crescent moon (the plain starter's rage art): the same look at <see cref="MoonScale"/>, and a bigger burst where it strikes.</summary>
+        public const string MoonFlight = "VFX_Kage_MoonCrescent", MoonHit = "VFX_Kage_MoonCrescentHit";
+        public const float MoonScale = 2.2f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register()
@@ -18,6 +21,23 @@ namespace Kage
             EffectCues.Register(Flight, CrescentLook.Play);
             EffectCues.Register(Hit, PlayHit);
             EffectCues.Register(Fade, PlayFade);
+            EffectCues.Register(MoonFlight, PlayMoon);
+            EffectCues.Register(MoonHit, PlayMoonHit);
+        }
+
+        static void PlayMoon(Vector2 pos, in CueArgs a)
+        {
+            var big = a;
+            big.scale = MoonScale;
+            CrescentLook.Play(pos, big);
+            if (a.owner != null) Vfx.I.Ring(pos, 0.3f, 2.2f, 0.12f, a.owner.fxMain, 0.35f, false);
+        }
+
+        static void PlayMoonHit(Vector2 pos, in CueArgs a)
+        {
+            if (a.owner == null) return;
+            Vfx.I.InkBurst(pos, a.owner.fxDark, 1.6f);
+            Vfx.I.Ring(pos, 0.2f, 1.6f, 0.1f, a.owner.fxMain, 0.3f, false);
         }
 
         static void PlayHit(Vector2 pos, in CueArgs a)
@@ -50,7 +70,8 @@ namespace Kage
             var go = new GameObject("CrescentLook");
             go.transform.SetParent(a.follow, false);
             go.transform.localPosition = Vector3.zero;
-            go.transform.localScale = new Vector3(a.dir.x < 0f ? -1f : 1f, 1f, 1f);
+            float k = a.scale > 0f ? a.scale : 1f;
+            go.transform.localScale = new Vector3((a.dir.x < 0f ? -1f : 1f) * k, k, 1f);
             go.AddComponent<CrescentLook>().Init(a.owner, a.follow, Mathf.Max(0.1f, a.seconds));
             Vfx.I.Star(pos, 0.6f, a.owner.fxCore, a.owner.fxMain);
         }

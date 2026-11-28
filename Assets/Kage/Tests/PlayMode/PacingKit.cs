@@ -13,7 +13,7 @@ namespace Kage.Tests
     ///
     /// <para><b>Expected gear</b> (<see cref="Loadouts"/>). A new save plays the ten stages in order, every one a B-rated first clear (what the
     /// campaign rules test uses), through the real rules (<see cref="GameRules.CompleteStage"/>). Before each stage the player spends every
-    /// coin on Kagetsu upgrades (the only weapon he can afford early, and the lever that raises damage), and wears the best helmet and armour
+    /// coin on Kagetsu upgrades (the only weapon he can afford early, and the lever that raises damage), and wears the best armor
     /// he owns (most defence, then most health), which is how the sub-bosses' drops get on. Gems are not spent. Coins therefore run 250, 365,
     /// 480, 735, 850, 1105, 1220, 1475, 1590, 1845 at the ten stages and the player level follows the XP of the clears.</para>
     ///
@@ -38,11 +38,11 @@ namespace Kage.Tests
 
         public sealed class Loadout
         {
-            public string Stage, Weapon, Helmet, Armor;
-            public int WeaponLevel, HelmetLevel, ArmorLevel, Level, Coins, Gems;
+            public string Stage, Weapon, Armor;
+            public int WeaponLevel, ArmorLevel, Level, Coins, Gems;
             public CharacterDef Kage;
             public string Text =>
-                $"Kage lv{Level}: {Weapon} L{WeaponLevel}, {Helmet} L{HelmetLevel}, {Armor} L{ArmorLevel} (JS hp {Kage.jsHealth:0}, def {Kage.defense:0.00}, dmg x{Kage.damageMul:0.000}), {Coins} coins held";
+                $"Kage lv{Level}: {Weapon} L{WeaponLevel}, {Armor} L{ArmorLevel} (JS hp {Kage.jsHealth:0}, def {Kage.defense:0.00}, dmg x{Kage.damageMul:0.000}), {Coins} coins held";
         }
 
         static string BestWorn(SaveData save, GearKind kind)
@@ -51,7 +51,7 @@ namespace Kage.Tests
             double bestDef = -1, bestHp = -1;
             foreach (var kv in GameRules.OwnedOf(save, kind))
             {
-                if (kv.Value <= 0) continue;
+                if (!GameRules.CanEquip(save, kind, kv.Key)) continue;
                 double def = GameRules.GearDef(kind, kv.Key, kv.Value), hp = GameRules.GearHp(kind, kv.Key, kv.Value);
                 if (def > bestDef || (def == bestDef && hp > bestHp)) { best = kv.Key; bestDef = def; bestHp = hp; }
             }
@@ -66,14 +66,12 @@ namespace Kage.Tests
             foreach (var id in Order)
             {
                 while (GameRules.UpgradeItem(save, GearKind.Weapons, "kagetsu")) { }
-                GameRules.EquipItem(save, GearKind.Helmets, BestWorn(save, GearKind.Helmets));
                 GameRules.EquipItem(save, GearKind.Armors, BestWorn(save, GearKind.Armors));
                 var e = save.equipped;
                 list.Add(new Loadout
                 {
                     Stage = id, Level = save.level, Coins = save.coins, Gems = save.gems,
                     Weapon = e.weapon, WeaponLevel = save.owned.weapons[e.weapon],
-                    Helmet = e.helmet, HelmetLevel = save.owned.helmets[e.helmet],
                     Armor = e.armor, ArmorLevel = save.owned.armors[e.armor],
                     Kage = KageCharacter.Def(save),
                 });

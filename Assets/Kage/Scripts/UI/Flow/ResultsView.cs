@@ -29,7 +29,7 @@ namespace Kage
         public string Rating;
         public int Coins, Gems;
         public List<string> Items = new List<string>();
-        /// <summary>The drawing of each item in <see cref="Items"/> (the sword, helmet or armour itself).</summary>
+        /// <summary>The drawing of each weapon or armor in the rewards.</summary>
         public List<TileArt> ItemArt = new List<TileArt>();
         public List<ResultToast> Toasts = new List<ResultToast>();
         public int Level, Xp, XpNeed, XpGain;

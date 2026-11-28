@@ -75,6 +75,7 @@ namespace Kage
         {
             string art = RageArtId;
             if (opponent != null && opponent.WouldCounterRageArt(this)) { RageArtTurnedAside(opponent, art); return; }
+            if (art == Mikazuki && StartMikazuki()) return;
             // a weapon's art needs someone to cut; with no target (the training bag) the press is spent as Thousand Shadows always was
             var cine = opponent != null && ctx != null ? MakeArt(art) : null;
             if (art == CrimsonMoon && opponent != null) StartCrimsonMoon();

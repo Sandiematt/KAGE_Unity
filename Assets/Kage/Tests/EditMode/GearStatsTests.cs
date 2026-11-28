@@ -132,9 +132,7 @@ namespace Kage.Tests
         [Test]
         public void Only_weapons_climb_tiers_helmets_armour_and_boss_weapons_keep_theirs()
         {
-            Assert.AreEqual("common", GameRules.ItemTier(GearKind.Helmets, "kuro_zukin", 5));
             Assert.AreEqual("starter", GameRules.ItemTier(GearKind.Armors, "tachibana_yoroi", 5));
-            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Helmets, "raijin_kabuto", 1));
             Assert.AreEqual("boss", GameRules.ItemTier(GearKind.Weapons, "raiko_no_tachi", 1));
         }
 
@@ -145,7 +143,6 @@ namespace Kage.Tests
             Assert.AreEqual("Rare", GameRules.TierLabel(GearKind.Weapons, "kagetsu", 1));
             Assert.AreEqual("Epic", GameRules.TierLabel(GearKind.Weapons, "kagetsu", 8));
             Assert.AreEqual("Legendary", GameRules.TierLabel(GearKind.Weapons, "iwakudaki", 1));
-            Assert.AreEqual("Common", GameRules.TierLabel(GearKind.Helmets, "shiro_maki", 1));
             Assert.AreEqual("Starting gear", GameRules.TierLabel(GearKind.Armors, "tachibana_yoroi", 1));
             Assert.AreEqual("Boss weapon", GameRules.TierLabel(GearKind.Weapons, "shinsen", 1));
         }
@@ -164,7 +161,6 @@ namespace Kage.Tests
         [Test]
         public void Even_the_starting_gear_gets_tougher_when_upgraded()
         {
-            Assert.AreEqual(0.058, GameRules.GearDef(GearKind.Helmets, "shiro_maki", 5), 1e-9);
             Assert.AreEqual(11, GameRules.GearHp(GearKind.Armors, "tachibana_yoroi", 5));
         }
 
@@ -184,20 +180,18 @@ namespace Kage.Tests
         {
             var s = Fresh();
             var start = GameRules.PlayerCombatStats(s);
-            Assert.AreEqual(232, start.Hp, "220 base + 8 from the Shinobi Garb + 4 from the Crimson Scarf");
+            Assert.AreEqual(232, start.Hp, "224 base + 8 from Shinobi Garb");
             Assert.AreEqual(0.03, start.Defense, 1e-9);
             Assert.AreEqual(1.0, start.WeaponDmg, 1e-9);
 
             s.owned.armors["mugen_yoroi"] = 5;
-            s.owned.helmets["shika_kabuto"] = 5;
             s.owned.weapons["iwakudaki"] = 8;
             s.equipped.weapon = "iwakudaki";
-            s.equipped.helmet = "shika_kabuto";
             s.equipped.armor = "mugen_yoroi";
 
             var geared = GameRules.PlayerCombatStats(s);
-            Assert.AreEqual(220 + 77 + 31, geared.Hp);
-            Assert.AreEqual(0.376, geared.Defense, 1e-9);
+            Assert.AreEqual(224 + 77, geared.Hp);
+            Assert.AreEqual(0.218, geared.Defense, 1e-9);
             Assert.AreEqual(1.56, geared.WeaponDmg, 1e-9);
         }
 
@@ -211,18 +205,16 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Helmet_and_armour_perks_are_summed()
+        public void TheEquippedArmorSuppliesThePerks()
         {
             var s = Fresh();
             s.owned.armors["mugen_yoroi"] = 1;
-            s.owned.helmets["kasa"] = 1;
             s.equipped.armor = "mugen_yoroi";
-            s.equipped.helmet = "kasa";
             var perks = GameRules.PlayerCombatStats(s).Perks;
             Assert.AreEqual(0.07, perks["dmg"], 1e-9);
-            Assert.AreEqual(0.35, perks["rage"], 1e-9, "0.2 from the armour + 0.15 from the helmet");
+            Assert.AreEqual(0.2, perks["rage"], 1e-9, "the armor supplies the rage perk");
             Assert.AreEqual(0.2, perks["stunRes"], 1e-9);
-            Assert.AreEqual(3, perks["ammo"], 1e-9);
+            Assert.IsFalse(perks.ContainsKey("ammo"));
         }
 
         [Test]
@@ -230,22 +222,5 @@ namespace Kage.Tests
         {
             Assert.AreEqual(0, GameRules.PlayerCombatStats(Fresh()).Perks.Count);
         }
-    
-        [TestCase("utsuro_kabuto")]
-        [TestCase("shikko_zukin")]
-        [TestCase("raijin_kabuto")]
-        public void A_legendary_helmet_has_the_best_helmet_stats_of_the_tables(string id)
-        {
-            Assert.AreEqual("legendary", GameRules.ItemTier(GearKind.Helmets, id, 1));
-            Assert.AreEqual("Legendary", GameRules.TierLabel(GearKind.Helmets, id, 1));
-            Assert.AreEqual(0.2, GameRules.GearDef(GearKind.Helmets, id, 1), 1e-9);
-            Assert.AreEqual(40, GameRules.GearHp(GearKind.Helmets, id, 1));
-            foreach (var h in JsTables.Helmets)
-                if (!h.Enemy && !h.Retired)
-                {
-                    Assert.GreaterOrEqual(GameRules.GearDef(GearKind.Helmets, id, 1), GameRules.GearDef(GearKind.Helmets, h.Id, 1), h.Id);
-                    Assert.GreaterOrEqual(GameRules.GearHp(GearKind.Helmets, id, 1), GameRules.GearHp(GearKind.Helmets, h.Id, 1), h.Id);
-                }
-        }
-}
+    }
 }

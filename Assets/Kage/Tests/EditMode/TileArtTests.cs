@@ -39,15 +39,15 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void Every_helmet_tile_shows_the_drawn_helmet_not_a_glyph()
+        public void EveryHairstyleTileHasItsInkEmblem()
         {
-            var v = ArmoryView.Build(Save(), ArmoryTab.Helmets);
-            Assert.AreEqual(14, v.Tiles.Length);
+            var v = ArmoryView.Build(Save(), ArmoryTab.Hairstyles);
+            Assert.AreEqual(6, v.Tiles.Length);
             foreach (var t in v.Tiles)
             {
-                Assert.AreEqual(ArtSource.HelmetIcon, t.Art.Source, t.Id);
-                Assert.AreEqual("icon_h_" + t.Id, t.Art.Key);
-                Assert.IsNotNull(t.Art.Texture, "the helmet drawing of " + t.Id);
+                Assert.AreEqual(ArtSource.HairstylePortrait, t.Art.Source, t.Id);
+                Assert.AreEqual("hair_" + t.Id, t.Art.Key);
+                Assert.IsNotNull(t.Art.Texture, "the hairstyle portrait of " + t.Id);
             }
         }
 
@@ -73,8 +73,8 @@ namespace Kage.Tests
             Assert.AreEqual("big_w_onikiri", w.PreviewKey);
             Assert.IsNotNull(Ui.Tex(w.PreviewKey), "the illustration exists");
             Assert.IsNotNull(Ui.Tex(GearArt.GhostKey), "and so does the ghost behind it");
-            Assert.AreEqual(ArmoryPreview.LiveKage, ArmoryView.Build(save, ArmoryTab.Helmets, "oni_menpo").Preview);
-            Assert.IsNull(ArmoryView.Build(save, ArmoryTab.Helmets, "oni_menpo").PreviewKey);
+            Assert.AreEqual(ArmoryPreview.LiveKage, ArmoryView.Build(save, ArmoryTab.Hairstyles, "low_ponytail").Preview);
+            Assert.IsNull(ArmoryView.Build(save, ArmoryTab.Hairstyles, "low_ponytail").PreviewKey);
             Assert.AreEqual(ArmoryPreview.LiveKage, ArmoryView.Build(save, ArmoryTab.Armor).Preview);
         }
 
@@ -91,22 +91,22 @@ namespace Kage.Tests
             var save = GameRules.DefaultSave(false);
             foreach (var st in GameRules.Stages)
             {
-                if (st.Id == "act1.sub1") break;
+                if (st.Id == "act1.sub2") break;
                 GameRules.MarkStageCleared(save, st.Id);
             }
             var r = new FightResult { win = true, hpLeft = 0.8, time = 50, maxCombo = 5 };
-            var v = ResultsView.Build(save, GameRules.CompleteStage(save, "act1.sub1", r), r);
+            var v = ResultsView.Build(save, GameRules.CompleteStage(save, "act1.sub2", r), r);
             Assert.IsTrue(v.Items.Count > 0, "the first sub-boss drops a trophy");
             Assert.AreEqual(v.Items.Count, v.ItemArt.Count, "one picture per item");
-            Assert.AreEqual(ArtSource.HelmetIcon, v.ItemArt[0].Source, "Sumi Eboshi is a helmet");
-            Assert.AreEqual("icon_h_sumi_eboshi", v.ItemArt[0].Key);
+            Assert.AreEqual(ArtSource.ArmorIcon, v.ItemArt[0].Source, "Ikazuchi-do is armor");
+            Assert.AreEqual("icon_a_ikazuchi_do", v.ItemArt[0].Key);
             Assert.IsNotNull(v.ItemArt[0].Texture);
         }
 
         [Test]
         public void An_item_the_player_does_not_own_still_shows_its_picture()
         {
-            var v = ArmoryView.Build(GameRules.DefaultSave(false), ArmoryTab.Helmets);
+            var v = ArmoryView.Build(GameRules.DefaultSave(false), ArmoryTab.Weapons);
             var locked = v.Tiles.First(t => !t.Owned);
             Assert.IsNotNull(locked.Art.Texture, "a tile that is not owned is the same drawing, shown dim by the screen");
         }

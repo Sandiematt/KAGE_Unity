@@ -66,8 +66,8 @@ namespace Kage
         /// <summary>Id of the part set that draws this character (<see cref="CharacterCatalog.PartSet"/>).</summary>
         public string partSet;
         public FighterColors colors;
-        /// <summary>The JS id of the equipped helmet that is drawn on this character (Kage's part set layers it, <see cref="HelmetVisuals"/>); null or an id with no drawing = none.</summary>
-        public string helmet;
+        /// <summary>Kage’s cosmetic hair silhouette.</summary>
+        public string hairstyle;
         /// <summary>The JS id of the equipped armour that is drawn on this character (Kage's part set layers it, <see cref="ArmorVisuals"/>); null, the starter or an id with no drawing = his plain coat.</summary>
         public string armor;
 

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Kage
 {
     /// <summary>
-    /// What the equipped helmet and armour do in a fight (SAN-84, ADR-0005): the perks that need the fighter. Health and defence
+    /// What the equipped armour does in a fight (SAN-84, ADR-0005): the perks that need the fighter. Health and defence
     /// are on the character (<see cref="CharacterDef.MaxHealth"/>, <see cref="Defense"/>), damage and speed perks are folded into
     /// <see cref="DamageMul"/> and <see cref="SpeedMul"/> by <see cref="KageCharacter.Def(Rules.SaveData)"/>. Every value is 0 or 1 for a
     /// fighter with no perks (every foe, and Kage in his starter gear), so none of it changes a fight that has no perk.

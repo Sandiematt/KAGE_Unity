@@ -25,17 +25,13 @@ namespace Kage.Tests
         // Kage's own look (the starter, whose plain coat is the design itself), retired armours, and bad ids
         static readonly string[] NoDrawing = { "tachibana_yoroi", "kozane_do", "kawa_do", "no_such_armor", "", null };
 
-        static readonly string[] Helmets =
-        {
-            null, "shiro_maki", "kuro_zukin", "sugegasa", "hachigane", "kasumi_men", "tetsu_kabuto", "oni_menpo", "hoshi_kabuto",
-            "shika_kabuto", "utsuro_kabuto", "shikko_zukin", "sumi_eboshi", "hisame_zukin", "raijin_kabuto",
-        };
+        static readonly string[] Hairstyles = { "spike", "messy_layers", "low_ponytail", "topknot", "long_flowing", "undercut" };
 
-        static RigDef Kage(string armor, string helmet = null)
+        static RigDef Kage(string armor, string hairstyle = null)
         {
             var def = KageCharacter.Def();
             def.armor = armor;
-            def.helmet = helmet;
+            def.hairstyle = hairstyle;
             return new KagePartSet().Build(def);
         }
 
@@ -134,8 +130,8 @@ namespace Kage.Tests
                 Assert.AreNotEqual(Coat(bare), Coat(d), $"{id} coat");
                 Assert.AreNotEqual(bare.scarfColor, d.scarfColor, $"{id} scarf");
                 Assert.AreNotEqual(bare.rimColor, d.rimColor, $"{id} rim");
-                Assert.AreNotEqual(string.Join(",", bare.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col)),
-                                   string.Join(",", d.parts.Single(p => p.name == "Head_Hair").polys.Select(q => q.col)), $"{id} hair strokes");
+                Assert.AreEqual(string.Join(",", bare.parts.Single(p => p.soft == SoftKind.Hair).polys.Select(q => q.col)),
+                                   string.Join(",", d.parts.Single(p => p.soft == SoftKind.Hair).polys.Select(q => q.col)), $"{id} hair strokes");
             }
             foreach (var id in TrophyDrawn)
             {
@@ -209,7 +205,7 @@ namespace Kage.Tests
             int torso = bare.parts.Single(p => p.name == "Torso").order;
             int wrap = bare.parts.Single(p => p.name == "Scarf_Wrap").order;
             int upper = bare.parts.Single(p => p.name == "ArmN_Upper").order;
-            int hair = bare.parts.Single(p => p.name == "Head_Hair").order;
+            int hair = bare.parts.Single(p => p.soft == SoftKind.Hair).order;
             foreach (var id in Drawn)
             {
                 foreach (var p in ArmourParts(Kage(id)))
@@ -224,25 +220,25 @@ namespace Kage.Tests
             }
         }
 
-        // ---------------------------------------------------------------- helmets and armour together
+        // ---------------------------------------------------------------- hairstyles and armour together
 
         [Test]
-        public void EveryHelmetAndArmourCombinationBuildsAndNothingCoversTheFace()
+        public void EveryHairstyleAndArmourCombinationBuildsAndNothingCoversTheFace()
         {
             var bare = Bare();
             var eye = bare.parts.First(p => p.name == "Eye");
             Vector2 eyeCentre = eye.pts.Aggregate(Vector2.zero, (a, v) => a + v) / eye.pts.Length;
-            int hair = bare.parts.Single(p => p.name == "Head_Hair").order;
-            foreach (var helmet in Helmets)
+            int hair = bare.parts.Single(p => p.soft == SoftKind.Hair).order;
+            foreach (var hairstyle in Hairstyles)
                 foreach (var armor in Drawn.Concat(new[] { "tachibana_yoroi" }))
                 {
-                    var d = Kage(armor, helmet);
-                    Assert.IsNotNull(d.parts.Find(p => p.name == "Eye"), $"{helmet}+{armor}");
+                    var d = Kage(armor, hairstyle);
+                    Assert.IsNotNull(d.parts.Find(p => p.name == "Eye"), $"{hairstyle}+{armor}");
                     foreach (var p in ArmourParts(d))
                     {
                         if (p.order <= hair) continue;                  // under the head: cannot cover the face
                         foreach (var poly in Polygons(p))
-                            Assert.IsFalse(Contains(poly, eyeCentre), $"{armor}/{p.name} covers the eye (with {helmet})");
+                            Assert.IsFalse(Contains(poly, eyeCentre), $"{armor}/{p.name} covers the eye (with {hairstyle})");
                     }
                     // the eye is still the topmost thing on the head: nothing of the armour is drawn over it
                     int eyeOrder = d.parts.Find(p => p.name == "Eye").order;
@@ -251,15 +247,27 @@ namespace Kage.Tests
         }
 
         [Test]
-        public void ArmourAndHelmetLayerIndependentlyOnTheSameRig()
+        public void ArmourAndHairstyleLayerIndependentlyOnTheSameRig()
         {
+            var silhouettes = new HashSet<string>();
+            foreach (string style in Hairstyles)
+            {
+                var part = Kage(null, style).parts.Single(p => p.soft == SoftKind.Hair);
+                Assert.IsTrue(silhouettes.Add(string.Join("|", part.polys[0].pts.Select(point => point.ToString("F4")))), style);
+                foreach (var armor in Drawn)
+                {
+                    var worn = Kage(armor, style).parts.Single(p => p.soft == SoftKind.Hair);
+                    Assert.AreEqual(part.name, worn.name);
+                    CollectionAssert.AreEqual(part.polys, worn.polys);
+                }
+            }
             var bare = Bare();
             foreach (var armor in Drawn)
             {
                 int armourOnly = Kage(armor).parts.Count - bare.parts.Count;
-                int helmetOnly = Kage(null, "tetsu_kabuto").parts.Count - bare.parts.Count;
+                int hairstyleOnly = Kage(null, "long_flowing").parts.Count - bare.parts.Count;
                 Assert.Greater(armourOnly, 0, armor);
-                Assert.AreEqual(bare.parts.Count + armourOnly + helmetOnly, Kage(armor, "tetsu_kabuto").parts.Count, armor);
+                Assert.AreEqual(bare.parts.Count + armourOnly + hairstyleOnly, Kage(armor, "long_flowing").parts.Count, armor);
             }
         }
 

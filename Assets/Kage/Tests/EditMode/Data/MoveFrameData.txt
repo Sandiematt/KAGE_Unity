@@ -100,6 +100,11 @@ katana.lunge total=26 cancel=12 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour
   fx 7..12 TrailFist
   fx 3..3 Dust
   chain P->cross
+katana.mikazuki total=50 cancel=999 jumpCancel=-1 invuln=0..30 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=19 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 1..18 ChargeDark
+  fx 17..22 TrailBlade
+  fx 19..19 SlashLine
+  fx 19..19 Dust
 katana.push total=28 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 9..13 pts=FootN r=0.11 dmg=6 lvl=Mid kb=4,0.6 stun=20 kd=False launch=False otg=False heavy=False sword=False breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 8..13 TrailFootN
@@ -383,6 +388,13 @@ spear.spear.airSweep total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..
   hit 4..9 pts=Blade r=0.08 dmg=5 lvl=Overhead kb=1.2,1 stun=16 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=4 shake=0.08 posture=1 crit=False fixed=False
   hit 11..16 pts=Blade r=0.08 dmg=5 lvl=Overhead kb=1.8,2.5 stun=20 kd=True launch=False otg=False heavy=False sword=True breaks=False stop=6 shake=0.15 posture=1 crit=False fixed=False
   fx 3..18 TrailBlade
+spear.spear.counterGuard total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=4..24 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 4..4 Glint
+spear.spear.counterThrust total=30 cancel=999 jumpCancel=-1 invuln=0..12 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 2..7 pts=Blade r=0.14 dmg=12 lvl=Unblockable kb=2.8,1.2 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.4 posture=1 crit=False fixed=False
+  move 0..4 v=2,0 setY=False
+  fx 0..8 TrailBlade
+  fx 2..2 SlashLine
 spear.spear.crescentCleave total=42 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 12..18 pts=Blade r=0.09 dmg=12 lvl=Overhead kb=3.4,1.4 stun=26 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=8 shake=0.24 posture=1.5 crit=False fixed=False
   move 10..16 v=3.2,0 setY=False
@@ -481,6 +493,13 @@ chain.chain.airReap total=30 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-
 chain.chain.backKick total=24 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=False norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 7..11 pts=FootF+ShinF r=0.1 dmg=5 lvl=Mid kb=2.4,0.4 stun=16 kd=True launch=False otg=False heavy=False sword=False breaks=False stop=4 shake=0.1 posture=1 crit=False fixed=False
   fx 6..12 TrailFootF
+chain.chain.counterGuard total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=4..24 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 4..4 Glint
+chain.chain.counterReap total=28 cancel=999 jumpCancel=-1 invuln=0..12 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 2..7 pts=Blade r=0.1 dmg=11 lvl=Unblockable kb=1.8,1.4 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.38 posture=1 crit=False fixed=False
+  move 0..4 v=2,0 setY=False
+  fx 0..8 TrailBlade
+  fx 3..3 SlashLine
 chain.chain.crescentLift total=36 cancel=999 jumpCancel=15 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 6..10 pts=Blade r=0.09 dmg=5 lvl=Mid kb=0.3,6.2 stun=26 kd=False launch=True otg=False heavy=False sword=True breaks=False stop=5 shake=0.14 posture=1 crit=False fixed=False
   hit 8..14 pts=Blade r=0.09 dmg=7 lvl=High kb=0.5,7.2 stun=30 kd=False launch=True otg=False heavy=True sword=True breaks=False stop=7 shake=0.2 posture=1 crit=False fixed=False
@@ -596,6 +615,14 @@ cleaver.cleaver.charge total=50 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1
   fx 6..24 AfterImage
   fx 16..27 TrailBlade
   fx 12..12 Dust
+cleaver.cleaver.counterGuard total=34 cancel=999 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=4..24 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  fx 4..4 Glint
+cleaver.cleaver.counterHack total=32 cancel=999 jumpCancel=-1 invuln=0..12 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
+  hit 3..8 pts=Blade r=0.11 dmg=14 lvl=Unblockable kb=2.2,1 stun=30 kd=True launch=False otg=False heavy=True sword=True breaks=False stop=12 shake=0.45 posture=1.4 crit=False fixed=False
+  move 0..4 v=1.8,0 setY=False
+  fx 1..9 TrailBlade
+  fx 4..4 SlashLine
+  fx 5..5 Dust
 cleaver.cleaver.hack total=28 cancel=15 jumpCancel=-1 invuln=-1..-1 noPush=-1..-1 armour=-1..-1 counter=-1..-1 gravOff=-1..-1 air=False/False sword=True norm=False throw=False:0..-1/0/0 meter=0 proj=-1 hazard=-1 vault=-1..-1 brace=-1..-1 wallStagger=0
   hit 10..15 pts=Blade r=0.1 dmg=9 lvl=High kb=1.8,-0.2 stun=19 kd=False launch=False otg=False heavy=False sword=True breaks=False stop=7 shake=0.15 posture=1 crit=False fixed=False
   move 5..11 v=2.2,0 setY=False

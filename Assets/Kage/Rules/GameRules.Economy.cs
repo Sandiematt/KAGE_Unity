@@ -11,7 +11,7 @@ namespace Kage.Rules
             switch (kind)
             {
                 case GearKind.Weapons: return JsTables.GearMaxWeapons;
-                case GearKind.Helmets: return JsTables.GearMaxHelmets;
+                case GearKind.Hairstyles: return 1;
                 default: return JsTables.GearMaxArmors;
             }
         }
@@ -20,13 +20,14 @@ namespace Kage.Rules
         public static int MaxLevel(GearKind kind, string id)
         {
             var it = Item(kind, id);
-            string tier = it != null && it.Gear != null ? it.Gear.Tier : it?.Tier;     // the JS tier: a legendary trophy helmet stays at level 1
+            string tier = it != null && it.Gear != null ? it.Gear.Tier : it?.Tier;     // Trophy gear stays at level 1.
             return it != null && (tier == "trophy" || tier == "boss") ? 1 : GearMax(kind);
         }
 
         /// <summary>Coins to take an owned item from <paramref name="level"/> to the next level.</summary>
         public static int UpgradeCost(GearKind kind, string id, int level)
         {
+            if (kind == GearKind.Hairstyles) return 0;
             var item = Item(kind, id);
             // a weapon upgrades at its JS price, not the shop price Unity's tiers gave it: Kagetsu, the old starter (JS price 0), now
             // sold, still upgrades exactly as it did, and Mumei, the new starter, as the old starter did
@@ -50,6 +51,7 @@ namespace Kage.Rules
         /// <summary>Raises an owned item one level for coins, up to its cap.</summary>
         public static bool UpgradeItem(SaveData save, GearKind kind, string id)
         {
+            if (kind == GearKind.Hairstyles) return false;
             int level;
             if (!OwnedOf(save, kind).TryGetValue(id, out level) || level <= 0 || level >= MaxLevel(kind, id)) return false;
             int cost = UpgradeCost(kind, id, level);
@@ -59,15 +61,21 @@ namespace Kage.Rules
             return true;
         }
 
-        /// <summary>Equips an owned item into its slot.</summary>
+        public static bool CanEquip(SaveData save, GearKind kind, string id)
+        {
+            return !string.IsNullOrEmpty(id) && Owns(save, kind, id);
+        }
+
         public static bool EquipItem(SaveData save, GearKind kind, string id)
         {
-            if (!Owns(save, kind, id)) return false;
+            if (!CanEquip(save, kind, id)) return false;
             switch (kind)
             {
                 case GearKind.Weapons: save.equipped.weapon = id; break;
-                case GearKind.Helmets: save.equipped.helmet = id; break;
-                default: save.equipped.armor = id; break;
+                case GearKind.Hairstyles: save.equipped.hairstyle = id; break;
+                default:
+                    save.equipped.armor = id;
+                    break;
             }
             return true;
         }

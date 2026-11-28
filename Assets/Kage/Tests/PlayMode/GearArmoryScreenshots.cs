@@ -12,7 +12,7 @@ namespace Kage.Tests
 {
     /// <summary>
     /// Renders the Armory to Screenshots/review/SAN-90/unity (1600 x 900) for the side-by-side review with the JS Armory, on the same
-    /// mid-game save the JS screens were taken with (1500 coins, 30 gems, Kagetsu level 3, Tsubame, Kuro Zukin level 2, Ronin Armor).
+    /// mid-game save the JS screens were taken with (1500 coins, 30 gems, Kagetsu level 3, Tsubame, Ronin Armor).
     /// Needs a GPU: it skips itself under -nographics. Run <c>-testFilter GearArmoryScreenshots</c> without -nographics.
     /// </summary>
     [Category("Screenshots")]
@@ -50,7 +50,6 @@ namespace Kage.Tests
             s.gems = 30;
             s.owned.weapons["kagetsu"] = 3;
             s.owned.weapons["tsubame"] = 1;
-            s.owned.helmets["kuro_zukin"] = 2;
             s.owned.armors["ronin_yoroi"] = 1;
             return s;
         }
@@ -88,8 +87,8 @@ namespace Kage.Tests
             yield return Shot("weapons_upgrade");
             yield return Show(ArmoryTab.Weapons, "raiko_no_tachi");
             yield return Shot("weapons_locked");
-            yield return Show(ArmoryTab.Helmets, "oni_menpo");
-            yield return Shot("helmets_buy");
+            yield return Show(ArmoryTab.Hairstyles, "low_ponytail");
+            yield return Shot("hairstyles");
             yield return Show(ArmoryTab.Armor, "ronin_yoroi");
             yield return Shot("armors_line");
             yield return Show(ArmoryTab.Armor, "mugen_yoroi");
@@ -116,6 +115,18 @@ namespace Kage.Tests
             flow.Controller.BeginLoadout();
             yield return new WaitForSecondsRealtime(0.6f);
             yield return Shot("loadout_change_gear");
+        }
+
+        [Category("Hairstyles"), UnityTest]
+        public IEnumerator CaptureHairstyleGallery()
+        {
+            shotDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Screenshots", "review", "hairstyles"));
+            Directory.CreateDirectory(shotDir);
+            Start(GameRules.DefaultSave(false));
+            yield return null;
+            flow.Controller.OpenArmory();
+            yield return Show(ArmoryTab.Hairstyles, "long_flowing");
+            yield return Shot("hairstyle-gallery");
         }
 
         // SAN-108: pointing at a tile only highlights it; the preview and the details change when it is clicked or confirmed.
@@ -145,16 +156,15 @@ namespace Kage.Tests
             Assert.AreEqual("big_w_onikiri", A.View.PreviewKey);
             yield return Shot("pick_weapons_3_click_onikiri");
 
-            // Helmets: the live Kage keeps his helmet while the pointer is on Oni Menpo, and wears it after the click
-            yield return Show(ArmoryTab.Helmets, "shiro_maki");
-            flow.Active.Nav.FocusOn(Item("tile:oni_menpo"), true);
+            yield return Show(ArmoryTab.Hairstyles, "spike");
+            flow.Active.Nav.FocusOn(Item("tile:low_ponytail"), true);
             yield return new WaitForSecondsRealtime(1.2f);
-            Assert.AreEqual("shiro_maki", A.SelectedId);
-            yield return Shot("pick_helmets_1_hover_oni_menpo");
+            Assert.AreEqual("spike", A.SelectedId);
+            yield return Shot("pick_hairstyles_1_hover_low_ponytail");
             flow.Send(MenuCommand.Submit);
             yield return new WaitForSecondsRealtime(1.2f);
-            Assert.AreEqual("oni_menpo", A.SelectedId);
-            yield return Shot("pick_helmets_2_click_oni_menpo");
+            Assert.AreEqual("low_ponytail", A.SelectedId);
+            yield return Shot("pick_hairstyles_2_click_low_ponytail");
 
             // Armor: ten cards scroll; moving the focus to the last one scrolls the row (and the Kages in it) without selecting it
             A.Save.owned.armors["ikazuchi_do"] = 1;

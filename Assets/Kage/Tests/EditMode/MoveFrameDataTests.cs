@@ -22,7 +22,9 @@ namespace Kage.Tests
     /// sweep likewise) and the cancel frames those links need (lowReap 14, tachi.sweep 25). No existing katana/fists/twin/tachi move's frames changed;
     /// and the four-weapon combat overhaul (Mizuchi spear, Yamigama chain sickle, Iwakudaki war hammer, Onikiri heavy cleaver): updated the
     /// spear, chain and cleaver family move sets with martial-arts-authentic 4-phase pacing, sliding spear thrusts, dynamic weighted-chain whip
-    /// arcs, ground-impact/spark-drag cues and active ClashGeometry hit segments while keeping katana, fists, twin and tachi byte-for-byte identical.
+    /// arcs, ground-impact/spark-drag cues and active ClashGeometry hit segments while keeping katana, fists, twin and tachi byte-for-byte identical;
+    /// and the Back + Weapon counters (2026-11-27): <c>spear.counterGuard</c>/<c>counterThrust</c>, <c>chain.counterGuard</c>/<c>counterReap</c> and
+    /// <c>cleaver.counterGuard</c>/<c>counterHack</c> added, plus Mumei's rage art <c>katana.mikazuki</c>. No existing move's frames changed.
     /// </summary>
     public class MoveFrameDataTests
     {

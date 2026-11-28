@@ -20,7 +20,7 @@ namespace Kage.Rules
     // Pure: no file access. SaveStore (Kage.Runtime) reads and writes the file.
     public static partial class GameRules
     {
-        static readonly string StarterWeapon = StarterWeaponId, StarterHelmet = "shiro_maki", StarterArmor = "tachibana_yoroi";
+        static readonly string StarterWeapon = StarterWeaponId, StarterArmor = "tachibana_yoroi";
 
         // ---------------- opening ----------------
 
@@ -77,7 +77,6 @@ namespace Kage.Rules
             if (s.settings == null) s.settings = new SaveSettings();
             if (s.owned == null) s.owned = new OwnedItems();
             if (s.owned.weapons == null) s.owned.weapons = new Dictionary<string, int>();
-            if (s.owned.helmets == null) s.owned.helmets = new Dictionary<string, int>();
             if (s.owned.armors == null) s.owned.armors = new Dictionary<string, int>();
             if (s.equipped == null) s.equipped = new Equipped();
             var defaults = new SaveSettings();
@@ -96,10 +95,9 @@ namespace Kage.Rules
 
             // the starter items are always owned
             EnsureOwned(s.owned.weapons, StarterWeapon);
-            EnsureOwned(s.owned.helmets, StarterHelmet);
             EnsureOwned(s.owned.armors, StarterArmor);
 
-            foreach (GearKind kind in new[] { GearKind.Weapons, GearKind.Helmets, GearKind.Armors })
+            foreach (GearKind kind in new[] { GearKind.Weapons, GearKind.Armors })
             {
                 var owned = OwnedOf(s, kind);
                 foreach (var id in new List<string>(owned.Keys))
@@ -119,9 +117,8 @@ namespace Kage.Rules
 
             // a slot wearing something unowned or unknown goes back to the starter item
             if (!Owns(s, GearKind.Weapons, s.equipped.weapon ?? "")) s.equipped.weapon = StarterWeapon;
-            if (!Owns(s, GearKind.Helmets, s.equipped.helmet ?? "")) s.equipped.helmet = StarterHelmet;
+            s.equipped.hairstyle = Hairstyles.Resolve(s.equipped.hairstyle);
             if (!Owns(s, GearKind.Armors, s.equipped.armor ?? "")) s.equipped.armor = StarterArmor;
-
             // clears and defeats are keyed by stage id; keys the map doesn't know (old saves, removed stages) are dropped
             var cleared = new Dictionary<string, bool>();
             foreach (var kv in s.cleared) if (kv.Value && Stage(kv.Key) != null) cleared[kv.Key] = true;
@@ -142,7 +139,7 @@ namespace Kage.Rules
         // ---------------- dev mode ----------------
 
         /// <summary>
-        /// The dev unlock's grants (JS applyDevUnlock): every weapon, helmet and armour that isn't enemy-only or retired is
+        /// The dev unlock's grants (JS applyDevUnlock): every weapon, hairstyle and armour that isn't enemy-only or retired is
         /// owned (at level 1 unless already higher), coins are at least <see cref="DevDefaults.Coins"/> and gems at least
         /// <see cref="DevDefaults.Gems"/>. Nothing the save already has is lowered. Returns the save it was given.
         /// </summary>
@@ -150,8 +147,6 @@ namespace Kage.Rules
         {
             foreach (var w in JsTables.AllWeapons)
                 if (!w.Enemy && w.Id != "fists") EnsureOwned(save.owned.weapons, w.Id);
-            foreach (var h in JsTables.Helmets)
-                if (!h.Enemy && !h.Retired) EnsureOwned(save.owned.helmets, h.Id);
             foreach (var a in JsTables.Armors)
                 if (!a.Enemy && !a.Retired) EnsureOwned(save.owned.armors, a.Id);
             save.coins = Math.Max(save.coins, DevDefaults.Coins);

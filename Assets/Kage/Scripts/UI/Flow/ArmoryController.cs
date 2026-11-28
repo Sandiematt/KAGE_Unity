@@ -60,6 +60,11 @@ namespace Kage
             var v = View;
             if (id == null || v.Tiles.All(t => t.Id != id)) return;
             selected = id;
+            if (Tab == ArmoryTab.Hairstyles && save.equipped.hairstyle != id)
+            {
+                GameRules.EquipItem(save, GearKind.Hairstyles, id);
+                persist(save);
+            }
             Raise();
         }
 

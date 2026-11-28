@@ -99,8 +99,7 @@ namespace Kage.Rules
         }
 
         /// <summary>
-        /// A Unity-only tier above every JS tier: the legendary helmets (<see cref="GameRules.LegendaryHelmets"/>) are listed
-        /// last in the Armory, under a rainbow tier line, with the best helmet stats of the tables.
+        /// A Unity-only tier above Epic for legendary weapons and armor.
         /// </summary>
         public static readonly JsTier Legendary = new JsTier { Id = "legendary", Rank = 6, Label = "Legendary" };
 

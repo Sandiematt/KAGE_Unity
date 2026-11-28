@@ -23,7 +23,7 @@ namespace Kage
         static RageArtCounterTuning RageCounterT => Tuning.Get<RageArtCounterTuning>();
 
         /// <summary>True when <paramref name="id"/> names a rage art (Thousand Shadows or a cinematic one): the HUD's RAGE COUNTERED reads it off the Countered event.</summary>
-        public static bool IsRageArtId(string id) => !string.IsNullOrEmpty(id) && (id == ThousandShadows || IsCinematicArt(id));
+        public static bool IsRageArtId(string id) => !string.IsNullOrEmpty(id) && (id == ThousandShadows || id == Mikazuki || IsCinematicArt(id));
 
         /// <summary>This fighter reads rage arts: a sub-boss or the boss (<see cref="Tier"/>), while the rule is on.</summary>
         public bool CountersRageArts => RageCounterT.enabled && Tier is CombatTier.Sub or CombatTier.Boss;
